@@ -78,12 +78,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-2065f9e58f6345017599ef1c45dc3d4f.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-ced54966b0e53f059c291d5781927a30.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2065f9e58f6345017599ef1c45dc3d4f.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-373076f01c624ec94dd0eba18e68a6dc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-8b7d824e8e0d8915afb392958cb20883.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-373076f01c624ec94dd0eba18e68a6dc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-3096fc03eaa8802cf8cf484d45085e39.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-d5368a4c102af53f1016a2f54756c9a3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -114,7 +112,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
-<script defer="" data-domain="r-heller.github.io/tutorials" src="https://analytics.hellebo.de/js/script.file-downloads.outbound-links.js"></script>
+<script defer="" data-domain="cttir.github.io/tutorials" src="https://analytics.hellebo.de/js/script.file-downloads.outbound-links.js"></script>
 <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
@@ -149,7 +147,7 @@ window.Quarto = {
 
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-dark"><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -291,10 +289,8 @@ window.Quarto = {
         changeGiscusTheme();
       }
     };
-    const authorPrefersDark = false;
+    const authorPrefersDark = true;
     const darkModeDefault = authorPrefersDark;
-      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
-      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
     let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
     // Dark / light mode switch
     window.quartoToggleColorScheme = () => {
@@ -328,6 +324,10 @@ window.Quarto = {
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../overview.html"> 
+<span class="menu-text">Overview</span></a>
+  </li>  
   <li class="nav-item dropdown ">
     <a class="nav-link dropdown-toggle" href="#" id="nav-menu-tutorials" role="link" data-bs-toggle="dropdown" aria-expanded="false">
  <span class="menu-text">Tutorials</span>
@@ -339,67 +339,67 @@ window.Quarto = {
   </li>  
         <li><hr class="dropdown-divider"></li>
         <li>
-    <a class="dropdown-item" href="../tutorials/statistical-foundations/index.html">
+    <a class="dropdown-item" href="../tutorials/statistical-foundations/index.qmd">
  <span class="dropdown-text">Statistical Foundations</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../tutorials/descriptive-statistics/index.html">
+    <a class="dropdown-item" href="../tutorials/descriptive-statistics/index.qmd">
  <span class="dropdown-text">Descriptive Statistics</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../tutorials/probability/index.html">
+    <a class="dropdown-item" href="../tutorials/probability/index.qmd">
  <span class="dropdown-text">Probability Theory</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../tutorials/inference/index.html">
+    <a class="dropdown-item" href="../tutorials/inference/index.qmd">
  <span class="dropdown-text">Inferential Statistics</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../tutorials/sample-size/index.html">
+    <a class="dropdown-item" href="../tutorials/sample-size/index.qmd">
  <span class="dropdown-text">Sample Size &amp; Power</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../tutorials/visualisation/index.html">
+    <a class="dropdown-item" href="../tutorials/visualisation/index.qmd">
  <span class="dropdown-text">Data Visualisation</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../tutorials/regression-modelling/index.html">
+    <a class="dropdown-item" href="../tutorials/regression-modelling/index.qmd">
  <span class="dropdown-text">Regression &amp; Modelling</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../tutorials/multivariate/index.html">
+    <a class="dropdown-item" href="../tutorials/multivariate/index.qmd">
  <span class="dropdown-text">Multivariate Methods</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../tutorials/time-series/index.html">
+    <a class="dropdown-item" href="../tutorials/time-series/index.qmd">
  <span class="dropdown-text">Time-Series Analysis</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../tutorials/bayesian/index.html">
+    <a class="dropdown-item" href="../tutorials/bayesian/index.qmd">
  <span class="dropdown-text">Bayesian Statistics</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../tutorials/survival-analysis/index.html">
+    <a class="dropdown-item" href="../tutorials/survival-analysis/index.qmd">
  <span class="dropdown-text">Survival Analysis</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../tutorials/bioinformatics/index.html">
+    <a class="dropdown-item" href="../tutorials/bioinformatics/index.qmd">
  <span class="dropdown-text">Bioinformatics</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../tutorials/machine-learning/index.html">
+    <a class="dropdown-item" href="../tutorials/machine-learning/index.qmd">
  <span class="dropdown-text">Machine Learning</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../tutorials/clinical-biostatistics/index.html">
+    <a class="dropdown-item" href="../tutorials/clinical-biostatistics/index.qmd">
  <span class="dropdown-text">Clinical Biostatistics</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../tutorials/meta-analysis/index.html">
+    <a class="dropdown-item" href="../tutorials/meta-analysis/index.qmd">
  <span class="dropdown-text">Meta-Analysis</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../tutorials/experimental-design/index.html">
+    <a class="dropdown-item" href="../tutorials/experimental-design/index.qmd">
  <span class="dropdown-text">Experimental Design</span></a>
   </li>  
     </ul>
@@ -429,21 +429,17 @@ window.Quarto = {
     </ul>
   </li>
   <li class="nav-item">
-    <a class="nav-link" href="../overview.html"> 
-<span class="menu-text">Overview</span></a>
-  </li>  
-  <li class="nav-item">
     <a class="nav-link" href="../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
     <a class="nav-link" href="../impressum.html"> 
 <span class="menu-text">Impressum</span></a>
   </li>  
-</ul>
-            <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/r-heller/tutorials"> <i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/CTTIR/tutorials"> <i class="bi bi-github" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -645,7 +641,7 @@ window.Quarto = {
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/r-heller\.github\.io\/tutorials\/");
+        var filterRegex = new RegExp("https:\/\/cttir\.github\.io\/tutorials\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
@@ -1003,6 +999,11 @@ window.Quarto = {
     <li class="nav-item">
     <a class="nav-link" href="../impressum.html">
 <p>Impressum</p>
+</a>
+  </li>  
+    <li class="nav-item">
+    <a class="nav-link" href="mailto:58561665+r-heller@users.noreply.github.com">
+<p>Kontakt</p>
 </a>
   </li>  
 </ul>

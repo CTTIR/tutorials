@@ -1,6 +1,7 @@
 ---
 title: "All Tutorials"
 description: "Complete index of every tutorial, grouped by topic area."
+title-block-style: none
 ---
 
 ::: {.hero}

@@ -13,7 +13,7 @@ execute:
 website:
   title: "#tutorials"
   description: "Comprehensive tutorials in statistics and bioinformatics with R code examples"
-  site-url: "https://r-heller.github.io/tutorials/"
+  site-url: "https://cttir.github.io/tutorials/"
   navbar:
     title: "#tutorials"
     left:
@@ -70,16 +70,10 @@ website:
       - href: about.qmd
         text: "About"
     right:
-      - text: "Rechtliches"
-        menu:
-          - href: impressum.qmd
-            text: "Impressum"
-          - href: datenschutz.qmd
-            text: "Datenschutzerklärung"
-          - href: haftungsausschluss.qmd
-            text: "Haftungsausschluss"
+      - href: impressum.qmd
+        text: "Impressum"
       - icon: github
-        href: https://github.com/r-heller/tutorials
+        href: https://github.com/CTTIR/tutorials
   page-navigation: true
   page-footer:
     left: "#tutorials · MIT"
@@ -92,10 +86,6 @@ website:
         href: about.qmd
       - text: "Impressum"
         href: impressum.qmd
-      - text: "Datenschutz"
-        href: datenschutz.qmd
-      - text: "Haftungsausschluss"
-        href: haftungsausschluss.qmd
       - text: "Kontakt"
         href: "mailto:58561665+r-heller@users.noreply.github.com"
     right: "Built with [Quarto](https://quarto.org)"
@@ -106,8 +96,8 @@ filters:
 format:
   html:
     theme:
-      light: [flatly, assets/light.scss]
       dark:  [darkly, assets/dark.scss]
+      light: [flatly, assets/light.scss]
     toc: true
     toc-depth: 3
     toc-location: right
@@ -119,7 +109,7 @@ format:
           <link rel="preconnect" href="https://fonts.googleapis.com">
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
           <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-          <script defer data-domain="r-heller.github.io/tutorials" src="https://analytics.hellebo.de/js/script.file-downloads.outbound-links.js"></script>
+          <script defer data-domain="cttir.github.io/tutorials" src="https://analytics.hellebo.de/js/script.file-downloads.outbound-links.js"></script>
           <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
     include-after-body:
       - text: |

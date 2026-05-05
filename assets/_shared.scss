@@ -125,6 +125,30 @@ hr { border: none; border-top: 1px solid var(--rule); margin: 2.5rem 0; }
   border: 1px solid var(--rule) !important;
 }
 
+/* Make the dark/light toggle as visible as the search button. */
+.navbar .quarto-color-scheme-toggle {
+  background: var(--surface) !important;
+  border: 1px solid var(--rule) !important;
+  border-radius: var(--radius);
+  padding: 0.25rem 0.55rem !important;
+  margin-left: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  min-height: 1.9rem;
+  line-height: 1;
+}
+.navbar .quarto-color-scheme-toggle i { color: var(--fg) !important; }
+.navbar .quarto-color-scheme-toggle:not(.alternate) i::before {
+  content: "\f495"; /* bi-moon-stars */
+  font-family: "bootstrap-icons" !important;
+}
+.navbar .quarto-color-scheme-toggle.alternate i::before {
+  content: "\f5a2"; /* bi-sun */
+  font-family: "bootstrap-icons" !important;
+}
+
 /* Dropdown menu surface in either mode. */
 .dropdown-menu {
   background-color: var(--surface);

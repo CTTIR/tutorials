@@ -1,13 +1,14 @@
 # Legal pages — Pflege- und Build-Hinweise
 
-Dieses Repository enthält:
+Dieses Repository enthält eine konsolidierte Rechtliches-Seite:
 
-- `impressum.qmd` — Anbieter nach § 5 DDG, § 18 Abs. 2 MStV
-- `datenschutz.qmd` — Datenschutzerklärung
-- `haftungsausschluss.qmd` — Haftung Inhalte / Links / Urheberrecht
+- `impressum.qmd` — Impressum (§ 5 DDG, § 18 Abs. 2 MStV),
+  Datenschutzerklärung und Haftungsausschluss in einem Dokument.
 
-Im Header oben rechts unter **Rechtliches**, im Footer als
-eigene Linkgruppe inkl. Kontakt.
+Im Header oben rechts als **Impressum**, im Footer ebenfalls als
+einzelner Link inkl. Kontakt. Aliase
+(`/datenschutz.html`, `/haftungsausschluss.html`, `/privacy/`,
+`/disclaimer/`, …) verweisen auf die konsolidierte Seite.
 
 ## Plausible Analytics
 
@@ -32,7 +33,7 @@ Pandoc-Lua-Filter `scripts/vgwort.lua`, in `_quarto.yml` unter
    vgwort_pixel: "vg08.met.vgwort.de/na/<32-hex-token>"
    ---
    ```
-4. Übersichten, Listings, Rechtliches-Seiten, 404 und Werke
+4. Übersichten, Listings, Impressum, 404 und Werke
    unter 1.500 Zeichen bleiben pixelfrei.
 
 `vgwort_audit.csv` im Repo-Root kann als Verzeichnis aller

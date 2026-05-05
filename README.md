@@ -3,7 +3,7 @@
 Comprehensive, runnable tutorials in statistics and bioinformatics, with
 R code throughout.
 
-**Live site:** <https://r-heller.github.io/tutorials/>
+**Live site:** <https://cttir.github.io/tutorials/>
 
 ## Site structure
 

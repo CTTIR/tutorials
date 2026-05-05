@@ -2,6 +2,7 @@
 title: "#tutorials"
 description: "Comprehensive tutorials in statistics and bioinformatics with R"
 toc: false
+title-block-style: none
 ---
 
 ::: {.hero}

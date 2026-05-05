@@ -3,6 +3,7 @@ title: "Overview"
 description: "Filter all 569 tutorials by label and explore the relational network of topics and tags."
 toc: false
 page-layout: full
+title-block-style: none
 ---
 
 ::: {.hero}
