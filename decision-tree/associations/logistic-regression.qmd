@@ -100,15 +100,3 @@ Exponentiated coefficients are odds ratios. For lactate, OR $\approx 2.4$ (95 % 
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 00326516423c4b749f7eecbf2b163e5a -->
-<img src="https://vg09.met.vgwort.de/na/00326516423c4b749f7eecbf2b163e5a"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

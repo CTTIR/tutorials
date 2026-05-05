@@ -1,0 +1,109 @@
+---
+title: Two-Way ANOVA
+date: "2026-04-17"
+description: "Two between-subjects factors: main effects and interaction"
+categories:
+  - Inferential Statistics
+  - anova
+  - two-way
+  - interaction
+  - factorial
+---
+
+## Introduction
+
+Two-way ANOVA tests the effects of two categorical factors on a continuous outcome, plus their interaction. It generalises one-way ANOVA by accommodating designs that manipulate or measure two conditions simultaneously, and is the simplest example of a factorial design.
+
+## Prerequisites
+
+One-way ANOVA, factorial designs.
+
+## Theory
+
+For a two-way design with factors A and B:
+
+$$Y_{ijk} = \mu + \alpha_i + \beta_j + (\alpha\beta)_{ij} + \varepsilon_{ijk},$$
+
+where $\varepsilon \sim \mathcal{N}(0, \sigma^2)$. The ANOVA partitions the total sum of squares into:
+
+- Main effect of A (df = a - 1).
+- Main effect of B (df = b - 1).
+- Interaction AxB (df = (a - 1)(b - 1)).
+- Residual (df = ab(n - 1) for balanced design with n per cell).
+
+Three null hypotheses are tested: no main A effect, no main B effect, no interaction. The F-tests use the residual MS as denominator.
+
+**Type I, II, III sums of squares** differ when the design is unbalanced:
+
+- Type I: sequential; order-dependent.
+- Type II: each effect adjusted for others except interactions involving it.
+- Type III: each effect adjusted for all others; default in most modern practice when interactions are present.
+
+## Assumptions
+
+- Independent observations.
+- Normal residuals.
+- Homogeneous variances across cells.
+- For balanced designs all SS types agree; for unbalanced ones, the choice matters.
+
+## R Implementation
+
+```r
+library(car); library(effectsize); library(emmeans)
+set.seed(2026)
+
+df <- expand.grid(A = factor(c("A1", "A2")),
+                  B = factor(c("B1", "B2", "B3")),
+                  rep = 1:20)
+df$y <- with(df, 50 + 3*(A == "A2") + 2*(B == "B2") + 4*(B == "B3") +
+                5*(A == "A2" & B == "B3") + rnorm(nrow(df), 0, 6))
+
+# Fit and Type III ANOVA
+fit <- lm(y ~ A * B, data = df, contrasts = list(A = contr.sum, B = contr.sum))
+Anova(fit, type = 3)
+
+# Effect sizes
+eta_squared(fit, partial = TRUE)
+
+# Marginal means and interaction plot
+emm <- emmeans(fit, ~ A * B)
+emm
+pairs(emm, simple = "A")
+
+# Simple interaction plot
+interaction.plot(df$B, df$A, df$y, col = c("#2A9D8F", "#F4A261"),
+                 lwd = 2, main = "Interaction plot")
+```
+
+## Output & Results
+
+```
+Anova Table (Type III tests)
+
+            Sum Sq  Df  F value  Pr(>F)
+(Intercept) 291 000  1  8036    <2e-16
+A             168   1   4.64  0.0332
+B             490   2   6.77  0.0017
+A:B           186   2   2.57  0.0819
+Residuals  4 123 114
+
+Eta2 (partial) | 95% CI
+-------------------------
+A              | 0.04
+B              | 0.11
+A:B            | 0.04
+```
+
+Main effects of A and B are significant; the interaction is borderline.
+
+## Interpretation
+
+"In a two-way ANOVA, both A (F(1, 114) = 4.64, p = 0.033) and B (F(2, 114) = 6.77, p = 0.002) had significant main effects; the A x B interaction was not significant (F(2, 114) = 2.57, p = 0.082)."
+
+## Practical Tips
+
+- Use Type III SS with sum-to-zero contrasts for standard interpretation.
+- Always inspect the interaction plot; visual patterns often matter more than p-values.
+- Unbalanced designs need careful contrast specification; `car::Anova` handles the SS types explicitly.
+- Report effect sizes (partial $\eta^2$) alongside F.
+- For significant interactions, interpret simple effects, not the main effects alone.

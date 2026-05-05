@@ -1,0 +1,64 @@
+---
+title: Multiple Linear Regression
+date: "2026-04-17"
+description: "Linear regression with two or more predictors: coefficient interpretation, partial effects, and collinearity"
+categories:
+  - "Regression & Modelling"
+  - multiple-regression
+  - ols
+  - collinearity
+  - partial-effect
+---
+
+## Introduction
+
+Multiple linear regression extends simple regression to include two or more predictors. Each coefficient represents the partial effect of its predictor, holding all others constant. This allows confounding adjustment, multi-factor prediction, and partial correlations.
+
+## Prerequisites
+
+Simple linear regression.
+
+## Theory
+
+Model: $Y = \beta_0 + \beta_1 X_1 + \ldots + \beta_p X_p + \varepsilon$, with $\varepsilon \sim \mathcal{N}(0, \sigma^2)$.
+
+OLS estimates: $\hat{\boldsymbol{\beta}} = (X^\top X)^{-1} X^\top Y$. Each coefficient is the **partial slope**: change in $E[Y]$ per unit of $X_j$, holding other predictors fixed.
+
+**Collinearity**: highly correlated predictors inflate SE of individual coefficients. Diagnose with variance inflation factors (VIF): $\mathrm{VIF}_j = 1 / (1 - R^2_j)$, where $R^2_j$ is the $R^2$ of regressing $X_j$ on the others. VIF > 5 is concerning; > 10 is severe.
+
+$R^2$ is the proportion of variance explained; adjusted $R^2$ penalises model complexity.
+
+## Assumptions
+
+Linearity of each predictor, independence, homoscedasticity, normality of residuals, no severe collinearity.
+
+## R Implementation
+
+```r
+library(broom); library(car); library(performance)
+
+data(mtcars)
+fit <- lm(mpg ~ wt + hp + cyl + disp, data = mtcars)
+
+tidy(fit, conf.int = TRUE)
+glance(fit)
+vif(fit)
+
+check_model(fit)
+```
+
+## Output & Results
+
+Coefficients with SE, t-statistic, p-values, 95 % CIs. $R^2$, adjusted $R^2$, residual SE. VIF values per predictor.
+
+## Interpretation
+
+"After adjusting for horsepower, cylinders, and displacement, each additional 1000 lbs of weight reduced mpg by 3.8 (95 % CI -6.8 to -0.7). The model explained 84 % of the variance in mpg ($R^2 = 0.84$)."
+
+## Practical Tips
+
+- Centre continuous predictors for interpretable intercepts.
+- For highly collinear predictors, drop one, combine them, or use ridge regression.
+- Always check residual plots before trusting p-values.
+- Report both raw coefficients and standardised ones when comparing effect magnitudes across predictors on different scales.
+- For prediction accuracy, cross-validate -- in-sample $R^2$ is optimistic.

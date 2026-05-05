@@ -1,0 +1,67 @@
+---
+title: Metric Multidimensional Scaling
+date: "2026-04-17"
+description: Representing a distance matrix in low-dimensional Euclidean coordinates
+categories:
+  - Multivariate Statistics
+  - mds
+  - classical-mds
+  - pcoa
+---
+
+## Introduction
+
+Metric multidimensional scaling — also known as classical MDS or principal coordinates analysis (PCoA) — takes a pairwise distance matrix and produces a low-dimensional Euclidean configuration whose pairwise distances approximate the input as closely as possible. It is the workhorse for visualising similarity or distance data when raw coordinates are unavailable: think reconstructing a map from inter-city distances, projecting microbial-community Bray-Curtis dissimilarities, or visualising a kernel-derived similarity matrix in a 2D plot.
+
+## Prerequisites
+
+A working understanding of distance and similarity matrices, principal components analysis, and basic linear algebra (eigendecomposition).
+
+## Theory
+
+Given an $n \times n$ distance matrix $D$, form the doubly-centred inner-product matrix
+
+$$B = -\tfrac{1}{2}\bigl(I - J/n\bigr) D^{(2)} \bigl(I - J/n\bigr),$$
+
+where $D^{(2)}$ has elements $d_{ij}^2$ and $J$ is the all-ones matrix. Eigendecompose $B = U \Lambda U^\top$. The top $k$ eigenvectors scaled by $\sqrt{\lambda}$ give a $k$-dimensional configuration whose Euclidean inter-point distances approximate the original distances. When $D$ comes from Euclidean distances on raw data, classical MDS is equivalent to PCA on the centred data — the eigenvalues match the squared singular values of the centred data matrix.
+
+For non-Euclidean distances, $B$ may have negative eigenvalues; the configuration still uses only the top positive eigenvalues, with the discarded negative mass quantifying the embedding error.
+
+## Assumptions
+
+A pairwise distance matrix that is at least approximately Euclidean-embeddable. Severe violations (negative eigenvalues dominating) suggest non-metric MDS as a more appropriate alternative.
+
+## R Implementation
+
+```r
+# Classical MDS on US city distances
+data(UScitiesD)
+mds <- cmdscale(UScitiesD, k = 2, eig = TRUE)
+plot(mds$points, type = "n")
+text(mds$points, labels = labels(UScitiesD))
+
+# Eigenvalues and variance explained
+mds$eig[1:5]
+cumsum(mds$eig[1:5] / sum(mds$eig[1:5]))
+```
+
+## Output & Results
+
+`cmdscale()` returns the low-dimensional configuration (`$points`), eigenvalues, and an indicator of how well the chosen $k$ approximates the original distances. The plot of US-city MDS coordinates recovers the recognisable geographical structure with a near-perfect rotation and reflection of the actual map.
+
+## Interpretation
+
+A reporting sentence: "Classical MDS on the 10 inter-city distances produced a two-dimensional configuration that captured 99 % of the eigen-mass; the resulting layout matches actual geography after a reflection, with east-west and north-south structure immediately visible." Always report the proportion of eigen-mass retained in the displayed dimensions; a poor approximation signals that more dimensions or non-metric MDS would help.
+
+## Practical Tips
+
+- For Euclidean distances, classical MDS is equivalent to PCA on the centred data; if you have raw data, run PCA directly for cleaner output.
+- For non-Euclidean distances (Bray-Curtis, Jaccard, network distances), check the eigenvalue structure — large negative eigenvalues indicate a non-Euclidean metric and motivate non-metric MDS instead.
+- In ecology and microbiome research, this method is called principal coordinates analysis (PCoA); the algorithm is identical.
+- Add Procrustes analysis (`vegan::procrustes`) when comparing MDS solutions across related datasets; it aligns configurations up to rotation, reflection, and scaling.
+- For configurations beyond two dimensions, plot pairs of axes; `factoextra::fviz_mds()` provides a ggplot-style alternative.
+- Pair the configuration with a stress measure or the proportion of variance retained to communicate fit quality alongside the visual.
+
+## R Packages Used
+
+Base R `cmdscale()` for classical MDS; `vegan::wcmdscale()` for weighted classical MDS in ecology; `MASS::isoMDS()` and `vegan::metaMDS()` for non-metric alternatives; `factoextra::fviz_mds()` for ggplot-style visualisation; `smacof` for advanced MDS variants including weighted and constrained versions.

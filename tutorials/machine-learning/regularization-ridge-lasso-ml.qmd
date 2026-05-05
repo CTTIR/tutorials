@@ -1,0 +1,72 @@
+---
+title: Regularisation in ML
+date: "2026-04-17"
+description: "L2 ridge, L1 lasso, and elastic net for controlling model complexity"
+categories:
+  - Machine Learning
+  - regularisation
+  - ridge
+  - lasso
+  - elastic-net
+---
+
+## Introduction
+
+Regularisation adds a complexity penalty to the training loss, preventing overfitting by shrinking coefficients. Ridge (L2) shrinks all coefficients toward zero; lasso (L1) also performs variable selection; elastic net combines both. All three are standard tools across regression and classification.
+
+## Prerequisites
+
+Linear / logistic regression; convex optimisation.
+
+## Theory
+
+**Objective**: $\min_\beta \sum_i L(y_i, x_i^\top \beta) + \lambda \cdot P(\beta)$, with
+- $P(\beta) = \|\beta\|^2$ (ridge, L2)
+- $P(\beta) = \|\beta\|_1$ (lasso, L1)
+- $P(\beta) = \alpha \|\beta\|_1 + (1 - \alpha) \|\beta\|^2 / 2$ (elastic net)
+
+Lasso produces sparse solutions (many $\hat{\beta}_j = 0$); ridge shrinks but rarely zeros; elastic net balances sparsity with the grouping effect for correlated features.
+
+## Assumptions
+
+Features are standardised so the penalty is comparable across predictors; $\lambda$ is tuned by CV.
+
+## R Implementation
+
+```r
+library(glmnet)
+
+set.seed(2026)
+n <- 300; p <- 50
+X <- matrix(rnorm(n * p), n, p)
+beta <- c(rep(2, 5), rep(0, 45))
+y <- X %*% beta + rnorm(n)
+
+cv_ridge <- cv.glmnet(X, y, alpha = 0,   nfolds = 10)   # L2
+cv_lasso <- cv.glmnet(X, y, alpha = 1,   nfolds = 10)   # L1
+cv_enet  <- cv.glmnet(X, y, alpha = 0.5, nfolds = 10)
+
+nz <- function(fit) sum(as.vector(coef(fit, s = "lambda.min")) != 0) - 1
+cat("nonzero: ridge=", nz(cv_ridge),
+    "  lasso=", nz(cv_lasso),
+    "  elastic=", nz(cv_enet), "\n")
+c(ridge = cv_ridge$cvm[cv_ridge$lambda == cv_ridge$lambda.min],
+  lasso = cv_lasso$cvm[cv_lasso$lambda == cv_lasso$lambda.min],
+  enet  = cv_enet $cvm[cv_enet $lambda == cv_enet $lambda.min])
+```
+
+## Output & Results
+
+Non-zero counts: ridge retains all 50, lasso selects ~5, elastic net selects ~7. Elastic net combines sparsity (lasso-like) with stability (ridge-like) for correlated features.
+
+## Interpretation
+
+"Lasso with CV-selected $\lambda$ retained the 5 true non-zero features and zero-ed out 45 irrelevant ones; elastic net gave similar sparsity but handled correlated predictors more gracefully."
+
+## Practical Tips
+
+- Always standardise features (`glmnet` does this internally); otherwise the penalty is scale-dependent.
+- Use `lambda.1se` for a sparser, more parsimonious model within one SE of the CV minimum.
+- Lasso picks one from correlated-feature groups arbitrarily; elastic net picks all -- often more stable.
+- For classification, extend via `family = "binomial"`; same rules apply.
+- Gradient-boosting frameworks expose L1/L2 regularisation on leaf weights; not identical to glmnet's lasso/ridge but same motivation.

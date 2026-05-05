@@ -24,6 +24,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -287,67 +322,67 @@ ul.task-list li input[type="checkbox"] {
   </li>  
         <li><hr class="dropdown-divider"></li>
         <li>
-    <a class="dropdown-item" href="./tutorials/statistical-foundations/index.qmd">
+    <a class="dropdown-item" href="./tutorials/statistical-foundations/index.html">
  <span class="dropdown-text">Statistical Foundations</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/descriptive-statistics/index.qmd">
+    <a class="dropdown-item" href="./tutorials/descriptive-statistics/index.html">
  <span class="dropdown-text">Descriptive Statistics</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/probability/index.qmd">
+    <a class="dropdown-item" href="./tutorials/probability/index.html">
  <span class="dropdown-text">Probability Theory</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/inference/index.qmd">
+    <a class="dropdown-item" href="./tutorials/inference/index.html">
  <span class="dropdown-text">Inferential Statistics</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/sample-size/index.qmd">
+    <a class="dropdown-item" href="./tutorials/sample-size/index.html">
  <span class="dropdown-text">Sample Size &amp; Power</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/visualisation/index.qmd">
+    <a class="dropdown-item" href="./tutorials/visualisation/index.html">
  <span class="dropdown-text">Data Visualisation</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/regression-modelling/index.qmd">
+    <a class="dropdown-item" href="./tutorials/regression-modelling/index.html">
  <span class="dropdown-text">Regression &amp; Modelling</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/multivariate/index.qmd">
+    <a class="dropdown-item" href="./tutorials/multivariate/index.html">
  <span class="dropdown-text">Multivariate Methods</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/time-series/index.qmd">
+    <a class="dropdown-item" href="./tutorials/time-series/index.html">
  <span class="dropdown-text">Time-Series Analysis</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/bayesian/index.qmd">
+    <a class="dropdown-item" href="./tutorials/bayesian/index.html">
  <span class="dropdown-text">Bayesian Statistics</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/survival-analysis/index.qmd">
+    <a class="dropdown-item" href="./tutorials/survival-analysis/index.html">
  <span class="dropdown-text">Survival Analysis</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/bioinformatics/index.qmd">
+    <a class="dropdown-item" href="./tutorials/bioinformatics/index.html">
  <span class="dropdown-text">Bioinformatics</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/machine-learning/index.qmd">
+    <a class="dropdown-item" href="./tutorials/machine-learning/index.html">
  <span class="dropdown-text">Machine Learning</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/clinical-biostatistics/index.qmd">
+    <a class="dropdown-item" href="./tutorials/clinical-biostatistics/index.html">
  <span class="dropdown-text">Clinical Biostatistics</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/meta-analysis/index.qmd">
+    <a class="dropdown-item" href="./tutorials/meta-analysis/index.html">
  <span class="dropdown-text">Meta-Analysis</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/experimental-design/index.qmd">
+    <a class="dropdown-item" href="./tutorials/experimental-design/index.html">
  <span class="dropdown-text">Experimental Design</span></a>
   </li>  
     </ul>
@@ -415,6 +450,14 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#technical-requirements" id="toc-technical-requirements" class="nav-link" data-scroll-target="#technical-requirements">Technical Requirements</a></li>
   <li><a href="#author" id="toc-author" class="nav-link" data-scroll-target="#author">Author</a></li>
   </ul></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a>
+  <ul class="collapse">
+  <li><a href="#books" id="toc-books" class="nav-link" data-scroll-target="#books">Books</a></li>
+  <li><a href="#articles" id="toc-articles" class="nav-link" data-scroll-target="#articles">Articles</a></li>
+  <li><a href="#software" id="toc-software" class="nav-link" data-scroll-target="#software">Software</a></li>
+  </ul></li>
+  <li><a href="#acknowledgements" id="toc-acknowledgements" class="nav-link" data-scroll-target="#acknowledgements">Acknowledgements</a></li>
+  <li><a href="#citation" id="toc-citation" class="nav-link" data-scroll-target="#citation">Citation</a></li>
   </ul>
 </nav>
     </div>
@@ -493,13 +536,81 @@ ul.task-list li input[type="checkbox"] {
 <section id="author" class="level3">
 <h3 class="anchored" data-anchor-id="author">Author</h3>
 <p>These tutorials are maintained by <strong>R. Heller</strong>. For more information, visit the <a href="https://r-heller.github.io/website/">main website</a>.</p>
-<div class="vgwort-pixel">
-<!-- VG Wort Zählmarke — public ID: 0015a195ffc14c80a3fcdf264e8c509f -->
-<img src="https://vg09.met.vgwort.de/na/0015a195ffc14c80a3fcdf264e8c509f" width="1" height="1" alt="" loading="eager" fetchpriority="high" decoding="async" style="position:absolute;visibility:hidden;">
-</div>
-
-
 </section>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<p>The following sources informed the methodological choices, worked examples, and recommendations across the tutorial collection. Full BibTeX entries are available in <a href="https://github.com/CTTIR/tutorials/blob/main/references.bib"><code>references.bib</code></a>.</p>
+<section id="books" class="level3">
+<h3 class="anchored" data-anchor-id="books">Books</h3>
+<ul>
+<li>Agresti, A. (2010). <em>Analysis of Ordinal Categorical Data</em> (2nd ed.). Wiley.</li>
+<li>Agresti, A. (2013). <em>Categorical Data Analysis</em> (3rd ed.). Wiley.</li>
+<li>Cohen, J. (1988). <em>Statistical Power Analysis for the Behavioral Sciences</em> (2nd ed.). Lawrence Erlbaum.</li>
+<li>Faraway, J. J. (2015). <em>Linear Models with R</em> (2nd ed.). Chapman and Hall/CRC.</li>
+<li>Field, A. (2018). <em>Discovering Statistics Using IBM SPSS Statistics</em> (5th ed.). SAGE.</li>
+<li>Fox, J., &amp; Weisberg, S. (2019). <em>An R Companion to Applied Regression</em> (3rd ed.). SAGE.</li>
+<li>Harrell, F. E. (2015). <em>Regression Modeling Strategies</em> (2nd ed.). Springer.</li>
+<li>Hollander, M., Wolfe, D. A., &amp; Chicken, E. (2014). <em>Nonparametric Statistical Methods</em> (3rd ed.). Wiley.</li>
+<li>Hosmer, D. W., Lemeshow, S., &amp; Sturdivant, R. X. (2013). <em>Applied Logistic Regression</em> (3rd ed.). Wiley.</li>
+<li>Kaufman, L., &amp; Rousseeuw, P. J. (2009). <em>Finding Groups in Data: An Introduction to Cluster Analysis</em>. Wiley.</li>
+<li>Maxwell, S. E., Delaney, H. D., &amp; Kelley, K. (2017). <em>Designing Experiments and Analyzing Data</em> (3rd ed.). Routledge.</li>
+<li>Rousseeuw, P. J., &amp; Leroy, A. M. (2005). <em>Robust Regression and Outlier Detection</em>. Wiley.</li>
+</ul>
+</section>
+<section id="articles" class="level3">
+<h3 class="anchored" data-anchor-id="articles">Articles</h3>
+<ul>
+<li>Agresti, A., &amp; Coull, B. A. (1998). Approximate is better than “exact” for interval estimation of binomial proportions. <em>The American Statistician</em>, 52(2), 119–126.</li>
+<li>Bakeman, R. (2005). Recommended effect size statistics for repeated measures designs. <em>Behavior Research Methods</em>, 37(3), 379–384.</li>
+<li>Bishara, A. J., &amp; Hittner, J. B. (2012). Testing the significance of a correlation with nonnormal data. <em>Psychological Methods</em>, 17(3), 399–417.</li>
+<li>Conover, W. J., Johnson, M. E., &amp; Johnson, M. M. (1981). A comparative study of tests for homogeneity of variances. <em>Technometrics</em>, 23(4), 351–361.</li>
+<li>Delacre, M., Lakens, D., &amp; Leys, C. (2017). Why psychologists should by default use Welch’s t-test. <em>International Review of Social Psychology</em>, 30(1), 92–101.</li>
+<li>Dinno, A. (2015). Nonparametric pairwise multiple comparisons in independent groups using Dunn’s test. <em>The Stata Journal</em>, 15(1), 292–300.</li>
+<li>Divine, G., Norton, H. J., Hunt, R., &amp; Dienemann, J. (2013). A review of analysis and sample size calculation considerations for Wilcoxon tests. <em>Anesthesia and Analgesia</em>, 117(3), 699–710.</li>
+<li>Fabrigar, L. R., Wegener, D. T., MacCallum, R. C., &amp; Strahan, E. J. (1999). Evaluating the use of exploratory factor analysis in psychological research. <em>Psychological Methods</em>, 4(3), 272–299.</li>
+<li>Ghasemi, A., &amp; Zahediasl, S. (2012). Normality tests for statistical analysis: A guide for non-statisticians. <em>International Journal of Endocrinology and Metabolism</em>, 10(2), 486–489.</li>
+<li>Gueorguieva, R., &amp; Krystal, J. H. (2004). Move over ANOVA: Progress in analyzing repeated-measures data. <em>Archives of General Psychiatry</em>, 61(3), 310–317.</li>
+<li>Kendall, M. G. (1938). A new measure of rank correlation. <em>Biometrika</em>, 30(1–2), 81–93.</li>
+<li>Kerby, D. S. (2014). The simple difference formula: An approach to teaching nonparametric correlation. <em>Comprehensive Psychology</em>, 3.</li>
+<li>Newson, R. (2002). Parameters behind “nonparametric” statistics. <em>The Stata Journal</em>, 2(1), 45–64.</li>
+<li>Sharpe, D. (2015). Chi-square test is statistically significant: Now what? <em>Practical Assessment, Research and Evaluation</em>, 20(8).</li>
+</ul>
+</section>
+<section id="software" class="level3">
+<h3 class="anchored" data-anchor-id="software">Software</h3>
+<ul>
+<li>Kassambara, A. (2023). <em>rstatix: Pipe-friendly framework for basic statistical tests</em>.</li>
+<li>Patil, I. (2021). Visualizations with statistical details: The ggstatsplot approach. <em>Journal of Open Source Software</em>, 6(61), 3167.</li>
+<li>Rosseel, Y. (2012). lavaan: An R package for structural equation modeling. <em>Journal of Statistical Software</em>, 48(2), 1–36.</li>
+<li>Sjoberg, D. D., Whiting, K., Curry, M., Lavery, J. A., &amp; Larmarange, J. (2021). Reproducible summary tables with the gtsummary package. <em>The R Journal</em>, 13(1), 570–580.</li>
+<li>Wickham, H., et al.&nbsp;(2019). Welcome to the tidyverse. <em>Journal of Open Source Software</em>, 4(43), 1686.</li>
+</ul>
+</section>
+</section>
+<section id="acknowledgements" class="level2">
+<h2 class="anchored" data-anchor-id="acknowledgements">Acknowledgements</h2>
+<p>This tutorial collection builds on the work of the wider R, Quarto, and statistical-computing communities. Particular thanks to:</p>
+<ul>
+<li>The <strong>R Core Team</strong> and <strong>CRAN</strong> maintainers for the language and package ecosystem that underpins every example.</li>
+<li>The <strong>Posit / Quarto</strong> team for the publishing system used to render this site.</li>
+<li>The authors of the <strong>tidyverse</strong>, <strong>rstatix</strong>, <strong>ggstatsplot</strong>, <strong>lavaan</strong>, <strong>gtsummary</strong>, and the many Bioconductor packages cited in individual tutorials.</li>
+<li>The textbook authors listed above, whose pedagogy shaped how methods are introduced and compared here.</li>
+<li>Readers and contributors who reported issues, suggested corrections, and proposed new topics through the project’s GitHub repository.</li>
+</ul>
+</section>
+<section id="citation" class="level2">
+<h2 class="anchored" data-anchor-id="citation">Citation</h2>
+<p>If you use this tutorial collection in teaching, research, or other written work, please cite it as:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bibtex code-with-copy"><code class="sourceCode bibtex"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="va">@misc</span>{<span class="ot">heller2026tutorials</span>,</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">author</span>       = {Heller, R.},</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">title</span>        = {{<span class="ch">\#</span>}tutorials: Comprehensive Tutorials in Statistics and Bioinformatics with {R}},</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">year</span>         = {2026},</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">howpublished</span> = {<span class="ch">\url</span>{https://cttir.github.io/tutorials/}},</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">note</span>         = {CTTIR project}</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+
+
 </section>
 
 </main> <!-- /main -->

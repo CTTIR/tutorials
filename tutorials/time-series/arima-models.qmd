@@ -1,0 +1,88 @@
+---
+title: ARIMA Models
+date: "2026-04-17"
+description: Autoregressive integrated moving average models for forecasting stationary and trending time series
+categories:
+  - Time Series Analysis
+  - arima
+  - sarima
+  - forecasting
+  - stationarity
+  - time-series
+---
+
+## Introduction
+
+ARIMA models are the classical workhorse of time-series forecasting. They combine three ideas: autoregression (the current value depends on lagged values), differencing (the current value depends on changes rather than levels), and moving averages of the errors. An ARIMA model is specified by three integers $(p, d, q)$: the order of autoregression, the order of differencing, and the order of moving averages. With a seasonal extension (SARIMA), the same model captures weekly, monthly, or annual cycles.
+
+## Prerequisites
+
+The reader should understand the concepts of a stationary time series, autocorrelation, and white noise, and should have seen an ACF/PACF plot before.
+
+## Theory
+
+An ARMA$(p, q)$ model for a stationary series $Y_t$ is
+
+$$Y_t = c + \phi_1 Y_{t-1} + \ldots + \phi_p Y_{t-p} + \varepsilon_t + \theta_1 \varepsilon_{t-1} + \ldots + \theta_q \varepsilon_{t-q},$$
+
+where $\varepsilon_t$ is white noise. When the series is non-stationary, differencing is applied: $\Delta Y_t = Y_t - Y_{t-1}$, or more generally $\Delta^d Y_t$. An ARIMA$(p, d, q)$ model is an ARMA$(p, q)$ model fit to the $d$-th-order differenced series.
+
+For seasonal data with period $s$, SARIMA$(p, d, q)(P, D, Q)_s$ adds seasonal autoregressive, differencing, and moving-average terms at lag $s$. A monthly retail sales series might be well described by a SARIMA$(1, 1, 1)(0, 1, 1)_{12}$.
+
+Model identification traditionally follows the Box-Jenkins methodology:
+
+1. Check stationarity; difference until stationary.
+2. Inspect the ACF and PACF of the differenced series; the decay patterns suggest $p$ and $q$.
+3. Fit candidate models and choose by AIC/BIC.
+4. Diagnose residuals: they should be white noise.
+
+In practice, `auto.arima()` automates steps 1-3 and reliably finds a good model.
+
+## Assumptions
+
+ARIMA models assume:
+
+1. The differenced series is stationary (constant mean, constant variance, autocorrelation depending only on lag).
+2. Errors are uncorrelated and have constant variance (homoscedastic).
+3. Errors are approximately normally distributed (for prediction-interval validity).
+
+Violations of normality affect interval coverage but not point forecasts; violations of stationarity invalidate the whole model.
+
+## R Implementation
+
+The `forecast` package provides the classical interface; the newer `fable` package integrates with the tidyverse.
+
+```r
+library(forecast)
+
+data(AirPassengers)
+plot(AirPassengers)
+
+fit <- auto.arima(AirPassengers)
+summary(fit)
+
+checkresiduals(fit)
+
+fc <- forecast(fit, h = 24)
+autoplot(fc) +
+  labs(x = "Year", y = "Air passengers (thousands)",
+       title = "24-month ahead forecast with 80/95% PIs")
+```
+
+`auto.arima()` searches over a range of $(p, d, q)(P, D, Q)_{12}$ specifications and returns the best by corrected AIC. `checkresiduals()` plots the residual time series, ACF, histogram, and runs a Ljung-Box test for remaining autocorrelation.
+
+## Output & Results
+
+For the `AirPassengers` series, `auto.arima()` selects an ARIMA$(0, 1, 1)(0, 1, 1)_{12}$ model on the log scale (with automatic Box-Cox transformation). The Ljung-Box test on residuals gives $p \approx 0.5$, indicating no remaining autocorrelation. The forecast plot shows point predictions with 80% and 95% prediction intervals that fan out over the 24-month horizon.
+
+## Interpretation
+
+The model says that after seasonal and regular differencing on the log scale, the series is well described by a simple MA(1) structure in both the regular and seasonal dimensions. The growing width of the prediction intervals reflects accumulating uncertainty -- a feature, not a bug, of any honest forecast.
+
+## Practical Tips
+
+- Always inspect the series visually before and after differencing; automated tools can miss obvious issues like level shifts or outlier clusters.
+- Use information criteria (AICc preferred for small samples) for model comparison, not p-values.
+- Validate forecasts on a held-out tail of the series (train/test split in time), not by in-sample fit.
+- If the series shows clear seasonality, try both SARIMA and ETS (`ets()`) and let cross-validated accuracy choose.
+- For very long series with complex seasonality, consider `prophet`, `fable::fable`, or structural time-series models instead of ARIMA.

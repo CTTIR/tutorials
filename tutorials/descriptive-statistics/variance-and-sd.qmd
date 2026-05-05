@@ -1,0 +1,79 @@
+---
+title: Variance and Standard Deviation
+date: "2026-04-17"
+description: "Squared and unsquared dispersion, the n vs n-1 divisor, and why the sample SD is biased"
+categories:
+  - Descriptive Statistics
+  - variance
+  - sd
+  - bessel-correction
+  - bias
+---
+
+## Introduction
+
+Variance and standard deviation are the most widely used dispersion measures in applied statistics. The variance is the mean squared deviation from the mean; the SD is its square root, returning to the original units. Both underlie the normal distribution, the central limit theorem, regression, and every parametric test that refers to "sigma".
+
+## Prerequisites
+
+The reader should know the mean and be comfortable squaring, summing, and taking square roots in R.
+
+## Theory
+
+For a sample $x_1, \ldots, x_n$:
+
+- **Population variance** (when the data *are* the whole population): $\sigma^2 = \frac{1}{n} \sum (x_i - \mu)^2$.
+- **Sample variance** (when the data are a sample): $s^2 = \frac{1}{n-1} \sum (x_i - \bar{x})^2$.
+
+The $n - 1$ divisor (Bessel's correction) makes $s^2$ an unbiased estimator of $\sigma^2$. Using $n$ would systematically underestimate $\sigma^2$ because $\bar{x}$ is itself estimated from the same data.
+
+The sample **standard deviation** is $s = \sqrt{s^2}$. Even though $s^2$ is unbiased, $s$ is biased downward because the square root is concave (Jensen's inequality). The bias shrinks like $1/n$ and is negligible for $n > 30$; an unbiased estimator exists (`c_4` correction in SPC) but is rarely used in applied work.
+
+R's `var()` and `sd()` use the $n - 1$ divisor by default. To get the MLE version, compute `mean((x - mean(x))^2)`.
+
+## Assumptions
+
+Variance and SD are descriptive; no distributional assumption is required. For inferential use (the standard error of the mean is $s / \sqrt{n}$), the usual iid assumption applies.
+
+## R Implementation
+
+```r
+set.seed(2026)
+x <- rnorm(60, mean = 100, sd = 15)
+
+var(x)
+sd(x)
+
+# MLE (biased) version with divisor n
+mean((x - mean(x))^2)
+sqrt(mean((x - mean(x))^2))
+
+# Bias of s: theoretical factor c_4(n) for normal data
+c4 <- function(n) sqrt(2 / (n - 1)) * gamma(n / 2) / gamma((n - 1) / 2)
+sd_unbiased <- sd(x) / c4(length(x))
+sd_unbiased
+```
+
+## Output & Results
+
+```
+[1] 210.5       # s^2 with divisor n-1
+[1]  14.5       # s
+[1] 207.0       # MLE variance
+[1]  14.4       # MLE SD (biased)
+[1]  14.6       # bias-corrected SD
+```
+
+At $n = 60$, the difference between biased and unbiased SD is a fraction of a percent, irrelevant for applied work.
+
+## Interpretation
+
+Report variance when the scale of the squared units is interpretable (e.g., variance of portfolio returns). Report SD when the scale of the original units is desired. In a paper: "mean 100.2 (SD 14.5)" is universally readable.
+
+## Practical Tips
+
+- Always specify which divisor you mean when reporting; R's default is $n - 1$, which is the statistician's convention.
+- For very small samples, the biased-vs-unbiased distinction matters; for most applied work (n > 30) it does not.
+- The SD is in the same units as the data; the variance is in units squared. Don't mix them in a single report.
+- When a variance is reported without an associated mean, check whether it is actually a standard error (which is smaller by $\sqrt{n}$).
+- For skewed data, the SD is not a useful summary; use the IQR instead.

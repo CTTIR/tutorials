@@ -1,0 +1,321 @@
+---
+title: Clinical Biostatistics
+description: "Statistical methods for clinical research: trial design, diagnostic accuracy, agreement studies, and the specifics of regulatory analysis"
+---
+
+Clinical biostatistics applies statistical theory to the questions that matter in medicine: does a treatment work, does a test diagnose correctly, do two raters agree, and does an effect generalise. The methods overlap heavily with general statistics but are applied under constraints -- ethics, regulation, small effective sample sizes, interim monitoring -- that reshape how each analysis is designed and reported.
+
+This area covers the core topics a biostatistician supporting clinical trials or diagnostic studies is expected to know, with emphasis on the reporting standards (CONSORT, STARD, TRIPOD, STROBE) that guide manuscript preparation.
+
+## Coverage
+
+- Randomised controlled trial designs: parallel-group, crossover, cluster, stepped wedge
+- Randomisation methods: simple, block, stratified, minimisation
+- Intention-to-treat, per-protocol, and modified ITT analyses
+- Interim analyses and group sequential designs (O'Brien-Fleming, Pocock, alpha spending)
+- Adaptive designs: sample-size re-estimation, response-adaptive randomisation, Bayesian adaptive
+- Non-inferiority and equivalence trials: margin selection, TOST, assay sensitivity
+- Diagnostic test accuracy: sensitivity, specificity, PPV, NPV, likelihood ratios
+- ROC analysis, AUC, and comparison of curves (DeLong test)
+- Agreement studies: Cohen's kappa, weighted kappa, Fleiss' kappa, Krippendorff's alpha
+- Intraclass correlation coefficient for continuous ratings; Bland-Altman limits of agreement
+- Sample size for diagnostic accuracy, agreement, and survival endpoints
+- Reporting checklists and figures: CONSORT flow diagrams, STARD checklists
+
+Packages: `pROC`, `DTComPair`, `cutpointr`, `irr`, `blandr`, `gsDesign`, `rpact`, `gtsummary`.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Adaptive Trial Designs](adaptive-design.qmd)
+Pre-specified modifications to trial conduct based on interim data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Alpha-Spending Functions](alpha-spending.qmd)
+Flexible interim alpha allocation via Lan-DeMets spending functions
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Baseline Adjustment with ANCOVA](baseline-adjustment-ancova.qmd)
+Adjusting for baseline covariates to improve precision and address regression to the mean
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bland-Altman Limits of Agreement](bland-altman-analysis.qmd)
+Graphical comparison of two measurement methods on the same subjects
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Blinding Procedures](blinding-procedures.qmd)
+Masking participants, investigators, assessors, and analysts
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Block Randomisation](block-randomization.qmd)
+Random permutations within fixed blocks for balanced allocation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Clinical Equivalence Trials](equivalence-clinical.qmd)
+Two one-sided tests (TOST) for bioequivalence and clinical equivalence
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Cluster-Randomised Trials](cluster-rct.qmd)
+Randomisation of clusters (clinics, schools) rather than individuals
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Cohen's Kappa](cohens-kappa.qmd)
+Chance-corrected agreement between two raters on categorical data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Conditional Power](conditional-power.qmd)
+Probability of eventual trial success given interim data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Crossover RCT Design](rct-design-crossover.qmd)
+Within-subject comparison across treatment periods with washout
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Cutpoint Selection](cutpoint-selection.qmd)
+Youden's J, cost-based, and closest-to-(0,1) criteria for diagnostic thresholds
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Diagnostic Test Accuracy](diagnostic-accuracy.qmd)
+Sensitivity, specificity, predictive values, likelihood ratios, and ROC analysis for binary diagnostic tests
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Factorial Trials](factorial-trial.qmd)
+Simultaneously evaluating multiple interventions via a factorial design
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [ITT vs Per-Protocol Analysis](itt-vs-pp-analysis.qmd)
+Primary analyses under the intent-to-treat and per-protocol principles
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Interim Analyses and Group Sequential Designs](interim-analysis-group-sequential.qmd)
+Pre-planned interim looks with alpha-spending and early-stopping boundaries
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Intraclass Correlation Coefficient (ICC)](icc-continuous-agreement.qmd)
+Absolute agreement and consistency for continuous inter-rater reliability
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Likelihood Ratios](likelihood-ratios.qmd)
+LR+ and LR- as prevalence-independent summaries of diagnostic performance
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Minimisation Algorithm](minimization-algorithm.qmd)
+Covariate-adaptive allocation that prospectively minimises imbalance
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Missing Data in RCTs](missing-data-rct.qmd)
+MCAR, MAR, MNAR and their implications for primary analysis
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Multiple Imputation](multiple-imputation.qmd)
+Imputing multiple plausible values and combining via Rubin's rules
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Non-Inferiority Margin Selection](non-inferiority-margin.qmd)
+Defining the clinically acceptable maximum inferiority
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [O'Brien-Fleming Boundary](obrien-fleming-boundary.qmd)
+Conservative early stopping boundary in group-sequential trials
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Parallel-Group RCT Design](rct-design-parallel.qmd)
+The two-arm randomised controlled trial: structure, analysis, and reporting
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Pocock Boundary](pocock-boundary.qmd)
+Constant nominal alpha across interim analyses
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Predictive Values and Prevalence](predictive-values-prevalence.qmd)
+How disease prevalence determines PPV and NPV via Bayes' theorem
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [ROC Analysis](roc-analysis.qmd)
+Receiver Operating Characteristic curves and area under the curve
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Randomisation Methods](randomization-methods.qmd)
+Simple, block, and stratified randomisation for RCT allocation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Reliability and Cronbach's Alpha](reliability-cronbach-alpha.qmd)
+Internal consistency of multi-item scales
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Sample Size Re-Estimation](sample-size-reestimation.qmd)
+Updating trial sample size mid-study using blinded or unblinded nuisance parameter estimates
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Sensitivity Analyses in Clinical Trials](sensitivity-analysis-clinical.qmd)
+Exploring robustness of conclusions to assumptions about missing data and model choice
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Stepped-Wedge Trial](stepped-wedge-trial.qmd)
+Sequential rollout cluster design with all clusters eventually treated
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Stratified Randomisation](stratified-randomization.qmd)
+Separate randomisation lists within levels of baseline covariates
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Subgroup Analyses](subgroup-analysis.qmd)
+Pre-specified subgroup effects and treatment-by-subgroup interaction tests
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Subgroup Forest Plots](forest-plot-subgroup.qmd)
+Visual summary of subgroup-specific effects and interaction tests
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Weighted Kappa](weighted-kappa.qmd)
+Ordinal inter-rater agreement with linear or quadratic weights
+:::
+
+:::

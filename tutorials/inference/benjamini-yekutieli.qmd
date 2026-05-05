@@ -1,0 +1,90 @@
+---
+title: Benjamini-Yekutieli FDR
+date: "2026-04-17"
+description: Dependence-robust false discovery rate control at the cost of conservatism
+categories:
+  - Inferential Statistics
+  - by
+  - benjamini-yekutieli
+  - fdr
+  - dependence
+---
+
+## Introduction
+
+The Benjamini-Hochberg procedure controls FDR under independence or positive dependence. When p-values are arbitrarily dependent -- including negatively correlated -- BH's FDR guarantee can break. **Benjamini-Yekutieli (BY)** (2001) modifies BH by dividing by the harmonic number $c(m) = \sum_{i=1}^m 1/i$, giving FDR control under any dependence.
+
+## Prerequisites
+
+Benjamini-Hochberg FDR, multiple testing.
+
+## Theory
+
+Under arbitrary dependence, the BY procedure at level $q$:
+
+1. Sort p-values: $p_{(1)} \leq \ldots \leq p_{(m)}$.
+2. Find the largest $k$ such that $p_{(k)} \leq k q / (m \, c(m))$ where $c(m) = \sum_{i=1}^m 1/i \approx \log m + 0.577$.
+3. Reject all hypotheses with $p_{(i)} \leq p_{(k)}$.
+
+The adjusted p-value is $\min(1, \min_{i \geq j} m c(m) p_{(i)} / i)$.
+
+BY is more conservative than BH by roughly a factor of $\log m$: for $m = 1000$, $c(m) \approx 7.5$, so BY's threshold is about 7.5 times tighter.
+
+In practice, BY is used mainly when:
+
+- The p-values come from tests whose joint distribution is complex and cannot be shown to satisfy PRDS.
+- The cost of a false discovery is high and independence cannot be asserted.
+
+## Assumptions
+
+No dependence assumption -- the procedure's FDR guarantee holds universally. The cost is reduced power.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+# Simulate 500 p-values with true signals
+n_tests <- 500
+true_signal <- rep(FALSE, n_tests)
+true_signal[1:50] <- TRUE
+
+p_vals <- ifelse(true_signal,
+                 pmin(runif(n_tests) * 0.02, 0.05),
+                 runif(n_tests))
+
+adj_bh <- p.adjust(p_vals, method = "BH")
+adj_by <- p.adjust(p_vals, method = "BY")
+
+q <- 0.05
+c(BH_rejections = sum(adj_bh < q),
+  BY_rejections = sum(adj_by < q))
+
+# BY adjustment explicitly
+m  <- length(p_vals)
+cm <- sum(1 / seq_len(m))
+manual_adj <- rev(cummin(rev(sort(p_vals) * m * cm / seq_len(m))))
+head(manual_adj)
+head(sort(adj_by))
+```
+
+## Output & Results
+
+```
+BH_rejections  BY_rejections
+          47             24
+```
+
+BH identifies 47 signals at FDR 0.05; BY identifies only 24 at the same target. The additional conservatism of BY is visible as roughly halved power for this example.
+
+## Interpretation
+
+Reporting: "Multiple testing was controlled at $q < 0.05$ using the Benjamini-Yekutieli procedure, which preserves FDR control under arbitrary dependence across tests."
+
+## Practical Tips
+
+- Use BY when test dependence is complex and unknown.
+- If tests are independent or positively dependent (common in RNA-seq), BH is strictly more powerful and equally valid.
+- BY-adjusted p-values can be very close to 1 for large $m$; don't be surprised by unrecognisably inflated q-values.
+- Simulation-based FDR control (via permutations) is often more powerful than BY when computationally feasible.
+- The harmonic-factor multiplier makes BY nearly as conservative as Bonferroni for large $m$; consider whether you truly need arbitrary-dependence robustness.

@@ -1,0 +1,92 @@
+---
+title: Sampling Distributions
+date: "2026-04-17"
+description: "The distribution of a statistic across repeated samples: the key object that makes inference possible"
+categories:
+  - Statistical Foundations
+  - sampling-distribution
+  - statistic
+  - standard-error
+  - variability
+---
+
+## Introduction
+
+The sampling distribution of a statistic is the distribution of its values across hypothetical repetitions of the sampling process. Every confidence interval, every p-value, and every standard error is a statement about the sampling distribution of some statistic. Understanding this concept makes inference intuitive; ignoring it makes it a ritual of incantations.
+
+## Prerequisites
+
+The reader should know what a sample mean is and should be comfortable with histograms and R's `replicate()` function.
+
+## Theory
+
+Let $T = T(X_1, \ldots, X_n)$ be a statistic computed from a sample of size $n$ drawn from a population with some distribution. The **sampling distribution** of $T$ is the distribution of values $T$ would take if the sampling process were repeated many times, each time drawing a fresh sample of size $n$ from the same population.
+
+Key facts:
+
+- The sampling distribution is a property of $T$ and of the sampling design, not of any particular observed sample.
+- Its mean is the expectation $E[T]$. For unbiased estimators, $E[T]$ equals the population parameter.
+- Its standard deviation is called the **standard error** of $T$: $\mathrm{SE}(T) = \sqrt{\mathrm{Var}(T)}$.
+- Its shape depends on the statistic, on $n$, and on the population distribution. For the sample mean from a population with finite variance, the central limit theorem guarantees approximate normality as $n$ grows.
+
+For the sample mean $\bar{X}$ of $n$ iid observations with mean $\mu$ and variance $\sigma^2$:
+
+$$E[\bar{X}] = \mu, \qquad \mathrm{SE}(\bar{X}) = \sigma/\sqrt{n}.$$
+
+The standard error tells us the typical distance between $\bar{X}$ and $\mu$ -- it is the unit in which confidence intervals are measured.
+
+## Assumptions
+
+The theoretical sampling distribution derived in most textbooks assumes iid sampling from a population with finite variance. Deviations (heavy tails, dependence, non-iid sampling) change the shape or the formulas; the bootstrap lets us approximate the sampling distribution empirically without these assumptions.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+set.seed(2026)
+population <- rgamma(1e5, shape = 2, rate = 0.1)
+mu <- mean(population)
+sigma <- sd(population)
+
+draw_mean <- function(n) mean(sample(population, n))
+
+reps <- 10000
+means_n10  <- replicate(reps, draw_mean(10))
+means_n100 <- replicate(reps, draw_mean(100))
+
+cat(sprintf("n=10  : mean=%.2f, SE=%.2f; theoretical SE=%.2f\n",
+            mean(means_n10), sd(means_n10), sigma / sqrt(10)))
+cat(sprintf("n=100 : mean=%.2f, SE=%.2f; theoretical SE=%.2f\n",
+            mean(means_n100), sd(means_n100), sigma / sqrt(100)))
+
+df <- data.frame(xbar = c(means_n10, means_n100),
+                 n = factor(rep(c(10, 100), each = reps)))
+ggplot(df, aes(x = xbar, fill = n)) +
+  geom_histogram(alpha = 0.6, bins = 50, position = "identity") +
+  labs(x = expression(bar(X)), y = "Frequency") +
+  theme_minimal()
+```
+
+For a skewed gamma population, the sampling distribution of the mean concentrates as $n$ grows, and its spread matches the theoretical standard error.
+
+## Output & Results
+
+```
+n=10  : mean=19.98, SE=4.42; theoretical SE=4.47
+n=100 : mean=20.01, SE=1.41; theoretical SE=1.41
+```
+
+Increasing $n$ by a factor of 10 decreases the standard error by $\sqrt{10} \approx 3.16$, exactly as the $1/\sqrt{n}$ rule predicts.
+
+## Interpretation
+
+The standard deviation of the sampling distribution -- the SE -- is what a confidence interval is built from. A 95% CI for the mean is approximately $\bar{x} \pm 1.96 \cdot \mathrm{SE}(\bar{X})$. When a manuscript reports "mean 19.98 (SE 1.41, 95% CI 17.22--22.74)", every number in that summary is derived from the sampling distribution of the statistic.
+
+## Practical Tips
+
+- Do not confuse the standard deviation of the data with the standard error of a statistic. The SD describes variability across individuals; the SE describes variability across hypothetical samples of size $n$.
+- When the theoretical sampling distribution is unknown, approximate it by the bootstrap: resample with replacement from the observed sample, compute the statistic, and use the empirical distribution of the resampled statistics as an estimate.
+- The sampling distribution depends on $n$ -- larger samples yield tighter distributions, as the $1/\sqrt{n}$ rule captures for the mean.
+- For statistics other than the mean, the sampling distribution may be harder to derive analytically but is equally well-defined; simulation or bootstrap is the general-purpose tool.
+- The $t$ distribution that appears in small-sample inference is the sampling distribution of $(\bar{X} - \mu)/(s/\sqrt{n})$ under normality with unknown variance, not of the mean itself.

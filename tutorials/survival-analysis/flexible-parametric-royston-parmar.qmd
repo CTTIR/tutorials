@@ -1,0 +1,68 @@
+---
+title: Royston-Parmar Flexible Parametric Models
+date: "2026-04-17"
+description: Splines on the log-cumulative-hazard for flexible baseline without leaving parametric modelling
+categories:
+  - Survival Analysis
+  - royston-parmar
+  - flexible-parametric
+  - splines
+---
+
+## Introduction
+
+Royston-Parmar models bridge the gap between rigid parametric survival families (exponential, Weibull, log-normal) and the assumption-light Cox semi-parametric model. They place restricted cubic splines on the log cumulative hazard (or on related transforms) so the baseline can take essentially any shape the data demand, while keeping the full parametric likelihood that delivers smooth survival, hazard, and quantile predictions for any covariate pattern. In epidemiological work — particularly population-based cancer studies — they have become the preferred default because they combine Cox-like flexibility with parametric extrapolation.
+
+## Prerequisites
+
+A working understanding of Cox regression, parametric survival families, and restricted cubic splines for smooth functional forms.
+
+## Theory
+
+The Royston-Parmar model writes
+
+$$\log H(t \mid x) = s\bigl(\log t; \gamma\bigr) + x^\top \beta,$$
+
+where $s$ is a restricted cubic spline in $\log t$ with knots placed at quantiles of the log event-time distribution. With $k$ internal knots, the spline has $k + 1$ parameters; common choices are 1–4 knots. Setting `scale = "hazard"` produces a proportional-hazards model; `scale = "odds"` gives a proportional-odds parameterisation; `scale = "normal"` gives a probit parameterisation, equivalent to a generalised log-normal model. Time-dependent effects can be modelled by interacting covariates with spline basis functions.
+
+Predictions on the natural time scale are smooth and available at any horizon, including extrapolation beyond the maximum observed event time, where Cox predictions are undefined.
+
+## Assumptions
+
+The chosen scale (PH, PO, or probit) is appropriate; the number of knots is not so large that the baseline is overfitted nor so small that the underlying shape is missed. AIC is the conventional knot-selection criterion.
+
+## R Implementation
+
+```r
+library(flexsurv)
+
+data(lung)
+
+# 2 internal knots (default placement at quantiles of log-event times)
+fit <- flexsurvspline(Surv(time, status) ~ age + sex, data = lung,
+                      k = 2, scale = "hazard")
+fit
+plot(fit, type = "hazard")
+plot(fit, type = "survival")
+```
+
+## Output & Results
+
+`flexsurvspline()` returns spline coefficients $\gamma_0, \gamma_1, \dots$, covariate effects $\hat\beta$ on the log-hazard scale (under PH), and a fully smooth model object. `plot(fit, type = "hazard")` overlays the model-implied hazard on a non-parametric reference, and `plot(fit, type = "survival")` does the same for the survival function. The smoothness is the headline visual difference from a Cox-based survfit step function.
+
+## Interpretation
+
+A reporting sentence: "A Royston-Parmar PH model with two internal knots estimated the hazard ratio for female sex at 0.60 (95 % CI 0.42 to 0.85), close to the Cox estimate of 0.59 (0.42 to 0.83); the spline baseline captured a hazard peak around 9 months that the Weibull model missed entirely (AIC: Royston-Parmar 1{,}890, Weibull 1{,}908)." Reporting AIC across knots and against simpler parametric alternatives makes the choice transparent.
+
+## Practical Tips
+
+- Start with 2–3 knots and compare AIC across 1–4; more than 4 internal knots tends to overfit small datasets.
+- Use `scale = "hazard"` (PH) when the goal matches a Cox interpretation; `"odds"` for a proportional-odds analogue; `"normal"` for a probit / log-normal-like fit.
+- Coefficient estimates should be close to those from a Cox model under PH; large discrepancies indicate either Cox tied-event handling differences or an issue with the spline baseline.
+- Time-dependent covariate effects come from `gamma1 ~ x` interactions inside `flexsurvspline()`; this lets you test PH non-parametrically within the model.
+- For predictions on a fine time grid, `summary(fit, type = "survival", t = seq(0, 1000, 10))` produces smooth survival probabilities ready for plotting.
+- In population-based cancer epidemiology, Royston-Parmar models have largely replaced Cox for relative-survival and excess-mortality work; the parametric baseline gives interpretable hazard shapes and clean extrapolation.
+
+## R Packages Used
+
+`flexsurv` for `flexsurvspline()` with PH, PO, and probit scales; `rstpm2` for the related Stata-compatible Royston-Parmar implementation with extended time-dependent effects; `survival` for the Cox baseline against which to compare; `ggflexsurv` for ggplot-style plotting of `flexsurvspline` objects.

@@ -1,0 +1,71 @@
+---
+title: Power for Paired t-Test
+date: "2026-04-17"
+description: "Sample size for paired designs, taking advantage of within-subject correlation"
+categories:
+  - "Sample Size & Power"
+  - power
+  - paired-t-test
+  - correlation
+---
+
+## Introduction
+
+Paired designs achieve their statistical power gain by cancelling between-subject variability from the treatment contrast. Because each subject acts as their own control, the between-subject component of variance — typically the largest source of noise in clinical-pharmacology, behavioural, and clinical-laboratory studies — drops out of the within-subject difference. The result is that paired designs are substantially more powerful than independent-groups designs of equal total sample size, with the benefit growing as the within-subject correlation increases. Power analysis for the paired $t$-test must therefore explicitly account for this correlation; ignoring it under-uses the design's main analytic advantage and inflates the planned sample size unnecessarily.
+
+## Prerequisites
+
+A working understanding of the paired $t$-test, the relationship between within-subject correlation $\rho$ and difference standard deviation $\sigma_D$, and the standardised effect-size measures Cohen's $d$ (between-subject) and $d_z$ (within-subject paired).
+
+## Theory
+
+For paired differences $D_i = X_i - Y_i$ with within-subject correlation $\rho$, the difference standard deviation is
+
+$$\sigma_D = \sigma \sqrt{2(1 - \rho)},$$
+
+and the appropriate paired-design effect size is
+
+$$d_z = \frac{\mu_D}{\sigma_D}.$$
+
+Higher within-subject correlation reduces $\sigma_D$, inflating $d_z$ for a fixed raw effect, and dramatically reducing the required sample size. With $\rho = 0$ the paired design reduces to the independent-groups case (at half the per-condition sample size); with $\rho \to 1$ the paired design approaches infinite efficiency.
+
+## Assumptions
+
+The design genuinely produces paired observations (each subject contributes one value per condition), the differences are approximately Normal (or the sample is large enough for the central limit theorem), and the within-subject correlation is reasonably known from pilot data or literature.
+
+## R Implementation
+
+```r
+library(pwr)
+
+pwr.t.test(d = 0.4, sig.level = 0.05, power = 0.80, type = "paired")
+
+sigma_diff <- function(sigma, rho) sigma * sqrt(2 * (1 - rho))
+d_z_from_d <- function(d, rho) d / sqrt(2 * (1 - rho))
+
+d_z_from_d(d = 0.5, rho = 0.7)
+
+pwr.t.test(d = 0.5, power = 0.80, type = "two.sample")$n
+pwr.t.test(d = d_z_from_d(0.5, 0.7), power = 0.80, type = "paired")$n
+```
+
+## Output & Results
+
+The script reports the required number of pairs at $d_z = 0.4$, the conversion from raw $d$ to paired $d_z$ at correlation 0.7, and the side-by-side sample-size comparison between independent-groups and paired designs for the same raw effect. The paired design needs roughly 21 pairs (42 observations) versus 128 observations for the independent comparison — a six-fold efficiency gain at $\rho = 0.7$.
+
+## Interpretation
+
+A reporting sentence: "Assuming a within-subject correlation of 0.7 (estimated from pilot data) and a raw mean difference of 0.5 SD, the paired design requires 21 paired observations for 80 % power at $\alpha = 0.05$ (two-sided), corresponding to a paired effect size $d_z = 0.65$. The same raw effect would require 128 observations (64 per arm) in an independent-groups design — a 6-fold efficiency gain. The protocol therefore enrols 25 subjects to accommodate up to 15 % attrition." Always report the assumed $\rho$ and the efficiency gain.
+
+## Practical Tips
+
+- Pre-specify the expected within-subject correlation $\rho$ from pilot data or published literature, and conduct a sensitivity analysis over a plausible range — typically $\rho \in [0.3, 0.8]$. The sample-size calculation is sensitive to this assumption, and protocols should defend the chosen value.
+- When $\rho = 0$ the paired design reduces to the independent-groups case at half the per-condition sample size; the paired design is genuinely advantageous only when within-subject correlation is meaningfully positive, which is almost always the case in repeated-measures contexts.
+- Report the effect size in paired $d_z$ form (where the denominator is the difference SD) rather than two-sample $d$ form (where the denominator is the within-group SD); the two are commonly confused and lead to apparent disagreements in power calculations across software packages.
+- Missing one member of a pair drops the entire pair from the analysis; this attrition pattern is more wasteful than in independent-groups designs and should be reflected in the sample-size inflation factor.
+- For more than two repeated measures (three time points, multiple conditions per subject), use repeated-measures ANOVA or mixed-effects power calculations rather than treating the design as a series of pairwise paired tests; the multi-condition analysis is more efficient and avoids multiplicity adjustments.
+- Pilot estimates of $\rho$ have substantial uncertainty in small samples; using the lower end of a CI on $\rho$ for power planning is a conservative approach that protects against an over-optimistic point estimate.
+
+## R Packages Used
+
+`pwr::pwr.t.test(type = "paired")` for the canonical paired-design power calculation in $d_z$ units; `WebPower::wp.t()` with paired specification for an alternative interface; `Superpower` for paired-design ANOVA and factorial extensions; `simr` for simulation-based power analysis when the design extends to mixed-effects models with random slopes; `BUCSS` for bias- and uncertainty-corrected sample-size estimation when pilot data are limited.

@@ -1,0 +1,65 @@
+---
+title: Randomisation in Design
+date: "2026-04-17"
+description: "Purpose, procedures, and role of randomisation in experimental design"
+categories:
+  - Experimental Design
+  - randomisation
+  - doe
+  - protection
+---
+
+## Introduction
+
+Randomisation is the protective heart of experimental design. It ensures that in expectation, unknown sources of variation are balanced across treatments; it validates the model's assumption of independent errors; and it prevents systematic bias from lurking variables.
+
+## Prerequisites
+
+Experimental design basics.
+
+## Theory
+
+Three Fisher principles of DoE: replication, randomisation, blocking. Randomisation:
+- Ensures **expected balance** of known and unknown covariates.
+- Justifies the random-error model used in ANOVA.
+- Validates inference (significance tests are approximate randomisation tests).
+
+Randomisation procedures vary by design: CRD = unrestricted, RCBD = within-block, Latin square = row-column, split-plot = nested.
+
+## Assumptions
+
+Randomisation is genuinely random (computer-generated sequence, sealed envelopes); allocation is concealed from the experimenter until assignment.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+# Randomise 12 units to 4 treatments for a CRD
+treatments <- rep(c("A", "B", "C", "D"), 3)
+allocation <- sample(treatments, 12, replace = FALSE)
+allocation
+
+# For a RCBD, randomise within each of 3 blocks
+blocks <- rep(1:3, each = 4)
+alloc_rcbd <- do.call(rbind, lapply(split(1:12, blocks), function(idx) {
+  data.frame(unit = idx, treatment = sample(c("A", "B", "C", "D")))
+}))
+alloc_rcbd
+```
+
+## Output & Results
+
+A randomised allocation list; randomisation is within block for RCBD to preserve block structure.
+
+## Interpretation
+
+"Experimental units were randomly allocated to 4 treatments using a computer-generated sequence (seed 2026); in the RCBD, randomisation was within each block to preserve the local-control benefit."
+
+## Practical Tips
+
+- Document the randomisation seed and procedure; reproducibility is part of responsible reporting.
+- Conceal allocation from experimenters until assignment; otherwise bias can creep in.
+- Randomise run order as well as treatment allocation to guard against temporal confounding.
+- Restricted randomisation (within blocks, strata) is required for blocked designs; unrestricted randomisation can mismatch the analysis.
+- Randomisation tests (permutation inference) are a rigorous alternative to parametric tests when distributional assumptions fail.

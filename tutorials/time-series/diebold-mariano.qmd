@@ -1,0 +1,62 @@
+---
+title: Diebold-Mariano Test
+date: "2026-04-17"
+description: Testing equality of forecast accuracy between two competing models
+categories:
+  - Time Series Analysis
+  - diebold-mariano
+  - forecast-comparison
+---
+
+## Introduction
+
+The Diebold-Mariano test compares the forecasting accuracy of two competing models on a held-out test window. Where naive accuracy comparisons (one model has lower MSE than another) ignore the statistical noise in the difference, the DM test treats the loss-difference series as a stochastic process and asks whether its mean is significantly non-zero. The test works with any loss function and accommodates the autocorrelation that multi-step-ahead forecast errors typically exhibit, making it the standard inferential tool for forecast comparisons.
+
+## Prerequisites
+
+A working understanding of forecast accuracy metrics, the difference between in-sample and out-of-sample evaluation, and basic familiarity with autocorrelation in residual series.
+
+## Theory
+
+For two forecasts of the same series with errors $e_{1,t}$ and $e_{2,t}$ on a test window of length $T$, define $d_t = L(e_{1,t}) - L(e_{2,t})$ where $L$ is a chosen loss (squared error, absolute error, log-squared error). The null is $\mathbb E[d_t] = 0$ — equal expected forecast accuracy. The test statistic is the standardised mean of $d_t$ with a long-run-variance estimator that accounts for the natural autocorrelation in the loss-difference series.
+
+The Harvey-Leybourne-Newbold (HLN) small-sample correction adjusts the asymptotic Normal reference for finite $T$ and forecast horizon $h$, reducing the over-rejection of the original DM test in small samples.
+
+## Assumptions
+
+The loss-difference series is covariance-stationary; forecast errors are observable on overlapping or sequential test sets; the chosen loss is appropriate for the forecasting question.
+
+## R Implementation
+
+```r
+library(forecast)
+
+train <- window(AirPassengers, end = c(1957, 12))
+test  <- window(AirPassengers, start = c(1958, 1))
+
+e1 <- test - forecast(auto.arima(train), h = length(test))$mean
+e2 <- test - forecast(ets(train), h = length(test))$mean
+
+dm.test(e1, e2, alternative = "two.sided", h = 1, power = 2)
+```
+
+## Output & Results
+
+`dm.test()` returns the DM statistic, $p$-value, and the chosen lag for autocovariance estimation. The HLN correction is applied by default in `forecast::dm.test()`.
+
+## Interpretation
+
+A reporting sentence: "On the held-out test window of three years (1958–1960), the Diebold-Mariano test comparing ARIMA and ETS forecasts at one-step-ahead horizon gave $\mathrm{DM} = -1.42$ with the HLN small-sample correction ($p = 0.16$); no significant difference in forecast accuracy under squared-error loss." Always state the test window, forecast horizon, and loss function.
+
+## Practical Tips
+
+- Use `power = 2` for squared-error loss (default), `power = 1` for absolute error; choose based on the substantive forecasting cost function.
+- For multi-step-ahead horizons, set `h` to the forecast horizon; the long-run variance uses $h$ to determine the truncation lag for autocovariance estimation.
+- Report the test window length, forecast horizon, and chosen loss; results depend on all three.
+- For model selection across many candidate models, the DM test is pairwise; the model-confidence-set approach (`MCS::mcsTest`) extends to many models with multiple-comparison correction.
+- The DM test compares forecast methods, not models per se; methods that produce the same point forecast (different prediction-interval widths) may be DM-equivalent despite different underlying assumptions.
+- For nested models, the conventional DM test under-covers; use Clark-West or West tests instead.
+
+## R Packages Used
+
+`forecast::dm.test()` for the canonical implementation with HLN correction; `MCS` for the model-confidence-set extension to multi-model comparisons; `multDM` for multivariate DM tests; `multMCS` for MCS extensions to multivariate forecasts.

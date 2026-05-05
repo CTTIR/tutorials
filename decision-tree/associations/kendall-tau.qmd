@@ -78,15 +78,3 @@ Kendall's tau is its own effect size. Cohen's thresholds (adapted): small 0.10, 
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 003126808d794a1cb0203657aac9b074 -->
-<img src="https://vg09.met.vgwort.de/na/003126808d794a1cb0203657aac9b074"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

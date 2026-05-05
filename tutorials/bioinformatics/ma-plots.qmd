@@ -1,0 +1,71 @@
+---
+title: MA Plots
+date: "2026-04-17"
+description: Mean-average plots for differential expression diagnostics
+categories:
+  - Bioinformatics
+  - visualisation
+  - ma-plot
+  - diagnostics
+---
+
+## Introduction
+
+An MA plot — also known as a mean-difference plot or Bland-Altman-style plot for genomics — displays the log fold change (M) on the y-axis against the mean expression intensity (A) on the x-axis. It is the standard diagnostic for differential-expression results: if the bulk of points (the non-DE genes) clusters around zero independent of mean intensity, normalisation has succeeded; systematic curvature or vertical drift indicates intensity-dependent bias that contaminates the DE calls. The MA plot complements the volcano plot by emphasising the relationship between effect size and expression level rather than effect size and statistical significance.
+
+## Prerequisites
+
+A working understanding of log fold change, average expression on the log scale, and differential-expression output (DESeq2, edgeR, limma).
+
+## Theory
+
+For two samples (or two groups) $X, Y$:
+
+$$M = \log_2(Y / X), \qquad A = \tfrac{1}{2} \log_2(X Y).$$
+
+A well-normalised comparison shows $M$ scattered around zero independently of $A$; the lowess curve of $M$ vs $A$ should be approximately flat at zero. Curvature, drift, or systematic offset indicates scaling or compositional bias that normalisation has failed to remove. The "trumpet" shape — wider scatter at low expression, narrower at high — is expected because low-expression genes have noisier fold-change estimates; this is information about precision, not bias.
+
+## Assumptions
+
+Counts have been normalised (TMM, RLE, or similar); the majority of genes are non-differentially expressed (so the lowess of $M$ should pass through zero); the dataset is sufficiently large to estimate the lowess curve stably.
+
+## R Implementation
+
+```r
+library(limma); library(edgeR)
+
+set.seed(2026)
+counts <- matrix(rpois(10000 * 6, lambda = 30), 10000, 6)
+group  <- factor(rep(c("A", "B"), each = 3))
+dge    <- DGEList(counts); dge <- calcNormFactors(dge)
+
+design <- model.matrix(~ group)
+v <- voom(dge, design)
+fit <- lmFit(v, design); fit <- eBayes(fit)
+
+plotMD(fit, coef = 2, status = decideTests(fit)[, 2],
+       values = c(-1, 1), hl.col = c("#2A9D8F", "#E76F51"),
+       main = "MA plot (limma)")
+abline(h = 0, lty = 2)
+```
+
+## Output & Results
+
+`limma::plotMD()` plots logFC vs mean log-CPM with significant genes highlighted in colour and a horizontal reference line at zero. `DESeq2::plotMA()` produces the same plot from a results object in a single call. Most non-DE genes should cluster tightly around zero with the trumpet shape opening toward low mean expression.
+
+## Interpretation
+
+A reporting sentence: "The MA plot (Fig. X) confirms that after TMM normalisation the log fold changes are centred on zero across the full mean-expression range; the lowess curve does not deviate from zero, indicating no intensity-dependent bias and supporting the validity of the differential-expression calls. Significant genes (highlighted) are distributed across the expression range." Always pair MA plots with volcano plots when reporting DE results.
+
+## Practical Tips
+
+- Always produce an MA plot alongside the volcano plot when reporting DE results; the two communicate complementary information.
+- Overlay a lowess curve (`lines(lowess(A, M))`) to diagnose intensity-dependent bias formally; visible drift signals normalisation problems.
+- For DESeq2, `plotMA(res)` produces the standard MA plot in a single call; the function automatically applies LFC shrinkage if the results object contains shrunken estimates.
+- Use shrinkage (`DESeq2::lfcShrink` with `apeglm` or `ashr`) to stabilise noisy log-fold-change estimates at low expression; the shrunken MA plot is more interpretable than the raw version.
+- Label only the top few genes (5–10); labelling all significant hits makes the plot unreadable.
+- For very large MA plots, alpha-blending or hexbin (`smoothScatter`) prevents overplotting in the dense central column.
+
+## R Packages Used
+
+`limma::plotMD()` for MA plots from limma fits; `DESeq2::plotMA()` for MA plots from DESeq2 results; `edgeR::plotMD()` for the edgeR analogue; `Glimma::glimmaMA()` for interactive MA plots embeddable in HTML; `ggplot2` for hand-built versions with custom styling.

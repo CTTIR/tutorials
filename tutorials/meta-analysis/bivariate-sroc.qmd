@@ -1,0 +1,69 @@
+---
+title: Bivariate SROC Curves
+date: "2026-04-17"
+description: Hierarchical summary ROC modelling for diagnostic-accuracy meta-analysis
+categories:
+  - Meta-Analysis
+  - sroc
+  - bivariate
+  - hierarchical
+---
+
+## Introduction
+
+The summary ROC (SROC) curve visualises the relationship between pooled sensitivity and specificity across a meta-analysis of diagnostic studies. Modern SROCs are derived from bivariate or HSROC models that properly account for the correlation between sensitivity and specificity as thresholds vary.
+
+## Prerequisites
+
+Sensitivity and specificity; bivariate meta-analysis.
+
+## Theory
+
+The bivariate model fits
+$$\begin{pmatrix} \text{logit}(\text{Sens}_i) \\ \text{logit}(1 - \text{Spec}_i) \end{pmatrix} \sim N(\mu, \Sigma).$$
+
+The SROC curve is derived by mapping a range of the logit(1 - Spec) axis back to expected logit(Sens), given the bivariate mean and covariance. The curve shows how sensitivity trades against specificity as threshold varies.
+
+## Assumptions
+
+Logit sensitivity and specificity are bivariate normal; studies vary by threshold; between-study heterogeneity captured by the covariance matrix.
+
+## R Implementation
+
+```r
+library(mada)
+
+set.seed(2026)
+df <- data.frame(
+  TP = c(45, 60, 32, 80, 28, 55, 70, 50),
+  FN = c( 5, 10,  8, 20, 12,  5,  8, 15),
+  FP = c(10, 15,  8, 20, 10, 12, 18,  9),
+  TN = c(140, 165, 152, 180, 150, 138, 200, 175)
+)
+
+fit <- reitsma(df)
+
+# Summary statistics
+summary(fit)$coefficients[c("tsens", "tfpr"), ]
+
+# SROC plot
+plot(fit, sroclty = 1, sroclwd = 2, predict = TRUE, predlty = 2,
+     main = "Bivariate SROC with 95% confidence and prediction regions")
+points(fpr(df), sens(df), cex = 0.8, pch = 19, col = "grey40")
+```
+
+## Output & Results
+
+Pooled sensitivity and FPR estimates; SROC curve with confidence (mean) and prediction (future-study) regions; individual study points overlaid.
+
+## Interpretation
+
+"The SROC curve had AUC = 0.94, with pooled sensitivity 0.84 and specificity 0.91 at the summary operating point. Individual studies clustered tightly along the curve, consistent with threshold variation rather than diagnostic accuracy variation."
+
+## Practical Tips
+
+- Always display both confidence (mean) and prediction (future-study) regions on the SROC.
+- Individual study points should lie close to the curve; large off-curve outliers indicate effect modifiers.
+- Do not average sensitivity and specificity independently -- their correlation matters.
+- For partial-threshold studies (e.g., only low-Sens/high-Spec), restrict the SROC to the covered threshold range.
+- Report per PRISMA-DTA with a clear operating-point recommendation.

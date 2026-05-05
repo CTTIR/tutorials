@@ -1,0 +1,83 @@
+---
+title: Law of Total Probability
+date: "2026-04-17"
+description: Decomposing a marginal probability over a partition of the sample space
+categories:
+  - Probability Theory
+  - total-probability
+  - partition
+  - marginalisation
+---
+
+## Introduction
+
+The law of total probability (LTP) expresses the unconditional probability of an event as a weighted sum of conditional probabilities. It is the bookkeeping rule for "conditioning on every possibility and adding them up", and it appears as the denominator in Bayes' theorem, as the marginalisation step in mixture models, and whenever a probability computation is easier after splitting on a latent variable.
+
+## Prerequisites
+
+Conditional probability and set partitions.
+
+## Theory
+
+Let $\{B_1, B_2, \ldots, B_n\}$ be a **partition** of the sample space: the events are pairwise disjoint and their union is $\Omega$. Then for any event $A$,
+
+$$P(A) = \sum_{i=1}^{n} P(A \mid B_i) \, P(B_i).$$
+
+Proof sketch: $A = \bigcup_i (A \cap B_i)$ where the intersections are disjoint. By additivity, $P(A) = \sum_i P(A \cap B_i)$, and each $P(A \cap B_i) = P(A \mid B_i) P(B_i)$.
+
+In continuous form, if $X$ is a continuous random variable and $A$ is an event,
+
+$$P(A) = \int P(A \mid X = x) f_X(x) \, dx,$$
+
+which is the marginalisation used to compute the probability of an event under a mixture or hierarchical model.
+
+## Assumptions
+
+- The $B_i$ form a partition: disjoint, exhaustive, positive probability each.
+- Otherwise standard probability-space assumptions.
+
+## R Implementation
+
+```r
+# Population of patients divided by three risk strata with different event rates
+strata_prop  <- c(low = 0.60, medium = 0.30, high = 0.10)
+event_rates  <- c(low = 0.02, medium = 0.08, high = 0.25)
+
+p_event <- sum(event_rates * strata_prop)
+p_event
+
+# Simulate to verify
+set.seed(2026)
+n <- 1e5
+stratum <- sample(names(strata_prop), n, replace = TRUE, prob = strata_prop)
+event   <- rbinom(n, 1, event_rates[stratum])
+mean(event)
+
+# Bayes using LTP for the denominator
+p_low_given_event <- event_rates["low"] * strata_prop["low"] / p_event
+p_low_given_event
+```
+
+## Output & Results
+
+```
+[1] 0.061         # P(event) = 0.02*0.6 + 0.08*0.3 + 0.25*0.1 = 0.061
+[1] 0.0608        # empirical verification
+
+      low
+   0.1967         # P(low-risk | event)
+```
+
+The marginal event rate of 6.1% masks substantial heterogeneity across strata. Given that an event occurred, the probability that the patient is in the low-risk stratum is 19.7% -- higher than some intuitions suggest, because low-risk patients outnumber high-risk by a factor of six.
+
+## Interpretation
+
+Most population-level quantities in epidemiology and public health are weighted sums of stratum-specific rates. Reporting the weighted sum without the underlying decomposition hides heterogeneity; reporting the decomposition clarifies what drives the pooled rate.
+
+## Practical Tips
+
+- Verify the partition: probabilities of the $B_i$ must sum to 1; the events must not overlap.
+- Conditioning on the "right" variable simplifies otherwise intractable probabilities -- choose a latent with clean conditional structure.
+- The LTP generalises to nested partitions and to countably infinite ones.
+- In Bayesian computation, the LTP is the denominator of Bayes' theorem ($P(B)$ as the marginal likelihood) and is often the hard quantity to compute.
+- For continuous marginalisations, numerical integration (`integrate()`) or Monte Carlo (`mean(f(rsample(...)))`) replace the sum.

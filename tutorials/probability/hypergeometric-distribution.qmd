@@ -1,0 +1,90 @@
+---
+title: The Hypergeometric Distribution
+date: "2026-04-17"
+description: Sampling without replacement from a finite population
+categories:
+  - Probability Theory
+  - hypergeometric
+  - without-replacement
+  - fisher-exact
+---
+
+## Introduction
+
+The hypergeometric distribution models the number of successes in a sample drawn without replacement from a finite population. It differs from the binomial by dependence across draws: removing a success reduces the probability of a subsequent success. It underlies Fisher's exact test and audit sampling.
+
+## Prerequisites
+
+Combinatorics, binomial distribution.
+
+## Theory
+
+A population of $N$ items contains $K$ "successes" and $N - K$ "failures". A sample of size $n$ is drawn without replacement. Let $X$ be the number of successes in the sample:
+
+$$P(X = k) = \frac{\binom{K}{k}\binom{N - K}{n - k}}{\binom{N}{n}}, \qquad \max(0, n - (N - K)) \leq k \leq \min(n, K).$$
+
+Moments:
+
+- $E[X] = n K / N$ (same as binomial with $p = K/N$).
+- $\mathrm{Var}(X) = n \cdot \frac{K(N - K)}{N^2} \cdot \frac{N - n}{N - 1}$.
+
+The factor $(N - n)/(N - 1)$ is the **finite-population correction**; it shrinks the variance relative to binomial sampling, reflecting the reduced uncertainty when a substantial fraction of the population is sampled.
+
+As $N \to \infty$ with $K / N = p$ fixed, hypergeometric converges to binomial: when the population is large relative to the sample, with/without replacement makes little difference.
+
+## Assumptions
+
+- Finite population of known size $N$.
+- Known number of successes $K$ in the population.
+- Simple random sampling without replacement.
+
+## R Implementation
+
+```r
+N <- 200; K <- 60; n <- 30
+
+# PMF and moments
+k <- 0:n
+pmf <- dhyper(k, K, N - K, n)
+c(mean = n * K / N,
+  var  = n * K / N * (1 - K / N) * (N - n) / (N - 1),
+  emp_mean = sum(k * pmf),
+  emp_var  = sum((k - sum(k * pmf))^2 * pmf))
+
+# Compare with binomial: same mean, larger variance
+c(binom_var = n * (K / N) * (1 - K / N))
+
+# Fisher's exact test uses the hypergeometric
+tab <- matrix(c(12, 18, 48, 122), 2, 2)
+fisher.test(tab)
+```
+
+## Output & Results
+
+```
+     mean       var   emp_mean    emp_var
+      9.0     5.487       9.00      5.487
+
+binom_var
+     6.30
+
+        Fisher's Exact Test for Count Data
+
+data:  tab
+p-value = 0.1412
+alternative hypothesis: true odds ratio is not equal to 1
+```
+
+The hypergeometric variance is smaller than the binomial variance (5.49 vs 6.30) because the finite-population correction accounts for dependence. Fisher's exact test in the 2x2 example is a hypergeometric computation under the null of independence.
+
+## Interpretation
+
+Hypergeometric inference appears whenever sampling without replacement matters. In quality audits, the exact probability of a given number of defective items being observed in a sample is hypergeometric. In contingency-table analysis of small cells, Fisher's exact test is hypergeometric.
+
+## Practical Tips
+
+- For large populations ($N > 20n$), binomial approximation is typically adequate and simpler.
+- For 2x2 contingency tables, Fisher's exact test is hypergeometric-based and preferable to chi-squared with small expected counts.
+- `dhyper(x, m, n, k)` uses R's quirky naming: `m` = successes in population, `n` = failures in population, `k` = sample size.
+- In survey sampling with stratification, the within-stratum variance uses a finite-population correction factor.
+- Generalisations to multiple categories yield the multivariate hypergeometric; useful in categorical audit and card-game probabilities.

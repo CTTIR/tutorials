@@ -1,0 +1,73 @@
+---
+title: Clinical Equivalence Trials
+date: "2026-04-17"
+description: Two one-sided tests (TOST) for bioequivalence and clinical equivalence
+categories:
+  - Clinical Biostatistics
+  - equivalence
+  - tost
+  - bioequivalence
+---
+
+## Introduction
+
+Clinical equivalence trials test whether two treatments are clinically interchangeable within a pre-specified equivalence margin — narrow enough that any difference inside the margin is regarded as clinically meaningless. Bioequivalence studies, used to support generic-drug approval, are the archetypal application: regulators require that the ratio of pharmacokinetic parameters between a generic and the reference product fall within 80 % to 125 % of unity, demonstrating that the generic delivers essentially the same exposure as the originator. Equivalence frameworks also apply in clinical contexts where two interventions are competing on safety or convenience and an investigator wishes to show "no clinically meaningful difference" rather than the more usual "test product is better".
+
+## Prerequisites
+
+A working understanding of non-inferiority trial design, confidence-interval logic, and the distinction between absence of evidence (high $p$-value) and evidence of absence (CI within an equivalence margin).
+
+## Theory
+
+The two one-sided tests (TOST) procedure rejects the null of non-equivalence if and only if the two-sided 90 % confidence interval of the treatment effect lies entirely within the equivalence margin $[-\Delta, +\Delta]$. This is equivalent to two one-sided tests, each at $\alpha = 0.05$, against the lower and upper non-equivalence boundaries; the overall type-I error is preserved at 0.05 because at most one of the two boundaries can be violated under any single state of the world.
+
+For bioequivalence on log-transformed pharmacokinetic parameters such as $\mathrm{AUC}$ and $C_{\max}$, the ratio $\mu_T / \mu_R$ must lie within $(0.80, 1.25)$, corresponding to $\pm \log(1.25) \approx \pm 0.223$ on the natural-log scale. Log-transformation is mandated by regulators because it makes the test-to-reference ratio symmetric around unity and renders the inference Normal-theory tractable.
+
+## Assumptions
+
+The outcome (typically a log-transformed pharmacokinetic parameter) is approximately Normal, the design is a crossover with adequate washout to eliminate carryover, the within-subject variance is reasonably estimated, and observations are independent across subjects.
+
+## R Implementation
+
+```r
+library(PowerTOST)
+
+n <- sampleN.TOST(alpha = 0.05, targetpower = 0.80,
+                  theta0 = 0.95,
+                  theta1 = 0.80, theta2 = 1.25,
+                  CV = 0.20,
+                  design = "2x2")
+n
+
+set.seed(2026)
+n_sub <- 30
+subject_re <- rnorm(n_sub, 0, 0.15)
+period1 <- exp(subject_re + rnorm(n_sub, 0, 0.1))
+period2 <- exp(subject_re + log(0.95) + rnorm(n_sub, 0, 0.1))
+
+log_diff <- log(period1) - log(period2)
+m  <- mean(log_diff); sd_d <- sd(log_diff)
+ci <- m + c(-1, 1) * qt(0.95, df = n_sub - 1) * sd_d / sqrt(n_sub)
+exp(ci)
+```
+
+## Output & Results
+
+`sampleN.TOST()` returns the sample size required to achieve target power for the bioequivalence hypothesis under specified true ratio and within-subject coefficient of variation. The simulation block then computes a 90 % confidence interval on the test-to-reference ratio, which is the regulatory-relevant inference. Reporting both the point ratio and the CI is the standard expected by FDA and EMA.
+
+## Interpretation
+
+A reporting sentence: "The 90 % confidence interval of the test-to-reference ratio was 0.92 to 1.08, fully within the regulatory bioequivalence window of 0.80 to 1.25 for both AUC and $C_{\max}$. The geometric mean ratio was 1.00, with within-subject coefficient of variation 18 %. Bioequivalence was therefore demonstrated under standard FDA and EMA criteria; the formal TOST procedure rejected non-equivalence on both boundaries at $\alpha = 0.05$." Always report the 90 % CI on the back-transformed scale.
+
+## Practical Tips
+
+- Always analyse log-transformed PK parameters rather than raw values; log-ratios are symmetric around unity, the regulatory equivalence window translates to a symmetric range on the log scale, and Normal-theory inference is tractable on the log scale.
+- Use the 90 % confidence interval, not the 95 %; the TOST procedure at $\alpha = 0.05$ corresponds exactly to a two-sided 90 % CI lying entirely within the equivalence margin, and this is the regulatory standard.
+- The bioequivalence margin (0.80 to 1.25) is fixed by FDA and EMA regulation; clinical equivalence margins for non-PK outcomes must be pre-specified and justified clinically, because the equivalence claim hinges entirely on the margin width.
+- Reference-scaled bioequivalence (RSABE) is used for highly variable drugs with within-subject CV above 30 %; the equivalence margin is then widened proportionally to the reference-product variability, preserving statistical feasibility for inherently variable products.
+- Replicate crossover designs (each subject receives test and reference twice) reduce within-subject variance and improve efficiency; they are the standard for highly variable drugs and increasingly the default in modern bioequivalence trials.
+- Pre-specify the equivalence margin, washout period, and analysis model in the protocol; FDA and EMA scrutinise these choices closely, and post-hoc margin selection is grounds for rejection.
+
+## R Packages Used
+
+`PowerTOST` for canonical TOST sample-size calculation, power analysis, and simulation across crossover and parallel-group equivalence designs; `bear` for end-to-end FDA-compliant bioequivalence analysis with all standard reporting; `bioequivalence` and `bioequivalenceR` for alternative interfaces; `replicateBE` for replicate-design bioequivalence with reference-scaled procedures; `BE` for Bayesian bioequivalence approaches.

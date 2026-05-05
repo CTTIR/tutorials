@@ -1,0 +1,69 @@
+---
+title: Vector Autoregression (VAR)
+date: "2026-04-17"
+description: Multivariate time series where each variable depends on lags of all variables
+categories:
+  - Time Series Analysis
+  - var
+  - multivariate
+  - granger
+---
+
+## Introduction
+
+Vector autoregression (VAR) is the multivariate generalisation of an autoregressive model: each variable in a $k$-variate time series depends linearly on lags of itself and lags of every other variable in the system. It is the workhorse of empirical macroeconomics, where modelling GDP, inflation, and interest rates jointly produces forecasts and impulse-response analyses that single-equation models cannot. Outside macro, VAR is the natural tool whenever multiple time series are believed to be jointly determined and forecasting all of them is the goal.
+
+## Prerequisites
+
+A working understanding of univariate AR models, multivariate data, and the concept of system-wide forecasting and identification.
+
+## Theory
+
+A VAR($p$) model is
+
+$$\mathbf y_t = \mathbf c + A_1 \mathbf y_{t-1} + A_2 \mathbf y_{t-2} + \dots + A_p \mathbf y_{t-p} + \mathbf u_t,$$
+
+where $\mathbf y_t$ is a $k$-vector, $A_i$ are $k \times k$ coefficient matrices, and $\mathbf u_t$ are jointly white-noise innovations with covariance $\Sigma_u$. The model is estimated equation-by-equation by OLS (the same as multivariate OLS under spherical errors), and lag length $p$ is chosen by AIC, BIC, HQ, or sequential LRT.
+
+The VAR feeds three key downstream analyses: multi-step forecasts with system-coherent uncertainty bands, impulse-response functions that trace the dynamic effect of a shock to one variable through the system, and Granger-causality tests for predictive relationships among the variables.
+
+## Assumptions
+
+Stationary series (difference first if not, or use VECM for cointegrated I(1) series); independent, homoscedastic, jointly white-noise innovations; correctly specified lag order.
+
+## R Implementation
+
+```r
+library(vars)
+
+data(Canada)   # four-variate quarterly macroeconomic series
+VARselect(Canada, lag.max = 10, type = "const")$selection
+
+fit <- VAR(Canada, p = 2, type = "const")
+summary(fit)
+
+# Forecast
+fc <- predict(fit, n.ahead = 8)
+plot(fc)
+```
+
+## Output & Results
+
+`VARselect()` returns suggested lag orders by four information criteria; differing recommendations across criteria are common. `summary()` returns equation-by-equation coefficient tables. `predict()` produces multi-step forecasts with system-coherent confidence bands.
+
+## Interpretation
+
+A reporting sentence: "VARselect identified $p = 2$ as the AIC- and HQ-optimal lag order for the four-variate Canada series; the VAR(2) model produced eight-quarter forecasts with prediction intervals that widen from $\pm 0.5$ % at one quarter to $\pm 1.8$ % at eight, with the multivariate covariance structure preserving the empirical co-movements between employment, GDP, and inflation." Always state the lag selection criterion and the deterministic specification (constant, trend, or both).
+
+## Practical Tips
+
+- Select lag order by AIC, BIC, or HQ information criteria; differing recommendations are common, and the conservative HQ or BIC choice is usually preferable for forecasting.
+- Check residual cross-correlations with `serial.test(fit)`; significant off-diagonals indicate missed cross-series dynamics.
+- For cointegrated I(1) series, use VECM (`urca::ca.jo()`) on the levels rather than VAR on differences; differencing throws away the long-run equilibrium relationship.
+- Structural VARs impose identifying restrictions (Cholesky, sign, long-run) on $\Sigma_u$ to give impulse responses a causal interpretation; the standard reduced-form VAR does not.
+- Forecast-error variance decompositions (`fevd(fit)`) partition forecast uncertainty across innovations; useful for understanding which variables drive forecast errors at each horizon.
+- For high-dimensional VARs ($k > 10$), use Bayesian VARs with Minnesota or stochastic-search variable-selection priors; reduced-form OLS becomes unstable.
+
+## R Packages Used
+
+`vars::VAR()`, `predict()`, `irf()`, `fevd()`, `causality()` for the canonical VAR workflow; `urca::ca.jo()` for cointegration tests as the precursor to VECM; `tsDyn::lineVar()` for an alternative implementation; `BVAR` for Bayesian VARs with hierarchical priors; `fable::VAR()` for the modern tidyverts interface.

@@ -1,0 +1,93 @@
+---
+title: The Log-Normal Distribution
+date: "2026-04-17"
+description: Positive-valued distribution whose logarithm is normal; multiplicative processes and biomedical concentrations
+categories:
+  - Probability Theory
+  - lognormal
+  - multiplicative
+  - skewed
+---
+
+## Introduction
+
+If $\log X$ is normally distributed, then $X$ is log-normal. The distribution is strictly positive and right-skewed, and it models variables that result from multiplicative rather than additive processes -- concentrations, income, survival times, and many biomedical lab values.
+
+## Prerequisites
+
+Normal distribution, basic properties of logarithms.
+
+## Theory
+
+A random variable $X > 0$ is log-normal with parameters $\mu$ and $\sigma$ (on the log scale) if $\log X \sim \mathcal{N}(\mu, \sigma^2)$.
+
+PDF:
+
+$$f(x) = \frac{1}{x \sigma \sqrt{2\pi}} \exp\!\left\{-\frac{(\log x - \mu)^2}{2 \sigma^2}\right\}, \qquad x > 0.$$
+
+Moments:
+
+- $E[X] = \exp(\mu + \sigma^2 / 2)$.
+- $\mathrm{Var}(X) = \left[\exp(\sigma^2) - 1\right] \exp(2\mu + \sigma^2)$.
+- Median $= e^\mu$; mode $= e^{\mu - \sigma^2}$.
+
+The **geometric mean** of a log-normal sample equals $e^\mu$, the median; it is the natural point estimate when the data combine multiplicatively.
+
+**Multiplicative CLT**: the product of a large number of independent positive random variables tends to log-normal (by applying the CLT to the sum of logs).
+
+## Assumptions
+
+Strictly positive continuous data whose logarithm is approximately normal.
+
+## R Implementation
+
+```r
+mu    <- 1.0
+sigma <- 0.5
+
+X <- rlnorm(1e5, meanlog = mu, sdlog = sigma)
+c(mean_X         = mean(X),
+  theoretical    = exp(mu + sigma^2 / 2),
+  median_X       = median(X),
+  theoretical_med = exp(mu))
+
+# Log-transform makes it normal
+hist(log(X), breaks = 50, freq = FALSE, col = "#2A9D8F")
+curve(dnorm(x, mu, sigma), add = TRUE, col = "#F4A261", lwd = 2)
+
+# Geometric mean equals median (for lognormal)
+gm <- exp(mean(log(X)))
+c(geometric_mean = gm, median = median(X), theoretical = exp(mu))
+
+# MLE
+est_mu    <- mean(log(X))
+est_sigma <- sd(log(X))
+c(mu_hat = est_mu, sigma_hat = est_sigma)
+```
+
+## Output & Results
+
+```
+       mean_X   theoretical      median_X  theoretical_med
+        3.082         3.080         2.716            2.718
+
+geometric_mean    median   theoretical
+         2.714     2.716         2.718
+
+   mu_hat    sigma_hat
+    0.9995       0.500
+```
+
+Empirical arithmetic mean is larger than the median (right skew), the geometric mean equals the median (a property of log-normals), and the log-scale MLEs recover the true $\mu$ and $\sigma$.
+
+## Interpretation
+
+For log-normal variables (concentrations, titres), report the geometric mean and a geometric-mean-based confidence interval rather than the arithmetic mean and SD. In a manuscript: "geometric mean antibody titre 588 (95 % CI 441-782)".
+
+## Practical Tips
+
+- Plot on a log scale when visualising log-normal data; the skew is removed.
+- For regression on log-normal outcomes, log-transform the response and fit a linear model on the log scale.
+- Back-transformation of the mean of the log-transformed variable gives the geometric mean, not the arithmetic mean.
+- For inference on the arithmetic mean, use $\hat{\mu} + \hat{\sigma}^2/2$ on the log scale and back-transform, but this requires a bias correction in small samples.
+- Zero or negative values cannot be log-transformed; substitute or switch to a zero-inflated or Tobit model.

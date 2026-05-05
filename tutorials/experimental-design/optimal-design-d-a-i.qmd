@@ -1,0 +1,74 @@
+---
+title: "Optimal Designs: D, A, I"
+date: "2026-04-17"
+description: "D-, A-, I-, and G-optimality criteria for computer-generated designs"
+categories:
+  - Experimental Design
+  - optimal-design
+  - d-optimal
+  - criteria
+---
+
+## Introduction
+
+Computer-generated optimal designs minimise a chosen criterion on the information matrix. When a standard design does not fit constraints (irregular region, mixed-level factors, restricted runs), optimal designs are the primary recourse.
+
+## Prerequisites
+
+Linear regression; Fisher information matrix.
+
+## Theory
+
+For a design matrix $X$ under the assumed model, the information matrix is $M = X^T X$. Common criteria:
+- **D-optimal**: maximise $\det(M)$ -- minimises the volume of the joint confidence ellipsoid for coefficients.
+- **A-optimal**: minimise trace($M^{-1}$) -- minimises the average variance of coefficient estimates.
+- **I-optimal**: minimise average prediction variance over the design region.
+- **G-optimal**: minimise the maximum prediction variance.
+
+Computer algorithms (Fedorov exchange) search for the optimum.
+
+## Assumptions
+
+Model is correctly specified; $n \geq p$ (parameters); design region is explicit.
+
+## R Implementation
+
+```r
+library(AlgDesign)
+
+set.seed(2026)
+# Candidate set: 3^2 factorial grid
+candidates <- expand.grid(x1 = c(-1, 0, 1), x2 = c(-1, 0, 1))
+
+# D-optimal design for a second-order model, selecting 8 runs
+d_opt <- optFederov(~ quad(x1, x2),
+                    data = candidates,
+                    nTrials = 8,
+                    criterion = "D",
+                    nRepeats = 20)
+d_opt$design
+
+# I-optimal
+i_opt <- optFederov(~ quad(x1, x2),
+                    data = candidates,
+                    nTrials = 8,
+                    criterion = "I",
+                    nRepeats = 20)
+i_opt$design
+```
+
+## Output & Results
+
+Two sets of 8 runs from the 9-point candidate set; D-optimal maximises determinant of $X^TX$; I-optimal minimises average prediction variance.
+
+## Interpretation
+
+"D-optimal selected the 8 runs that most tightly constrain the polynomial coefficients; I-optimal picked a different subset that minimises prediction variance across the design region. Choose D for inference on coefficients, I for prediction."
+
+## Practical Tips
+
+- Use D-optimal for parameter-precision goals; I-optimal for prediction-focused studies.
+- Generate several random starts (`nRepeats`); optimal-design search is non-convex.
+- Verify the final design's efficiency against standard designs if one is applicable.
+- Use optimal designs when standard textbook designs don't fit constraints.
+- Mixed-level optimal designs can handle categorical factors; pass them as factors to `optFederov`.

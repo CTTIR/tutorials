@@ -1,0 +1,66 @@
+---
+title: Credible Intervals
+date: "2026-04-17"
+description: "Bayesian analogue of confidence intervals: equal-tailed and highest-posterior-density regions"
+categories:
+  - Bayesian Statistics
+  - credible-interval
+  - hpd
+  - equal-tailed
+---
+
+## Introduction
+
+A credible interval is the Bayesian summary of posterior uncertainty most often reported alongside a point estimate. Unlike a confidence interval, whose probability statement refers to long-run frequency under hypothetical resampling, a credible interval supports the direct claim that "given the data and prior, there is a 95 % probability that the parameter lies inside this interval." That single sentence is the reason students consistently misinterpret confidence intervals — and the reason credible intervals are increasingly preferred in applied biomedical reporting.
+
+## Prerequisites
+
+A working understanding of Bayesian inference, posterior distributions, and the distinction between a posterior and a sampling distribution.
+
+## Theory
+
+Two definitions dominate practice:
+
+- **Equal-tailed interval (ETI)**: the interval bounded by the $\alpha/2$ and $1 - \alpha/2$ quantiles of the posterior. It is invariant under monotone reparameterisation and easy to compute from MCMC draws.
+- **Highest posterior density (HPD) interval**: the narrowest set with $1 - \alpha$ posterior mass; for unimodal posteriors it is a single interval centred on the region of highest density, and it is always at least as short as the ETI.
+
+For symmetric posteriors the two intervals coincide; for skewed posteriors they can differ markedly. A 95 % level is conventional but arbitrary — some Bayesian methodologists advocate 89 % to discourage misreading the threshold as a hypothesis test.
+
+## Assumptions
+
+A proper posterior distribution and either MCMC draws (post-warm-up, with adequate effective sample size) or a closed-form posterior. ETI endpoints are quantiles and tolerate small samples better than HPD endpoints, which depend on density estimation in the tails.
+
+## R Implementation
+
+```r
+library(HDInterval)
+
+set.seed(2026)
+theta <- rbeta(10000, 10, 4)
+
+# Equal-tailed
+quantile(theta, c(0.025, 0.975))
+
+# HPD
+hdi(theta, credMass = 0.95)
+```
+
+## Output & Results
+
+`quantile()` returns the ETI; `hdi()` returns the HPD. For a Beta(10, 4) posterior the ETI is approximately $(0.50, 0.90)$ and the HPD is approximately $(0.53, 0.93)$ — slightly shifted toward the right because the posterior is left-skewed and the HPD chases the highest density region rather than splitting tail probability evenly.
+
+## Interpretation
+
+A reporting sentence: "The posterior probability had a 95 % equal-tailed credible interval of 0.50 to 0.90; the highest-posterior-density interval was 0.53 to 0.93. There is a 95 % posterior probability that the true proportion falls in either interval, given the prior and the observed data." Always state which interval is reported; mixing definitions across tables in the same paper is a common reproducibility headache.
+
+## Practical Tips
+
+- Report ETIs for symmetric or near-symmetric posteriors; they are more familiar and reparameterisation-invariant.
+- Report HPDs for skewed posteriors when the additional precision matters and the density estimate is stable.
+- HPD intervals can be disjoint under multimodal posteriors; set `allowSplit = TRUE` in `HDInterval::hdi()` so the structure is preserved.
+- Disclose the prior in any reporting sentence; the credible interval is not a property of the data alone.
+- Use post-warm-up MCMC draws and check ESS in the tails — credible-interval endpoints depend on quantile estimation, which needs more effective draws than the mean.
+
+## R Packages Used
+
+`HDInterval` for the canonical `hdi()` function, `bayestestR::ci()` for an integrated wrapper that selects between ETI and HPD on `brms` and `rstanarm` model objects, and base R (`quantile()`) for the equal-tailed case.

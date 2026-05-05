@@ -1,0 +1,70 @@
+---
+title: SHAP Values
+date: "2026-04-17"
+description: Game-theoretic local feature attributions via Shapley values
+categories:
+  - Machine Learning
+  - shap
+  - shapley
+  - interpretability
+---
+
+## Introduction
+
+SHAP (SHapley Additive exPlanations; Lundberg & Lee, 2017) attributes each prediction to input features via the Shapley value from cooperative game theory. It is the only attribution method satisfying the combined axioms of local accuracy, consistency, and missingness. SHAP has become the standard for black-box model interpretability.
+
+## Prerequisites
+
+Variable importance; cooperative game theory basics helpful.
+
+## Theory
+
+For prediction $f(x)$, each feature $j$ gets a SHAP value $\phi_j$ satisfying
+$$f(x) = \mathbb{E}[f(X)] + \sum_j \phi_j.$$
+
+Shapley values average the marginal contribution of feature $j$ across all possible subsets of features, producing a fair attribution. Exact computation is exponential; Tree SHAP (Lundberg, 2020) computes it in polynomial time for tree ensembles.
+
+## Assumptions
+
+Features have sensible "absence" interpretations (TreeSHAP integrates over feature distributions); additive decomposition meaningfully captures model behaviour.
+
+## R Implementation
+
+```r
+library(xgboost); library(shapviz)
+
+set.seed(2026)
+n <- 500
+X <- matrix(rnorm(n * 4), n, 4); colnames(X) <- paste0("x", 1:4)
+y <- as.numeric(X[, 1] > 0) + 0.5 * as.numeric(X[, 2] > 0) +
+     rnorm(n, 0, 0.5)
+
+dtrain <- xgb.DMatrix(X, label = y)
+model <- xgb.train(list(objective = "reg:squarederror",
+                         max_depth = 3, eta = 0.1),
+                    data = dtrain, nrounds = 200, verbose = 0)
+
+sv <- shapviz(model, X_pred = X, X = X)
+
+# Summary (importance ranking)
+sv_importance(sv)
+
+# Per-observation waterfall (first prediction)
+sv_waterfall(sv, row_id = 1)
+```
+
+## Output & Results
+
+An importance plot (mean |SHAP| per feature) and a waterfall plot showing how each feature pushes the specific prediction above or below the baseline.
+
+## Interpretation
+
+"SHAP ranked $x_1$ as the dominant driver (mean |SHAP| = 0.36); the waterfall showed observation 1's prediction was pushed up by 0.42 from baseline primarily due to $x_1 = 1.8$."
+
+## Practical Tips
+
+- Use **Tree SHAP** (fast, exact) for tree models; fallback to **Kernel SHAP** for arbitrary models (approximate, slower).
+- SHAP dependence plots (SHAP value vs feature value) reveal non-linear effects and interactions.
+- SHAP values sum to $f(x) - \mathbb{E}[f(X)]$, so per-observation explanations are additive.
+- For deep learning, use `DeepSHAP` or integrated gradients; TreeSHAP does not apply.
+- Global importance = mean |SHAP| across observations; usually close to permutation importance on tree ensembles.

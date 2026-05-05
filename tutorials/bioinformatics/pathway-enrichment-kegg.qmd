@@ -1,0 +1,69 @@
+---
+title: KEGG Pathway Enrichment
+date: "2026-04-17"
+description: Over-representation and visualisation against KEGG metabolic/signalling pathways
+categories:
+  - Bioinformatics
+  - KEGG
+  - enrichment
+  - pathway
+---
+
+## Introduction
+
+KEGG (Kyoto Encyclopedia of Genes and Genomes) is a curated database of metabolic and signalling pathways represented as directed graphs of genes and gene products. KEGG pathway enrichment asks whether the genes in a differential-expression hit list are over-represented in any of the curated pathways, identifying functional themes in the differential signal. The companion visualisation tool `pathview` overlays log-fold-change values directly onto the canonical KEGG pathway diagrams, making it straightforward to communicate which specific genes within a pathway drive the enrichment signal.
+
+## Prerequisites
+
+A working understanding of differential-expression analysis, Entrez gene identifiers, and basic over-representation analysis using hypergeometric or Fisher's exact tests.
+
+## Theory
+
+KEGG enrichment uses the same statistical framework as GO over-representation analysis: a hypergeometric (Fisher's exact) test for each pathway compares the proportion of DE genes assigned to the pathway against the proportion expected by chance from the universe of all annotated genes. Adjusted $p$-values (BH or Benjamini-Hochberg) control the false-discovery rate across the many pathways tested.
+
+Pathway visualisation via `pathview` rendering colours each gene node in the canonical KEGG diagram by user-supplied log fold change (or any continuous statistic), producing an annotated PNG/PDF of the pathway map. The visual immediately exposes whether the enrichment is driven by a coordinated up- or down-regulation across the pathway versus a few isolated hits.
+
+## Assumptions
+
+DE genes are correctly mapped to Entrez IDs; KEGG pathway annotations are current (KEGG is updated regularly; old annotations miss recent additions); tests are independent across pathways (BH adjustment is conservative for the typical correlated-pathway structure).
+
+## R Implementation
+
+```r
+library(clusterProfiler); library(org.Hs.eg.db)
+
+set.seed(2026)
+all_entrez <- keys(org.Hs.eg.db, keytype = "ENTREZID")
+de_entrez  <- sample(all_entrez, 200)
+
+ek <- enrichKEGG(gene = de_entrez,
+                 organism = "hsa",
+                 pvalueCutoff = 0.1)
+head(as.data.frame(ek))[, c("ID", "Description", "p.adjust", "Count")]
+
+# Visualise a pathway with LFC overlay
+# library(pathview)
+# lfc_vec <- setNames(rnorm(length(de_entrez)), de_entrez)
+# pathview(gene.data = lfc_vec, pathway.id = "hsa04110", species = "hsa")
+```
+
+## Output & Results
+
+`enrichKEGG()` returns an `enrichResult` object with one row per pathway, including the pathway ID and description, the count of DE genes, BH-adjusted $p$-value, and the comma-separated list of contributing gene symbols. `pathview()` writes a PNG of the pathway diagram with each gene node coloured by its supplied log-fold-change value.
+
+## Interpretation
+
+A reporting sentence: "KEGG enrichment with `clusterProfiler::enrichKEGG` (organism = hsa, BH-adjusted $p < 0.05$) identified the cell cycle (hsa04110, $p_{\mathrm{adj}} = 0.001$, 23 genes) and p53 signalling (hsa04115, $p_{\mathrm{adj}} = 0.008$, 14 genes) as top enriched pathways; pathview overlay on hsa04110 showed consistent up-regulation of cyclins and CDKs alongside down-regulation of CDK inhibitors." Always state the species code, the universe of background genes, and the multiple-testing correction.
+
+## Practical Tips
+
+- KEGG functions in `clusterProfiler` require Entrez IDs; convert from gene symbols via `bitr(symbols, fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Hs.eg.db)`.
+- `enrichMKEGG()` uses KEGG modules (smaller, more specific functional units); it is preferable for metabolic studies where the broader KEGG pathway granularity is too coarse.
+- `pathview()` requires internet access and writes output files to the working directory; treat each rendering as a one-off rather than running it in an automated pipeline.
+- KEGG organism codes: `hsa` for human, `mmu` for mouse, `rno` for rat, `dme` for fly, `cel` for worm; a complete list is at the KEGG website.
+- Combine KEGG (broad pathways) with Reactome (`ReactomePA::enrichPathway`) for complementary coverage; the two databases overlap but emphasise different aspects of biology.
+- For genes with associated fold-change estimates, GSEA on KEGG pathways (`gseKEGG()`) is more powerful than over-representation analysis because it uses the full ranked gene list rather than thresholding into hit and non-hit sets.
+
+## R Packages Used
+
+`clusterProfiler` for `enrichKEGG()`, `enrichMKEGG()`, `gseKEGG()`, and the broader enrichment-analysis framework; `pathview` for KEGG pathway visualisation with LFC overlay; `org.Hs.eg.db` (and species-specific equivalents) for Entrez ID conversion; `ReactomePA` for Reactome alternatives; `enrichplot` for ggplot-based visualisations of enrichment results.

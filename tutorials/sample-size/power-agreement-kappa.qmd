@@ -1,0 +1,68 @@
+---
+title: Power for Agreement (Kappa)
+date: "2026-04-17"
+description: "Sample size for Cohen's kappa as a precision-targeted or hypothesis-test planning quantity"
+categories:
+  - "Sample Size & Power"
+  - power
+  - kappa
+  - agreement
+  - reliability
+---
+
+## Introduction
+
+Cohen's kappa measures agreement beyond chance between two raters on a categorical scale and is the de facto standard for inter-rater reliability with categorical outcomes. Sample-size planning for a kappa-based reliability study addresses one of two distinct questions: how many subjects are needed to estimate kappa with a desired precision (a target 95 % confidence-interval half-width around the expected value), or how many subjects are needed to test a hypothesis about kappa (typically that kappa exceeds a benchmark value such as 0 or 0.6) with adequate power. Modern reliability-study protocols are increasingly precision-driven rather than hypothesis-driven, because a "kappa is greater than zero" claim conveys little practical information about a clinical instrument.
+
+## Prerequisites
+
+A working understanding of Cohen's kappa, the marginal-prevalence dependence of kappa's variance, and the distinction between precision-based and hypothesis-test sample-size questions.
+
+## Theory
+
+For an expected kappa $\kappa_1$ with marginal prevalences $\pi_1$ and $\pi_2$ for the two raters, the asymptotic variance of the sample kappa is given by the Fleiss-Cicchetti-Everitt formula. Precision-based planning targets a 95 % CI half-width $w$:
+
+$$n \approx \frac{(1 - \kappa_1^2) \, z_{0.975}^2}{w^2 (1 - p_e)^2},$$
+
+with $p_e$ the chance-expected agreement. Hypothesis-test planning targets the power to reject $H_0: \kappa = \kappa_0$ in favour of $H_1: \kappa = \kappa_1$, using a Normal-approximation $z$-test on the difference between estimated and hypothesised values, scaled by the appropriate standard errors.
+
+## Assumptions
+
+Subjects are independent and each is rated once by each of the two raters; the expected kappa and the marginal prevalences are pre-specified from pilot data or substantive expectations; the rating scale is categorical (or ordinal with weighted kappa).
+
+## R Implementation
+
+```r
+library(irr)
+
+N.cohen.kappa(rate1 = 0.5, rate2 = 0.5,
+              k1 = 0.70, k0 = 0,
+              alpha = 0.05, power = 0.80,
+              twosided = TRUE)
+
+kappa_exp <- 0.70; p_e <- 0.5
+w <- 0.05
+n_prec <- qnorm(0.975)^2 * (1 - kappa_exp^2) / (w^2 * (1 - p_e)^2)
+ceiling(n_prec)
+```
+
+## Output & Results
+
+`N.cohen.kappa()` returns the sample size for the hypothesis test of $\kappa_1$ vs $\kappa_0$ given the marginal rates. For an expected $\kappa_1 = 0.70$ against $\kappa_0 = 0$ at balanced marginals, roughly 40 subjects suffice for the hypothesis-test approach; precision-targeted with a 95 % CI half-width of 0.05 requires roughly 83 subjects, illustrating that precision-based planning typically demands more subjects than hypothesis-test planning.
+
+## Interpretation
+
+A reporting sentence: "To estimate inter-rater Cohen's kappa with a 95 % CI half-width of 0.05 around an anticipated value of 0.70 (assumed marginal prevalences 0.5 in each rater), 83 subjects are required. The protocol enrols 100 to allow for 15 % unevaluable ratings. A hypothesis-test framing — power to reject $\kappa = 0$ at 80 % power — would require only 40 subjects, but the precision-based plan is preferred because the substantive question is the magnitude of agreement, not whether it differs from zero." Always state the planning paradigm.
+
+## Practical Tips
+
+- Kappa's variance depends substantially on the marginal prevalences; very imbalanced marginals (e.g., one category at 5 % prevalence) inflate the variance and require more subjects than balanced marginals at the same expected kappa value.
+- Weighted kappa for ordinal categories has smaller standard error than unweighted kappa for nominal categories with the same number of categories; adjust the sample-size calculation accordingly using the weighted-kappa variance formula.
+- Multi-rater kappa (Fleiss's kappa) requires a different sample-size calculation than two-rater Cohen's kappa; use `samplesize::kappa.sample.size()` or simulation-based approaches for the multi-rater design.
+- Always report the marginal prevalences and the assumed agreement matrix in the protocol, not just the expected kappa estimate; reviewers cannot reproduce the calculation without them, and the marginals materially affect the variance.
+- For continuous ratings, the appropriate reliability statistic is the intraclass correlation coefficient (ICC), and a separate sample-size calculation applies; do not dichotomise continuous ratings to compute kappa.
+- For the kappa-paradox situation where high observed agreement coincides with low kappa due to imbalanced marginals, consider reporting both kappa and the prevalence- and bias-adjusted kappa (PABAK) for a fuller picture of reliability.
+
+## R Packages Used
+
+`irr::N.cohen.kappa()` for the canonical Cohen's-kappa hypothesis-test sample-size calculation; `samplesize::kappa.sample.size()` for an alternative interface and multi-rater extensions; `kappaSize` for kappa sample-size with multi-category outcomes; `simr` for simulation-based extensions; `psych` and `irr` for kappa analysis after data collection.

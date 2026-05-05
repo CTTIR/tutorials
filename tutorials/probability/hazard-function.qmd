@@ -1,0 +1,96 @@
+---
+title: The Hazard Function
+date: "2026-04-17"
+description: Instantaneous event rate given survival so far; central concept of survival analysis
+categories:
+  - Probability Theory
+  - hazard
+  - survival
+  - instantaneous-rate
+---
+
+## Introduction
+
+The hazard function $h(t)$ gives the instantaneous rate at which events occur at time $t$, given that they have not occurred before $t$. It is the primary object in survival analysis and reliability engineering: proportional-hazards models, accelerated-failure-time models, and competing-risks methods all reason about hazards rather than distributions directly.
+
+## Prerequisites
+
+Continuous distributions; survival function $S(t) = P(T > t)$.
+
+## Theory
+
+For a non-negative continuous random variable $T$ with density $f$ and survival function $S(t) = 1 - F(t)$,
+
+$$h(t) = \frac{f(t)}{S(t)}.$$
+
+Intuitively, $h(t) \, dt$ is approximately $P(t \leq T < t + dt \mid T \geq t)$ for small $dt$.
+
+The **cumulative hazard** is
+
+$$H(t) = \int_0^t h(u) \, du = -\log S(t).$$
+
+Conversely, $S(t) = e^{-H(t)}$. Once either of $f$, $F$, $S$, $h$, $H$ is known, the others follow.
+
+**Hazard shapes** for common distributions:
+
+- Exponential: $h(t) = \lambda$ (constant).
+- Weibull with shape $k$: $h(t) = (k/\lambda)(t/\lambda)^{k-1}$ -- increasing if $k > 1$, decreasing if $k < 1$.
+- Gompertz: $h(t) = \alpha e^{\beta t}$ -- exponentially increasing; common in human mortality.
+- Log-normal: $h(t)$ rises then falls.
+
+## Assumptions
+
+$T$ is a non-negative continuous random variable with a density. Proportional-hazards models further assume $h(t \mid x) = h_0(t) \exp(\beta^\top x)$.
+
+## R Implementation
+
+```r
+library(survival); library(ggplot2)
+
+# Constant hazard (exponential)
+x <- seq(0.01, 5, length.out = 400)
+h_exp <- rep(0.5, length(x))
+h_weibull_inc <- (2.0 / 1.5) * (x / 1.5)^(2.0 - 1)
+h_weibull_dec <- (0.5 / 1.5) * (x / 1.5)^(0.5 - 1)
+
+df <- data.frame(
+  t  = rep(x, 3),
+  h  = c(h_exp, h_weibull_inc, h_weibull_dec),
+  kind = factor(rep(c("exp lambda=0.5",
+                      "weibull k=2 (incr)",
+                      "weibull k=0.5 (decr)"), each = length(x)))
+)
+
+ggplot(df, aes(t, h, colour = kind)) +
+  geom_line(linewidth = 1) +
+  scale_colour_manual(values = c("#6A4C93", "#2A9D8F", "#F4A261")) +
+  labs(x = "t", y = "h(t)", colour = "",
+       title = "Hazard functions for three canonical models") +
+  theme_minimal()
+
+# Empirical cumulative hazard from censored data
+set.seed(2026)
+T <- rexp(100, rate = 0.3)
+status <- rep(1, 100)
+fit <- survfit(Surv(T, status) ~ 1)
+plot(fit, fun = "cumhaz", col = "#2A9D8F", lwd = 2,
+     xlab = "t", ylab = "H(t)",
+     main = "Empirical cumulative hazard (Nelson-Aalen)")
+abline(0, 0.3, col = "#F4A261", lty = 2)
+```
+
+## Output & Results
+
+The plot shows three hazards: exponential (flat), increasing Weibull, decreasing Weibull. The empirical cumulative hazard from 100 exponential event times is approximately linear with slope $\lambda = 0.3$, matching the theoretical $H(t) = 0.3 t$.
+
+## Interpretation
+
+In survival analysis, hazards are the natural target of regression: "the hazard of death was 40 % higher in the treated group than in controls (HR = 1.40, 95 % CI 1.10-1.78)". The proportional-hazards model is ubiquitous because it avoids specifying the baseline hazard shape.
+
+## Practical Tips
+
+- A constant hazard implies exponentiality; a log-log plot of $-\log S(t)$ against $\log t$ that is linear indicates Weibull.
+- Empirical hazards are noisy at the tail where few subjects remain; report cumulative hazard (smoother) or kernel-smoothed hazard estimates.
+- The **Nelson-Aalen** estimator is the standard non-parametric estimator of the cumulative hazard under right-censoring.
+- In competing risks, cause-specific hazards differ from the sub-distribution hazard of Fine-Gray; the two answer different questions.
+- Time-varying hazard ratios invalidate the proportional-hazards assumption; use stratification or time-interactions.

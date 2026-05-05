@@ -1,0 +1,68 @@
+---
+title: Canonical Correlation Analysis
+date: "2026-04-17"
+description: Identifying pairs of linear combinations that maximise correlation between two variable sets
+categories:
+  - Multivariate Statistics
+  - cca
+  - canonical-correlation
+  - multivariate
+---
+
+## Introduction
+
+Canonical correlation analysis (CCA) finds pairs of linear combinations — one from each of two variable sets — that are maximally correlated. Where multiple regression has one outcome and many predictors, CCA generalises to many outcomes and many predictors simultaneously: the first canonical pair $(U_1, V_1)$ is the linear combination of the predictor side and the linear combination of the outcome side whose correlation is highest. Successive pairs are constrained to be uncorrelated with previous ones, mirroring the orthogonality of principal components.
+
+## Prerequisites
+
+A working understanding of multiple regression, principal components analysis, and the geometry of correlation in multivariate spaces.
+
+## Theory
+
+Given two sets of variables $X$ ($p$ columns) and $Y$ ($q$ columns), CCA finds pairs of canonical variates $U_k = X a_k$ and $V_k = Y b_k$ maximising $\mathrm{cor}(U_k, V_k)$ subject to $\mathrm{Var}(U_k) = \mathrm{Var}(V_k) = 1$ and orthogonality with previous pairs. There are $\min(p, q)$ canonical pairs, indexed by canonical correlations $\rho_1 \ge \rho_2 \ge \dots$ that are non-increasing.
+
+Inference under multivariate Normality uses Wilks' lambda or Pillai's trace to test whether canonical correlations beyond a given index are zero. Canonical loadings (correlations between original variables and canonical variates) help interpret the structure of each canonical pair.
+
+## Assumptions
+
+Multivariate Normality (for the asymptotic significance tests), linear associations between variable sets, and adequate sample size relative to $p + q$. CCA is sensitive to outliers; one or two extreme observations can dominate the canonical structure.
+
+## R Implementation
+
+```r
+library(CCA)
+
+# Two sets: first two and last two iris variables (artificial split)
+X <- scale(iris[, 1:2])
+Y <- scale(iris[, 3:4])
+
+cc_res <- cc(X, Y)
+cc_res$cor      # canonical correlations
+cc_res$xcoef    # canonical coefficients for X
+cc_res$ycoef    # canonical coefficients for Y
+
+# Significance via Wilks' lambda
+wilks <- (1 - cc_res$cor^2)
+wilks
+```
+
+## Output & Results
+
+`cc()` returns canonical correlations (sorted in decreasing order), canonical coefficients (weights for each variable set), and the canonical variate scores. Wilks' lambda statistic and its associated $F$-approximation test the joint significance of canonical correlations from a given index onwards.
+
+## Interpretation
+
+A reporting sentence: "Canonical correlation analysis on the iris measurements found a first canonical correlation of $\rho_1 = 0.94$ ($p < 0.001$, Wilks' $\lambda = 0.077$); the canonical loadings showed petal dimensions dominating the $Y$-side combination, indicating that overall flower size is the primary axis of association between the sepal and petal measurements." Report canonical loadings (correlations) rather than raw weights for interpretation; the latter are scale-dependent.
+
+## Practical Tips
+
+- Interpret only the first few canonical correlations; later pairs typically capture little signal.
+- For high-dimensional settings ($p + q$ approaching or exceeding $n$), use regularised CCA (`CCA::rcc`); standard CCA breaks down with rank-deficient covariance matrices.
+- Partial CCA (`CCA::pcc` or `CCP::p.asym`) controls for covariates that should be removed before testing the canonical structure.
+- For predictive use, partial least squares (`pls::plsr` or `mixOmics::spls`) is often preferable; PLS optimises predictive covariance rather than mutual correlation.
+- Canonical loadings (correlations between variables and canonical variates) interpret cleaner than raw weights because they are scale-independent.
+- Always pre-screen outliers; CCA is highly sensitive to extreme observations, and a robust CCA variant (`rrcov::CcaClassic` vs `CcaRobust`) is worth comparing.
+
+## R Packages Used
+
+`CCA` for `cc()`, `rcc()`, and visualisation helpers; `CCP` for asymptotic significance tests (Wilks' lambda, Pillai, Hotelling-Lawley); `vegan::CCorA()` for ecology-flavoured CCA; `mixOmics::cca()` for sparse and regularised variants integrated with omics workflows.

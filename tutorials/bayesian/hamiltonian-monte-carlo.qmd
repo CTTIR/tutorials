@@ -1,0 +1,64 @@
+---
+title: Hamiltonian Monte Carlo
+date: "2026-04-17"
+description: Gradient-based MCMC using Hamiltonian dynamics; NUTS variant in Stan
+categories:
+  - Bayesian Statistics
+  - hmc
+  - nuts
+  - gradient-mcmc
+---
+
+## Introduction
+
+Hamiltonian Monte Carlo (HMC) is the current state of the art for sampling from continuous Bayesian posteriors of moderate-to-high dimension. Where random-walk Metropolis takes small, undirected steps and Gibbs cycles through coordinates, HMC uses gradient information to propose long-distance moves that almost always land in regions of high posterior density. The No-U-Turn Sampler (NUTS), Stan's default, automates the choice of trajectory length so that users do not need to tune step counts by hand. The result is mixing rates that are orders of magnitude better than coordinate-wise samplers for posteriors with strong correlations.
+
+## Prerequisites
+
+A working understanding of MCMC, basic calculus (gradients), and the relationship between log-posterior gradients and the geometry of the posterior surface. Familiarity with Stan or `brms` makes the implementation step trivial.
+
+## Theory
+
+HMC introduces auxiliary momentum variables $p$ and samples from the joint distribution $p(\theta, p) = p(\theta \mid y) \mathcal N(p \mid 0, M)$, where $M$ is the mass matrix. Hamiltonian dynamics conserve the joint Hamiltonian $H(\theta, p) = -\log p(\theta \mid y) + \tfrac{1}{2} p^T M^{-1} p$, so trajectories simulated with leapfrog integration drift through level sets of constant log-density and explore the posterior efficiently. After $L$ leapfrog steps with step size $\epsilon$, the proposal is accepted with a Metropolis correction that compensates for integrator error. NUTS replaces the manual choice of $L$ with a "no-U-turn" criterion that terminates the trajectory when it starts doubling back, eliminating the most error-prone tuning parameter of plain HMC.
+
+## Assumptions
+
+A continuous, almost-everywhere differentiable log-posterior. Discrete parameters must be marginalised out. The mass matrix should approximate the posterior covariance — Stan adapts it during warm-up — and the step size must be small enough to keep integrator error in check.
+
+## R Implementation
+
+```r
+library(brms)
+
+set.seed(2026)
+d <- data.frame(x = rnorm(100))
+d$y <- 2 + 1.5 * d$x + rnorm(100)
+
+fit <- brm(y ~ x, data = d,
+           chains = 4, iter = 2000, refresh = 0,
+           control = list(adapt_delta = 0.95, max_treedepth = 10))
+
+summary(fit)
+# Diagnostics: R-hat, divergences, energy
+rstan::check_hmc_diagnostics(fit$fit)
+```
+
+## Output & Results
+
+`summary(fit)` reports posterior summaries with $\hat R$, ESS, and credible intervals. `rstan::check_hmc_diagnostics()` reports divergent transitions, tree-depth saturation, energy diagnostics (E-BFMI), and is the first-line check that the geometry was navigable. Healthy HMC delivers $\hat R$ near 1.00, no divergent transitions, and ESS that is a substantial fraction of the post-warm-up draws.
+
+## Interpretation
+
+A reporting sentence: "HMC/NUTS produced 4,000 post-warm-up draws across four chains with no divergent transitions and $\hat R = 1.00$ for every parameter; the slope posterior was 1.52 (95 % credible interval 1.31 to 1.74)." When divergences occur, report them and describe the remedy (reparameterisation, raising `adapt_delta`); a divergent transition is a missed region of the posterior, not a tuning curiosity.
+
+## Practical Tips
+
+- For hierarchical models with funnel geometry, switch to non-centred parameterisation; `brms` does this automatically when you specify `prior(... , class = "sd", ...)`.
+- Raising `adapt_delta` to 0.95 or 0.99 reduces divergences at the cost of smaller step sizes and slower sampling; reparameterisation is usually a better fix.
+- Tree-depth saturation (`treedepth__` hitting `max_treedepth`) signals that NUTS could not turn around within the budget — increase `max_treedepth` or simplify the model.
+- Reparameterise constrained variables onto unconstrained scales when you can: `log(sigma)` rather than `sigma > 0` keeps the leapfrog integrator stable.
+- HMC scales to thousands of parameters where Gibbs or random-walk MH would be unworkable, but it cannot rescue an ill-conditioned posterior; geometry matters more than algorithm.
+
+## R Packages Used
+
+`rstan` and `cmdstanr` as the HMC/NUTS backends, `brms` and `rstanarm` for high-level interfaces, `bayesplot` for diagnostic plots (`mcmc_pairs`, `mcmc_parcoord`) that visualise divergent transitions, and `posterior` for the underlying draw arrays.

@@ -1,0 +1,67 @@
+---
+title: Signal-to-Noise Ratios
+date: "2026-04-17"
+description: "Taguchi's SNR metrics combining mean and variance"
+categories:
+  - Experimental Design
+  - snr
+  - taguchi
+  - signal
+---
+
+## Introduction
+
+Signal-to-noise (SNR) ratios in Taguchi's framework jointly summarise the mean and variance of a response. Three variants handle different quality targets: smaller-is-better, larger-is-better, and nominal-is-best. Maximising SNR selects factor combinations that produce both a desirable mean and low variance.
+
+## Prerequisites
+
+Taguchi methods; variance and mean summaries.
+
+## Theory
+
+- **Smaller-is-better** (minimisation): $\text{SNR} = -10 \log_{10}\left(\frac{1}{n} \sum y_i^2\right)$.
+- **Larger-is-better** (maximisation): $\text{SNR} = -10 \log_{10}\left(\frac{1}{n} \sum 1/y_i^2\right)$.
+- **Nominal-is-best** (hit target $\tau$): $\text{SNR} = 10 \log_{10}(\bar{y}^2 / s^2)$.
+
+Higher SNR is always better. Bias: SNRs conflate mean and variance; variance reduction can increase SNR even when mean drifts.
+
+## Assumptions
+
+Outcomes are non-negative (for smaller/larger-is-better); target is appropriate; replicates exist to estimate variance.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+# Smaller-is-better: defects per batch
+defects <- matrix(rpois(20 * 3, lambda = 4), 20, 3)
+snr_sb <- -10 * log10(rowMeans(defects^2))
+
+# Larger-is-better: process yield
+yield <- matrix(rnorm(20 * 3, 80, 5), 20, 3)
+snr_lb <- -10 * log10(rowMeans(1 / yield^2))
+
+# Nominal-is-best: target 50
+values <- matrix(rnorm(20 * 3, 50, 3), 20, 3)
+means <- rowMeans(values); sds <- apply(values, 1, sd)
+snr_nom <- 10 * log10(means^2 / sds^2)
+
+head(data.frame(snr_sb, snr_lb, snr_nom))
+```
+
+## Output & Results
+
+Per-batch SNR values under the three variants; the batch maximising each SNR has the desirable combination of mean and variance.
+
+## Interpretation
+
+"Smaller-is-better SNR was -12.5 (batch 3) vs -14.7 (batch 10); batch 3 achieved lower mean and lower variance of defects. The larger-is-better SNR identified a different optimal batch, suggesting SNRs depend on target."
+
+## Practical Tips
+
+- SNR combines mean and variance -- convenient but conflates them. Modern practice reports mean and variance separately.
+- Dual-response surface methods (Myers-Carter, Vining-Myers) extend SNR thinking by fitting separate mean and variance models.
+- For nominal-is-best, ensure $\bar{y}$ hits target before interpreting SNR.
+- SNR is sensitive to sample size; fewer replicates inflate or deflate the metric.
+- Report SNR in dB (decibels, i.e. using $10 \log_{10}$), to follow Taguchi conventions.

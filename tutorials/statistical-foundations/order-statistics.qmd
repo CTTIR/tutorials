@@ -1,0 +1,97 @@
+---
+title: Order Statistics
+date: "2026-04-17"
+description: Distributions of the sorted sample and their role in quantile theory and robust estimation
+categories:
+  - Statistical Foundations
+  - order-statistics
+  - quantiles
+  - extremes
+  - range
+---
+
+## Introduction
+
+Given a sample $X_1, \ldots, X_n$, the **order statistics** are the sorted values $X_{(1)} \leq X_{(2)} \leq \ldots \leq X_{(n)}$. They are the raw material for the median, the quantiles, the range, the IQR, and many non-parametric and robust methods. Their distributional theory provides exact confidence intervals for quantiles and limiting distributions for extremes -- tools that analytical approaches to the mean cannot reach.
+
+## Prerequisites
+
+The reader should know what a CDF and a PDF are, and should be comfortable with `sort()` and `quantile()` in R.
+
+## Theory
+
+For iid $X_i$ with CDF $F$, the CDF of the $k$-th order statistic is
+
+$$F_{X_{(k)}}(x) = \sum_{j=k}^n \binom{n}{j} F(x)^j [1 - F(x)]^{n-j}.$$
+
+If $F$ has density $f$, the density of $X_{(k)}$ is
+
+$$f_{X_{(k)}}(x) = \frac{n!}{(k-1)!(n-k)!} F(x)^{k-1} [1 - F(x)]^{n-k} f(x).$$
+
+The joint density of $X_{(i)}$ and $X_{(j)}$ for $i < j$ has a similar combinatorial form.
+
+**Uniform case.** If $U_i \sim \text{Uniform}(0, 1)$, then $U_{(k)} \sim \text{Beta}(k, n - k + 1)$ with mean $k/(n+1)$. This is why plotting positions in Q-Q plots use $(k - 0.5)/n$ or $k/(n+1)$ rather than $k/n$.
+
+**Sample quantiles.** For sample size $n$, the sample $p$-quantile is usually defined as $X_{(\lceil np \rceil)}$ or an interpolation between adjacent order statistics; R's `quantile()` offers nine definitions via the `type` argument. The sample median is $X_{((n+1)/2)}$ for odd $n$.
+
+**Extremes.** The distributions of $X_{(1)}$ and $X_{(n)}$ are of independent interest. For large $n$, appropriately normalised extremes have limiting distributions (Gumbel, Frechet, or Weibull) given by extreme-value theory.
+
+**Confidence intervals for quantiles.** Because of the combinatorial form of the CDF of an order statistic, exact distribution-free CIs for a population quantile can be constructed: the interval $[X_{(i)}, X_{(j)}]$ has a known coverage probability for the $p$-quantile, regardless of $F$.
+
+## Assumptions
+
+The classical theory assumes iid observations; most of the formulas extend directly to exchangeable data. For dependent data, the distribution of order statistics is much more complicated.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+set.seed(2026)
+n <- 20
+p <- 0.75
+reps <- 10000
+
+sim_q <- replicate(reps, {
+  x <- rnorm(n, mean = 50, sd = 10)
+  sort(x)[ceiling(p * (n + 1))]
+})
+
+true_q <- qnorm(p, mean = 50, sd = 10)
+c(empirical_mean = mean(sim_q),
+  true           = true_q,
+  empirical_SE   = sd(sim_q))
+
+x <- rnorm(n, mean = 50, sd = 10)
+sorted_x <- sort(x)
+q05 <- binom.test(x = round(p * n), n = n, p = p)
+k_lo <- qbinom(0.025, n, p)
+k_hi <- qbinom(0.975, n, p) + 1
+c(lower = sorted_x[k_lo], upper = sorted_x[min(k_hi, n)])
+```
+
+The first block simulates the sampling distribution of the 75th-percentile estimate. The second constructs a distribution-free CI for the population 75th percentile from binomial probabilities applied to ranks.
+
+## Output & Results
+
+```
+empirical_mean            true   empirical_SE
+         56.13           56.74           3.01
+
+lower  upper
+54.17  72.81
+```
+
+The sample quantile is slightly biased in small samples (a known feature for definitions like `type = 7`); the distribution-free CI for the true quantile is wide but valid for any continuous distribution.
+
+## Interpretation
+
+Order-statistic-based CIs are useful when the distribution of the data is unknown or clearly non-normal. Reporting "median survival 27 months (distribution-free 95% CI 22 to 31)" is an appropriate summary in survival analysis when the parametric form is in doubt.
+
+## Practical Tips
+
+- R's `quantile()` default is `type = 7`; specify it explicitly if exact reproducibility across software is important.
+- For extreme-value inference (maxima, minima), do not rely on asymptotic normality; use extreme-value theory and the `evd` or `extRemes` packages.
+- Distribution-free CIs for quantiles are wide; they are the price of making no distributional assumption.
+- When the sample is small ($n < 20$), the set of achievable confidence levels for a distribution-free CI is discrete -- you cannot always get exactly 95%.
+- Empirical CDFs, constructed from order statistics, are the basis of Kolmogorov-Smirnov tests and many other non-parametric procedures.

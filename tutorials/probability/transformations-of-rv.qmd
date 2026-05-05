@@ -1,0 +1,101 @@
+---
+title: Transformations of Random Variables
+date: "2026-04-17"
+description: "Distribution of g(X) given the distribution of X, via the change-of-variables formula"
+categories:
+  - Probability Theory
+  - transformation
+  - change-of-variables
+  - jacobian
+---
+
+## Introduction
+
+Given a random variable $X$ and a function $g$, the distribution of $Y = g(X)$ is determined by the distribution of $X$ and the function. The change-of-variables formula computes the new distribution; for strictly monotone differentiable $g$ this involves a Jacobian factor.
+
+## Prerequisites
+
+Random variables, PDF, basic calculus.
+
+## Theory
+
+**Univariate, monotone case**. Let $X$ have density $f_X$ on support $\mathcal{X}$, and let $g$ be strictly monotone and differentiable on $\mathcal{X}$. Then $Y = g(X)$ has density
+
+$$f_Y(y) = f_X(g^{-1}(y)) \left|\frac{d g^{-1}(y)}{dy}\right|.$$
+
+The absolute value of the derivative of the inverse is the **Jacobian**.
+
+**Non-monotone case**. If $g$ is piecewise monotone, partition the domain into monotone segments and sum the contributions:
+
+$$f_Y(y) = \sum_i f_X(x_i) / |g'(x_i)|$$
+
+where $\{x_i\}$ are the solutions of $g(x) = y$.
+
+**Multivariate case**. For $\mathbf{Y} = g(\mathbf{X})$ with $g: \mathbb{R}^n \to \mathbb{R}^n$ a diffeomorphism,
+
+$$f_{\mathbf{Y}}(\mathbf{y}) = f_{\mathbf{X}}(g^{-1}(\mathbf{y})) \, |\det J_{g^{-1}}(\mathbf{y})|,$$
+
+where $J_{g^{-1}}$ is the Jacobian matrix of $g^{-1}$.
+
+**Common examples**:
+
+- $Y = aX + b$: $f_Y(y) = f_X((y - b)/a) / |a|$.
+- $Y = X^2$, $X$ standard normal: $Y \sim \chi^2_1$.
+- $Y = e^X$, $X$ normal: $Y$ is log-normal.
+- $Y = F^{-1}(U)$, $U \sim \mathrm{Uniform}(0, 1)$: the inverse-CDF method for generating arbitrary distributions.
+
+## Assumptions
+
+- $g$ must be measurable.
+- For the change-of-variables formula to apply, $g$ must be strictly monotone and differentiable (or piecewise so).
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+# Case 1: Y = X^2 for X ~ N(0, 1); Y should be chi-squared with 1 df
+X <- rnorm(1e5)
+Y <- X^2
+
+par(mfrow = c(1, 2))
+hist(Y, breaks = 100, freq = FALSE, main = "Empirical", col = "#2A9D8F")
+curve(dchisq(x, df = 1), from = 0, to = 10, add = TRUE, col = "#F4A261", lwd = 2)
+
+# Case 2: Y = exp(X) for X ~ N(mu, sigma) is log-normal
+mu <- 1; sigma <- 0.5
+X2 <- rnorm(1e5, mu, sigma)
+Y2 <- exp(X2)
+curve(dlnorm(x, mu, sigma), from = 0, to = 10,
+      main = "exp(N(1, 0.25)) vs lognormal PDF",
+      col = "#2A9D8F", lwd = 2)
+hist(Y2, breaks = 100, freq = FALSE, add = TRUE, border = "#F4A261")
+
+par(mfrow = c(1, 1))
+
+# Case 3: Inverse-CDF method to generate exponential from uniform
+U <- runif(1e5)
+E <- -log(1 - U)    # F^{-1}(u) = -log(1 - u) for rate = 1
+c(mean = mean(E), theoretical = 1)
+```
+
+## Output & Results
+
+```
+    mean  theoretical
+   0.999        1.000
+```
+
+Empirical histograms match the theoretical transformed densities. The inverse-CDF method recovers the exponential mean.
+
+## Interpretation
+
+Many "derived" distributions in statistics (chi-squared from normals, log-normal from normals, Cauchy from normals, Beta from gammas) arise as transformations of simpler distributions. Recognising the transformation short-cuts many derivations.
+
+## Practical Tips
+
+- Always check strict monotonicity before applying the simple Jacobian formula; square-mapping $X^2$ is a classic non-monotone case.
+- For inverse-CDF simulation, you need the CDF's inverse; use `qnorm`, `qgamma`, etc., in R.
+- The Jacobian for a multivariate linear transformation $Y = AX$ is $|det A|$, independent of location.
+- Delta method is the "linearised" version of the change-of-variables formula, used for asymptotic distributions.
+- Non-bijective transformations (e.g., $|X|$) require summing over preimages, as in the non-monotone case.

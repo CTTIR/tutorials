@@ -1,0 +1,92 @@
+---
+title: "Unbiasedness, Consistency, Efficiency"
+date: "2026-04-17"
+description: Three core finite- and large-sample properties that let us compare estimators
+categories:
+  - Statistical Foundations
+  - unbiased
+  - consistency
+  - efficiency
+  - estimator
+---
+
+## Introduction
+
+When multiple estimators are available for the same parameter, we need criteria to choose among them. Three classical criteria -- unbiasedness, consistency, and efficiency -- cover the most important properties: whether the estimator is correct on average (unbiasedness), whether it approaches the truth as more data arrive (consistency), and whether it uses the data as effectively as possible (efficiency).
+
+## Prerequisites
+
+The reader should be comfortable with the notions of expectation, variance, and convergence in probability.
+
+## Theory
+
+**Unbiasedness.** An estimator $\hat{\theta}$ is unbiased for $\theta$ if $E[\hat{\theta}] = \theta$ for every value of $\theta$ in the parameter space. Examples: the sample mean is unbiased for the population mean; the sample variance with divisor $n - 1$ is unbiased for $\sigma^2$; the plug-in variance with divisor $n$ is biased.
+
+**Consistency.** An estimator $\hat{\theta}_n$ is consistent for $\theta$ if it converges to $\theta$ in probability as $n \to \infty$:
+
+$$\hat{\theta}_n \xrightarrow{P} \theta.$$
+
+Unbiasedness and consistency are distinct: the sample median is consistent for the population median but can be biased in small samples; the MLE of $\sigma^2$ (divisor $n$) is biased in every finite sample but consistent.
+
+**Efficiency.** Among unbiased estimators, the **efficient** one is the one with the smallest variance. The Cramer-Rao lower bound (CRLB) sets a floor on this variance:
+
+$$\mathrm{Var}(\hat{\theta}) \geq \frac{1}{I(\theta)},$$
+
+where $I(\theta)$ is the Fisher information for $\theta$. An estimator that attains this bound is **UMVUE** (uniformly minimum-variance unbiased estimator). For regular models, the MLE is asymptotically efficient: its variance approaches the CRLB as $n$ grows.
+
+These three properties can be in tension. A biased estimator with tiny variance can have lower MSE than an unbiased estimator with large variance; a consistent estimator may converge slowly or may not exist in closed form.
+
+## Assumptions
+
+These properties are defined within a model. Change the model, and an estimator that was unbiased, consistent, and efficient for one parameter may be none of the three for another.
+
+## R Implementation
+
+```r
+library(ggplot2)
+set.seed(2026)
+
+simulate_props <- function(n, reps = 5000) {
+  mu <- 10
+  sigma <- 3
+  m  <- replicate(reps, mean(rnorm(n, mu, sigma)))
+  md <- replicate(reps, median(rnorm(n, mu, sigma)))
+  rbind(
+    data.frame(n = n, est = "mean",   bias = mean(m) - mu, var = var(m)),
+    data.frame(n = n, est = "median", bias = mean(md) - mu, var = var(md))
+  )
+}
+
+res <- do.call(rbind, lapply(c(10, 50, 250, 1000), simulate_props))
+res
+```
+
+We compare the sample mean and the sample median as estimators of the population mean $\mu$ (under a symmetric normal, so both target the same quantity). The mean is efficient; the median is less efficient but is also consistent.
+
+## Output & Results
+
+```
+     n    est         bias         var
+1   10   mean   0.00285700   0.9066562
+2   10 median   0.00162894   1.3963523
+3   50   mean   0.00098014   0.1795648
+4   50 median  -0.00132211   0.2743110
+5  250   mean  -0.00083720   0.0359942
+6  250 median  -0.00038881   0.0557902
+7 1000   mean   0.00006472   0.0090152
+8 1000 median  -0.00007128   0.0140841
+```
+
+Both estimators have bias near zero; variance shrinks at rate $1/n$ (the mean hits $\sigma^2/n = 9/n$; the median is higher by the factor $\pi/2 \approx 1.57$). The mean is thus more efficient by roughly 1.57.
+
+## Interpretation
+
+For normally distributed data, the sample mean is both unbiased and efficient; choosing it over the median costs nothing and gains precision. For heavy-tailed data or data with outliers, the median is more robust, and the efficiency gap can reverse in the opposite direction. These are trade-offs that the three criteria make explicit.
+
+## Practical Tips
+
+- Consistency is usually the bare minimum requirement; without it, more data does not help.
+- Unbiasedness is a mathematical convenience that can be sacrificed for a smaller variance (lower MSE).
+- The asymptotic efficiency of the MLE is why it is a default estimator in regular parametric models; the cost is specification error if the model is wrong.
+- Efficiency is relative to a model: under misspecification, the "efficient" estimator may be inconsistent while a "less efficient" robust one remains consistent.
+- Always compare estimators on the quantity that matters for the application -- MSE, coverage of CIs, predictive error -- not on a single property in isolation.

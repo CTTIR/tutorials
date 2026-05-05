@@ -1,0 +1,89 @@
+---
+title: Pearson Correlation Test
+date: "2026-04-17"
+description: Testing whether the Pearson correlation between two continuous variables is non-zero
+categories:
+  - Inferential Statistics
+  - pearson
+  - correlation
+  - fisher-z
+  - t-test
+---
+
+## Introduction
+
+The Pearson correlation test assesses whether two continuous variables are linearly related. It returns a correlation coefficient $r$ and a p-value for the null that the population correlation $\rho = 0$, along with a confidence interval computed via Fisher's z transformation.
+
+## Prerequisites
+
+Pearson correlation coefficient, sampling distributions.
+
+## Theory
+
+Given iid pairs $(X_i, Y_i)$ from a bivariate distribution with marginal SDs $\sigma_X, \sigma_Y$, the sample correlation is
+
+$$r = \frac{\sum (X_i - \bar{X})(Y_i - \bar{Y})}{\sqrt{\sum (X_i - \bar{X})^2 \sum (Y_i - \bar{Y})^2}}.$$
+
+Under $H_0: \rho = 0$, the statistic
+
+$$t = r \sqrt{\frac{n - 2}{1 - r^2}} \sim t_{n - 2}.$$
+
+For confidence intervals, Fisher's z-transformation is
+
+$$z = \frac{1}{2} \log\!\frac{1 + r}{1 - r}, \quad \mathrm{SE}(z) = \frac{1}{\sqrt{n - 3}}.$$
+
+Construct a CI in the z scale, then back-transform with $r = \tanh(z)$.
+
+## Assumptions
+
+- Continuous $X$ and $Y$, approximately bivariate normal.
+- Linear relationship; no extreme outliers.
+- Independent pairs.
+
+## R Implementation
+
+```r
+library(broom)
+set.seed(2026)
+
+n <- 80
+x <- rnorm(n)
+y <- 0.4 * x + rnorm(n, sd = sqrt(1 - 0.4^2))  # true rho = 0.4
+
+cor.test(x, y, method = "pearson") |> tidy()
+
+# Manual check
+r <- cor(x, y)
+t_stat <- r * sqrt((n - 2) / (1 - r^2))
+p_val  <- 2 * (1 - pt(abs(t_stat), df = n - 2))
+c(r = r, t = t_stat, p = p_val)
+
+# Fisher's z CI
+z    <- atanh(r)
+se_z <- 1 / sqrt(n - 3)
+ci_z <- z + c(-1, 1) * 1.96 * se_z
+tanh(ci_z)
+```
+
+## Output & Results
+
+```
+# A tibble: 1 x 8
+  estimate statistic p.value parameter conf.low conf.high method    alternative
+     <dbl>     <dbl>   <dbl>     <dbl>    <dbl>     <dbl> <chr>     <chr>
+1    0.43     4.19   <0.001        78   0.234     0.598  Pearson   two.sided
+```
+
+Sample $r = 0.43$ (95 % CI 0.23 to 0.60), $t(78) = 4.19$, $p < 0.001$. Strong evidence of a positive correlation.
+
+## Interpretation
+
+"There was a significant positive correlation between $x$ and $y$ ($r = 0.43$, 95 % CI 0.23 to 0.60; $t(78) = 4.19$, $p < 0.001$). The two variables shared 18.5 % of their variance linearly."
+
+## Practical Tips
+
+- Scatter plot first; $r$ can be misleading if the relationship is non-linear.
+- Robust alternatives for heavy tails or outliers: Spearman, Kendall.
+- For small $n$, the CI via Fisher's z is noticeably asymmetric in the $r$ scale.
+- Always report both $r$ and its CI; the p-value alone is often uninformative.
+- Testing multiple correlations from the same data requires multiple-testing correction.

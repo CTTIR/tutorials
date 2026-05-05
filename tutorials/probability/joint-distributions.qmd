@@ -1,0 +1,88 @@
+---
+title: Joint Distributions
+date: "2026-04-17"
+description: "The distribution of a pair (or vector) of random variables, encoding their dependence structure"
+categories:
+  - Probability Theory
+  - joint-distribution
+  - bivariate
+  - dependence
+---
+
+## Introduction
+
+A joint distribution describes how two or more random variables behave together. It contains strictly more information than the marginals alone: the marginals tell you about each variable in isolation, while the joint tells you how they interact. Dependence, correlation, and conditional behaviour are all properties of the joint distribution.
+
+## Prerequisites
+
+Random variables, PMF, PDF, independence.
+
+## Theory
+
+For two random variables $X$ and $Y$:
+
+- **Joint CDF**: $F_{X,Y}(x, y) = P(X \leq x, Y \leq y)$.
+- **Joint PMF** (discrete): $p_{X,Y}(x, y) = P(X = x, Y = y)$.
+- **Joint PDF** (continuous): $f_{X,Y}(x, y)$ with $\iint f = 1$.
+
+The joint CDF satisfies $\partial^2 F / \partial x \partial y = f$ (in the continuous case where derivatives exist).
+
+**Independence**: $X \perp Y$ if and only if $f_{X,Y}(x, y) = f_X(x) f_Y(y)$ for all $x, y$ (or the PMF equivalent). Equivalently, the joint CDF factorises.
+
+The **bivariate normal** is the canonical joint distribution in applied work:
+
+$$f_{X,Y}(x, y) = \frac{1}{2\pi \sigma_X \sigma_Y \sqrt{1 - \rho^2}} \exp\!\left\{-\frac{1}{2(1 - \rho^2)}\left[\frac{(x - \mu_X)^2}{\sigma_X^2} - \frac{2\rho (x - \mu_X)(y - \mu_Y)}{\sigma_X \sigma_Y} + \frac{(y - \mu_Y)^2}{\sigma_Y^2}\right]\right\}.$$
+
+Its marginals, conditionals, and any linear combination are all normal.
+
+## Assumptions
+
+A joint distribution is well-defined whenever the random variables live on a common probability space.
+
+## R Implementation
+
+```r
+library(mvtnorm); library(ggplot2)
+set.seed(2026)
+
+# Bivariate normal sample
+Sigma <- matrix(c(1, 0.6,
+                  0.6, 1), 2, 2)
+XY <- rmvnorm(2000, mean = c(0, 0), sigma = Sigma)
+df <- data.frame(X = XY[, 1], Y = XY[, 2])
+
+ggplot(df, aes(X, Y)) +
+  geom_point(alpha = 0.3, colour = "#2A9D8F") +
+  geom_density_2d(colour = "#F4A261") +
+  labs(title = "Bivariate normal with correlation 0.6") +
+  theme_minimal()
+
+# Joint density at a point
+dmvnorm(c(0, 0), mean = c(0, 0), sigma = Sigma)
+
+# Probability of a rectangle via the CDF
+p_rect <- pmvnorm(lower = c(-1, -1), upper = c(1, 1),
+                  mean = c(0, 0), sigma = Sigma)
+p_rect
+```
+
+## Output & Results
+
+```
+[1] 0.1989       # density at (0,0)
+[1] 0.6372       # P(-1 <= X <= 1, -1 <= Y <= 1)
+```
+
+The rectangle has probability 0.64 under the bivariate normal with correlation 0.6 -- higher than the product of the marginal rectangle probabilities (0.68 x 0.68 = 0.47) because the variables are positively correlated.
+
+## Interpretation
+
+Most multivariate methods assume some form of joint distribution. Multivariate normal is the default assumption in linear discriminant analysis, MANOVA, and Gaussian graphical models. When the joint distribution is clearly non-normal, consider copula models or non-parametric density estimation.
+
+## Practical Tips
+
+- Visualise joint distributions with 2D density plots, hexbin plots, or pairs plots; scatter plots alone can miss cluster structure.
+- The marginals never determine the joint distribution; two datasets with identical marginals can have very different bivariate structures (Anscombe's quartet generalisation).
+- For continuous data, `MASS::kde2d` and `ggplot2::stat_density_2d` give kernel joint densities.
+- Independence tests: for continuous data use Hoeffding's D (`Hmisc::hoeffd`) or distance correlation (`energy::dcor`); both detect non-linear dependence Pearson misses.
+- Joint discrete distributions are usually tabulated as contingency tables; chi-squared tests of independence are the canonical hypothesis tests.

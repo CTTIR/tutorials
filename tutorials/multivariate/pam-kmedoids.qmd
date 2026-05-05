@@ -1,0 +1,73 @@
+---
+title: Partitioning Around Medoids
+date: "2026-04-17"
+description: "PAM: robust k-medoids clustering for non-Euclidean distances and outlier-contaminated data"
+categories:
+  - Multivariate Statistics
+  - pam
+  - k-medoids
+  - robust
+  - gower
+---
+
+## Introduction
+
+Partitioning around medoids (PAM) is the canonical $k$-medoids clustering algorithm. Like $k$-means, it partitions $n$ observations into $k$ clusters; unlike $k$-means, the cluster centres are actual observations (medoids) rather than coordinate means. This single change makes PAM robust to outliers (a single extreme value cannot drag a medoid away from the cluster bulk), enables clustering on arbitrary dissimilarity matrices including those derived from non-Euclidean distances or mixed numeric-categorical data, and produces interpretable centre observations that can be quoted in clinical or biological contexts ("the typical patient in cluster 2 is patient 47").
+
+## Prerequisites
+
+A working understanding of $k$-means, distance and dissimilarity matrices, and the difference between mean-based and median-like cluster centres.
+
+## Theory
+
+PAM alternates two steps:
+
+1. **Build / swap**: for each cluster, choose the medoid that minimises the total dissimilarity to all other cluster members.
+2. **Assign**: assign each observation to the cluster of its nearest medoid.
+
+The objective is the sum of dissimilarities to the assigned medoid, summed over all observations. The algorithm converges to a local minimum; multiple random initialisations help find a better local optimum. Because PAM consumes a dissimilarity matrix, it works with Gower distance for mixed numeric-categorical data, Manhattan distance for outlier-robust clustering, correlation-based distances for gene-expression patterns, and any custom dissimilarity that the analyst can define.
+
+## Assumptions
+
+A meaningful dissimilarity (or distance) on the input space. Approximately equal cluster sizes are preferable; PAM does not handle very imbalanced clusters as gracefully as model-based methods (Gaussian mixtures).
+
+## R Implementation
+
+```r
+library(cluster)
+
+# Mixed-type data with Gower distance
+d_iris <- iris
+set.seed(2026)
+d_iris$Category <- factor(sample(c("A", "B", "C"), 150, replace = TRUE))
+
+g <- daisy(d_iris, metric = "gower")
+pam_fit <- pam(g, k = 3)
+
+pam_fit$medoids
+table(pam_fit$clustering, iris$Species)
+
+# Silhouette
+summary(silhouette(pam_fit))
+```
+
+## Output & Results
+
+`pam()` returns medoid identifiers (actual case indices), cluster assignments, and within-cluster summaries. `silhouette()` returns per-observation silhouette widths and an average — a primary internal validation metric.
+
+## Interpretation
+
+A reporting sentence: "Partitioning around medoids on Gower-distance dissimilarities produced three clusters that closely match the iris species (Cluster 1: setosa; Cluster 2: 92 % versicolor; Cluster 3: 86 % virginica) with average silhouette width 0.45 (range $-0.10$ to $0.78$)." Always pair PAM with a silhouette analysis to verify that the chosen $k$ produces well-separated clusters.
+
+## Practical Tips
+
+- Choose PAM over $k$-means when outliers are likely or when the data are mixed-type or genuinely non-Euclidean; the medoid is robust where the mean is not.
+- `cluster::pam()` accepts either a data matrix (computing Euclidean distance internally) or a pre-computed `dist` object via the `diss = TRUE` argument.
+- For large datasets ($n > 1{,}000$), `cluster::clara()` runs PAM on sub-samples and combines results, scaling to tens of thousands of observations.
+- Use `fpc::pamk()` to automatically select $k$ via the silhouette method; it returns the optimal $k$ along with the fit.
+- For Gower distances on mixed numeric and categorical data, `cluster::daisy(metric = "gower")` is the standard input; categorical variables become indicator distances, numeric ones become Manhattan after range normalisation.
+- For very large $n$, alternatives such as CLARANS, BIRCH, or mini-batch $k$-means scale better; the price is reduced robustness or interpretability.
+
+## R Packages Used
+
+`cluster` for `pam()`, `clara()`, `daisy()`, and `silhouette()`; `fpc` for `pamk()` automatic $k$ selection; `factoextra` for `fviz_cluster()` ggplot-style cluster visualisation; `klaR::kmodes()` for an analogous categorical-only $k$-modes algorithm.

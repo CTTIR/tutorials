@@ -108,15 +108,3 @@ $\omega^2$ is preferred in small samples because $\eta^2$ is upwardly biased.
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 007e6cdc6ee243a8b67a834e26bc9a66 -->
-<img src="https://vg09.met.vgwort.de/na/007e6cdc6ee243a8b67a834e26bc9a66"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

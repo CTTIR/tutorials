@@ -1,0 +1,79 @@
+---
+title: Percentile Ranks
+date: "2026-04-17"
+description: "Converting a raw value to its position in the sample distribution, expressed as a percentage"
+categories:
+  - Descriptive Statistics
+  - percentile-rank
+  - rank
+  - ecdf
+---
+
+## Introduction
+
+A percentile rank answers "what fraction of observations fall at or below this value?" It converts an absolute measurement to a relative position in the sample distribution. In paediatrics, growth charts give a child's weight percentile; in cognitive testing, an IQ score comes with a percentile rank; in bioinformatics, a gene's expression is often reported as a percentile across a reference panel.
+
+## Prerequisites
+
+The reader should know what a quantile is and be comfortable with sorted vectors in R.
+
+## Theory
+
+For a sample $x_1, \ldots, x_n$, the percentile rank of a value $y$ is
+
+$$\mathrm{PR}(y) = 100 \cdot \frac{\#\{x_i \leq y\}}{n}.$$
+
+Several refinements exist: the "mid-rank" form counts half of any ties; the "plotting position" form uses $(i - a)/(n + 1 - 2a)$ for various $a$ (e.g., Blom's $a = 3/8$).
+
+For a single value, computing the percentile rank is the inverse of computing a quantile: if the 75th percentile is $q_{0.75}$, then $\mathrm{PR}(q_{0.75}) \approx 75$.
+
+## Assumptions
+
+Purely descriptive; assumes only that the reference distribution is appropriate to the value being ranked.
+
+## R Implementation
+
+```r
+library(dplyr)
+
+set.seed(2026)
+growth_chart <- rnorm(1000, mean = 15.0, sd = 2.2)   # reference weights (kg)
+patient      <- 17.8                                   # a patient's weight
+
+pr_patient <- 100 * mean(growth_chart <= patient)
+pr_patient
+
+# Percentile ranks for all observations in a cohort
+cohort <- data.frame(weight = rnorm(30, 15.5, 2.0))
+cohort$rank    <- rank(cohort$weight)
+cohort$pr      <- 100 * cohort$rank / nrow(cohort)
+cohort$pr_mid  <- 100 * (rank(cohort$weight) - 0.5) / nrow(cohort)
+head(cohort)
+
+# ECDF equivalent
+ec <- ecdf(growth_chart)
+100 * ec(patient)
+```
+
+## Output & Results
+
+```
+[1] 89.4     # 17.8 kg is at the 89th percentile of the reference
+
+  weight rank    pr pr_mid
+1  13.29    1   3.3   1.67
+2  14.15    6  20.0  18.33
+3  15.01   11  36.7  35.00
+```
+
+## Interpretation
+
+Report percentile ranks in growth, development, and norming contexts. In a clinical note: "body weight 17.8 kg (89th percentile for age/sex)". The percentile tells the reader how unusual the value is relative to the reference.
+
+## Practical Tips
+
+- Percentile ranks depend on the reference sample; always state which reference was used (national norms, internal cohort, etc.).
+- Ties are handled by `rank()` via averaging, minimum, or maximum; specify `ties.method` when the convention matters.
+- For small reference samples, percentile ranks are unstable; use smoothing (LMS method) for growth chart applications.
+- A percentile rank of exactly 100 is usually not reported; "above the 99th percentile" is the conventional phrasing for the sample maximum.
+- Do not confuse percentile rank (position in a distribution) with percentile (value at a specified position).

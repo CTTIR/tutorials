@@ -1,0 +1,70 @@
+---
+title: Mahalanobis Distance
+date: "2026-04-17"
+description: Scale- and correlation-aware distance for multivariate data
+categories:
+  - Multivariate Statistics
+  - mahalanobis
+  - multivariate-outlier
+---
+
+## Introduction
+
+Mahalanobis distance is the multivariate generalisation of "how many standard deviations from the mean" that respects scale and correlation between variables. Where Euclidean distance treats each axis equally and ignores covariance, Mahalanobis pre-multiplies the deviation by the inverse covariance matrix, so directions with high variance contribute less and correlated directions are decorrelated before measurement. It is the foundation of multivariate outlier detection, the discriminant function in LDA and QDA, and Hotelling's $T^2$ statistic.
+
+## Prerequisites
+
+A working understanding of covariance matrices, multivariate Normal distributions, and the chi-squared distribution.
+
+## Theory
+
+For a point $x \in \mathbb R^p$, mean vector $\mu$, and covariance $\Sigma$:
+
+$$D_M(x, \mu, \Sigma) = \sqrt{(x - \mu)^\top \Sigma^{-1} (x - \mu)}.$$
+
+Under multivariate Normality, $D_M^2$ follows a chi-squared distribution with $p$ degrees of freedom. This is the basis for probabilistic outlier flagging: points with $D_M^2$ exceeding the $1 - \alpha$ chi-squared quantile are unlikely under the null. Substituting the sample mean and sample covariance gives the standard estimator, but the sample covariance is itself influenced by outliers — leading to "masking" where extreme points hide behind each other. Robust estimators (Minimum Covariance Determinant, MCD; Minimum Volume Ellipsoid, MVE) trim the most-influential observations before estimating $\Sigma$.
+
+## Assumptions
+
+Multivariate Normality for the chi-squared reference distribution; positive-definite $\Sigma$ (or its pseudo-inverse if rank-deficient); sufficient sample size relative to $p$ for stable covariance estimation.
+
+## R Implementation
+
+```r
+library(robustbase)
+
+X <- iris[, 1:4]
+mu <- colMeans(X)
+Sigma <- cov(X)
+MD2 <- mahalanobis(X, mu, Sigma)
+
+# Threshold at 97.5% chi-squared quantile
+cutoff <- qchisq(0.975, df = 4)
+which(MD2 > cutoff)
+
+# Robust version (MCD)
+mcd <- covMcd(X)
+MD2_rob <- mahalanobis(X, mcd$center, mcd$cov)
+which(MD2_rob > cutoff)
+```
+
+## Output & Results
+
+`mahalanobis()` returns squared distances under the supplied centre and covariance. Indexing by the chi-squared cutoff identifies candidate outliers. The robust MCD-based version typically flags more outliers because the classical estimator is itself distorted by the very points it should flag.
+
+## Interpretation
+
+A reporting sentence: "Classical Mahalanobis distance flagged 4 iris observations above the $\chi^2_4$ 97.5 % cutoff, while the robust MCD-based estimator flagged 12; the additional observations were masked by their joint influence on the classical covariance estimate, illustrating why robust methods are preferable for outlier diagnostics in non-trivial multivariate data." Always pair classical and robust Mahalanobis when reporting outliers; agreement increases confidence, disagreement signals masking.
+
+## Practical Tips
+
+- Classical Mahalanobis suffers from masking — outliers distort the very covariance used to detect them. Always pair with MCD or MVE for any non-trivial outlier-detection task.
+- For high-dimensional data ($p \gg n$), covariance is rank-deficient; use regularised estimators (`corpcor::cov.shrink`) or first reduce dimensionality.
+- Mahalanobis distance underlies LDA and QDA: the discriminant function is the Mahalanobis distance to each class centre, weighted by class priors.
+- For multivariate Normality assessment, plot ordered Mahalanobis distances against chi-squared quantiles; deviations from the diagonal indicate non-Normality or outliers.
+- The cutoff $\chi^2_p$ assumes Normality; for non-Normal data, calibrate the cutoff via simulation or use a robust universal cutoff.
+- Use the squared form $D_M^2$ in reporting; it has the chi-squared reference distribution and avoids the square-root computation.
+
+## R Packages Used
+
+Base R `mahalanobis()`; `robustbase::covMcd()` for MCD-based robust covariance; `MASS::cov.mve()` for MVE; `rrcov::CovMcd()` and `CovMve()` for additional robust estimators with formal classes; `mvoutlier::aq.plot()` for adjusted quantile plots that compare classical and robust Mahalanobis distances.

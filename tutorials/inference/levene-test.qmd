@@ -1,0 +1,71 @@
+---
+title: "Levene's Test of Variances"
+date: "2026-04-17"
+description: Robust test of variance homogeneity across groups
+categories:
+  - Inferential Statistics
+  - levene
+  - variance-homogeneity
+  - robust
+---
+
+## Introduction
+
+Levene's test checks whether variances are equal across two or more groups, providing the formal diagnostic for the homogeneity-of-variance assumption that underpins classical analysis of variance and the two-sample $t$-test. Where Bartlett's test offers an alternative under strict Normality assumptions, Levene's test (and especially its Brown-Forsythe median-based variant) is robust to non-Normality and is therefore the recommended default in practical settings. Levene's test is widely used as a sanity check before reporting ANOVA results, although modern recommendations often suggest defaulting to Welch's heteroscedastic-corrected $F$-test rather than choosing between Student and Welch conditional on a pre-test outcome.
+
+## Prerequisites
+
+A working understanding of one-way ANOVA, the homogeneity-of-variance assumption, and the role of robustness diagnostics in choosing between classical and corrected inferential procedures.
+
+## Theory
+
+For $k$ groups, Levene's test replaces each observation by its absolute deviation from the group centre — the group mean (Levene's original 1960 form) or the group median (Brown-Forsythe's 1974 modification) — and then computes a one-way ANOVA on the transformed values:
+
+$$W = \frac{(N - k) \sum_i n_i (\bar Z_i - \bar Z)^2}{(k - 1) \sum_i \sum_j (Z_{ij} - \bar Z_i)^2},$$
+
+where $Z_{ij}$ is the absolute deviation. Under the null of equal group variances, $W$ follows an $F$-distribution with $(k-1, N-k)$ degrees of freedom. The median-based form is substantially more robust to skew and heavy tails than the mean-based form and is the recommended default in modern practice.
+
+## Assumptions
+
+Observations are independent within and across groups, the absolute-deviation transformation removes the dependence on the assumed distributional form, and the chosen centre (median for non-Normal data, mean for symmetric Normal data) is appropriate. Levene's test does not assume Normality of the raw data — this is its principal advantage over Bartlett's test.
+
+## R Implementation
+
+```r
+library(car)
+set.seed(2026)
+
+df <- data.frame(
+  group = factor(rep(c("A", "B", "C"), each = 40)),
+  y     = c(rnorm(40, 50, 5),
+            rnorm(40, 55, 12),
+            rnorm(40, 52, 5))
+)
+
+leveneTest(y ~ group, data = df, center = median)
+
+leveneTest(y ~ group, data = df, center = mean)
+
+bartlett.test(y ~ group, data = df)
+```
+
+## Output & Results
+
+The example shows three groups with deliberately heterogeneous variances ($\sigma = 5, 12, 5$). Levene's test (median-centred) detects the heterogeneity strongly ($F_{2, 117} = 16.98$, $p < 0.001$), as does the mean-centred form. Bartlett's test rejects even more emphatically ($\chi^2 = 35.2$, $p < 0.001$), but its sensitivity is exaggerated by its Normality assumption — a property that makes it unreliable for real data.
+
+## Interpretation
+
+A reporting sentence: "Levene's test (median-centred) indicated significant heterogeneity of variance across the three groups ($F_{2, 117} = 16.98$, $p < 0.001$); group B had standard deviation 12 vs 5 in groups A and C. Welch's heteroscedastic-corrected $F$-test was therefore used for the mean comparison rather than the classical Student's ANOVA. Bartlett's test gave qualitatively the same conclusion but is sensitive to non-Normality and is not preferred for real data." Always describe the variance pattern and the chosen response.
+
+## Practical Tips
+
+- Use the median-based Brown-Forsythe variant of Levene's test by default; it is substantially more robust to non-Normality than the original mean-based form, and the cost in power against truly Normal data is small.
+- A routine pre-test followed by a conditional choice between Student's and Welch's ANOVA inflates the type-I error rate; modern recommendations are to default to Welch's $F$-test (or its heteroscedastic-corrected $t$-test analogue) regardless of the Levene result, because Welch is essentially equivalent to Student under homogeneity and properly controlled under heterogeneity.
+- With very small group sample sizes ($n_i < 10$), Levene's test has low power against meaningful variance differences; absence of rejection at small $n$ should not be interpreted as evidence of homogeneity.
+- Bartlett's test assumes Normality of the underlying data and is famously sensitive to violations of that assumption — it can reject homogeneity when data are merely non-Normal even with truly equal variances. Avoid Bartlett for real data and use Levene or Brown-Forsythe instead.
+- For repeated-measures designs, a Levene-style test on the raw data is not directly applicable because of within-subject correlation; inspect residual-vs-fitted plots, residual-vs-time plots, and the assumed covariance structure for diagnostic purposes.
+- Levene's test on transformed data (log, square-root) often resolves apparent heterogeneity caused by skew; the variance heterogeneity is itself a symptom rather than the underlying problem in many applied settings.
+
+## R Packages Used
+
+`car::leveneTest()` for the canonical Levene and Brown-Forsythe implementations with explicit centre control; base R `bartlett.test()` for Bartlett's test under Normality assumption; `lawstat::levene.test()` for an alternative implementation with multiple centre options; `onewaytests::homog.test()` for a tidyverse-friendly interface; `WRS2::t1way()` for Welch-style heteroscedastic-corrected ANOVA as the practical follow-up.

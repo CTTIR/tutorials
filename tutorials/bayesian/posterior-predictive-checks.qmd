@@ -1,0 +1,71 @@
+---
+title: Posterior Predictive Checks
+date: "2026-04-17"
+description: Comparing simulated data from the fitted model to observed data for model criticism
+categories:
+  - Bayesian Statistics
+  - pp-check
+  - model-criticism
+  - posterior-predictive
+---
+
+## Introduction
+
+A posterior predictive check is the Bayesian answer to "does this model produce data that look like ours?" After fitting, you draw replicated datasets from the model — each one using a different posterior parameter draw — and compare them to the observed data through summary statistics, density overlays, or grouped subsets. Systematic discrepancies between observed and replicated quantities are a model criticism: they tell you which feature of the data the current specification fails to capture, which is far more actionable than a single goodness-of-fit $p$-value.
+
+## Prerequisites
+
+A working understanding of the posterior predictive distribution and access to MCMC draws or any object that exposes a `posterior_predict()` method (`brms`, `rstanarm`, raw Stan).
+
+## Theory
+
+The posterior predictive distribution is
+
+$$p(\tilde y \mid y) = \int p(\tilde y \mid \theta) p(\theta \mid y) \, \mathrm d \theta,$$
+
+approximated by drawing $\theta$ from the posterior and then $\tilde y$ from the likelihood given that $\theta$. A posterior predictive check chooses a test statistic $T(y)$ — the mean, the standard deviation, the proportion of zeros, the maximum, the skew, or any function of the data — and compares its observed value to the distribution of $T(\tilde y)$ across replicates. If the observed statistic falls in the bulk of the replicate distribution, the model captures that aspect of the data; if it falls in a tail, the model misses it.
+
+## Assumptions
+
+A converged posterior with adequate effective sample size, since each replicate dataset depends on a posterior draw. PPCs do not require held-out data and are therefore not a measure of generalisation; they are a within-sample diagnostic.
+
+## R Implementation
+
+```r
+library(brms); library(bayesplot)
+
+set.seed(2026)
+d <- data.frame(y = rnorm(200, 3, 1.5))
+
+fit <- brm(y ~ 1, data = d, family = gaussian,
+           chains = 2, iter = 2000, refresh = 0)
+
+# Density overlay
+pp_check(fit)
+
+# Test-statistic check: SD of simulated vs observed
+pp_check(fit, type = "stat", stat = "sd")
+
+# Interval check
+pp_check(fit, type = "intervals")
+```
+
+## Output & Results
+
+`pp_check(fit)` returns a `ggplot` overlaying the empirical density of `y` on top of densities for several replicate datasets. `type = "stat"` plots the distribution of the chosen statistic across replicates with the observed value as a vertical line. `type = "intervals"` shows the 50 % and 90 % posterior predictive intervals point-by-point and is the most informative check for time-series and ordered data.
+
+## Interpretation
+
+A reporting sentence: "Posterior predictive density overlays showed the observed distribution falling well within the cloud of replicates; the standard-deviation check placed the observed value near the centre of the replicate distribution ($p_{\text{ppc}} = 0.48$), indicating that the Gaussian model captures both location and dispersion adequately." When a check fails, name the feature: "skew of replicates was systematically lower than the observed skew", which directly suggests a heavy-tailed family or a transformation.
+
+## Practical Tips
+
+- A density overlay is the broadest check; supplement it with tests on specific statistics (skew, kurtosis, proportion of zeros) that target likely misspecifications.
+- Group-wise PPCs (`pp_check(fit, type = "stat_grouped", group = "site")`) catch problems concentrated in specific subgroups that pooled checks would mask.
+- For count outcomes, `type = "rootogram"` is more informative than density overlays because it highlights overdispersion and zero-inflation directly.
+- A passing PPC does not guarantee good predictions on new data; pair PPCs with `loo()` or held-out evaluation when generalisation matters.
+- When PPCs reveal misspecification, the fix is almost always a richer family (heavy tails, dispersion, mixtures) before a richer mean structure.
+
+## R Packages Used
+
+`bayesplot` for the `pp_check()` and `ppc_*` graphics, `brms` (or `rstanarm`) as a backend that exposes `posterior_predict()` directly, and `posterior` for handling draw arrays when building custom PPCs by hand.

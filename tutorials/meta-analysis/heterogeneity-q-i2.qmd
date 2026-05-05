@@ -1,0 +1,75 @@
+---
+title: "Quantifying Heterogeneity: Q and I^2"
+date: "2026-04-17"
+description: "Cochran's Q, I-squared, and their interpretation in meta-analysis"
+categories:
+  - Meta-Analysis
+  - heterogeneity
+  - i-squared
+  - cochran-q
+---
+
+## Introduction
+
+Heterogeneity in meta-analysis refers to the variation in true effects across studies that exceeds what would be expected from sampling variability alone. Cochran's $Q$ test asks whether any heterogeneity is present at all; $I^2$ quantifies how much of the total observed variability is attributable to genuine between-study differences rather than within-study sampling noise; and $\tau^2$ provides the actual variance of true effects on the analysis scale. Together these three statistics inform the choice between fixed-effect and random-effects models, the width of prediction intervals, and the appropriateness of subgroup or meta-regression follow-up analyses. Reporting all three is now the universal standard in systematic-review publications.
+
+## Prerequisites
+
+A working understanding of fixed-effect and random-effects meta-analytic pooling, the chi-squared distribution, and inverse-variance weighting.
+
+## Theory
+
+Cochran's $Q$ is the weighted sum of squared deviations of study effects from the fixed-effect pooled estimate:
+
+$$Q = \sum_i w_i (\theta_i - \hat\theta_{\text{FE}})^2.$$
+
+Under the null of homogeneity, $Q$ follows a $\chi^2_{k-1}$ distribution. The $I^2$ statistic rescales $Q$ to a proportion:
+
+$$I^2 = \max\!\left\{0, \, \frac{Q - (k - 1)}{Q}\right\} \cdot 100\%,$$
+
+interpretable as the proportion of total variation attributable to between-study heterogeneity rather than within-study error. Higgins's benchmarks are: 0–40 % low, 30–60 % moderate, 50–90 % substantial, 75–100 % considerable. The variance component $\tau^2$ — typically estimated by REML, DerSimonian–Laird, or Paule–Mandel — gives heterogeneity on the effect-size scale and feeds directly into prediction-interval computation.
+
+## Assumptions
+
+Studies are independent and within-study variances are known (or precisely estimated). The $Q$ test is famously underpowered for small numbers of studies and famously over-powered for large meta-analyses with very precise studies, so its $p$-value should never be the sole criterion for a heterogeneity decision.
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+k <- 12
+theta <- rnorm(k, 0.4, 0.3)
+n_per <- sample(50:400, k, replace = TRUE)
+var_i <- 4 / n_per
+
+yi <- theta + rnorm(k, 0, sqrt(var_i))
+vi <- var_i
+
+res <- rma(yi, vi, method = "REML")
+cat("Q =", round(res$QE, 2),
+    "(df=", res$k - 1, ", p =", round(res$QEp, 3), ")\n")
+cat("I^2 =", round(res$I2, 1), "%;  tau^2 =", round(res$tau2, 3), "\n")
+```
+
+## Output & Results
+
+`rma()` returns the $Q$ statistic with its $p$-value, $I^2$ as a percentage, and $\tau^2$ on the effect-size scale. Confidence intervals on $\tau^2$ and $I^2$ are obtained from `confint(res)`, and the prediction interval comes from `predict(res)`. Reporting all four — $Q$ (with its df and $p$), $I^2$, $\tau^2$, and the prediction interval — is now standard practice.
+
+## Interpretation
+
+A reporting sentence: "Between-study heterogeneity was substantial: $Q = 31.4$ (df $= 11$, $p = 0.001$), $I^2 = 65 \%$, $\tau^2 = 0.07$ ($\tau = 0.26$). The 95 % prediction interval for the true effect in a future study was $[-0.10, 0.85]$, far wider than the confidence interval on the pooled mean ($[0.21, 0.55]$). The random-effects model is therefore appropriate, and a pre-specified meta-regression on study year and population age was conducted to explain the heterogeneity." Always combine the three statistics with the prediction interval.
+
+## Practical Tips
+
+- Do not rely on $Q$'s $p$-value alone; it is underpowered when $k$ is small and over-powered when individual studies are very precise. Always interpret it alongside $I^2$ and $\tau^2$.
+- Report $Q$, $I^2$, $\tau^2$, and the 95 % prediction interval together; each tells a different and complementary story about heterogeneity.
+- Substantial heterogeneity should prompt follow-up analyses: pre-specified meta-regression for continuous moderators, subgroup analysis for categorical ones, and explicit reporting of prediction intervals to communicate the practical range of true effects.
+- $I^2$ depends on the precision of individual studies as well as on $\tau^2$: large, precise studies inflate $I^2$ for the same true heterogeneity. The variance component $\tau^2$ is therefore more directly comparable across meta-analyses than $I^2$.
+- Confidence intervals on $I^2$ and $\tau^2$ via `confint()` in `metafor` are routinely reported; a wide CI on $I^2$ should temper interpretation of any single point estimate.
+- Use REML for $\tau^2$ as the default; DerSimonian–Laird is convenient and traditional but can be biased downward when heterogeneity is large, and the Paule–Mandel estimator is also widely accepted.
+
+## R Packages Used
+
+`metafor::rma()` for the canonical $Q$, $I^2$, and $\tau^2$ output, with `confint()` for variance-component intervals and `predict()` for prediction intervals; `meta::metagen()` and related `meta` functions for the alternative interface; `dmetar` for Knapp–Hartung-corrected heterogeneity reporting; `metafor` `permutest()` for permutation-based heterogeneity inference under small $k$.

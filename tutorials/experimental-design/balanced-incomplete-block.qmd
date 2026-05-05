@@ -1,0 +1,75 @@
+---
+title: Balanced Incomplete Block Designs
+date: "2026-04-17"
+description: BIBDs when block size is smaller than treatment count
+categories:
+  - Experimental Design
+  - bibd
+  - blocks
+  - incomplete
+---
+
+## Introduction
+
+Balanced incomplete block designs (BIBDs) allocate treatments to blocks when each block can hold fewer experimental units than the total number of treatments to be compared. The constraint arises constantly in practice — a litter of animals contains fewer pups than treatments, a panel of taste-testers has limited capacity per session, a microscopy slide accommodates only a few specimens, an oven processes a limited number of samples per run. The "balanced" property requires that every pair of treatments appears together in the same number $\lambda$ of blocks, ensuring that every pairwise treatment contrast is estimated with equal precision despite the block-level incompleteness. BIBDs are classical constructions in agricultural experimentation, sensory evaluation, and any setting where complete randomised blocks are physically impossible.
+
+## Prerequisites
+
+A working understanding of randomised complete block designs, combinatorial design parameters, and basic mixed-effects modelling for the recovery of inter-block information.
+
+## Theory
+
+A BIBD is specified by parameters $(v, b, r, k, \lambda)$:
+
+- $v$ = number of treatments,
+- $b$ = number of blocks,
+- $r$ = replicates per treatment,
+- $k$ = block size (with $k < v$),
+- $\lambda$ = number of blocks in which each treatment pair co-occurs.
+
+These parameters satisfy two necessary identities: $bk = vr$ and $\lambda(v - 1) = r(k - 1)$. Not every parameter combination corresponds to an existing BIBD; Fisher's inequality requires $b \geq v$, and the Bruck–Ryser–Chowla theorem provides further necessary conditions. The classical analysis fits blocks as either fixed or random effects; treating blocks as random recovers inter-block information and is generally more efficient.
+
+## Assumptions
+
+Treatment pairs are exchangeable via the balance property, within-block residuals are exchangeable and approximately Normal with constant variance, and block effects are additive (no block × treatment interaction). The design is implemented as planned — running fewer or more units than specified destroys the balance and requires reanalysis as a partially balanced or unbalanced incomplete block design.
+
+## R Implementation
+
+```r
+library(crossdes)
+
+bibd <- find.BIB(7, 7, 3)
+bibd
+
+set.seed(2026)
+df <- data.frame(
+  block = rep(1:7, each = 3),
+  treatment = factor(as.vector(t(bibd)))
+)
+df$y <- rnorm(nrow(df), mean = c(10, 11, 12, 13, 14, 15, 16)[as.integer(df$treatment)],
+              sd = 0.8)
+
+fit <- aov(y ~ factor(block) + treatment, data = df)
+summary(fit)
+```
+
+## Output & Results
+
+`find.BIB()` constructs a BIBD with the specified parameters when one exists. The fitted ANOVA partitions variability into block, treatment, and residual components, with the treatment $F$-test computed using the intra-block error. Reporting the proportion of variance absorbed by blocks alongside the treatment effect characterises the gain from incomplete blocking.
+
+## Interpretation
+
+A reporting sentence: "The $(v, b, r, k, \lambda) = (7, 7, 3, 3, 1)$ BIBD — equivalent to the Fano plane in projective geometry — tested seven treatments in seven blocks of size three. ANOVA showed a significant treatment effect ($F_{6, 8} = 8.2$, $p = 0.002$) with block-level variance absorbed by the block factor (block sum of squares 12.4, residual sum of squares 4.7). All 21 pairwise treatment contrasts were estimated with equal precision because of the balance property." Always report the BIBD parameters explicitly.
+
+## Practical Tips
+
+- Use a BIBD whenever block size is smaller than the treatment count and balanced pairwise comparisons are required; the balance property ensures every contrast has the same standard error, which simplifies interpretation and multiple-comparison adjustment.
+- Analyse with blocks as **random effects** (`(1 | block)` in `lme4`) to recover inter-block information; the random-effects analysis is generally more efficient than the fixed-effect intra-block analysis, especially when the number of blocks is large.
+- Not all parameter combinations $(v, k, \lambda)$ correspond to an existing BIBD; consult catalogue tables or use `crossdes::find.BIB()` to check existence before finalising the design. Fisher's inequality and the Bruck–Ryser–Chowla theorem give the necessary conditions.
+- For large treatment counts where a BIBD is impractical, partially balanced incomplete block designs (PBIBDs) relax the equal-pairwise-co-occurrence requirement at the cost of unequal pairwise precision; they are far easier to find and adequate for most applied work.
+- Pre-specify the block allocation in the protocol; changing mid-experiment — adding a unit, dropping a block — destroys the balance property and forces reanalysis as a general unbalanced design.
+- Visualise the incidence matrix (treatment × block) before running the experiment; an inadvertent imbalance (a treatment missing from a block, a duplicated treatment within a block) is far easier to spot at the design stage than after data collection.
+
+## R Packages Used
+
+`crossdes::find.BIB()` and `crossdes::isGYD()` for BIBD construction and verification; `agricolae::design.bib()` for an alternative interface integrated with the agricultural-DoE toolkit; `lme4::lmer()` for random-block analysis recovering inter-block information; `ibd` for advanced incomplete-block constructions including PBIBDs; `daewr` for textbook companion datasets.

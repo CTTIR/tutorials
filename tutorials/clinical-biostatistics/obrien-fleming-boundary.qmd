@@ -1,0 +1,65 @@
+---
+title: "O'Brien-Fleming Boundary"
+date: "2026-04-17"
+description: Conservative early stopping boundary in group-sequential trials
+categories:
+  - Clinical Biostatistics
+  - obrien-fleming
+  - boundary
+  - group-sequential
+---
+
+## Introduction
+
+The O'Brien-Fleming (OF) boundary, introduced by Peter O'Brien and Thomas Fleming in 1979, is the most widely used efficacy stopping boundary for group-sequential clinical trials and the de facto regulatory default for confirmatory phase-3 trials. It is conservative early and liberal late: very little type-I error budget is spent at early interim analyses, so stopping early for efficacy requires an unusually large effect, while the final analysis uses nearly the full nominal alpha. The practical consequence is that interim stops are rare and convincing — they happen only when the treatment effect is much larger than the powered alternative — while the final analysis suffers only a tiny multiplicity penalty if no early stop occurs.
+
+## Prerequisites
+
+A working understanding of group-sequential trial design, the alpha-spending framework, and the trade-off between early-stopping ease and final-analysis stringency in repeated-look hypothesis testing.
+
+## Theory
+
+The O'Brien-Fleming boundary on the standardised Wald-statistic scale takes the form $c_k = c / \sqrt{t_k}$ at information fraction $t_k$, so the nominal $p$-value threshold required at interim $k$ shrinks with $1/\sqrt{t_k}$. In practice, a five-look equally-spaced OF design has nominal $\alpha$ values approximately $5 \times 10^{-6}$, $0.0013$, $0.008$, $0.018$, $0.041$ at the five sequential analyses (for one-sided $\alpha = 0.025$). The final analysis therefore uses 0.041 instead of 0.025 — a mild penalty for the option to stop early — while early looks are protected against premature rejection.
+
+## Assumptions
+
+Information accrues as planned (regular interim spacing or alpha-spending implementation that handles irregular timing), the test statistic is approximately Normal at each look, and the multiplicity correction is pre-specified before any data are unblinded.
+
+## R Implementation
+
+```r
+library(rpact)
+
+design <- getDesignGroupSequential(
+  sided = 1, alpha = 0.025, beta = 0.2,
+  typeOfDesign = "OF",
+  informationRates = seq(0.2, 1, by = 0.2)
+)
+
+print(design$stageLevels)
+
+print(design$criticalValues)
+
+plot(design, type = 1)
+```
+
+## Output & Results
+
+`rpact` returns the stage-specific nominal alphas (very conservative at early looks, near-nominal at the final analysis) and the corresponding critical values on the standardised test-statistic scale. The boundary plot makes the asymmetric "high early, low late" shape visually obvious and is a standard supplementary figure in trial design documents.
+
+## Interpretation
+
+A reporting sentence: "The five-stage group-sequential design with O'Brien-Fleming efficacy boundaries required nominal $p < 5 \times 10^{-6}$ at the 20 % information interim, relaxing to $p < 0.041$ at the final analysis to maintain overall one-sided $\alpha = 0.025$. Early stopping was therefore triggered only by treatment effects substantially larger than the powered alternative; the final analysis suffered only a 0.009 multiplicity penalty (0.041 vs unadjusted 0.025) if no earlier stop occurred. The maximum sample size was 6 % larger than a fixed-design equivalent." Always justify boundary choice.
+
+## Practical Tips
+
+- O'Brien-Fleming is the default efficacy boundary in confirmatory phase-3 trials and is virtually always the regulatory expectation; deviations should be justified in the protocol with explicit reasoning about why a different boundary (Pocock, Hwang-Shih-DeCani, custom) is preferred.
+- Pair O'Brien-Fleming efficacy boundaries with a non-binding futility boundary (gamma-spending or beta-spending) to detect hopeless trials early; this combination preserves the type-I error of the efficacy analysis while allowing the trial to stop for futility when the conditional power is low.
+- Alpha-spending implementations of O'Brien-Fleming (Lan-DeMets with the OF-shape spending function) preserve the OF behaviour under irregular interim timing and are the modern default for handling unscheduled looks.
+- Post-stopping treatment-effect point estimates are upwardly biased — the trial stopped early precisely because the random fluctuation of the effect was large. Report repeated confidence intervals (Jennison-Turnbull) or median-unbiased estimates rather than the naive maximum-likelihood estimate when stopping for efficacy.
+- Compared with the Pocock boundary, OF makes early stopping substantially harder but preserves near-nominal final-analysis alpha and a smaller maximum sample size; Pocock makes early stopping easier but at higher final-analysis cost. Choice should reflect the trial's ethical and practical priorities.
+- Stage-specific information fractions need not be equally spaced; alpha-spending OF accommodates whatever schedule the data-monitoring committee prefers, but the schedule should be pre-specified or generated from a pre-specified spending function.
+
+## R Packages Used
+
+`rpact` for canonical group-sequential design with O'Brien-Fleming, Pocock, Hwang-Shih-DeCani, and custom alpha-spending boundaries; `gsDesign` for an alternative comprehensive group-sequential framework; `ldbounds` for Lan-DeMets alpha-spending; `gsbDesign` for Bayesian group-sequential alternatives; `Mediana` for trial-design simulation including OF and other boundary comparisons.

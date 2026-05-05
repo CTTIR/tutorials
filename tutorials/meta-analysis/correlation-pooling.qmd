@@ -1,0 +1,79 @@
+---
+title: Pooling Correlation Coefficients
+date: "2026-04-17"
+description: Fisher z transformation for meta-analysis of correlations
+categories:
+  - Meta-Analysis
+  - correlation
+  - fisher-z
+  - pooling
+---
+
+## Introduction
+
+Pearson correlation coefficients are bounded to $[-1, 1]$, and their sampling distributions are skewed with heteroscedastic variance — the variance depends on the underlying $\rho$ and on $n$. These properties make raw correlations unsuitable for inverse-variance meta-analysis. Fisher's z transformation converts each correlation to an approximately Normal scale with variance independent of $\rho$, enabling standard random-effects pooling. After pooling on the z scale, the result is back-transformed to a correlation for interpretation.
+
+## Prerequisites
+
+A working understanding of Pearson correlation, variance-stabilising transformations, and inverse-variance meta-analysis under random effects.
+
+## Theory
+
+The Fisher z transformation is
+
+$$z = \tfrac{1}{2} \log\!\left(\frac{1 + r}{1 - r}\right) = \tanh^{-1}(r), \qquad \mathrm{Var}(z) \approx \frac{1}{n - 3}.$$
+
+The variance is constant (depends only on $n$, not $\rho$), so the inverse-variance weighting in meta-analysis is well-defined. Pool $z$ values across studies via fixed-effect or random-effects meta-analysis, then back-transform $r = \tanh(z)$ for reporting on the natural correlation scale.
+
+The back-transformation preserves coverage at the original scale provided the transformed pooling is correctly weighted; reporting both $z$ (with SE) and $r$ (with CI) is standard.
+
+## Assumptions
+
+Bivariate-Normal data in each study (the basis of the variance formula); independent studies; sufficient sample size per study ($n > 10$ as a rough minimum) for the asymptotic distribution to be reasonable.
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+k <- 10
+# Simulated correlations and sample sizes
+df <- data.frame(
+  ri = c(0.25, 0.32, 0.18, 0.40, 0.28, 0.35, 0.22, 0.30, 0.45, 0.38),
+  ni = sample(50:300, k, replace = TRUE)
+)
+
+es <- escalc(measure = "ZCOR", ri = ri, ni = ni, data = df)
+re <- rma(yi, vi, data = es, method = "REML")
+
+# Convert pooled z back to correlation
+pooled_z  <- re$b
+pooled_r  <- tanh(pooled_z)
+ci_r      <- tanh(c(re$ci.lb, re$ci.ub))
+
+c(pooled_r = round(pooled_r, 3),
+  lower = round(ci_r[1], 3), upper = round(ci_r[2], 3))
+re$I2
+```
+
+## Output & Results
+
+`escalc(measure = "ZCOR")` computes Fisher z and its variance per study; `rma()` fits the random-effects model on the z scale. The pooled correlation is approximately 0.31 with a tight 95 % CI; $I^2$ quantifies heterogeneity.
+
+## Interpretation
+
+A reporting sentence: "Random-effects meta-analysis of 10 studies (REML, n total = 1{,}523) gave a pooled correlation of $r = 0.31$ (95 % CI 0.25 to 0.37) with modest heterogeneity ($I^2 = 28 \%$, $\tau^2 = 0.012$); pooling on the Fisher z scale and back-transforming maintains correct coverage despite the $[-1, 1]$ bound on $r$." Always pool on the z scale and report both Fisher z and back-transformed $r$.
+
+## Practical Tips
+
+- Always pool on the Fisher z scale; pooling raw $r$ biases estimates for high correlations and produces incorrect coverage.
+- `metafor::escalc(measure = "ZCOR")` handles the Fisher z transformation and variance computation in a single call.
+- Report both z (with SE) and back-transformed r (with CI); r is more interpretable for substantive readers.
+- For partial correlations, apply the same approach with the degrees-of-freedom-adjusted sample size $n - p$ where $p$ is the number of partialled-out variables.
+- Hartung-Knapp small-sample adjustment (`rma(..., test = "knha")`) is especially important when studies are few or unevenly sized; standard inverse-variance gives over-confident intervals in those settings.
+- For meta-analysis of intraclass correlations or other correlation-like statistics, the same Fisher z framework applies with appropriate variance formulae.
+
+## R Packages Used
+
+`metafor` for `escalc()`, `rma()`, and the canonical correlation-pooling workflow; `meta` for an alternative interface with cleaner forest-plot output; `psychmeta` for psychometric meta-analysis with Hunter-Schmidt artefact corrections; `clubSandwich` for robust variance estimation in correlated-effect meta-analyses.

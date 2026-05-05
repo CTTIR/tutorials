@@ -1,0 +1,71 @@
+---
+title: Left Truncation
+date: "2026-04-17"
+description: "Delayed entry: subjects only enter the study after surviving to a certain age or time"
+categories:
+  - Survival Analysis
+  - left-truncation
+  - delayed-entry
+  - age-as-timescale
+---
+
+## Introduction
+
+Left truncation, also called delayed entry, occurs when subjects become observable only after surviving to a certain age or calendar time. Recruiting middle-aged adults into a cohort study means anyone who died as a child or young adult is structurally absent — they could not contribute. Treating delayed-entry data as if every subject had been followed from time zero overestimates survival, because the early period is observed only for the survivors. The counting-process formulation in `survival::Surv(tstart, tstop, event)` handles this naturally by restricting risk sets at each event time to subjects actually under observation then.
+
+## Prerequisites
+
+A working understanding of survival analysis, the difference between censoring (subject leaves before event) and truncation (subject only enters under specific conditions), and the counting-process formulation of survival data.
+
+## Theory
+
+For a left-truncated subject who enters at time $\tau_i$ and exits at time $T_i$ (with event indicator $\delta_i$), the contribution to the partial likelihood at event time $t$ should appear only when $\tau_i < t \le T_i$. The standard $\mathrm{Surv}(\mathrm{time}, \mathrm{event})$ object does not encode the entry time $\tau_i$ and silently sets it to zero, biasing estimates upward. The two-argument form $\mathrm{Surv}(\tau, T, \mathrm{event})$ (counting-process style) carries both endpoints; `survfit()` and `coxph()` use them to construct correct risk sets.
+
+In age-as-timescale analyses (the natural framing in chronic-disease epidemiology), every subject is left-truncated at their age at enrolment.
+
+## Assumptions
+
+The truncation mechanism is independent of the event of interest given covariates: subjects do not become observable for reasons related to their underlying risk profile.
+
+## R Implementation
+
+```r
+library(survival)
+
+# Age-as-timescale cohort: enrolled between ages 40 and 70
+set.seed(2026)
+n <- 200
+age_enroll <- runif(n, 40, 70)
+event_age  <- age_enroll + rexp(n, 0.05)
+end_age    <- pmin(event_age, age_enroll + runif(n, 5, 20))
+status     <- as.integer(event_age <= end_age)
+
+# Left-truncated Cox: tstart = entry age, tstop = exit age
+fit <- coxph(Surv(age_enroll, end_age, status) ~ 1)
+summary(fit)
+
+# Kaplan-Meier with delayed entry
+km <- survfit(Surv(age_enroll, end_age, status) ~ 1)
+plot(km)
+```
+
+## Output & Results
+
+`survfit()` returns a Kaplan-Meier curve on the chosen time scale (age, calendar year, or time-since-event) that conditions on each subject's entry time. The Cox model with the counting-process `Surv` object produces unbiased hazard-ratio estimates even when entry times are heavily truncated.
+
+## Interpretation
+
+A reporting sentence: "Using age as the time scale with left truncation at enrolment, the conditional survival from age 40 was 0.75 at age 60 (95 % CI 0.68 to 0.82); ignoring delayed entry inflates this estimate to 0.84 by treating mid-life enrolees as if they had been followed since age 0." Always state the time scale and the truncation mechanism in the methods section.
+
+## Practical Tips
+
+- Always specify both `tstart` and `tstop` arguments to `Surv()` when entry times vary across subjects; the single-argument form silently assumes all subjects entered at zero.
+- Age-as-timescale cohort studies are always left-truncated; this is the most common scenario in chronic-disease epidemiology and ageing research.
+- Distinguish left truncation (subject only observable after a certain time) from left censoring (event occurred before observation began but the subject is observable now); the two are handled differently.
+- Without left-truncation correction, you overestimate survival of cohorts enrolled at older ages because their early-life mortality is invisible to your data.
+- `survfit()` with delayed entry produces correct conditional survival curves; check that the reported time scale starts at the minimum entry time, not zero.
+- For competing risks with delayed entry, `cmprsk::cuminc` and `tidycmprsk::cuminc` accept counting-process input via `entry` arguments.
+
+## R Packages Used
+
+`survival` for `Surv(tstart, tstop, event)` and `survfit()` / `coxph()` with counting-process input; `Epi` for left-truncation-aware tools targeted at epidemiology; `etm` for non-parametric multi-state estimation with delayed entry; `tidycmprsk` for left-truncation-aware competing-risks analysis.

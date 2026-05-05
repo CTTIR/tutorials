@@ -1,0 +1,92 @@
+---
+title: The Empirical Distribution Function
+date: "2026-04-17"
+description: "The sample-based step-function estimator of the CDF, with the DKW inequality for its uniform error"
+categories:
+  - Statistical Foundations
+  - ecdf
+  - cdf
+  - dkw
+  - empirical-distribution
+---
+
+## Introduction
+
+The empirical distribution function (ECDF) is the simplest possible non-parametric estimator of a probability distribution: it puts mass $1/n$ at each observation and returns the resulting step-function CDF. Despite its simplicity, the ECDF is consistent uniformly for the true CDF (Glivenko-Cantelli), has a tight universal error bound (Dvoretzky-Kiefer-Wolfowitz), and underlies every non-parametric statistic built on ranks or percentiles.
+
+## Prerequisites
+
+The reader should know what a CDF is and should be able to sort a vector in R.
+
+## Theory
+
+For iid observations $X_1, \ldots, X_n$ from a CDF $F$, the ECDF is
+
+$$\hat{F}_n(x) = \frac{1}{n} \sum_{i=1}^n \mathbb{1}\{X_i \leq x\}.$$
+
+Properties at each fixed $x$:
+
+- $n \hat{F}_n(x) \sim \text{Binomial}(n, F(x))$, so $E[\hat{F}_n(x)] = F(x)$ and $\mathrm{Var}[\hat{F}_n(x)] = F(x)(1 - F(x))/n$.
+- By the CLT, $\sqrt{n}(\hat{F}_n(x) - F(x)) \xrightarrow{d} \mathcal{N}(0, F(x)(1 - F(x)))$.
+
+**Dvoretzky-Kiefer-Wolfowitz (DKW) inequality.** For every $n$ and every $\varepsilon > 0$,
+
+$$P\!\left(\sup_x |\hat{F}_n(x) - F(x)| > \varepsilon\right) \leq 2 e^{-2 n \varepsilon^2}.$$
+
+This is a *uniform* bound -- it controls the supremum over all $x$ -- and holds for every $F$. It underwrites non-parametric confidence *bands* for the entire CDF, not just pointwise.
+
+**Sup-norm CI.** Setting the DKW bound equal to $\alpha$ and solving for $\varepsilon$ gives a $1 - \alpha$ confidence band of the form $[\hat{F}_n(x) - \varepsilon, \hat{F}_n(x) + \varepsilon]$ for all $x$ simultaneously.
+
+## Assumptions
+
+The ECDF is defined for any distribution; it is an estimator with minimal assumptions -- only iid sampling (or exchangeability). Dependent data complicate the variance but not the point estimator.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+set.seed(2026)
+n <- 100
+alpha <- 0.05
+x <- rnorm(n)
+
+Fn <- ecdf(x)
+eps <- sqrt(log(2 / alpha) / (2 * n))
+
+grid <- seq(-4, 4, length.out = 1001)
+df <- data.frame(
+  x      = grid,
+  Fhat   = Fn(grid),
+  lower  = pmax(0, Fn(grid) - eps),
+  upper  = pmin(1, Fn(grid) + eps),
+  Ftrue  = pnorm(grid)
+)
+
+ggplot(df, aes(x = x)) +
+  geom_step(aes(y = Fhat), colour = "steelblue") +
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2,
+              fill = "steelblue") +
+  geom_line(aes(y = Ftrue), colour = "red", linetype = "dashed") +
+  labs(y = "CDF",
+       title = sprintf("ECDF with 95%% DKW band (n = %d)", n)) +
+  theme_minimal()
+```
+
+The plot overlays the ECDF, the DKW 95% band, and the true CDF. With $n = 100$ and $\alpha = 0.05$, the band width is $\varepsilon = \sqrt{\log(40)/200} \approx 0.136$ -- constant across $x$.
+
+## Output & Results
+
+The ECDF traces the true CDF closely; the DKW band contains it at every $x$, as expected since the DKW bound is universal. Increasing $n$ to 1000 shrinks the band to $\varepsilon \approx 0.043$.
+
+## Interpretation
+
+The ECDF is an omnibus, assumption-light summary of the data. Reporting a plot of the ECDF with DKW bands is a sensible way to communicate a distribution's shape when no parametric form is assumed. Quantile reporting, K-S tests, and many other non-parametric procedures ultimately derive from the ECDF.
+
+## Practical Tips
+
+- For small samples ($n < 30$), the DKW band is wide; report pointwise Clopper-Pearson or Wilson CIs instead if you only need uncertainty at specific quantiles.
+- The `ecdf()` function in R returns a function; apply it to any vector of $x$ values to get empirical probabilities.
+- Smooth variants (kernel-based) exist, but the ECDF's simplicity is a feature: it is the non-parametric MLE and a sufficient statistic in the non-parametric model.
+- The DKW constant 2 is tight (Massart 1990); older texts quote larger constants.
+- The ECDF is the foundation of quantile plots, Q-Q plots, and goodness-of-fit statistics like Kolmogorov-Smirnov and Cramer-von Mises.

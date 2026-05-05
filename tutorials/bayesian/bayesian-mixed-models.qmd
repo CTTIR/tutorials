@@ -1,0 +1,71 @@
+---
+title: Bayesian Mixed Models
+date: "2026-04-17"
+description: "Multilevel regression with random effects, fit via Bayesian MCMC"
+categories:
+  - Bayesian Statistics
+  - bayesian-mixed
+  - multilevel
+  - random-effects
+---
+
+## Introduction
+
+Bayesian mixed models treat the random-effect variance components as parameters with their own priors instead of plug-in estimates from REML. The pay-off is most visible in small samples and at the boundary: ML and REML routinely return zero variance estimates when only a handful of clusters contribute, but a half-Normal or half-Cauchy prior keeps the variance away from zero in a principled way and propagates the resulting uncertainty into every fixed-effect interval. The cost is computational — sampling instead of optimising — but for any analysis that depends on credible variance components, that cost is a worthwhile investment.
+
+## Prerequisites
+
+A working understanding of frequentist mixed-effects models (`lme4`-style formulas), Bayesian regression, and the role of half-distributions as priors on standard deviations.
+
+## Theory
+
+A random-intercept-and-slope model has the form
+
+$$y_{ij} = \beta_0 + \beta_1 X_{ij} + u_{0i} + u_{1i} X_{ij} + \varepsilon_{ij},$$
+
+with $\bigl(u_{0i}, u_{1i}\bigr) \sim \mathcal N(0, \Sigma)$ and $\varepsilon_{ij} \sim \mathcal N(0, \sigma^2)$. Priors are placed on every component: weakly informative Normal priors on $\beta$, half-Normal or half-Cauchy on the diagonal of $\Sigma$, an LKJ prior on the correlation, and an exponential or half-$t$ on $\sigma$. The LKJ$(\eta)$ prior with $\eta > 1$ pulls correlations toward zero gently while still allowing strong correlations when the data demand them. Posterior draws of $u_i$ are *shrunk* toward zero by an amount that depends on within-cluster signal-to-noise — the same partial-pooling behaviour that makes mixed models attractive in the first place.
+
+## Assumptions
+
+Conditional independence of observations given random effects, exchangeability of clusters, approximately Normal random effects with the prior structure above, and proper priors on every variance and correlation parameter. Convergence diagnostics ($\hat R$, divergent transitions, ESS) are part of the assumptions in practice.
+
+## R Implementation
+
+```r
+library(brms)
+
+data(sleepstudy, package = "lme4")
+
+fit <- brm(Reaction ~ Days + (Days | Subject), data = sleepstudy,
+           prior = prior(normal(0, 30), class = "b") +
+                   prior(normal(250, 50), class = "Intercept") +
+                   prior(exponential(0.1), class = "sd") +
+                   prior(exponential(0.1), class = "sigma") +
+                   prior(lkj(2), class = "cor"),
+           chains = 4, iter = 2000, refresh = 0)
+summary(fit)
+
+# Visualise random effects
+ranef(fit)
+```
+
+## Output & Results
+
+`summary(fit)` reports the population-level fixed effects, the standard deviations of the random intercept and slope, the correlation between them, and the residual scale, all with credible intervals, $\hat R$, and ESS. `ranef(fit)` returns a list of per-cluster posterior summaries — the analogue of `lme4::ranef()` but with full credible intervals.
+
+## Interpretation
+
+A reporting sentence: "A Bayesian linear mixed model estimated the population-level slope at 10.5 ms per day of sleep deprivation (95 % credible interval 7.4 to 13.6); between-subject heterogeneity in slope was substantial ($\mathrm{SD} = 6.0$, 95 % CrI 4.0 to 8.8) and weakly negatively correlated with the intercept ($r = -0.13$, 95 % CrI $-0.49$ to 0.27)." Always report the variance components with their credible intervals; point estimates alone can be misleading when posteriors are skewed.
+
+## Practical Tips
+
+- Use `LKJ(2)` for correlation priors as a sensible default; tighten to `LKJ(4)` only when you have strong reason to expect weak correlations.
+- For divergent transitions in hierarchical models, switch to non-centred parameterisation (`brms` does this automatically when you set `prior(... , class = "sd", ...)`).
+- Standardise continuous predictors before fitting; weakly informative priors are then meaningful across columns.
+- Compare nested random-effect structures with `loo_compare()` rather than likelihood-ratio tests; LOO works correctly when ML-LRT statistics are on the boundary of the parameter space.
+- For very small $n_{\text{cluster}}$ (under 5), report a sensitivity analysis across at least two priors on the random-effect SD; the choice can dominate the posterior.
+- `rstanarm::stan_lmer()` mirrors `lme4` syntax and uses pre-compiled Stan models, useful when fit time matters and the model is standard.
+
+## R Packages Used
+
+`brms` for formula-based Bayesian mixed models with full prior control, `rstanarm` for the pre-compiled `stan_lmer` interface, `bayesplot` for diagnostic plots, and `tidybayes` for tidy posterior draws when bespoke shrinkage plots are needed.

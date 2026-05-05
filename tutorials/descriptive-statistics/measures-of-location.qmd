@@ -1,0 +1,77 @@
+---
+title: Measures of Central Tendency
+date: "2026-04-17"
+description: "Mean, median, mode, and their robust cousins -- when each is appropriate and how to compute them in R"
+categories:
+  - Descriptive Statistics
+  - mean
+  - median
+  - mode
+  - trimmed-mean
+  - robust-statistics
+---
+
+## Introduction
+
+A measure of central tendency is a single number that summarises "where the data are". The three classical choices -- arithmetic mean, median, and mode -- are not interchangeable: each answers a slightly different question, and each is appropriate in a different context. Choosing the right one matters because readers of your results will form mental pictures of the data that the number implies.
+
+## Prerequisites
+
+The reader should know the difference between a numeric, an ordered categorical, and a nominal categorical variable, and should be able to read a histogram. Familiarity with R vectors is assumed.
+
+## Theory
+
+The **arithmetic mean** of observations $x_1, \ldots, x_n$ is $\bar{x} = \frac{1}{n} \sum_{i=1}^n x_i$. It is the centre of mass of the data and minimises the sum of squared deviations from any candidate centre. The mean uses all observations, but it is sensitive to outliers: a single extreme value can drag it arbitrarily far from the bulk of the data.
+
+The **median** is the value that separates the lower half of the data from the upper half: $x_{((n+1)/2)}$ for odd $n$, the average of the two middle values for even $n$. The median minimises the sum of absolute deviations. Unlike the mean, it is robust to outliers: moving the largest observation to infinity leaves the median unchanged.
+
+The **mode** is the most frequently occurring value. For continuous data, the mode is typically defined from a kernel density estimate rather than from the raw values, because ties are unlikely. The mode is the only measure of central tendency that makes sense for nominal categorical variables.
+
+The **trimmed mean** computes the mean after removing a proportion $\alpha$ of the smallest and largest observations -- a compromise between the efficiency of the mean and the robustness of the median. A 10% trimmed mean removes the bottom and top 10% of the observations; a 50% trimmed mean is the median.
+
+## Assumptions
+
+These are descriptive statistics, not tests, so they do not carry distributional assumptions. They do carry interpretive assumptions: the mean is most useful when the distribution is roughly symmetric; the median is preferred for skewed distributions and for ordinal data; the mode is preferred for categorical data and for multimodal distributions where a single centre is misleading.
+
+## R Implementation
+
+```r
+library(DescTools)
+library(psych)
+
+x <- c(2.1, 2.4, 2.5, 2.7, 2.9, 3.1, 3.3, 3.4, 3.7, 42.0)
+
+mean(x)
+median(x)
+mean(x, trim = 0.1)
+Mode(x)
+psych::geometric.mean(x)
+psych::harmonic.mean(x)
+```
+
+The vector `x` is a small sample with a single outlier at 42. Running the above shows a mean of 6.71, a median of 3.00, and a 10% trimmed mean of 2.94. The geometric mean (3.44) and harmonic mean (3.15) are close to the median rather than the mean, since both give less weight to the outlier.
+
+## Output & Results
+
+For a skewed or contaminated distribution, the three classical measures of central tendency can differ substantially:
+
+| Statistic | Value |
+|---|---|
+| Mean | 6.71 |
+| Median | 3.00 |
+| 10% trimmed mean | 2.94 |
+| Geometric mean | 3.44 |
+| Harmonic mean | 3.15 |
+
+The mean is pulled far from the bulk of the data by the single outlier; every other measure stays close to the main cluster.
+
+## Interpretation
+
+For a manuscript, the choice of statistic should be justified in the methods section. A paper reporting the "mean serum creatinine" in a cohort where several dialysis patients are included should either exclude those patients explicitly or report the median with IQR. Never mix conventions across papers in a series: if you reported medians in one table you should not swap to means in the next.
+
+## Practical Tips
+
+- Plot the data before choosing the statistic. A histogram or boxplot will show immediately whether the mean is a sensible summary.
+- Report the median and IQR (not the mean and SD) for variables with strong right skew: lab values, income, incubation times.
+- For small samples ($n < 10$), any central tendency measure is uncertain; consider bootstrapping to get a confidence interval for the statistic of choice.
+- Do not report the mode for continuous data unless it comes from a density estimate -- the sample mode of continuous data is the lowest value in the tied set, which is meaningless.

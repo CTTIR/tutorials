@@ -1,0 +1,80 @@
+---
+title: Contrasts in R
+date: "2026-04-17"
+description: Built-in and custom contrast matrices for factor variables in regression and ANOVA
+categories:
+  - "Regression & Modelling"
+  - contrasts
+  - factor
+  - orthogonal
+  - helmert
+---
+
+## Introduction
+
+A contrast matrix maps a factor's levels to the numeric indicator columns that enter the regression design matrix. R ships with four built-in schemes — treatment, sum, Helmert, polynomial — each testing different hypotheses about group differences. Beyond these, custom contrasts let analysts test pre-specified comparisons (e.g. "first arm vs the average of the other two") directly in the coefficient table, without post-hoc multiple comparisons. Choosing and reporting the contrast scheme is a routine but consequential modelling decision.
+
+## Prerequisites
+
+A working understanding of dummy coding, the role of the design matrix in regression, and basic familiarity with factor handling in R.
+
+## Theory
+
+For a factor with $k$ levels, any contrast scheme produces $k - 1$ numeric columns. Built-in choices:
+
+- **Treatment (`contr.treatment`)**: first level as reference; coefficients are level-vs-reference differences. Default for unordered factors.
+- **Sum (`contr.sum`)**: sum-to-zero deviation coding; intercept becomes the grand mean and coefficients are level-vs-grand-mean deviations.
+- **Helmert (`contr.helmert`)**: orthogonal successive comparisons (level $j$ vs the mean of levels $1, \dots, j-1$). Useful for ordered or sequential designs.
+- **Polynomial (`contr.poly`)**: linear, quadratic, cubic, etc. trends for ordered factors. Default for ordered factors.
+
+Custom contrasts are matrices whose columns define the comparisons of interest; the resulting coefficients represent exactly those comparisons. For orthogonal contrasts (columns sum to zero and pairwise products sum to zero), tests of each coefficient are independent and no multiplicity adjustment is needed within the pre-planned set.
+
+## Assumptions
+
+Standard regression assumptions; the contrast choice does not change fit or predictions, only the coefficient interpretation.
+
+## R Implementation
+
+```r
+d <- mtcars
+d$cyl <- factor(d$cyl, levels = c("4", "6", "8"))
+
+# Compare built-in contrasts
+contr.treatment(3)
+contr.sum(3)
+contr.helmert(3)
+contr.poly(3)
+
+# Apply a specific contrast to a factor
+contrasts(d$cyl) <- contr.helmert(3)
+fit <- lm(mpg ~ cyl, data = d)
+summary(fit)
+
+# Custom contrast: 4 vs (6 + 8), and 6 vs 8
+custom <- cbind("4_vs_68" = c(2, -1, -1),
+                "6_vs_8"  = c(0, 1, -1))
+contrasts(d$cyl) <- custom
+fit_custom <- lm(mpg ~ cyl, data = d)
+summary(fit_custom)
+```
+
+## Output & Results
+
+Each coefficient in the regression output tests the comparison defined by the corresponding column of the contrast matrix. Treatment contrasts produce level-vs-reference comparisons; sum contrasts produce level-vs-grand-mean; custom contrasts produce whatever comparisons the user specifies.
+
+## Interpretation
+
+A reporting sentence: "Custom orthogonal contrasts compared 4-cylinder cars against the average of 6- and 8-cylinder cars (estimate $-9.36$, 95 % CI $-12.0$ to $-6.7$, $p < 0.001$) and 6-cylinder against 8-cylinder cars (estimate $-4.65$, 95 % CI $-7.6$ to $-1.7$, $p = 0.003$); orthogonal contrasts allow these two pre-specified hypotheses to be tested without multiplicity adjustment." Always state the contrast scheme.
+
+## Practical Tips
+
+- Match the contrast scheme to the scientific question rather than the software default; treatment contrasts are convenient but rarely optimal for ANOVA-style questions.
+- Custom contrasts must be linearly independent (rank $k-1$); orthogonal contrasts add the property that pairwise within-column products sum to zero.
+- For Type III sums of squares in unbalanced ANOVA designs, use sum-to-zero (`contr.sum`) or Helmert; treatment contrasts produce non-orthogonal SS that confound main effects with interactions.
+- For ordered factors, the polynomial default tests linear, quadratic, etc. trends; if you want pairwise group differences, override with `contr.treatment`.
+- Centring continuous predictors is conceptually analogous to using effect-coding for factors; both shift the intercept to a meaningful reference and reduce collinearity with interactions.
+- Document the contrast scheme in the methods section: "treatment contrasts with placebo as reference" or "Helmert contrasts" leaves no room for misreading.
+
+## R Packages Used
+
+Base R `contrasts()`, `contr.treatment()`, `contr.sum()`, `contr.helmert()`, `contr.poly()`; `MASS::contr.sdif()` for successive-differences contrasts; `multcomp::glht()` for testing arbitrary linear combinations of coefficients with multiplicity correction; `emmeans` for marginal means and contrast-stable post-hoc inference.

@@ -1,0 +1,67 @@
+---
+title: PLS Discriminant Analysis
+date: "2026-04-17"
+description: PLS extended to classification via dummy-coded class indicators
+categories:
+  - Multivariate Statistics
+  - plsda
+  - classification
+  - mixomics
+---
+
+## Introduction
+
+PLS discriminant analysis (PLS-DA) extends partial least squares regression to classification by dummy-coding the class variable as a binary indicator matrix. It has become a standard tool in metabolomics, transcriptomics, and other omics disciplines because it handles the $p \gg n$ regime gracefully and, in its sparse variant, performs simultaneous classification and feature selection. The output — a small set of latent components plus the discriminant boundary in the projected space — is interpretable in a way that black-box classifiers (random forests, deep nets) often are not.
+
+## Prerequisites
+
+A working understanding of PLS regression, classification metrics, and the high-dimensional ($p \gg n$) regime that motivates latent-component methods.
+
+## Theory
+
+Encode the class variable as one-hot indicators $Y \in \{0, 1\}^{n \times K}$ for $K$ classes. PLS regression on $(X, Y)$ produces latent components that maximise covariance with the indicator matrix; the predicted indicators are continuous, and a new sample is assigned to the class with the largest prediction. The number of components is selected by cross-validation (`mixOmics::perf()`).
+
+Sparse PLS-DA (sPLS-DA) imposes an L1 penalty per component, retaining only `keepX` predictors per component. This produces a signature — a small list of variables driving the classification — that can be reported alongside the classifier itself.
+
+## Assumptions
+
+Linear relationships between latent components and outcome probabilities, sample sizes large enough per class to estimate the components stably (rule of thumb: at least 5–10 observations per class), and meaningful covariance between predictors and the encoded indicators.
+
+## R Implementation
+
+```r
+library(mixOmics)
+
+data(srbct)
+X <- srbct$gene
+Y <- srbct$class
+
+# PLS-DA
+fit_plsda <- plsda(X, Y, ncomp = 3)
+plotIndiv(fit_plsda, ind.names = FALSE, legend = TRUE)
+
+# Sparse PLS-DA: select 50 variables per component
+fit_splsda <- splsda(X, Y, ncomp = 3, keepX = c(50, 50, 50))
+selectVar(fit_splsda, comp = 1)$name |> head()
+```
+
+## Output & Results
+
+`plsda()` returns latent component scores per sample, loadings for each predictor, and predicted class labels. `splsda()` adds variable-selection-per-component, with `selectVar()` extracting the chosen predictors. `plotIndiv()` displays samples in the latent component space, coloured by class.
+
+## Interpretation
+
+A reporting sentence: "Sparse PLS-DA on the 2,308-gene SRBCT dataset selected 50 genes per component across three components, achieving 100 % balanced accuracy in 10-fold cross-validation; the resulting 150-gene signature substantially overlaps with the published transcriptomic markers of the four cancer subtypes." Always report both classification performance (accuracy, balanced accuracy, AUC) and the selected feature signature.
+
+## Practical Tips
+
+- Use `mixOmics::perf()` with cross-validation to select `ncomp` and `keepX`; a fixed choice without tuning over-fits in high-dimensional omics.
+- For two-class problems, logistic regression with elastic net regularisation often performs comparably and is more familiar; reserve sPLS-DA for multi-class or when the covariance structure is strongly multivariate.
+- Sparse PLS-DA can produce unstable variable selections in the presence of highly correlated predictors; report selection stability via bootstrap resampling (`mixOmics::perf()` with `nrepeat = 50`).
+- The selected signature is the headline result for biological audiences; pair it with pathway-enrichment analysis to interpret functionally.
+- Compare against alternative classifiers (random forest, elastic-net logistic, sPLS-DA) on identical CV folds; modern omics papers typically report multiple methods.
+- For very imbalanced classes, use `near.zero.var = TRUE` and balanced cross-validation to prevent the majority class from dominating component construction.
+
+## R Packages Used
+
+`mixOmics` for `plsda()`, `splsda()`, `perf()`, `selectVar()`, and the broader multi-block extensions; `caret` for unified cross-validated benchmarking against alternative classifiers; `ropls` for an alternative PLS-DA implementation popular in metabolomics; `glmnet` for elastic-net logistic regression as a complementary high-dimensional classifier.

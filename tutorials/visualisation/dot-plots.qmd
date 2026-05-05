@@ -1,0 +1,74 @@
+---
+title: Dot Plots
+date: "2026-04-17"
+description: Cleveland dot plots and Wilkinson dot plots for compact distributional displays
+categories:
+  - Data Visualisation
+  - dot-plot
+  - cleveland
+  - wilkinson
+---
+
+## Introduction
+
+"Dot plot" refers to two distinct chart types that share a name and a geometry but answer different questions. **Cleveland dot plots** show one value per category as a single point, replacing bar charts for ranked comparisons; they were popularised by William Cleveland's 1985 *Elements of Graphing Data* on the grounds that perceiving position is more accurate than perceiving length. **Wilkinson dot plots** show one point per observation, stacked at the relevant x-value, and act as a hand-drawn histogram that exposes individual observations rather than binned counts.
+
+## Prerequisites
+
+A working knowledge of `ggplot2`, an idea of when to prefer position to length encoding, and basic familiarity with histograms and bar charts.
+
+## Theory
+
+**Cleveland dot plots** (`geom_point()` with category on y and value on x) eliminate the visual noise of bar lengths and make small differences across many categories easy to compare. A faint horizontal segment from zero to the point — `geom_segment()` — preserves the bar-like sense of "distance from origin" without committing the visual heaviness of a filled bar.
+
+**Wilkinson dot plots** (`geom_dotplot()`) bin observations along one axis and stack equal-sized dots in each bin. The `method = "histodot"` argument anchors bins to the data range; `method = "dotdensity"` adapts bin centres to local density. They are most useful for small samples (n < 100) where every observation should be visible; for larger samples, jittered strip plots or swarm plots scale better.
+
+## Assumptions
+
+For Cleveland dot plots: one value per category (or a clearly defined summary). For Wilkinson dot plots: the binwidth makes sense for the data range — too small and dots stack into spikes; too large and they merge into bars.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+# Cleveland dot plot: mean mpg by car class
+mpg_summary <- aggregate(hwy ~ class, mpg, mean)
+ggplot(mpg_summary, aes(hwy, reorder(class, hwy))) +
+  geom_segment(aes(x = 0, xend = hwy, yend = class), colour = "grey80") +
+  geom_point(size = 3, colour = "#2A9D8F") +
+  labs(y = NULL) +
+  theme_minimal()
+
+# Wilkinson dot plot: distribution of a small sample
+ggplot(mtcars, aes(mpg)) +
+  geom_dotplot(method = "histodot", binwidth = 1, fill = "#2A9D8F") +
+  theme_minimal()
+
+# Grouped dot plot
+ggplot(iris, aes(Species, Sepal.Length)) +
+  geom_dotplot(binaxis = "y", stackdir = "center", binwidth = 0.1,
+               fill = "#2A9D8F") +
+  theme_minimal()
+```
+
+## Output & Results
+
+Three views: a Cleveland dot plot ranking car classes by mean highway mpg with faint baseline segments, a Wilkinson dot plot of the 32 `mtcars` mpg values stacked as a histogram, and a grouped Wilkinson plot showing sepal-length distributions for three iris species side by side.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Cleveland dot plot of mean highway fuel economy (mpg) by class for 234 vehicles; categories are ordered by descending mean. Wilkinson dot plot of mpg values for 32 vehicles, with each dot representing a single car." When showing summary points, always describe which summary (mean, median, count) the dot represents.
+
+## Practical Tips
+
+- Order Cleveland-dot categories by value with `forcats::fct_reorder()` or `reorder()`; alphabetic orderings rarely communicate ranking.
+- Combine Cleveland dot plots with horizontal error bars (`geom_errorbarh()` or `geom_segment()` for confidence intervals) when uncertainty is important.
+- Choose Wilkinson dot binwidth to match the data resolution; for integer data, set binwidth equal to the unit step.
+- For grouped Wilkinson plots, set `stackdir = "center"` for symmetric stacks or `"up"` for one-sided; `binaxis = "y"` rotates the dotplot for vertical y-axis layouts.
+- Dot plots in presentation slides work better than bar charts at small sizes; the bar's length advantage becomes a length-perception headache when the bar is only a few pixels tall.
+- Above a few hundred observations per category, switch from Wilkinson dot plots to strip plots, swarm plots (`ggbeeswarm`), or violin plots; stacked dots no longer scale.
+
+## R Packages Used
+
+`ggplot2` for `geom_dotplot()`, `geom_point()`, and `geom_segment()`; `forcats` for category reordering; `ggbeeswarm` for swarm-style dot plots that scale to larger samples; `ggdist` for slabinterval geoms that combine the dot-plot and density idioms.

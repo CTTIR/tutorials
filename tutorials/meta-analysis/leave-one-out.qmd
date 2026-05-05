@@ -1,0 +1,69 @@
+---
+title: Leave-One-Out Meta-Analysis
+date: "2026-04-17"
+description: Sensitivity of the pooled estimate to each individual study
+categories:
+  - Meta-Analysis
+  - leave-one-out
+  - sensitivity
+  - influence
+---
+
+## Introduction
+
+Leave-one-out (LOO) meta-analysis systematically removes each study and re-computes the pooled estimate using the remaining $k - 1$ studies. The resulting per-removal estimates show how much each study drives the overall conclusion. Studies whose removal substantially changes the pooled effect — magnitude, significance, or both — are influential and warrant careful interpretation. LOO is a routine sensitivity analysis in modern meta-analysis reporting.
+
+## Prerequisites
+
+A working understanding of pooled meta-analysis (fixed or random effects) and the concept of influence diagnostics from regression analysis.
+
+## Theory
+
+For each study $i = 1, \dots, k$, compute $\hat\theta_{(-i)}$ by pooling the other $k - 1$ studies under the same meta-analysis model. Plot $\hat\theta_{(-i)}$ with its confidence interval across $i$; large deviations from the full-model pooled estimate indicate influential studies.
+
+LOO complements other influence measures: Cook's distance and DFBETAS quantify how much each study perturbs the overall fit, and Baujat plots show each study's contribution to heterogeneity ($Q$) versus its contribution to the pooled estimate. Used together, these diagnostics provide a comprehensive picture of which studies the conclusion depends on.
+
+## Assumptions
+
+Same as the underlying random-effects meta-analysis; each leave-one-out fit uses the same model and method as the full pooling.
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+k <- 10
+yi <- c(0.35, 0.42, 0.25, 0.55, 0.28, 0.39, 0.95, 0.31, 0.44, 0.36)
+vi <- c(0.02, 0.03, 0.015, 0.02, 0.025, 0.018, 0.01, 0.04, 0.02, 0.022)
+
+res <- rma(yi, vi, method = "REML")
+loo <- leave1out(res)
+
+print(loo[, c("estimate", "ci.lb", "ci.ub", "I2")])
+
+# Influence diagnostics: Cook's distance, DFBETAS
+inf <- influence(res)
+print(inf$inf)
+```
+
+## Output & Results
+
+`leave1out()` returns a per-study table of the recomputed pooled estimate, confidence interval, and $I^2$ when each study is omitted. `influence()` provides Cook's distance, DFBETAS, hat values, and other diagnostics computed jointly.
+
+## Interpretation
+
+A reporting sentence: "Leave-one-out analysis revealed study 7 (SMD = 0.95, the largest single estimate) as highly influential; removing it reduced the pooled SMD from 0.41 to 0.35 and shrunk $I^2$ from 38 % to 18 %. Conclusions are robust to removal of any other study; the sensitivity analysis without study 7 is reported as supplementary." Always describe what an influential study removal does to both effect size and heterogeneity.
+
+## Practical Tips
+
+- Pair LOO with Cook's distance and DFBETAS from `metafor::influence()`; the combination flags both effect-size influence and overall fit influence.
+- If removing any single study crosses the significance line, the conclusion is fragile and should be reported as such.
+- LOO is descriptive — it does not correct any bias. Use it to inform readers about robustness, not to "clean up" the meta-analysis post-hoc.
+- Report LOO results only if at least one study is markedly influential; otherwise the table conveys no useful information beyond the headline pooled estimate.
+- Combine with Baujat plots (`metafor::baujat()`) for a richer visualisation: studies in the upper-right corner contribute disproportionately to both heterogeneity and effect.
+- For meta-analyses with fewer than 5 studies, LOO is unstable and largely uninformative; report it but interpret cautiously.
+
+## R Packages Used
+
+`metafor::leave1out()` for the canonical LOO output; `metafor::influence()` for Cook's distance, DFBETAS, and hat values; `metafor::baujat()` for Baujat plots; `meta` for analogous sensitivity tools in an alternative interface; `dmetar::infA()` for combined influence and outlier diagnostics in an integrated workflow.

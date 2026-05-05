@@ -1,0 +1,68 @@
+---
+title: Randomisation Methods
+date: "2026-04-17"
+description: "Simple, block, and stratified randomisation for RCT allocation"
+categories:
+  - Clinical Biostatistics
+  - randomisation
+  - allocation
+  - trials
+---
+
+## Introduction
+
+Randomisation is the defining feature of an RCT: participants are allocated by chance rather than choice. Proper randomisation prevents selection bias (investigators cannot predict allocation) and ensures balance of known and unknown confounders in expectation. Several schemes trade simplicity, balance, and unpredictability.
+
+## Prerequisites
+
+Probability; allocation concealment.
+
+## Theory
+
+**Simple randomisation**: each participant flips a fair coin. Easy but can produce imbalance in small trials.
+
+**Block randomisation**: within blocks of size $B$, allocate equal counts to each arm. Guarantees balance at block boundaries.
+
+**Stratified randomisation**: block within strata defined by baseline covariates (sex, age, centre). Balances the stratification variables without post-hoc adjustment.
+
+**Minimisation** (covariate-adaptive): allocate each new participant to minimise covariate imbalance; quasi-random, less transparent.
+
+## Assumptions
+
+Allocation is concealed until the participant is enrolled; blocks / strata definitions are pre-specified.
+
+## R Implementation
+
+```r
+library(blockrand)
+
+set.seed(2026)
+# Block randomisation with variable block sizes (4, 6)
+alloc <- blockrand(n = 60, num.levels = 2,
+                   levels = c("ctrl", "trt"),
+                   block.sizes = c(2, 3))
+head(alloc, 10)
+table(alloc$treatment)
+
+# Stratified randomisation: stratify by sex
+library(randomizeR)
+pbr <- pbrPar(rb = c(4, 6), K = 2, ratio = c(1, 1))
+rand_m <- genSeq(pbr, r = 1, seed = 2026)
+rand_f <- genSeq(pbr, r = 1, seed = 2027)
+```
+
+## Output & Results
+
+Allocation sequence with approximately equal arm counts; variable block sizes prevent predictability at block boundaries.
+
+## Interpretation
+
+"Block-randomisation with variable block sizes (4, 6) was used to allocate 60 participants, guaranteeing equal arm counts at every 20-participant batch. Stratification by centre ensured balance across sites."
+
+## Practical Tips
+
+- Use variable block sizes (e.g., 4 and 6) to prevent predictability; investigators guessing the next allocation defeats concealment.
+- Stratify on a small number of strong prognostic variables (typically 2-3); over-stratification creates empty cells.
+- Centralise the allocation schedule; local administration risks unblinding.
+- Document randomisation method and concealment in the published paper and trial registry.
+- For small trials, stratified block randomisation is usually the best choice.

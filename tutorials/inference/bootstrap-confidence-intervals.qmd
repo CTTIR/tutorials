@@ -1,0 +1,87 @@
+---
+title: Bootstrap Confidence Intervals
+date: "2026-04-17"
+description: "Percentile, basic, BCa, and studentised bootstrap CIs"
+categories:
+  - Inferential Statistics
+  - bootstrap
+  - confidence-interval
+  - bca
+  - percentile
+---
+
+## Introduction
+
+The bootstrap offers several ways to construct confidence intervals from resamples. They differ in accuracy (first- vs second-order correctness), in assumptions, and in complexity. Choosing well among them is part of responsible bootstrap use.
+
+## Prerequisites
+
+Bootstrap, confidence intervals.
+
+## Theory
+
+For a statistic $\hat{\theta}$ with bootstrap replicates $\hat{\theta}^{*(1)}, \ldots, \hat{\theta}^{*(B)}$:
+
+- **Percentile**: $[\hat{\theta}^*_{(\alpha/2)}, \hat{\theta}^*_{(1-\alpha/2)}]$. Simple and intuitive; assumes symmetry of the bootstrap distribution.
+- **Basic (pivotal)**: $[2\hat{\theta} - \hat{\theta}^*_{(1 - \alpha/2)}, 2\hat{\theta} - \hat{\theta}^*_{(\alpha/2)}]$. Uses the bootstrap distribution of $\hat{\theta}^* - \hat{\theta}$ as a pivot.
+- **Studentised (bootstrap-t)**: requires bootstrap SE, generally most accurate but computationally heavier.
+- **BCa (bias-corrected and accelerated)**: corrects for bias and skewness; the default modern choice.
+
+**Coverage**: percentile is first-order accurate (error $O(n^{-1/2})$); BCa and studentised are second-order ($O(n^{-1})$).
+
+## Assumptions
+
+Same as bootstrap generally; specific methods may assume additional smoothness.
+
+## R Implementation
+
+```r
+library(boot)
+set.seed(2026)
+
+x <- rlnorm(40, meanlog = 0, sdlog = 0.8)   # skewed data
+
+median_stat <- function(data, indices) median(data[indices])
+boot_out <- boot(x, median_stat, R = 5000)
+
+ci <- boot.ci(boot_out, type = c("norm", "basic", "perc", "bca"))
+ci
+
+# Studentised bootstrap
+median_with_var <- function(data, indices) {
+  d <- data[indices]
+  md <- median(d)
+  # Jackknife variance of median
+  jk <- sapply(seq_along(d), function(i) median(d[-i]))
+  c(md, var(jk) * (length(d) - 1))
+}
+boot_t <- boot(x, median_with_var, R = 5000)
+boot.ci(boot_t, type = "stud")
+```
+
+## Output & Results
+
+```
+BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS
+
+Normal       (0.728, 1.241)
+Basic        (0.712, 1.221)
+Percentile   (0.735, 1.244)
+BCa          (0.800, 1.297)
+
+Studentized  (0.729, 1.341)
+```
+
+For skewed data, BCa shifts the interval to the right, correcting for the bias in the percentile CI.
+
+## Interpretation
+
+"The median was 0.97 with a 95 % BCa bootstrap CI of (0.80, 1.30) based on 5000 resamples."
+
+## Practical Tips
+
+- Default to BCa CIs unless computational constraints matter; they correct for bias and skew at modest additional cost.
+- For very small $B$ (e.g., $B < 1000$), percentile and BCa can be unstable at the tails; increase $B$.
+- Studentised (boot-t) CIs are the most accurate but require a variance estimate of the statistic (jackknife or formula); worth it for critical inference.
+- Normal bootstrap CIs (using mean +/- 1.96 SE) are the crudest; avoid them unless the bootstrap distribution is nearly normal.
+- Report which CI method was used and the number of bootstrap resamples.

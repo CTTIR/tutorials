@@ -1,0 +1,391 @@
+---
+title: Inferential Statistics
+description: "Hypothesis testing, confidence intervals, and the major parametric and non-parametric procedures for comparing groups and relationships"
+---
+
+Inferential statistics is the bridge from data in hand to claims about the world. This area covers the philosophy of hypothesis testing, the construction and interpretation of confidence intervals, and the full catalogue of common tests used in the life sciences and clinical research.
+
+Tutorials are grouped by the kind of research question being answered: comparing a single mean to a reference, comparing two or more groups, testing associations between categorical variables, and quantifying correlations between continuous variables. Non-parametric alternatives are treated in parallel with their parametric counterparts, and multiple testing correction is given its own dedicated thread.
+
+## What is covered
+
+- The logic of Null Hypothesis Significance Testing, type I/II errors, and the much-misunderstood p-value
+- Confidence intervals: construction, coverage, and why they are more informative than p-values alone
+- One-sample and paired-sample t-tests with assumption checks
+- Two-sample t-tests: Student's, Welch's, and when to choose which
+- One-way, two-way, repeated-measures, and mixed ANOVA with post-hoc testing
+- Chi-squared tests of independence and goodness-of-fit; Fisher's exact test for small tables
+- Correlation coefficients: Pearson, Spearman, Kendall, and their inferential procedures
+- Non-parametric rank tests: Mann-Whitney U, Wilcoxon signed-rank, Kruskal-Wallis, Friedman
+- Permutation and bootstrap tests for when distributional assumptions are untenable
+- Multiple testing correction: Bonferroni, Holm, Benjamini-Hochberg (FDR), Benjamini-Yekutieli
+
+Effect sizes are reported alongside p-values in every example, and guidance on effect-size interpretation is given for each design.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Anderson-Darling Test](anderson-darling-test.qmd)
+A distribution goodness-of-fit test with emphasis on the tails
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bartlett's Test](bartlett-test.qmd)
+Test of equal variances across groups, most powerful under normality but very sensitive to its violation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Benjamini-Hochberg FDR](benjamini-hochberg-fdr.qmd)
+Controlling the expected proportion of false discoveries among rejected hypotheses
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Benjamini-Yekutieli FDR](benjamini-yekutieli.qmd)
+Dependence-robust false discovery rate control at the cost of conservatism
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bonferroni Correction](bonferroni-correction.qmd)
+Controlling family-wise error rate by dividing alpha across m tests
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bootstrap Confidence Intervals](bootstrap-confidence-intervals.qmd)
+Percentile, basic, BCa, and studentised bootstrap CIs
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Chi-Squared Goodness-of-Fit Test](chi-squared-goodness-of-fit.qmd)
+Testing whether observed category frequencies match an expected distribution
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Chi-Squared Test of Independence](chi-squared-independence.qmd)
+Testing association between two categorical variables via observed vs. expected counts under independence
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Cochran-Mantel-Haenszel Test](cochran-mantel-haenszel.qmd)
+Stratified analysis of 2x2 tables across levels of a confounding variable
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Effect Sizes: Overview](effect-sizes-overview.qmd)
+Why effect sizes matter and which measures apply to which tests
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Equivalence Testing with TOST](equivalence-tost.qmd)
+Two one-sided tests for establishing practical equivalence within a margin
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Fisher's Exact Test](fisher-exact-test.qmd)
+Exact test for 2x2 (and r x c) contingency tables, based on the hypergeometric distribution
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Friedman Test](friedman-test.qmd)
+Non-parametric test for three or more paired / repeated measures
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Holm's Step-Down Correction](holm-correction.qmd)
+Sequential Bonferroni with uniformly greater power; controls FWER
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Kendall's Tau](kendall-tau.qmd)
+Rank correlation based on concordant vs discordant pairs; robust to ties and small samples
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Kolmogorov-Smirnov Test](kolmogorov-smirnov-test.qmd)
+CDF-based goodness-of-fit for one-sample and two-sample comparisons
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Kruskal-Wallis Test](kruskal-wallis.qmd)
+Non-parametric one-way ANOVA based on ranks across three or more groups
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Levene's Test of Variances](levene-test.qmd)
+Robust test of variance homogeneity across groups
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Mann-Whitney U Test](mann-whitney-u.qmd)
+Non-parametric two-sample test based on ranks; alternative to the independent t-test
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [McNemar's Test](mcnemar-test.qmd)
+Paired / matched binary data: comparing two measurements on the same units, using discordant pairs only
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Mixed ANOVA](mixed-anova.qmd)
+Designs combining between-subjects and within-subjects factors, with the interaction as key
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Multiple Comparisons: Overview](multiple-comparisons-overview.qmd)
+Family-wise error vs false discovery rate and when each applies
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Null and Alternative Hypotheses](null-alternative-hypotheses.qmd)
+Formulating H0 and H1, choosing one- vs two-sided tests, and avoiding post-hoc reformulation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [One-Proportion Test](one-proportion-test.qmd)
+Testing whether an observed proportion differs from a pre-specified reference; exact and score-based methods
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [One-Sample t-Test](one-sample-t-test.qmd)
+Testing whether a sample mean equals a pre-specified reference value
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [One-Sample z-Test](one-sample-z-test.qmd)
+Comparing a sample mean to a reference when the population variance is known -- rare in practice but pedagogically useful
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [One-Way ANOVA](one-way-anova.qmd)
+Comparing means across three or more independent groups via the F-test
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [P-Values Explained](p-values-explained.qmd)
+Definition, correct interpretation, and the most common misinterpretations of the p-value
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Paired t-Test](paired-t-test.qmd)
+Comparing two dependent measurements by applying a one-sample t-test to their differences
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Pearson Correlation Test](pearson-correlation-test.qmd)
+Testing whether the Pearson correlation between two continuous variables is non-zero
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Permutation Tests](permutation-tests.qmd)
+Exact or Monte Carlo p-values via resampling under exchangeability
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Post-Hoc Tests with Tukey HSD](post-hoc-tests-tukey.qmd)
+Pairwise comparisons after ANOVA with family-wise error control
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Repeated-Measures ANOVA](repeated-measures-anova.qmd)
+Within-subjects analysis of variance with sphericity checks and corrections
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Shapiro-Wilk Normality Test](shapiro-wilk-test.qmd)
+The most powerful commonly used test for normality in small to moderate samples
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Spearman Rank Correlation Test](spearman-correlation-test.qmd)
+Non-parametric correlation test for monotonic association between two variables
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Bootstrap: Introduction](bootstrap-introduction.qmd)
+Resampling with replacement to estimate standard errors and sampling distributions
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Jackknife](jackknife.qmd)
+Leave-one-out resampling for bias and variance estimation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Runs Test](runs-test.qmd)
+Testing randomness of a binary or dichotomised sequence via run lengths
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Sign Test](sign-test.qmd)
+Testing a median or paired difference using only the direction of each observation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Two-Proportion Test](two-proportion-test.qmd)
+Comparing two independent proportions; z-test and chi-squared equivalence, with risk difference and relative risk
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Two-Sample t-Test](two-sample-t-test.qmd)
+Comparing means between two independent groups with Student's and Welch's t-tests, including assumption checks and effect sizes
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Two-Way ANOVA](two-way-anova.qmd)
+Two between-subjects factors: main effects and interaction
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Type I and Type II Errors](type-i-type-ii-errors.qmd)
+Rejecting a true null (alpha) and failing to reject a false null (beta); power and the trade-off
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Welch's t-Test](welch-t-test.qmd)
+Two-sample t-test that does not assume equal variances; R's default
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Wilcoxon Signed-Rank Test](wilcoxon-signed-rank.qmd)
+Non-parametric paired-sample test based on signed ranks
+:::
+
+:::

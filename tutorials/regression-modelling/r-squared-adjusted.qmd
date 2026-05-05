@@ -1,0 +1,73 @@
+---
+title: R-Squared and Adjusted R-Squared
+date: "2026-04-17"
+description: "Proportion of variance explained, and the penalty for model complexity"
+categories:
+  - "Regression & Modelling"
+  - r-squared
+  - adjusted-r-squared
+  - variance-explained
+---
+
+## Introduction
+
+$R^2$ is the proportion of variance in the outcome explained by the regression — the most commonly reported summary of regression fit. Its weakness is well known: $R^2$ never decreases when predictors are added, so it cannot distinguish a useful predictor from a noise variable, and high $R^2$ alone does not imply a useful model. Adjusted $R^2$ penalises for the number of predictors and decreases when an added predictor does not earn its complexity. For predictive purposes, cross-validated $R^2$ is more honest still.
+
+## Prerequisites
+
+A working understanding of multiple regression, residual sum of squares, and the bias-variance trade-off in model selection.
+
+## Theory
+
+$$R^2 = 1 - \frac{\mathrm{SS}_{\mathrm{res}}}{\mathrm{SS}_{\mathrm{tot}}}.$$
+
+It equals the squared correlation between observed and fitted values for OLS with an intercept. Always between 0 and 1; always non-decreasing as predictors are added.
+
+Adjusted $R^2$ corrects for the penalty:
+
+$$R^2_{\mathrm{adj}} = 1 - (1 - R^2) \cdot \frac{n - 1}{n - p - 1},$$
+
+with $p$ the number of predictors. Adjusted $R^2$ can decrease when an added predictor does not improve fit enough to compensate for the lost degree of freedom; it can even be negative for very poorly fitting models.
+
+For prediction, both are in-sample summaries; cross-validated $R^2$ (`1 - SSE_{CV} / SS_{tot}`) replaces the residual sum with a CV-based estimate of out-of-sample error and corrects for the optimism of in-sample fit.
+
+## Assumptions
+
+Standard regression assumptions for the underlying linear model. $R^2$ is well-defined for any model with an intercept; without an intercept, definitions differ across software.
+
+## R Implementation
+
+```r
+fit <- lm(mpg ~ wt + hp + disp, data = mtcars)
+s <- summary(fit)
+c(R2 = s$r.squared, R2_adj = s$adj.r.squared)
+
+# Cross-validated R^2
+library(caret)
+set.seed(2026)
+cv <- train(mpg ~ wt + hp + disp, data = mtcars,
+            method = "lm",
+            trControl = trainControl(method = "cv", number = 10))
+cv$results
+```
+
+## Output & Results
+
+`summary(fit)$r.squared` and `$adj.r.squared` give in-sample values; `caret::train()` returns cross-validated $R^2$ and RMSE under 10-fold CV. The gap between in-sample and CV $R^2$ quantifies optimism — large gaps indicate overfitting.
+
+## Interpretation
+
+A reporting sentence: "The model explained 83 % of the variance in mpg ($R^2 = 0.83$, adjusted $R^2 = 0.81$); 10-fold cross-validated $R^2$ was 0.79, indicating modest optimism in the in-sample estimate. Adjusted $R^2$ confirmed that all three predictors contributed beyond their penalty." Always report adjusted $R^2$ alongside $R^2$ for multi-predictor models, and CV $R^2$ when prediction is the goal.
+
+## Practical Tips
+
+- Report adjusted $R^2$, not just $R^2$, whenever predictors number more than one; the unadjusted version misleads about model parsimony.
+- Adjusted $R^2$ can be negative for very poorly fitting models; this is informative, not a bug.
+- For predictive modelling, prefer cross-validated $R^2$ or RMSE; in-sample $R^2$ is optimistic by design.
+- Do not compare $R^2$ across different datasets with different outcome variance; the comparison is meaningless.
+- Avoid causal language: "the model explains 83 % of the variance" is correct; "the model predicts 83 % of the outcome" is not.
+- For GLMs, pseudo-$R^2$ measures (Cox-Snell, Nagelkerke, McFadden) generalise the concept; report the specific variant used because they give different numerical answers.
+
+## R Packages Used
+
+Base R `summary.lm()` and `summary.glm()`; `performance::r2()` for tidy $R^2$ across model classes; `caret` and `tidymodels` for cross-validated $R^2$; `MuMIn::r.squaredGLMM()` for marginal and conditional $R^2$ in mixed models.

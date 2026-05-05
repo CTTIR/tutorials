@@ -1,0 +1,72 @@
+---
+title: Holt-Winters Method
+date: "2026-04-17"
+description: "Triple exponential smoothing with level, trend, and seasonal components"
+categories:
+  - Time Series Analysis
+  - holt-winters
+  - seasonal
+  - exponential-smoothing
+---
+
+## Introduction
+
+The Holt-Winters method extends exponential smoothing to handle both trend and seasonality via three coupled smoothing equations — level, trend, and seasonal — each with its own smoothing parameter. It is the seasonal generalisation of Holt's linear method and the conceptual ancestor of the modern ETS family. Its strength is interpretability and competitive forecasting performance with relatively few parameters; its weakness is the assumption of a fixed seasonal period and stable parameters across the entire series.
+
+## Prerequisites
+
+A working understanding of simple exponential smoothing, Holt's linear-trend method, and the additive-vs-multiplicative seasonal distinction.
+
+## Theory
+
+The additive Holt-Winters equations are
+
+$$\begin{aligned}
+L_t &= \alpha (y_t - S_{t-s}) + (1 - \alpha)(L_{t-1} + T_{t-1}), \\
+T_t &= \beta (L_t - L_{t-1}) + (1 - \beta) T_{t-1}, \\
+S_t &= \gamma (y_t - L_t) + (1 - \gamma) S_{t-s}.
+\end{aligned}$$
+
+The forecast is $\hat y_{t+h} = L_t + h T_t + S_{t-s+1+(h-1) \bmod s}$. The multiplicative variant replaces the seasonal additions with multiplications and is appropriate when seasonal amplitude grows with the level.
+
+The three smoothing parameters $\alpha, \beta, \gamma$ each lie in $[0, 1]$: small values give slow adaptation (smoother estimates), large values give fast adaptation (more responsive but noisier).
+
+## Assumptions
+
+The seasonal period $s$ is fixed and known; the smoothing parameters are stable over the series; for prediction intervals, residuals are approximately Normal.
+
+## R Implementation
+
+```r
+library(forecast)
+
+x <- AirPassengers
+
+# Multiplicative
+hw_m <- HoltWinters(x, seasonal = "multiplicative")
+hw_m$alpha; hw_m$beta; hw_m$gamma
+
+fc <- forecast(hw_m, h = 24)
+plot(fc)
+```
+
+## Output & Results
+
+`HoltWinters()` returns the three smoothing parameters, the fitted level / trend / seasonal components, and the fitted values on the original series. `forecast()` extends to multi-step-ahead predictions with 80 % / 95 % intervals.
+
+## Interpretation
+
+A reporting sentence: "Holt-Winters multiplicative smoothing of monthly air-passenger counts estimated $\hat\alpha = 0.20$, $\hat\beta = 0.03$, $\hat\gamma = 0.80$; the resulting 24-month forecast continues the upward trend with proportionally growing seasonal amplitude. The slow $\beta$ indicates a stable trend slope, while the fast $\gamma$ allows the seasonal shape to adapt over time." Always state the smoothing parameters and the additive-vs-multiplicative choice.
+
+## Practical Tips
+
+- Use additive Holt-Winters for stable seasonal amplitude; multiplicative when seasonal amplitude scales with the level.
+- Log-transforming the series often allows additive Holt-Winters to substitute for multiplicative; both produce essentially equivalent forecasts.
+- Parameters $\alpha, \beta, \gamma$ near 0 give slow updates (highly smoothed); near 1 give fast adaptation (responsive but noisy).
+- For complex seasonality (multiple periods, irregular spacing), the older Holt-Winters fails; use BATS or TBATS (`forecast::bats()`, `tbats()`) which handle these cases.
+- `forecast::ets()` automates the choice between additive, multiplicative, and damped variants by AIC; reach for it before `HoltWinters()` for new analyses.
+- Diagnostic check: the residuals should look like white noise; `checkresiduals(fc)` runs Ljung-Box and visual diagnostics.
+
+## R Packages Used
+
+Base R `HoltWinters()` for the classical implementation; `forecast::ets()` for the modern state-space ETS family that includes Holt-Winters as ETS(...,A,A) or ETS(...,M,M); `forecast::tbats()` for multi-seasonal extensions; `fable::ETS()` for the tidyverts equivalent.

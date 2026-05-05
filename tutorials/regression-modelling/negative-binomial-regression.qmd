@@ -1,0 +1,68 @@
+---
+title: Negative Binomial Regression
+date: "2026-04-17"
+description: Count regression with explicit variance-dispersion parameter for overdispersed data
+categories:
+  - "Regression & Modelling"
+  - negative-binomial
+  - nb
+  - overdispersion
+---
+
+## Introduction
+
+Negative binomial (NB) regression is the standard remedy for overdispersed count data — counts whose variance exceeds the mean, which is most real-world count data once any unobserved heterogeneity is present. It generalises Poisson regression by adding a dispersion parameter $\theta$ that explicitly models the additional variance, so confidence intervals and tests respect the true uncertainty rather than the artificially narrow Poisson ones. For epidemiological count data, hospital admissions, ecological abundance counts, and almost any context where Poisson dispersion checks fail, NB is the natural next step.
+
+## Prerequisites
+
+A working understanding of Poisson regression, the log link, and the concept of overdispersion as the failure of $\mathrm{Var}(Y) = \mathbb E[Y]$.
+
+## Theory
+
+The NB distribution arises as a Poisson-Gamma mixture: $Y \mid \lambda \sim \mathrm{Poisson}(\lambda)$ with $\lambda \sim \mathrm{Gamma}(\theta, \theta/\mu)$. Marginalising over the Gamma yields $Y \sim \mathrm{NegBin}(\mu, \theta)$ with mean $\mu$ and variance
+
+$$\mathrm{Var}(Y) = \mu + \mu^2 / \theta.$$
+
+The dispersion parameter $\theta$ controls extra-Poisson variance; as $\theta \to \infty$, NB reduces to Poisson, and as $\theta \to 0$, the variance grows quadratically with the mean.
+
+The regression model uses the log link $\log \mu = X^\top \beta$. Coefficients are interpreted as log-rate ratios identically to Poisson; the difference is that standard errors and inference reflect the genuine over-Poisson variance.
+
+## Assumptions
+
+Non-negative integer outcomes, independent observations conditional on covariates, and the NB variance structure $\mu + \mu^2/\theta$. For excess zeros beyond what NB predicts, zero-inflated extensions are needed.
+
+## R Implementation
+
+```r
+library(MASS)
+
+set.seed(2026)
+d <- data.frame(x = rnorm(300))
+d$y <- rnbinom(300, mu = exp(1 + 0.5 * d$x), size = 2)
+
+fit <- glm.nb(y ~ x, data = d)
+summary(fit)
+exp(coef(fit))   # rate ratios
+fit$theta
+```
+
+## Output & Results
+
+`glm.nb()` returns regression coefficients on the log scale (Wald $z$-tests, confidence intervals) plus the estimated dispersion parameter $\hat\theta$. Exponentiating coefficients gives rate ratios; comparing AIC against a Poisson fit on the same data confirms whether NB is justified.
+
+## Interpretation
+
+A reporting sentence: "Negative binomial regression with estimated dispersion $\hat\theta = 2.1$ (indicating substantial overdispersion relative to Poisson, $\Delta\mathrm{AIC} = 87$) estimated a rate ratio of 1.65 per unit increase in $x$ (95 % CI 1.40 to 1.95, $p < 0.001$); a Poisson fit underestimated the standard error by 22 %, illustrating the consequence of ignoring overdispersion." Always report $\hat\theta$ alongside the rate ratios; it carries information about residual heterogeneity.
+
+## Practical Tips
+
+- Compare NB and Poisson by AIC or likelihood-ratio test (`lmtest::lrtest`); the NB additional parameter $\theta$ has well-defined inference.
+- For zero-inflation in addition to overdispersion, use `pscl::zeroinfl(..., dist = "negbin")` or `glmmTMB(family = nbinom2(), ziformula = ...)`.
+- For count data with hierarchical structure, `glmmTMB(family = nbinom2())` adds random effects on top of the NB likelihood; `lme4::glmer.nb()` is the older, less reliable alternative.
+- Very large $\hat\theta$ ($> 100$) suggests Poisson would suffice and the NB extension is unnecessary; very small values ($< 1$) indicate severe overdispersion that may signal mis-specification rather than just Poisson failure.
+- The NB1 parameterisation (`glmmTMB(family = nbinom1())`) gives variance proportional to the mean (linear); NB2 (the default in `MASS::glm.nb`) gives quadratic variance. Choose based on the variance-mean relationship in residual plots.
+- Pearson residuals from the NB fit should look approximately uniform; systematic patterns reveal model misspecification.
+
+## R Packages Used
+
+`MASS::glm.nb()` for canonical NB regression with offset support; `glmmTMB` for mixed-effects NB1 / NB2 / zero-inflated models with cleaner overdispersion handling; `pscl::zeroinfl()` for zero-inflated count models; `lmtest::lrtest()` for likelihood-ratio comparisons against Poisson; `DHARMa` for residual diagnostics across count-model families.

@@ -1,0 +1,69 @@
+---
+title: Truncated Regression
+date: "2026-04-17"
+description: Regression when observations are missing (not just censored) below or above a threshold
+categories:
+  - "Regression & Modelling"
+  - truncation
+  - truncated-normal
+  - sample-selection
+---
+
+## Introduction
+
+Truncated regression applies when observations outside a range are absent entirely from the dataset rather than being censored at the threshold. The distinction matters: censored data record a value at the threshold for observations that fall outside, while truncated data simply omit them. Examples: a study limited to hypertensive patients (no normotensive observations), an income survey of households above a threshold (no low-income data), a registry of high-grade tumours (no low-grade entries). Ordinary least squares on truncated data is biased because the conditional mean inside the truncation region is non-linear, even when the latent model is linear.
+
+## Prerequisites
+
+A working understanding of linear regression, the difference between censoring and truncation, and the truncated-Normal distribution.
+
+## Theory
+
+For latent $Y^* = X^\top \beta + \varepsilon$ with $\varepsilon \sim \mathcal N(0, \sigma^2)$, truncation at $L$ from below means we observe $Y$ only when $Y^* > L$. The conditional density on the truncated region is
+
+$$f(y \mid x, Y > L) = \frac{\phi((y - x^\top \beta)/\sigma)/\sigma}{1 - \Phi((L - x^\top \beta)/\sigma)}.$$
+
+The conditional mean inside the truncation region depends non-linearly on $x$ via the truncation point, so OLS coefficients are attenuated. Maximum-likelihood estimation under the correct truncated-Normal density recovers the latent-model coefficients. The corresponding model with covariate-dependent truncation rules is the Heckman selection model (`sampleSelection::selection`).
+
+## Assumptions
+
+A known truncation threshold (or a known truncation rule), Normal latent errors, correctly specified latent linear model. Heavy truncation makes inference fragile because few observations remain.
+
+## R Implementation
+
+```r
+library(truncreg)
+
+set.seed(2026)
+x_all <- rnorm(300)
+y_all <- 2 + 1.5 * x_all + rnorm(300)
+keep  <- y_all > 0                 # truncation: keep only y > 0
+x <- x_all[keep]; y <- y_all[keep]
+
+fit_trunc <- truncreg(y ~ x, point = 0, direction = "left")
+summary(fit_trunc)
+
+# Biased OLS
+coef(lm(y ~ x))
+```
+
+## Output & Results
+
+`truncreg()` returns coefficient estimates that recover the latent-model parameters (close to the data-generating values 2 and 1.5). Naive OLS on the same truncated data attenuates the slope toward zero, illustrating the bias.
+
+## Interpretation
+
+A reporting sentence: "Truncated regression accounting for the selection rule ($y > 0$) recovered the slope at 1.48 (95 % CI 1.20 to 1.76), close to the data-generating value of 1.5; naive OLS on the same truncated sample produced an attenuated slope of 0.91 (95 % CI 0.65 to 1.17), demonstrating the consequence of ignoring truncation." Always check whether observations were dropped before reaching the analysis dataset; truncation in the data-collection process is invisible to standard regression diagnostics.
+
+## Practical Tips
+
+- Truncation is stronger than censoring: truncated values are unobserved, censored values are observed at the boundary. Use the right model for the data structure.
+- For covariate-dependent truncation rules, Heckman two-step or `sampleSelection::selection()` jointly models the selection and outcome equations.
+- Truncated regression is sensitive to the Normality assumption; check residuals on the truncated scale and consider semi-parametric alternatives if Normality fails.
+- For heavily truncated samples (most of the latent distribution unobserved), inference becomes fragile; report the proportion of latent observations retained.
+- Bayesian alternatives with informative priors stabilise truncated fits when the data alone are weak.
+- Confirm the truncation point (often a study design parameter) before fitting; misstating $L$ produces systematically biased estimates.
+
+## R Packages Used
+
+`truncreg` for the canonical truncated-Normal regression; `sampleSelection` for Heckman two-step and ML-based sample-selection models; `crch` for censored / truncated regression with heteroscedastic errors; `gamlss` for truncated outcomes within a richer distributional-regression framework.

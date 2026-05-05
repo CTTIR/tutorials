@@ -1,0 +1,91 @@
+---
+title: Benjamini-Hochberg FDR
+date: "2026-04-17"
+description: Controlling the expected proportion of false discoveries among rejected hypotheses
+categories:
+  - Inferential Statistics
+  - fdr
+  - benjamini-hochberg
+  - multiple-testing
+  - discovery
+---
+
+## Introduction
+
+Controlling the family-wise error rate becomes impractical when the number of tests runs into the thousands or millions (genomics, imaging). Benjamini and Hochberg (1995) introduced the **false discovery rate** (FDR) as a less stringent alternative: the expected proportion of false positives among rejected hypotheses. Their procedure is the default multiple-testing correction in high-throughput biology.
+
+## Prerequisites
+
+Hypothesis testing, multiple-testing problem.
+
+## Theory
+
+Let $V$ be the number of false rejections and $R$ the total number of rejections. The **FDR** is
+
+$$\mathrm{FDR} = E\!\left[\frac{V}{\max(R, 1)}\right].$$
+
+The **Benjamini-Hochberg (BH) procedure** at level $q$:
+
+1. Sort p-values: $p_{(1)} \leq p_{(2)} \leq \ldots \leq p_{(m)}$.
+2. Find the largest $k$ such that $p_{(k)} \leq k q / m$.
+3. Reject all hypotheses with $p_{(i)} \leq p_{(k)}$.
+
+Equivalently, the BH-adjusted p-value is
+
+$$p_{(j)}^{\text{adj}} = \min\!\left[1, \min_{i \geq j}\left(\frac{m p_{(i)}}{i}\right)\right].$$
+
+BH controls FDR at $q$ under independence or positive dependence. For arbitrary dependence, use Benjamini-Yekutieli (BY), which is more conservative.
+
+## Assumptions
+
+- Either independent p-values or positive regression dependence (PRDS).
+- Each p-value is valid (uniform under its null).
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+# 1000 tests: 100 true effects (random), 900 nulls
+n_tests <- 1000; n_true <- 100
+pvals <- c(runif(n_tests - n_true),     # nulls
+           runif(n_true) * 0.01)         # true effects, very small p
+
+pvals <- sample(pvals)   # random order
+
+adj_bonf <- p.adjust(pvals, method = "bonferroni")
+adj_holm <- p.adjust(pvals, method = "holm")
+adj_bh   <- p.adjust(pvals, method = "BH")
+adj_by   <- p.adjust(pvals, method = "BY")
+
+q_target <- 0.05
+c(bonferroni_rejections = sum(adj_bonf < q_target),
+  holm_rejections       = sum(adj_holm < q_target),
+  BH_rejections         = sum(adj_bh   < q_target),
+  BY_rejections         = sum(adj_by   < q_target))
+
+# Power approximation vs FDR control
+true_signal <- c(rep(FALSE, n_tests - n_true), rep(TRUE, n_true))[match(sort(pvals), pvals)]
+sum(adj_bh[true_signal] < q_target) / n_true   # TPR among true signals
+```
+
+## Output & Results
+
+```
+bonferroni_rejections  holm_rejections  BH_rejections  BY_rejections
+                   82               82             99             83
+```
+
+BH recovers 99 true signals (highest), Bonferroni/Holm recover 82, BY 83. The FDR among BH rejections is below 0.05 on average.
+
+## Interpretation
+
+Report which correction was applied and the target FDR level. "Differentially expressed genes were identified at FDR $q < 0.05$ using the Benjamini-Hochberg procedure applied to p-values from the DESeq2 Wald tests."
+
+## Practical Tips
+
+- BH is the default FDR procedure in genomics, transcriptomics, imaging, and other high-dimensional settings.
+- FDR q = 0.05 is much less stringent than FWER = 0.05; results should be qualified accordingly.
+- For strongly correlated tests (e.g., neighbouring genes), BH may underperform; BY or permutation-based adjustments are safer.
+- "Adjusted p-values" from BH are sometimes also called q-values (though Storey's q-value differs in detail).
+- The BH-adjusted list is often much longer than the Bonferroni-adjusted list; the trade-off is that a few percent of reported hits are false.

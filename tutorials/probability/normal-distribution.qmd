@@ -1,0 +1,81 @@
+---
+title: The Normal Distribution
+date: "2026-04-17"
+description: "Definition, properties, and practical use of the normal (Gaussian) distribution, with R examples for every common task"
+categories:
+  - Probability Theory
+  - normal-distribution
+  - gaussian
+  - probability
+  - distributions
+---
+
+## Introduction
+
+The normal distribution -- also called the Gaussian distribution -- is the most important continuous distribution in applied statistics. It arises naturally as the limit of averages (via the central limit theorem), as the distribution of measurement errors, and as the default assumption in classical regression and ANOVA. Even when a raw variable is not itself normal, its transformations, its averages, or its residuals often are.
+
+## Prerequisites
+
+Familiarity with probability density and cumulative distribution functions, and with the idea of expectation and variance, is assumed. The reader should know how to call R functions and generate a histogram.
+
+## Theory
+
+The normal distribution with mean $\mu$ and variance $\sigma^2$ has the probability density function
+
+$$f(x \mid \mu, \sigma) = \frac{1}{\sigma \sqrt{2\pi}} \exp\!\left(-\frac{(x - \mu)^2}{2\sigma^2}\right),$$
+
+defined for all real $x$. The mean, median, and mode all coincide at $\mu$; the standard deviation $\sigma$ controls the spread. The distribution is symmetric about $\mu$, with thin tails -- about 68% of the mass falls within one standard deviation of the mean, 95% within two, and 99.7% within three. These "68-95-99.7" rule-of-thumb numbers are used constantly in applied work.
+
+Several properties make the normal distribution uniquely convenient:
+
+- **Closure under linear transformations**: if $X \sim \mathcal{N}(\mu, \sigma^2)$, then $aX + b \sim \mathcal{N}(a\mu + b, a^2\sigma^2)$.
+- **Closure under sums**: the sum of independent normals is normal.
+- **Maximum entropy**: among all distributions with a given mean and variance, the normal has the highest entropy -- it is the least informative choice given those moments.
+- **Conjugacy**: in Bayesian analysis with known variance, the normal prior is conjugate to the normal likelihood.
+
+The standard normal is $\mathcal{N}(0, 1)$ and its CDF is denoted $\Phi(z)$. Any normal can be reduced to the standard normal by the linear transformation $Z = (X - \mu)/\sigma$.
+
+## Assumptions
+
+When a procedure *assumes normality* it usually means one of two things: (i) the individual observations are normally distributed, or (ii) the residuals from the fitted model are normally distributed. The latter is much more common in practice, and is what matters for linear regression and ANOVA. For inference on the mean, the CLT often makes this distinction academic: the sampling distribution of the mean can be approximately normal even when the observations are not.
+
+## R Implementation
+
+R provides the standard `d`, `p`, `q`, `r` interface for every distribution:
+
+```r
+library(ggplot2)
+
+dnorm(0)
+pnorm(1.96)
+qnorm(0.975)
+rnorm(5, mean = 10, sd = 2)
+
+grid <- data.frame(x = seq(-4, 4, length.out = 401))
+grid$density <- dnorm(grid$x)
+
+ggplot(grid, aes(x = x, y = density)) +
+  geom_line(colour = "steelblue", linewidth = 1) +
+  geom_area(data = subset(grid, x >= -1.96 & x <= 1.96),
+            aes(y = density), fill = "steelblue", alpha = 0.25) +
+  labs(x = "z", y = "Density",
+       title = "Standard normal with the central 95% shaded") +
+  theme_minimal(base_size = 12)
+```
+
+`dnorm(0)` returns the density at the mean, $1/\sqrt{2\pi} \approx 0.3989$. `pnorm(1.96)` returns the CDF at 1.96, which is approximately 0.975. `qnorm(0.975)` returns the 97.5% quantile of the standard normal, which is approximately 1.96.
+
+## Output & Results
+
+The plot shows the familiar bell curve with the central 95% shaded between $z = \pm 1.96$. The `rnorm()` call produces a sample of five values, for example `c(9.02, 11.14, 7.88, 12.47, 10.06)`, from a normal with mean 10 and SD 2.
+
+## Interpretation
+
+In a manuscript, reporting a variable as "approximately normal, mean 75.2 (SD 8.4)" communicates that the distribution is roughly symmetric and bell-shaped, and that 95% of values lie in the range $75.2 \pm 1.96 \times 8.4 = (58.7, 91.7)$. If the distribution is skewed or heavy-tailed, reporting a mean and SD is misleading, and the summary should be a median with IQR.
+
+## Practical Tips
+
+- Check normality with a Q-Q plot, not with a formal test. In small samples, formal tests lack power; in large samples, they reject for trivial deviations that do not affect inference.
+- Data that are strictly positive and right-skewed (concentrations, incubation times, expression levels) are often approximately *log-normal*: their logarithm is normal. Analyses on the log scale may be more appropriate.
+- In high dimensions (many variables per observation), joint normality is a much stronger assumption than marginal normality. Check both.
+- "Normal" does not mean "common". Many natural phenomena are not normally distributed; always verify rather than assume.

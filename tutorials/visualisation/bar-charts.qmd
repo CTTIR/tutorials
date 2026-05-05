@@ -1,0 +1,77 @@
+---
+title: Bar Charts
+date: "2026-04-17"
+description: Counts per category and summarised values per category
+categories:
+  - Data Visualisation
+  - bar-chart
+  - geom_bar
+  - geom_col
+---
+
+## Introduction
+
+Bar charts are the workhorse for categorical data and the geom most frequently misused. The confusion almost always stems from a single distinction: a bar can show how many observations fall in a category (a count) or a summary statistic computed for that category (a mean, a percentage, a proportion). `ggplot2` separates the two cases through `geom_bar()` for counts and `geom_col()` for pre-computed values, and getting the right geom for the data on hand is the first step to a sensible figure.
+
+## Prerequisites
+
+A working knowledge of categorical variables, basic summary statistics (mean, standard error), and `ggplot2`'s aesthetic mappings.
+
+## Theory
+
+`geom_bar()` defaults to `stat = "count"`: it tabulates rows by the x-aesthetic and draws bars whose heights equal those counts. No y-aesthetic is required; supplying one along with `stat = "identity"` is equivalent to using `geom_col()` directly.
+
+`geom_col()` plots an explicit y-aesthetic as the bar height — useful when the data are already summarised. For group means with uncertainty, pair `geom_col()` with `geom_errorbar()` whose `ymin` and `ymax` come from a confidence interval or standard error column.
+
+The cognitive risk with bar-plus-error-bar plots is well documented: they hide the within-group distribution and overemphasise the mean. For showing distributional information, raincloud plots, dot plots, or boxplots are more transparent. Bars remain the right choice for genuine counts and for cumulative quantities (proportions, percentages, totals).
+
+## Assumptions
+
+For count bars: the x-axis is categorical or discrete. For summary bars: the y-aesthetic is a meaningful summary of the data, ideally one that respects the bar's "starts at zero" implication.
+
+## R Implementation
+
+```r
+library(ggplot2); library(dplyr)
+
+# Counts
+ggplot(mpg, aes(class)) +
+  geom_bar(fill = "#2A9D8F") +
+  theme_minimal()
+
+# Ordered bars by count
+ggplot(mpg, aes(forcats::fct_infreq(class))) +
+  geom_bar(fill = "#2A9D8F") +
+  labs(x = "Class") +
+  theme_minimal()
+
+# Summarised values (e.g., mean mpg by class)
+mpg_summary <- mpg |> group_by(class) |>
+  summarise(mean_hwy = mean(hwy), se = sd(hwy)/sqrt(n()))
+ggplot(mpg_summary, aes(class, mean_hwy)) +
+  geom_col(fill = "#2A9D8F") +
+  geom_errorbar(aes(ymin = mean_hwy - se, ymax = mean_hwy + se),
+                width = 0.2) +
+  theme_minimal()
+```
+
+## Output & Results
+
+Three bar charts: a count of cars per class in alphabetical order, the same data with categories ordered by descending frequency, and a summary chart of mean highway mileage per class with $\pm 1$ standard-error bars. Reordering and the explicit summary radically improve readability over the default.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Bar heights show the mean highway fuel efficiency per class (n varies, see Table 1); error bars are $\pm 1$ standard error of the mean. Classes are ordered alphabetically." Always state the summary statistic and the uncertainty measure in the caption — bars are not self-explanatory.
+
+## Practical Tips
+
+- Order categories by value (`forcats::fct_reorder()` or `fct_infreq()`) rather than alphabetically; sorted bars communicate ranking instantly.
+- Use `geom_col()` when you already have summary statistics and `geom_bar()` (default `stat = "count"`) when you want raw frequencies.
+- For two-category comparisons, a simple sentence often beats a bar chart; reserve bars for three or more groups.
+- Add the underlying observations as jittered points (`geom_jitter(width = 0.2, alpha = 0.4)`) on top of summary bars to recover the distributional information bars hide.
+- Always label the y-axis with units when bars summarise quantities ("Mean fuel economy (mpg)") rather than counts.
+- Avoid 3D bars, gradient fills along the bar length, and other ornamental flourishes; they distort the perceptual mapping between bar length and value.
+
+## R Packages Used
+
+`ggplot2` for `geom_bar()`, `geom_col()`, and `geom_errorbar()`; `dplyr` and `forcats` for the summary and category-ordering pipeline; `ggdist` if you want to overlay distributional summaries (slabintervals) on top of bar charts to communicate spread alongside the mean.

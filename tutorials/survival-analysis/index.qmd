@@ -1,0 +1,273 @@
+---
+title: Survival Analysis
+description: "Time-to-event methods: Kaplan-Meier estimation, log-rank tests, Cox proportional hazards, and competing risks"
+---
+
+Survival analysis studies the time until an event of interest occurs -- death, disease recurrence, mechanical failure, customer churn. It differs from ordinary regression in a single crucial respect: observations may be censored, meaning the event has not occurred by the end of follow-up, and this partial information must be used without bias.
+
+This area walks through the special definitions survival analysis requires (hazard, survival, cumulative hazard), the non-parametric methods that estimate them (Kaplan-Meier, Nelson-Aalen), and the regression models that relate them to covariates (Cox proportional hazards, accelerated failure time, flexible parametric models).
+
+## Topics
+
+- Censoring types: right, left, interval; informative vs. non-informative censoring
+- The hazard function, cumulative hazard, and survival function, and the mathematical relationships between them
+- Kaplan-Meier estimation with pointwise and simultaneous confidence bands
+- The log-rank test and its weighted variants (Peto-Peto, Tarone-Ware, Fleming-Harrington)
+- Cox proportional hazards regression: partial likelihood, hazard ratios, interpretation
+- Checking proportional hazards: Schoenfeld residuals, interaction with time
+- Time-varying covariates and time-dependent coefficients
+- Accelerated failure time (AFT) models with exponential, Weibull, log-normal, log-logistic distributions
+- Flexible parametric models (Royston-Parmar) via restricted cubic splines on the log-hazard
+- Competing risks: cumulative incidence functions, Fine-Gray subdistribution hazards
+- Frailty models for clustered or recurrent event data
+- Landmark analysis and multi-state models
+
+Packages: `survival`, `survminer`, `cmprsk`, `flexsurv`, `rms`, `riskRegression`, `mstate`.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Accelerated Failure Time Models](accelerated-failure-time.qmd)
+Parametric survival regression on the log-time scale with acceleration-factor interpretation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Censoring Types](censoring-types.qmd)
+Right, left, interval, and informative censoring in time-to-event data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Checking Cox Assumptions](cox-assumptions-check.qmd)
+Diagnostics for proportional hazards, functional form, and influential observations
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Competing Risks: Cumulative Incidence](competing-risks-cif.qmd)
+Estimating the probability of each event type in the presence of competing risks
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Concordance and the C-Index](concordance-c-index.qmd)
+Discrimination ability of a survival model measured by concordance probability
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Conditional Survival](conditional-survival.qmd)
+Updating prognosis for survivors: P(T > t + s | T > s)
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Cox Proportional Hazards Regression](cox-proportional-hazards.qmd)
+Semi-parametric regression for survival data with arbitrary baseline hazard
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Fine-Gray Subdistribution Hazards](fine-gray-regression.qmd)
+Regression directly targeting cumulative incidence in competing-risks data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Frailty Models](frailty-models.qmd)
+Random effects in survival: unobserved heterogeneity and clustered survival data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Hazard, Survival, and Cumulative Hazard](hazard-survival-cumulative.qmd)
+The three equivalent representations of a time-to-event distribution
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Interval-Censored Data](interval-censored-data.qmd)
+Events known to occur within a time interval, not at an exact time
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Joint Longitudinal-Survival Models](joint-longitudinal-survival.qmd)
+Simultaneously modelling a longitudinal biomarker and time-to-event outcome
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Kaplan-Meier Estimation](kaplan-meier.qmd)
+Non-parametric estimation of the survival function from right-censored data, with confidence intervals and group comparisons
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Landmark Analysis](landmark-analysis.qmd)
+Conditioning on survival to a landmark time to analyse time-varying covariates
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Left Truncation](left-truncation.qmd)
+Delayed entry: subjects only enter the study after surviving to a certain age or time
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Log-Rank Test: Details](log-rank-test-details.qmd)
+Weighted and stratified log-rank test for comparing survival across groups
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Multi-State Models](multi-state-models.qmd)
+Modelling transitions between discrete states over time
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Parametric Survival: Log-Normal](parametric-survival-lognormal.qmd)
+Log-normal AFT model for non-monotone hazards
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Parametric Survival: Weibull](parametric-survival-weibull.qmd)
+Fitting Weibull regression in both PH and AFT parameterisations
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Recurrent Events](recurrent-events.qmd)
+Modelling repeated events per subject: Andersen-Gill, PWP, and frailty approaches
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Restricted Mean Survival Time (RMST)](restricted-mean-survival-time.qmd)
+Alternative summary robust to non-proportional hazards and censoring
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Royston-Parmar Flexible Parametric Models](flexible-parametric-royston-parmar.qmd)
+Splines on the log-cumulative-hazard for flexible baseline without leaving parametric modelling
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Schoenfeld Residuals](schoenfeld-residuals.qmd)
+Residuals that test the proportional-hazards assumption in Cox regression
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Simulating Survival Data](survival-simulation.qmd)
+Generating realistic censored time-to-event datasets for power analysis and method validation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Stratified Cox Models](stratified-cox.qmd)
+Stratum-specific baseline hazards when proportional hazards fails across groups
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Brier Score for Survival](brier-score-survival.qmd)
+Time-dependent prediction loss combining calibration and discrimination
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Nelson-Aalen Estimator](nelson-aalen-estimator.qmd)
+Non-parametric estimator of the cumulative hazard under right-censoring
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Time-Dependent ROC](time-dependent-roc.qmd)
+ROC curves and AUC evaluated at specific follow-up times for survival predictions
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Time-Varying Covariates](time-varying-covariates.qmd)
+Covariates whose value changes during follow-up: counting-process data layout
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Weighted Log-Rank Tests](weighted-log-rank.qmd)
+Peto-Peto, Fleming-Harrington, and other weighted variants for non-proportional hazards
+:::
+
+:::

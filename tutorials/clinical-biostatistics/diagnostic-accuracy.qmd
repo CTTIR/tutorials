@@ -1,0 +1,103 @@
+---
+title: Diagnostic Test Accuracy
+date: "2026-04-17"
+description: "Sensitivity, specificity, predictive values, likelihood ratios, and ROC analysis for binary diagnostic tests"
+categories:
+  - Clinical Biostatistics
+  - diagnostic-accuracy
+  - sensitivity
+  - specificity
+  - roc
+  - predictive-values
+---
+
+## Introduction
+
+When a new diagnostic test is proposed, the first question is: how accurately does it classify disease status against a reference standard? The answer comes in several complementary numbers -- sensitivity, specificity, positive and negative predictive values, likelihood ratios, and the area under the ROC curve. Each answers a different question, and reporting any one alone is inadequate.
+
+## Prerequisites
+
+The reader should understand the distinction between a test result (positive/negative) and disease status (truly positive/negative), and should be comfortable with 2x2 tables and proportions.
+
+## Theory
+
+Given a binary test and a binary gold-standard diagnosis, every study produces a 2x2 table:
+
+|            | Disease + | Disease - |
+|------------|-----------|-----------|
+| Test +     | TP        | FP        |
+| Test -     | FN        | TN        |
+
+From this table:
+
+- **Sensitivity** = TP / (TP + FN). The probability that the test is positive in a diseased person.
+- **Specificity** = TN / (TN + FP). The probability that the test is negative in a healthy person.
+- **Positive predictive value (PPV)** = TP / (TP + FP). The probability of disease given a positive test.
+- **Negative predictive value (NPV)** = TN / (TN + FN). The probability of no disease given a negative test.
+- **Positive likelihood ratio (LR+)** = sensitivity / (1 - specificity). How many times more likely a positive test is in diseased versus healthy people.
+- **Negative likelihood ratio (LR-)** = (1 - sensitivity) / specificity.
+
+Sensitivity and specificity are properties of the test that are (approximately) invariant to prevalence. Predictive values depend strongly on prevalence: a test with 99% sensitivity and 99% specificity still has PPV below 50% when disease prevalence is 1%. Likelihood ratios, via Bayes' theorem, convert a pre-test probability into a post-test probability and thus tie the test-level quantities to the clinical reasoning a doctor actually does.
+
+For a continuous marker, each possible threshold produces a pair (sensitivity, 1 - specificity). Plotting these across all thresholds gives the **receiver operating characteristic (ROC) curve**. The **area under the ROC curve (AUC)** is the probability that a randomly chosen diseased person has a higher marker value than a randomly chosen healthy person -- an interpretable summary of discrimination independent of any threshold.
+
+## Assumptions
+
+- The reference standard is a true gold standard (otherwise sensitivity and specificity are biased).
+- The test is evaluated on a representative spectrum of diseased and healthy individuals (spectrum bias can inflate apparent accuracy).
+- Test results are read blinded to the reference standard (verification and review bias are the two most common threats in reporting).
+
+## R Implementation
+
+```r
+library(pROC)
+library(cutpointr)
+
+set.seed(2026)
+n <- 200
+disease <- rbinom(n, 1, 0.3)
+marker <- ifelse(disease == 1,
+                 rnorm(n, mean = 60, sd = 12),
+                 rnorm(n, mean = 45, sd = 10))
+
+df <- data.frame(disease = factor(disease, levels = c(0, 1),
+                                  labels = c("healthy", "diseased")),
+                 marker = marker)
+
+roc_obj <- roc(df$disease, df$marker,
+               levels = c("healthy", "diseased"), direction = "<")
+
+auc(roc_obj)
+ci.auc(roc_obj)
+
+plot(roc_obj, print.auc = TRUE, ci = TRUE)
+
+cp <- cutpointr(df, marker, disease,
+                pos_class = "diseased",
+                method = maximize_metric,
+                metric = youden)
+summary(cp)
+plot(cp)
+```
+
+`pROC::roc()` constructs the ROC object from marker values and disease labels. `auc()` and `ci.auc()` give the point estimate and 95% CI. The `cutpointr` package finds the threshold that maximises Youden's index (sensitivity + specificity - 1) and reports the operating characteristics at that threshold.
+
+## Output & Results
+
+The simulated example gives an AUC of approximately 0.85 (95% CI 0.79 to 0.90). The Youden-optimal cutoff is around 52, with sensitivity ~0.75 and specificity ~0.80 at that threshold.
+
+## Interpretation
+
+A manuscript table should report sensitivity, specificity, PPV, NPV, LR+, LR-, and the AUC, each with 95% confidence intervals. For a binary test:
+
+"Sensitivity was 75% (95% CI 66-83%), specificity 80% (74-86%), PPV 62% (52-72%), NPV 88% (82-93%), LR+ 3.8 (2.7-5.2), LR- 0.31 (0.22-0.44), AUC 0.85 (0.79-0.90)."
+
+Crucially, the PPV depends on the disease prevalence in the study population. If the intended clinical use is in a lower-prevalence setting, report the projected PPV at that prevalence using Bayes' theorem.
+
+## Practical Tips
+
+- Always report the reference standard explicitly and justify it as a gold standard.
+- Report sensitivity and specificity *with* predictive values, not instead of them. Predictive values are what the clinician uses; sensitivity and specificity are what the test provides.
+- Use 95% Wilson or Clopper-Pearson intervals for proportions, not the Wald interval, which can extend outside $[0, 1]$ or have poor coverage near 0 and 1.
+- Avoid choosing a threshold from the same data that will report its performance; hold out a validation set or use cross-validation.
+- Follow STARD reporting guidelines: flow diagram, blinding, reference-standard description, thresholds, and indeterminate results.

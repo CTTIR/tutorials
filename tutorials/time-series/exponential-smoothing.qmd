@@ -1,0 +1,72 @@
+---
+title: Exponential Smoothing
+date: "2026-04-17"
+description: "Recursive weighted-average smoothers: simple, Holt (trend), Holt-Winters (seasonal)"
+categories:
+  - Time Series Analysis
+  - exponential-smoothing
+  - holt
+  - holt-winters
+---
+
+## Introduction
+
+Exponential smoothing is a family of forecasting methods that produces predictions as weighted averages of past observations with geometrically declining weights. The simplest form (simple exponential smoothing, SES) handles series with no trend and no seasonality; Holt's method adds a linear trend; Holt-Winters extends to seasonal series with additive or multiplicative seasonality. The methods are competitive with ARIMA at short horizons, conceptually simpler, and the natural choice when the series structure matches one of the supported variants.
+
+## Prerequisites
+
+A working understanding of moving averages, forecasting basics, and the trade-off between adaptiveness and smoothness.
+
+## Theory
+
+Simple exponential smoothing recursively updates a level estimate:
+
+$$\hat y_{t+1 \mid t} = \alpha y_t + (1 - \alpha) \hat y_{t \mid t-1},$$
+
+with smoothing parameter $\alpha \in (0, 1)$. Larger $\alpha$ adapts more quickly to recent values; smaller $\alpha$ smooths more aggressively.
+
+Holt's method adds a trend component with its own smoothing parameter $\beta$. Holt-Winters adds a seasonal component with parameter $\gamma$ in either additive (constant seasonal amplitude) or multiplicative (seasonal amplitude grows with level) form. The equivalent state-space representations form the ETS family — Error/Trend/Seasonal — coded as ETS(A, A, A), ETS(M, Ad, M), and so on, with A = additive, M = multiplicative, N = none, Ad = damped additive trend.
+
+## Assumptions
+
+The chosen ETS specification matches the data's components; smoothing parameters are constant over time; for prediction intervals, innovations are approximately Normal.
+
+## R Implementation
+
+```r
+library(forecast)
+
+x <- AirPassengers
+
+# Holt-Winters multiplicative (for multiplicative seasonality)
+hw <- HoltWinters(x, seasonal = "multiplicative")
+plot(hw)
+fc <- forecast(hw, h = 24)
+plot(fc)
+
+# Equivalent via ets()
+fit_ets <- ets(x)
+summary(fit_ets)
+plot(forecast(fit_ets, h = 24))
+```
+
+## Output & Results
+
+`HoltWinters()` returns smoothing parameters and the fitted level, trend, and seasonal components. `ets()` automatically selects the ETS variant by AIC and produces equivalent output with prediction intervals from the state-space form.
+
+## Interpretation
+
+A reporting sentence: "Holt-Winters multiplicative smoothing captured the growing seasonal amplitude in airline passengers (smoothing parameters $\alpha = 0.34$, $\beta = 0.01$, $\gamma = 1.0$); 24-month forecasts extend the trend with realistic seasonal variation, and 95 % prediction intervals widen from $\pm 4 \%$ at 1 month to $\pm 18 \%$ at 24 months." Always state the ETS variant chosen and the smoothing parameter values.
+
+## Practical Tips
+
+- `ets()` automatically selects the ETS family by AIC; specify `model` argument explicitly to force a specific structure.
+- For multiplicative seasonality, either fit ETS(...,M) directly or log-transform the series and fit ETS(...,A); both approaches give equivalent forecasts.
+- Exponential smoothing is competitive with ARIMA for short horizons (1–4 periods); ARIMA tends to win at longer horizons.
+- Prediction intervals from `forecast()` assume Normal innovations; check residuals for skewness and heavy tails.
+- For short series ($T < 30$), simple SES or Holt often beats Holt-Winters because parameter estimation is unstable for the more complex models.
+- The damped-trend ETS(...,Ad) variant is a sensible default when the trend is plausibly slowing in the forecast horizon; pure additive trends extrapolate forever.
+
+## R Packages Used
+
+Base R `HoltWinters()` for the classical implementation; `forecast::ets()` for the modern state-space ETS family with AIC-based selection; `fable::ETS()` for the tidyverts equivalent; `smooth::es()` for advanced exponential-smoothing variants including ETS plus regressors.

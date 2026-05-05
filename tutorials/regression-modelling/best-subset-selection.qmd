@@ -1,0 +1,78 @@
+---
+title: Best Subset Selection
+date: "2026-04-17"
+description: Enumerate all candidate predictor subsets to find the best by a chosen criterion
+categories:
+  - "Regression & Modelling"
+  - best-subset
+  - leaps
+  - selection
+---
+
+## Introduction
+
+Best subset selection enumerates all $2^p$ possible predictor subsets and identifies the best subset by a chosen criterion (adjusted $R^2$, Mallows' $C_p$, BIC, cross-validation error). It is an exhaustive search and therefore avoids the sequence-dependence that plagues stepwise methods, but the combinatorial cost limits its practical use to modest $p$ — typically up to about 30 predictors with branch-and-bound algorithms (`leaps`).
+
+## Prerequisites
+
+A working understanding of multiple regression, model-selection criteria, and the bias-variance trade-off in choosing model complexity.
+
+## Theory
+
+For each subset size $k \in \{0, 1, \dots, p\}$, find the subset with the lowest residual sum of squares (equivalently, highest $R^2$). Then compare across sizes using a criterion that penalises complexity:
+
+- **Adjusted $R^2$**: $1 - (1 - R^2)(n-1)/(n-k-1)$; rewards fit per parameter.
+- **Mallows' $C_p$**: $\mathrm{RSS}_k / \hat\sigma^2 - n + 2k$; near $k$ when the subset is adequate.
+- **AIC**: $-2 \ell + 2k$; favours predictive accuracy.
+- **BIC**: $-2 \ell + k \log n$; more parsimonious than AIC.
+- **Cross-validation**: directly estimates predictive error.
+
+`leaps::regsubsets` uses branch-and-bound to avoid evaluating every subset explicitly, making moderate-$p$ best-subset feasible.
+
+## Assumptions
+
+Standard linear-regression assumptions; criteria like AIC, BIC assume Gaussian residuals (other forms exist for GLMs).
+
+## R Implementation
+
+```r
+library(leaps)
+
+d <- mtcars
+fit <- regsubsets(mpg ~ ., data = d, nvmax = 5)
+sum_fit <- summary(fit)
+
+data.frame(
+  n_pred = 1:5,
+  adj_R2 = sum_fit$adjr2,
+  Cp     = sum_fit$cp,
+  BIC    = sum_fit$bic
+)
+
+# Show the best subset at each size
+sum_fit$which
+
+# Plot the criterion
+plot(fit, scale = "bic")
+```
+
+## Output & Results
+
+`regsubsets()` returns the best subset of each size up to `nvmax`. The summary provides criterion values; `sum_fit$which` shows which predictors are included at each size; the plot displays subsets ordered by the chosen criterion.
+
+## Interpretation
+
+A reporting sentence: "Best-subset selection on `mtcars` (with `nvmax = 5`) identified weight (`wt`), quarter-mile time (`qsec`), and transmission (`am`) as the preferred three-predictor model under BIC ($\mathrm{BIC} = -84$); cross-validated mean squared error confirmed this as the best subset, with substantially worse performance for both smaller and larger models." Always state the criterion and pair with cross-validation when stakes are high.
+
+## Practical Tips
+
+- Best subset is computationally feasible up to about $p = 30$ with branch-and-bound; beyond that, switch to penalised methods (lasso, elastic net).
+- Lasso and elastic net often perform similarly to best-subset selection with better scalability and less over-fitting; benchmark all three for high-dimensional problems.
+- Like stepwise selection, best-subset chooses by criteria computed on the same data — cross-validate to assess true predictive performance.
+- `regsubsets()` returns only the *single* best subset per size; near-ties can be missed and selection becomes unstable across resamples. Bootstrap to assess stability.
+- Pre-specification of a subset based on substantive theory generally beats any data-driven search; reserve best-subset for genuinely exploratory work.
+- For GLMs, use `bestglm::bestglm` or stepwise on AIC; pure best-subset enumeration is OLS-specific in `leaps`.
+
+## R Packages Used
+
+`leaps::regsubsets` for branch-and-bound best-subset on linear models; `bestglm::bestglm` for GLMs; `glmnet` for lasso/elastic-net alternatives that scale to high $p$; `caret` and `tidymodels` for cross-validated subset comparison; `MuMIn::dredge` for model-averaging extensions.

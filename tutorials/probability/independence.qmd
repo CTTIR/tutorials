@@ -1,0 +1,99 @@
+---
+title: Independence
+date: "2026-04-17"
+description: "Events and variables that do not inform each other, and the distinction between pairwise and mutual independence"
+categories:
+  - Probability Theory
+  - independence
+  - mutual-independence
+  - pairwise
+---
+
+## Introduction
+
+Two events are *independent* when knowing that one occurred tells you nothing about whether the other will. Independence is the property that makes simulation tractable, factorises joint distributions, and underlies the iid assumption of almost every classical statistical method. It is also one of the most commonly mis-stated concepts: independent is not the same as disjoint, and pairwise independence does not imply joint independence.
+
+## Prerequisites
+
+Basic probability, conditional probability, and the product rule.
+
+## Theory
+
+Two events $A$ and $B$ are **independent** if
+
+$$P(A \cap B) = P(A) \, P(B).$$
+
+Equivalently, when $P(B) > 0$: $P(A \mid B) = P(A)$. Knowing $B$ does not update the probability of $A$.
+
+For $n$ events $A_1, \ldots, A_n$, two levels of independence exist:
+
+- **Pairwise independence**: $P(A_i \cap A_j) = P(A_i) P(A_j)$ for every $i \neq j$.
+- **Mutual independence**: every subset factorises. $P(A_{i_1} \cap \ldots \cap A_{i_k}) = \prod_{j=1}^k P(A_{i_j})$ for every subset.
+
+Mutual is strictly stronger: it is possible for three events to be pairwise independent yet not mutually independent (Bernstein's example).
+
+For random variables $X$ and $Y$:
+
+$$X \perp Y \iff F_{XY}(x, y) = F_X(x) F_Y(y) \quad \forall x, y,$$
+
+or equivalently (when densities exist) $f_{XY}(x, y) = f_X(x) f_Y(y)$.
+
+**Independence vs. uncorrelatedness.** Independence implies zero correlation, but not vice versa: $X$ and $X^2$ for $X \sim \mathcal{N}(0, 1)$ are uncorrelated yet functionally dependent.
+
+## Assumptions
+
+None beyond the probability space being well-defined.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+# Two independent Bernoulli trials
+n <- 1e5
+A <- rbinom(n, 1, 0.3)
+B <- rbinom(n, 1, 0.6)
+
+# Check: P(A and B) ≈ P(A) * P(B)
+c(joint = mean(A == 1 & B == 1),
+  product = mean(A == 1) * mean(B == 1))
+
+# Dependence: construct two correlated Bernoullis
+C <- ifelse(A == 1, rbinom(n, 1, 0.9), rbinom(n, 1, 0.2))
+c(joint = mean(A == 1 & C == 1),
+  product = mean(A == 1) * mean(C == 1))
+
+# Uncorrelated but dependent example
+X <- rnorm(n)
+Y <- X^2
+c(correlation = cor(X, Y),
+  joint_factorises = abs(mean(X < 0 & Y > 2) -
+                          mean(X < 0) * mean(Y > 2)))
+```
+
+## Output & Results
+
+```
+  joint  product
+ 0.1801   0.1800
+
+  joint  product
+ 0.2714   0.1798
+
+correlation joint_factorises
+     0.0028           0.1589
+```
+
+First pair is independent (joint equals product). Second pair is dependent (joint much larger than product). Third shows zero correlation with clearly non-zero deviation from factorisation.
+
+## Interpretation
+
+In study design, independence is usually a *design* property: separate random assignments ensure treatment is independent of unmeasured confounders; random selection ensures the sample is independent of other observable sources. When the design does not guarantee independence (clustered data, repeated measures), the statistical model must account for it.
+
+## Practical Tips
+
+- Independence is a property of a particular probability measure $P$. Two events can be independent under one distribution and dependent under another.
+- Pairwise-but-not-mutual independence is rare in applied settings but matters in cryptography and combinatorial probability.
+- "iid" (independent and identically distributed) is the default assumption of most statistical methods; violations require mixed-effects models, GEE, or time-series methods.
+- Use simulation to check independence when analytical factorisation is cumbersome; the deviation from $P(A)P(B)$ quantifies the dependence.
+- For continuous variables, a formal independence test is available via distance correlation (`energy::dcor`).

@@ -1,0 +1,70 @@
+---
+title: Cox Proportional Hazards Regression
+date: "2026-04-17"
+description: Semi-parametric regression for survival data with arbitrary baseline hazard
+categories:
+  - Survival Analysis
+  - cox
+  - proportional-hazards
+  - partial-likelihood
+---
+
+## Introduction
+
+Cox proportional hazards regression is the most widely used survival regression model in clinical and epidemiological research. Its central insight is that hazard *ratios* between subjects can be estimated without specifying or estimating the baseline hazard $h_0(t)$. The partial likelihood, introduced by D. R. Cox in 1972, conditions on the risk set at each event time and depends only on the regression coefficients, leaving the baseline hazard unspecified. The result is a semi-parametric model that combines the interpretability of regression with the flexibility of non-parametric survival analysis.
+
+## Prerequisites
+
+A working understanding of hazard functions, the proportional-hazards assumption, and the partial-likelihood concept.
+
+## Theory
+
+The Cox model is
+
+$$h(t \mid x) = h_0(t) \exp(x^\top \beta).$$
+
+The partial likelihood over event times is
+
+$$L_p(\beta) = \prod_{i: \delta_i = 1} \frac{\exp(x_i^\top \beta)}{\sum_{j \in R(t_i)} \exp(x_j^\top \beta)},$$
+
+where $R(t_i)$ is the risk set just before $t_i$. Maximising $L_p$ produces $\hat\beta$ whose exponentiated components are hazard ratios. Tied event times require a handling rule: Breslow's approximation (default) is fast and consistent under no ties, Efron's is more accurate when ties are common, and the exact-marginal method is the gold standard for discrete-time data.
+
+The model assumes the hazard ratio between any two covariate patterns is constant over time — proportional hazards. When this fails, options include stratification, time-varying coefficients, or switching to a parametric AFT model.
+
+## Assumptions
+
+Proportional hazards across covariate levels, independent non-informative censoring, and the absence of unmodelled time-varying covariate effects. Adequate events-per-variable (EPV) ratios — at least 10–15 events per regression coefficient — for stable inference.
+
+## R Implementation
+
+```r
+library(survival); library(broom)
+
+data(lung)
+fit <- coxph(Surv(time, status) ~ age + sex + ph.ecog, data = lung)
+tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+
+# Check PH assumption
+cox.zph(fit)
+```
+
+## Output & Results
+
+`tidy(fit, exponentiate = TRUE)` returns a tibble of hazard ratios, confidence intervals, and Wald $p$-values for each covariate. `summary(fit)` adds the likelihood-ratio test, score test, and Wald global tests for the joint null. `cox.zph()` reports the proportional-hazards diagnostic for each covariate and globally.
+
+## Interpretation
+
+A reporting sentence: "A multivariable Cox proportional-hazards model adjusted for age, sex, and ECOG performance status estimated that each additional year of age increased the hazard of death by 2 % (HR 1.02, 95 % CI 1.00 to 1.04, $p = 0.04$); female sex was associated with a 40 % lower hazard (HR 0.60, 95 % CI 0.42 to 0.85, $p = 0.004$). The proportional-hazards assumption was supported (global Schoenfeld test $p = 0.55$)." Always pair coefficient reporting with PH diagnostics.
+
+## Practical Tips
+
+- Always check proportional hazards via `cox.zph()` after fitting; reporting Cox HRs without PH diagnostics is no longer acceptable in clinical-trial publications.
+- Use Efron's tie-handling method (`ties = "efron"`) for tied event times; the default in older software is Breslow, which is less accurate.
+- Report HRs with 95 % confidence intervals; $p$-values alone are inadequate, and a CI that includes 1.0 is more interpretable than a $p > 0.05$.
+- Small events-per-variable (EPV) ratios inflate standard errors and lead to unstable estimates; report the EPV alongside the model.
+- For continuous covariates, check linearity in the log-hazard via martingale residuals or restricted cubic splines; categorising a continuous covariate to "fix" non-linearity discards information.
+- For non-PH covariates, choose between stratification (if the stratifier is not of interest) and time-varying coefficients (if the time-varying effect is itself the question).
+
+## R Packages Used
+
+`survival` for `coxph()`, `cox.zph()`, and `Surv()`; `broom` for `tidy()` and `glance()` summaries; `survminer` for ggplot-style diagnostic plots; `rms` for `cph()` with built-in spline and bootstrap-validation tools.

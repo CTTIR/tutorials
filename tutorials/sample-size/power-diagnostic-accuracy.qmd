@@ -1,0 +1,69 @@
+---
+title: Power for Diagnostic Accuracy
+date: "2026-04-17"
+description: Sample size for estimating sensitivity and specificity with adequate precision
+categories:
+  - "Sample Size & Power"
+  - power
+  - diagnostic-accuracy
+  - sensitivity
+  - specificity
+---
+
+## Introduction
+
+Sample-size planning for diagnostic studies typically targets **precision** (CI width) for sensitivity and specificity rather than power against a hypothesis. Separate calculations apply to diseased and non-diseased cohorts.
+
+## Prerequisites
+
+Sensitivity, specificity, proportion CIs.
+
+## Theory
+
+For a Wilson 95 % CI on sensitivity of anticipated value $p_{\text{sens}}$ with desired half-width $w$:
+
+$$n_{\text{dis}} \approx \frac{z_{0.975}^2 p_{\text{sens}}(1 - p_{\text{sens}})}{w^2}.$$
+
+Analogously for specificity using non-diseased. Total sample = $n_{\text{dis}} + n_{\text{non-dis}}$, with the ratio determined by the prevalence of disease in the source population.
+
+For hypothesis-testing framing (is sensitivity > some reference), the one-proportion power formula applies.
+
+## Assumptions
+
+- Anticipated sensitivity / specificity from pilot or literature.
+- Independent gold-standard verification for every subject.
+
+## R Implementation
+
+```r
+# Design 95% CI half-width 5% on sensitivity = 0.90
+p_sens <- 0.90; w <- 0.05
+n_dis <- qnorm(0.975)^2 * p_sens * (1 - p_sens) / w^2
+ceiling(n_dis)
+
+# Spec = 0.85, same width
+p_spec <- 0.85
+n_non <- qnorm(0.975)^2 * p_spec * (1 - p_spec) / w^2
+ceiling(n_non)
+
+# Hypothesis-test framing: sensitivity > 0.80
+# Expected sens = 0.90, alpha = 0.05, power = 0.80
+library(MKmisc)
+power.prop1.test(p0 = 0.80, p1 = 0.90, sig.level = 0.05, power = 0.80)
+```
+
+## Output & Results
+
+For sens 0.90 +/- 5 %: 138 diseased cases. For spec 0.85 +/- 5 %: 196 non-diseased. Hypothesis-test $n \approx 130$ diseased cases to show sensitivity > 0.80.
+
+## Interpretation
+
+"To estimate sensitivity of 0.90 with a 95 % CI half-width of 5 %, at least 138 diseased cases are required. Assuming a disease prevalence of 30 % in the source population, a total enrolment of 460 subjects provides adequate non-diseased controls."
+
+## Practical Tips
+
+- Plan separately for sensitivity and specificity; the two calculations have independent sample-size requirements per cohort.
+- Use Wilson or exact intervals for the reported CI; Wald intervals can be optimistic.
+- STARD reporting guidelines recommend reporting both prevalence and the numbers of diseased / non-diseased subjects.
+- Paired designs (both tests on each subject) use McNemar-style within-subject comparisons; they are more efficient than unpaired designs.
+- AUC-based sample sizes exist (e.g., Hanley-McNeil); different from sensitivity-only calculations.

@@ -1,0 +1,66 @@
+---
+title: Interim Analyses and Group Sequential Designs
+date: "2026-04-17"
+description: Pre-planned interim looks with alpha-spending and early-stopping boundaries
+categories:
+  - Clinical Biostatistics
+  - interim
+  - group-sequential
+  - alpha-spending
+---
+
+## Introduction
+
+Group-sequential designs schedule a sequence of interim analyses at pre-specified information fractions, each with efficacy and/or futility boundaries. Trials can stop early for benefit, harm, or futility while preserving overall Type I error. They are the standard for confirmatory trials with ethical imperatives for early stopping.
+
+## Prerequisites
+
+Type I error; sample-size calculation; information fraction.
+
+## Theory
+
+With $K$ analyses and overall two-sided alpha $\alpha$, boundaries are chosen so the union of rejection events has probability $\alpha$ under the null.
+
+Common families:
+- **O'Brien-Fleming**: conservative early, near-nominal late -- preserves nominal alpha at final analysis.
+- **Pocock**: constant boundary across looks -- more early stopping but harder to reach final.
+- **Alpha-spending** (Lan-DeMets): flexible timing; spending function $f(t)$ at information fraction $t$.
+
+## Assumptions
+
+Analyses occur at pre-specified information fractions; test statistic is approximately normal at each look.
+
+## R Implementation
+
+```r
+library(rpact)
+
+# Group-sequential design: 3 analyses, O'Brien-Fleming, alpha=0.025 one-sided
+design <- getDesignGroupSequential(
+  sided = 1, alpha = 0.025, beta = 0.2,
+  informationRates = c(0.33, 0.67, 1),
+  typeOfDesign = "OF"
+)
+print(design)
+
+# Corresponding sample sizes for two-mean comparison
+ss <- getSampleSizeMeans(design = design,
+                         alternative = 0.3, stDev = 1)
+print(ss)
+```
+
+## Output & Results
+
+Three-stage design with cumulative alpha budgets per stage summing to 0.025; stage sample sizes scale with the chosen information fractions.
+
+## Interpretation
+
+"The group-sequential design with O'Brien-Fleming boundary allocated very little alpha to the first two interims (< 0.001 each), preserving nearly the full alpha for the final analysis. Early stopping is extremely unlikely unless the effect is large."
+
+## Practical Tips
+
+- OF boundaries are standard for confirmatory trials; Pocock may suit exploratory ones or single-arm phase II.
+- Alpha-spending (Lan-DeMets) is more flexible -- timing does not need to be exact, only pre-specified.
+- Independent DMC must oversee interim analyses; investigators remain blinded.
+- Adjust point estimates and CIs for stopping (median-unbiased, repeated CI).
+- Futility boundaries (betagamma spending) complement efficacy and can be non-binding.

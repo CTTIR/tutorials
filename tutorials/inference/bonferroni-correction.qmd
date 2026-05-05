@@ -1,0 +1,104 @@
+---
+title: Bonferroni Correction
+date: "2026-04-17"
+description: Controlling family-wise error rate by dividing alpha across m tests
+categories:
+  - Inferential Statistics
+  - bonferroni
+  - multiple-testing
+  - family-wise-error
+---
+
+## Introduction
+
+When many hypothesis tests are performed simultaneously, the probability that at least one rejects a true null grows rapidly. The **Bonferroni correction** is the simplest, most conservative way to control the family-wise error rate (FWER): divide the target $\alpha$ by the number of tests.
+
+## Prerequisites
+
+Hypothesis testing, Type I error.
+
+## Theory
+
+For $m$ tests each at nominal $\alpha$, if all nulls are true, the probability of at least one false rejection is
+
+$$P(\text{any rejection}) \leq m \alpha$$
+
+by the union bound. To keep the overall rate below $\alpha$, test each hypothesis at $\alpha_{\text{per}} = \alpha / m$.
+
+Equivalently, multiply each raw p-value by $m$ and compare to $\alpha$:
+
+$$p_j^{\text{adj}} = \min(1, m p_j).$$
+
+Properties:
+
+- Always controls FWER at exactly $\alpha$ regardless of dependence structure among tests.
+- Very conservative when tests are positively correlated.
+- Powerful only when $m$ is small; the correction becomes harsh as $m$ grows.
+
+## Assumptions
+
+No distributional assumptions about the tests themselves; Bonferroni works for arbitrary dependence. The cost is a lower power for each individual test.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+# Ten simulated test statistics under a mix of null and alternative
+n_each <- 30
+groups <- LETTERS[1:11]
+y <- c(rnorm(n_each, 50, 10),       # group A (control)
+       rnorm(n_each, 50, 10),       # B null
+       rnorm(n_each, 52, 10),       # C small effect
+       rnorm(n_each, 48, 10),       # D
+       rnorm(n_each, 55, 10),       # E real effect
+       rnorm(n_each, 50, 10),       # F null
+       rnorm(n_each, 58, 10),       # G large real effect
+       rnorm(n_each, 51, 10),       # H
+       rnorm(n_each, 49, 10),       # I
+       rnorm(n_each, 53, 10),       # J
+       rnorm(n_each, 50, 10))       # K
+grp <- rep(groups, each = n_each)
+
+# Pairwise t-tests vs group A
+p_raw <- sapply(groups[-1], function(g)
+  t.test(y[grp == g], y[grp == "A"])$p.value)
+
+p_bonf <- p.adjust(p_raw, method = "bonferroni")
+p_holm <- p.adjust(p_raw, method = "holm")
+
+data.frame(group = groups[-1],
+           raw = round(p_raw, 4),
+           bonferroni = round(p_bonf, 4),
+           holm = round(p_holm, 4))
+```
+
+## Output & Results
+
+```
+  group    raw  bonferroni   holm
+1     B  0.5734      1.0000 1.0000
+2     C  0.1832      1.0000 0.9161
+3     D  0.9112      1.0000 1.0000
+4     E  0.0188      0.1880 0.1506
+5     F  0.4234      1.0000 1.0000
+6     G  0.00041     0.0041 0.0041
+7     H  0.8344      1.0000 1.0000
+8     I  0.7122      1.0000 1.0000
+9     J  0.1643      1.0000 0.9161
+10    K  0.4721      1.0000 1.0000
+```
+
+Only the large-effect test (G) survives Bonferroni correction at $\alpha = 0.05$. Several raw p-values below 0.05 (e.g., E at 0.019) become non-significant after correction.
+
+## Interpretation
+
+"After Bonferroni correction for 10 pairwise comparisons (adjusted $\alpha = 0.005$), only group G differed significantly from control (raw p = 0.0004, adjusted p = 0.004)."
+
+## Practical Tips
+
+- Bonferroni is overly conservative when $m$ is large; prefer Holm or FDR.
+- `p.adjust()` in R supports "bonferroni", "holm", "hochberg", "hommel", "BH" (FDR), "BY" methods.
+- Always apply the correction to a well-defined family of tests pre-specified in the protocol.
+- Do not apply Bonferroni to a handful of primary pre-specified comparisons when they were individually justified.
+- For a single primary endpoint and secondary exploratory analyses, correction often applies only to the exploratory family.

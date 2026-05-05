@@ -1,0 +1,66 @@
+---
+title: Completely Randomised Design
+date: "2026-04-17"
+description: "The simplest experimental design: random assignment of treatments to units"
+categories:
+  - Experimental Design
+  - crd
+  - randomisation
+  - anova
+---
+
+## Introduction
+
+The completely randomised design (CRD) is the simplest and most flexible of all comparative experimental designs: each of the available experimental units is assigned to one of several treatment groups by an unrestricted random mechanism, with no blocking, stratification, or other restriction on randomisation. CRD is the default starting point in any introductory experimental-design course and remains the right choice whenever the experimental units are reasonably homogeneous and no nuisance source of variation justifies the additional complexity of a blocked layout. Its analysis is one-way ANOVA, its assumptions are minimal, and its results are easily generalised to whatever target population the units were sampled from.
+
+## Prerequisites
+
+A working understanding of randomisation as the foundation of causal inference in experiments, one-way analysis of variance with the $F$-test, and the multiple-comparisons problem that arises when more than two treatment groups are compared.
+
+## Theory
+
+With $a$ treatment levels and $r$ replicates per treatment, $n = a \cdot r$ experimental units are randomly allocated to treatments without any restriction. The standard analysis model is
+
+$$y_{ij} = \mu + \tau_i + \varepsilon_{ij}, \qquad \varepsilon_{ij} \sim N(0, \sigma^2),$$
+
+with $\tau_i$ the fixed effect of the $i$-th treatment and $\varepsilon_{ij}$ independent Normal error. The omnibus null hypothesis is $\tau_1 = \cdots = \tau_a$, tested by the one-way ANOVA $F$-statistic. Post-hoc pairwise comparisons (Tukey HSD, Dunnett against a control, Scheffé for arbitrary contrasts) follow when the omnibus test is significant and pairwise inference is needed.
+
+## Assumptions
+
+The experimental units are exchangeable prior to randomisation (homogeneous), the errors are independent within and across treatment groups, the within-group residuals are approximately Normal, and the residual variance is the same in each group. Departures from variance homogeneity can usually be addressed by transformation, weighted ANOVA, or Welch's $F$-test.
+
+## R Implementation
+
+```r
+set.seed(2026)
+a <- 4; r <- 6
+treatment <- factor(rep(LETTERS[1:a], each = r))
+y <- rnorm(a * r, mean = rep(c(10, 12, 11, 14), each = r), sd = 2)
+
+df <- data.frame(treatment, y)
+fit <- aov(y ~ treatment, data = df)
+summary(fit)
+
+TukeyHSD(fit)
+```
+
+## Output & Results
+
+`aov()` returns the one-way ANOVA partitioning of the total sum of squares into between-group and within-group components, with the omnibus $F$-test reported as the primary inference. `TukeyHSD()` provides simultaneous 95 % confidence intervals for all pairwise differences, controlling family-wise error rate at the chosen $\alpha$, and is the standard follow-up when the omnibus null is rejected.
+
+## Interpretation
+
+A reporting sentence: "The one-way ANOVA showed significant treatment differences ($F_{3, 20} = 5.9$, $p = 0.005$); Tukey HSD identified treatment D as significantly higher than treatment A (mean difference 3.7, adjusted $p = 0.004$, 95 % CI 1.2 to 6.2). Other pairwise contrasts did not reach the adjusted $\alpha = 0.05$ level. Residual diagnostics (Q-Q plot, Levene's test $p = 0.41$) supported the Normal-equal-variance assumptions." Always pair the omnibus test with adjusted pairwise comparisons and a brief assumption-check statement.
+
+## Practical Tips
+
+- CRD is most efficient when experimental units are reasonably homogeneous; if a substantial source of nuisance variation is known in advance, a randomised complete block design will reduce error variance and increase power without changing the inferential framework.
+- Balanced designs with equal $r$ across groups are optimal in efficiency and most robust to small departures from variance homogeneity; modest imbalance is acceptable but complicates type-III sum-of-squares interpretation.
+- Always check residual diagnostics: a Q-Q plot, residuals-versus-fitted plot, and Levene's or Brown–Forsythe test for variance homogeneity. Mild departures rarely affect the omnibus $F$-test, but severe departures motivate a transformation or robust alternative.
+- For markedly non-Normal responses, log or square-root transformations often suffice; for ordinal or otherwise non-transformable outcomes, use Kruskal–Wallis as a non-parametric omnibus and Dunn's procedure for post-hoc comparisons.
+- Document the randomisation procedure (seed, software, date) so that the assignment list can be reconstructed from the protocol — a basic reproducibility requirement that auditors increasingly demand.
+- If interest centres on a specific contrast (treatment vs control), Dunnett's procedure is more powerful than Tukey HSD and should be pre-specified in the protocol.
+
+## R Packages Used
+
+Base R `aov()`, `lm()`, and `TukeyHSD()` cover the canonical CRD analysis; `agricolae` for `LSD.test()` and Duncan-style multiple-comparison tools used in agricultural DoE; `multcomp` for Dunnett, Scheffé, and arbitrary linear contrasts with adjustment; `emmeans` for marginal-mean estimation, plotting, and flexible contrast construction across designs.

@@ -1,0 +1,69 @@
+---
+title: Dummy Coding
+date: "2026-04-17"
+description: "Treatment-contrast coding for categorical predictors: reference category and indicator variables"
+categories:
+  - "Regression & Modelling"
+  - dummy-coding
+  - treatment-contrast
+  - reference-level
+---
+
+## Introduction
+
+Categorical predictors in regression must be encoded as numeric indicator variables before they enter the linear predictor. R's default is treatment-contrast coding (also called dummy coding), where one level is the implicit reference and the remaining $k - 1$ levels each get a 0/1 indicator. The choice of reference level is partly arbitrary and partly substantive: the reference becomes the baseline against which all other levels are compared, so it should be the level that makes scientific sense — placebo in a clinical trial, "no symptom" in symptom-based predictors, the largest stratum in observational studies.
+
+## Prerequisites
+
+A working understanding of categorical variables, factor handling in R, and the role of design matrices in regression.
+
+## Theory
+
+For a factor with $k$ levels, treatment coding produces a $k \times (k-1)$ contrast matrix. The reference level has all-zero indicator entries; each other level has a 1 in its own column and 0 elsewhere. Substituting into the linear model:
+
+- Intercept = mean of the reference level (in a model with only the factor as predictor).
+- Coefficient on indicator $j$ = difference $\mu_j - \mu_{\mathrm{ref}}$.
+
+Alternative coding schemes — sum-to-zero (`contr.sum`), Helmert (`contr.helmert`), polynomial (`contr.poly`) — change the meaning of the intercept and coefficients but produce identical fits. Ordered factors default to polynomial contrasts in R, which decompose the trend into linear, quadratic, etc. components; override with `contrasts(f) <- contr.treatment` if you want familiar group differences.
+
+## Assumptions
+
+Same as the underlying regression: linearity in the linear predictor, etc. The choice of contrast affects coefficient interpretation but not model fit, residuals, or predictions.
+
+## R Implementation
+
+```r
+# Default: treatment contrasts with first level as reference
+fit <- lm(mpg ~ factor(cyl), data = mtcars)
+summary(fit)
+
+# Change reference level
+mtcars$cyl <- factor(mtcars$cyl)
+mtcars$cyl <- relevel(mtcars$cyl, ref = "6")
+fit2 <- lm(mpg ~ cyl, data = mtcars)
+summary(fit2)
+
+# Inspect contrast matrix
+contrasts(mtcars$cyl)
+```
+
+## Output & Results
+
+The fitted intercept equals the reference-level mean; each coefficient equals the difference from the reference. Re-leveling changes the intercept and coefficients but does not change predictions or residuals.
+
+## Interpretation
+
+A reporting sentence: "Compared to 4-cylinder cars (reference; mean 26.7 mpg), 6-cylinder cars averaged 6.9 mpg less ($p < 0.001$) and 8-cylinder cars averaged 11.6 mpg less ($p < 0.001$). Treatment contrasts with 4-cylinder as reference were used throughout." Always state the reference level explicitly; reviewers and reanalysts cannot tell from coefficients alone.
+
+## Practical Tips
+
+- Choose the reference level to match the scientific question — placebo, baseline, control, or "most common" — rather than relying on alphabetic default.
+- Use `relevel(f, ref = "...")` or `forcats::fct_relevel()` to set a specific reference; in `lm()`/`glm()`, the first factor level is always the reference.
+- For ordered factors, R defaults to polynomial contrasts (`contr.poly`); override with `contrasts(f) <- contr.treatment` if you want pairwise group differences.
+- For ANOVA-style hypothesis testing, sum-to-zero contrasts (`contr.sum`) make the intercept the grand mean and produce orthogonal Type II / Type III sums of squares; specify with `options(contrasts = c("contr.sum", "contr.poly"))`.
+- Inspect contrast matrices with `contrasts(f)` to confirm what is actually being fitted; mismatch between expected and actual contrasts is a common source of misinterpreted output.
+- Document the contrast type in methods: "treatment contrasts with placebo as reference" leaves no room for ambiguity.
+
+## R Packages Used
+
+Base R `factor()`, `relevel()`, `contrasts()`, `contr.treatment()`, `contr.sum()`, `contr.helmert()`, `contr.poly()`; `forcats` for tidy factor manipulation including `fct_relevel()`; `emmeans::emmeans()` for marginal means and post-hoc contrasts that are interpretation-stable across coding choices.

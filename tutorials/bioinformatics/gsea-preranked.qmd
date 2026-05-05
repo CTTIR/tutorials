@@ -1,0 +1,67 @@
+---
+title: GSEA Preranked Analysis
+date: "2026-04-17"
+description: Enrichment of gene sets in a ranked list without a significance cutoff
+categories:
+  - Bioinformatics
+  - gsea
+  - fgsea
+  - ranked
+---
+
+## Introduction
+
+Gene Set Enrichment Analysis (GSEA) tests whether a gene set is concentrated at the top or bottom of a ranked gene list (e.g., by log fold change or signed p-value). Unlike over-representation analysis, it uses the full ranking and is more sensitive to coordinated modest changes within a pathway.
+
+## Prerequisites
+
+Ranked gene statistic (LFC or signed -log10 p); a curated gene-set database (MSigDB, Reactome, KEGG).
+
+## Theory
+
+GSEA walks down the ranked list, incrementing a running-sum statistic when encountering a set member (weighted by the rank statistic) and decrementing otherwise. The **enrichment score (ES)** is the maximum deviation from zero; a permutation-based null distribution yields p-values. `fgsea` uses a fast adaptive multi-level permutation scheme.
+
+**Normalised ES (NES)** adjusts for gene-set size and allows cross-set comparison.
+
+## Assumptions
+
+The ranking reflects biological signal; gene sets are well-curated; permutation null captures the null distribution of ES.
+
+## R Implementation
+
+```r
+library(fgsea); library(msigdbr)
+
+set.seed(2026)
+n_genes <- 5000
+genes <- paste0("g", 1:n_genes)
+stats <- rnorm(n_genes); names(stats) <- genes
+
+# Inject a pathway signal
+pathway_A <- sample(genes, 30); stats[pathway_A] <- stats[pathway_A] + 1.5
+pathway_B <- sample(genes, 20); stats[pathway_B] <- stats[pathway_B] - 1.2
+
+pathways <- list(pathway_A = pathway_A, pathway_B = pathway_B,
+                 pathway_C = sample(genes, 40))
+
+fg <- fgsea(pathways = pathways, stats = sort(stats, decreasing = TRUE),
+            minSize = 10, maxSize = 500)
+fg[, .(pathway, NES, pval, padj)]
+plotEnrichment(pathways$pathway_A, sort(stats, decreasing = TRUE))
+```
+
+## Output & Results
+
+A table with NES, p-value, and adjusted p-value per pathway. The enrichment plot for pathway_A shows a strong positive leading edge.
+
+## Interpretation
+
+"GSEA against MSigDB Hallmark revealed positive enrichment for inflammatory response (NES = 1.8, BH-FDR < 0.01) and negative enrichment for oxidative phosphorylation (NES = -1.5)."
+
+## Practical Tips
+
+- Use the `stat` column from DESeq2 or `t` from limma as the ranking; signed -log10(p-value) is an alternative.
+- Remove NAs from the ranking; fgsea is sensitive to ties and NAs.
+- Report the **leading-edge subset** for biologically driven interpretation.
+- MSigDB has Hallmark (50 curated), C2 (curated pathways), C5 (GO), C7 (immune); match collection to biological question.
+- GSEA tests concentrated enrichment, not direction-specific effects; combine with ORA for complementary evidence.

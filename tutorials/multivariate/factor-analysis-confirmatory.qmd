@@ -1,0 +1,73 @@
+---
+title: Confirmatory Factor Analysis
+date: "2026-04-17"
+description: "Testing a pre-specified factor structure against data, with chi-squared and incremental fit indices"
+categories:
+  - Multivariate Statistics
+  - cfa
+  - lavaan
+  - structural-equation
+  - fit-indices
+---
+
+## Introduction
+
+Confirmatory factor analysis (CFA) tests a pre-specified factor structure against data: which items load on which factors, which loadings are constrained to zero, and how factors correlate with each other. It is the measurement-model portion of structural equation modelling and the standard tool for validating questionnaire structures, latent-trait models in psychometrics, and multi-indicator latent constructs in clinical and behavioural research. Unlike exploratory factor analysis, CFA does not estimate which items belong to which factor — that decision is in the model — and instead estimates only the strength of the predetermined relationships and tests model-data fit.
+
+## Prerequisites
+
+A working understanding of exploratory factor analysis, regression, and the `lavaan` model-syntax conventions for specifying latent variables.
+
+## Theory
+
+CFA specifies a complete pattern matrix in advance: each item either loads freely on its assigned factor or is constrained to zero on every other factor. Fit is assessed via:
+
+- **Chi-squared test**: a non-significant $\chi^2$ formally accepts the model, but the test rejects too easily at large $n$.
+- **Incremental fit indices**: CFI and TLI compare to a baseline null model; values above 0.95 indicate good fit, 0.90–0.95 acceptable.
+- **Absolute fit**: RMSEA measures discrepancy per degree of freedom; below 0.06 is good, 0.06–0.08 acceptable. The accompanying 90 % CI quantifies precision.
+- **SRMR**: standardised root-mean-square residual; below 0.08 indicates good fit.
+
+A well-fitting model satisfies multiple criteria simultaneously — no single index is sufficient.
+
+## Assumptions
+
+A correctly specified factor structure, multivariate Normal continuous indicators (or robust / WLSMV estimators for non-Normal or ordinal data), and sufficient sample size (rule of thumb: at least 10 observations per estimated parameter, or $n \ge 200$).
+
+## R Implementation
+
+```r
+library(lavaan); library(semTools)
+
+# Three-factor model on HolzingerSwineford1939 dataset
+model <- '
+  visual  =~ x1 + x2 + x3
+  textual =~ x4 + x5 + x6
+  speed   =~ x7 + x8 + x9
+'
+fit <- cfa(model, data = HolzingerSwineford1939)
+summary(fit, fit.measures = TRUE, standardized = TRUE)
+
+# Modification indices for potential improvements
+head(modificationIndices(fit, sort = TRUE), 10)
+```
+
+## Output & Results
+
+`summary(fit, fit.measures = TRUE, standardized = TRUE)` reports unstandardised and standardised loadings, factor correlations, residual variances, and the full panel of fit indices (chi-squared, CFI, TLI, RMSEA with CI, SRMR). `modificationIndices()` lists potential parameter additions ordered by expected chi-squared improvement.
+
+## Interpretation
+
+A reporting sentence: "The three-factor CFA fit the data adequately ($\chi^2(24) = 85.3$, $p < 0.001$; CFI 0.93; RMSEA 0.092 [90 % CI 0.071 to 0.114]; SRMR 0.065); all standardised loadings exceeded 0.50 and were statistically significant ($p < 0.001$). RMSEA exceeded the conventional 0.06 threshold, suggesting modest local misspecification — modification indices indicated a residual correlation between $x_7$ and $x_9$ that would improve fit if substantively justified." Always report multiple fit indices; no single one is decisive.
+
+## Practical Tips
+
+- Do not follow modification indices blindly; each unconstrained parameter moves the analysis from confirmatory to exploratory and inflates Type I error if not pre-specified.
+- For ordinal Likert items, use diagonally-weighted least squares (`cfa(..., estimator = "DWLS")` or `"WLSMV"`); ordinary ML on Likert items violates Normality assumptions.
+- For non-Normal continuous data, use robust ML (`estimator = "MLR"`); standard errors and chi-squared are corrected for non-Normality.
+- Measurement-invariance testing across groups (configural, metric, scalar invariance) is a standard follow-up before comparing latent means; use `semTools::measurementInvariance()`.
+- Report chi-squared with degrees of freedom and the full set of fit indices; never report a single index alone.
+- Standardised loadings (factor-loading correlations) communicate effect size more clearly than unstandardised; always include them.
+
+## R Packages Used
+
+`lavaan` for `cfa()` and `sem()` with multiple estimators; `semTools` for measurement-invariance testing, reliability coefficients, and modification heuristics; `lavaanPlot` and `semPlot` for path-diagram visualisation; `blavaan` for Bayesian CFA when small samples or complex priors require it.

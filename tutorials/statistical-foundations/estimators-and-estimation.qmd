@@ -1,0 +1,86 @@
+---
+title: Estimators and Estimation
+date: "2026-04-17"
+description: "Point estimation and the plug-in principle: turning a sample into a guess about a population parameter"
+categories:
+  - Statistical Foundations
+  - estimation
+  - estimator
+  - plug-in
+  - point-estimate
+---
+
+## Introduction
+
+An **estimator** is a rule -- a function of the data -- that produces a guess about an unknown parameter of the population. An **estimate** is the value that rule returns on a specific sample. The sample mean is an estimator of the population mean; on the sample $\{3.1, 2.7, 3.4\}$ it returns the estimate $3.07$. Every inferential procedure begins with an estimator.
+
+## Prerequisites
+
+The reader should know what a sample is, what a parameter is, and should be comfortable calling R functions on a numeric vector.
+
+## Theory
+
+Given iid observations $X_1, \ldots, X_n$ from a distribution $F$ with parameter $\theta$, an estimator is any function $\hat{\theta} = T(X_1, \ldots, X_n)$. Common examples:
+
+- Sample mean $\bar{X} = \frac{1}{n}\sum X_i$ for the population mean $\mu$.
+- Sample variance $s^2 = \frac{1}{n-1}\sum (X_i - \bar{X})^2$ for $\sigma^2$.
+- Sample proportion $\hat{p} = \bar{X}$ for $\pi$ when $X_i \in \{0, 1\}$.
+- Sample correlation $\hat{\rho}$ for $\rho$.
+
+The **plug-in principle** motivates many estimators: to estimate any functional $\theta = T(F)$ of the distribution, replace $F$ with the empirical distribution $\hat{F}_n$ and compute $T(\hat{F}_n)$. This principle yields the sample mean as an estimator of the population mean, the sample quantile as an estimator of the population quantile, and so on.
+
+Properties by which estimators are judged:
+
+- **Unbiasedness**: $E[\hat{\theta}] = \theta$.
+- **Consistency**: $\hat{\theta} \to \theta$ in probability as $n \to \infty$.
+- **Efficiency**: small variance (ideally attaining the Cramer-Rao lower bound).
+- **Robustness**: stability under deviations from modelling assumptions.
+- **Sufficiency**: using all the information about $\theta$ in the data.
+
+General-purpose construction methods -- method of moments, maximum likelihood, least squares, Bayesian posterior summaries -- each yield estimators with characteristic properties under the model they assume.
+
+## Assumptions
+
+The plug-in principle is model-free in spirit but model-dependent in application: the estimator inherits any bias from the mismatch between the assumed model and reality. When the sample does not represent the target population, no estimator can rescue the inference.
+
+## R Implementation
+
+```r
+set.seed(2026)
+x <- rnorm(40, mean = 75, sd = 12)
+
+mean(x)
+var(x); sd(x)
+median(x); quantile(x, probs = c(0.25, 0.5, 0.75))
+mean(x > 70)
+cor(x, x + rnorm(length(x), sd = 5))
+```
+
+Each call is a plug-in estimator: `mean()` for $\mu$, `var()` for $\sigma^2$, `quantile()` for population quantiles, `mean(x > 70)` for $P(X > 70)$, `cor()` for $\rho$.
+
+## Output & Results
+
+```
+[1] 73.80       # sample mean
+[1] 152.37      # sample variance
+[1] 12.34       # sample SD
+[1] 73.87       # sample median
+     25%     50%     75%
+   65.13   73.87   81.62
+[1] 0.60       # plug-in estimate of P(X > 70)
+[1] 0.922      # sample correlation
+```
+
+Each of these is a point estimate of the corresponding population quantity; none tells us how uncertain that estimate is.
+
+## Interpretation
+
+A point estimate is not enough. Every estimate reported in a paper should be accompanied by a measure of its uncertainty -- a standard error, a confidence interval, or a credible interval. "Mean systolic blood pressure 128 mmHg" is a statement; "128 mmHg (95% CI 125--131)" is inference.
+
+## Practical Tips
+
+- The plug-in principle gives a good default estimator for most quantities; check for bias only when you have reason to suspect it.
+- For small samples, unbiased-looking estimators may still be biased because of non-linear transformations (e.g., SD from variance).
+- When multiple estimators exist for the same parameter, compare them by MSE, not just bias or variance alone.
+- The Bayesian posterior mean is an estimator too -- it optimises MSE among squared-error-loss rules under the posterior.
+- Never report a point estimate as if it were a true parameter; the estimate is random, the parameter is not, and the inference must reflect that.

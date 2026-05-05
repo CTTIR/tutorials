@@ -1,0 +1,66 @@
+---
+title: Quasi-Poisson Regression
+date: "2026-04-17"
+description: Poisson regression with a dispersion parameter for moderate overdispersion
+categories:
+  - "Regression & Modelling"
+  - quasi-poisson
+  - overdispersion
+  - dispersion
+---
+
+## Introduction
+
+Quasi-Poisson regression is the simplest fix for overdispersion in count data: keep the Poisson mean structure $\log \mu = X^\top \beta$, but introduce a free dispersion parameter $\phi$ that scales the variance to $\phi \mu$ rather than the Poisson-mandated $\mu$. Coefficient estimates are identical to Poisson; only the standard errors change, multiplied by $\sqrt{\phi}$. It is the workhorse "quick fix" when a Poisson dispersion check fails by a moderate amount and you do not need a likelihood-based comparison.
+
+## Prerequisites
+
+A working understanding of Poisson regression, generalised linear models, and the concept of overdispersion.
+
+## Theory
+
+Quasi-Poisson uses quasi-likelihood: it specifies only the first two moments $\mathbb E[Y] = \mu$ and $\mathrm{Var}(Y) = \phi \mu$, without committing to a particular distribution. The dispersion parameter is estimated by Pearson chi-squared divided by residual degrees of freedom. Coefficient estimates are unchanged from Poisson; standard errors are inflated by $\sqrt{\hat\phi}$, and confidence intervals widen accordingly.
+
+Unlike the negative binomial — which has a genuine likelihood and AIC — quasi-Poisson is a quasi-likelihood model: no AIC, no BIC, no likelihood-ratio tests in the usual sense. F-type tests via `anova(fit, test = "F")` are appropriate for comparing nested quasi-Poisson models.
+
+## Assumptions
+
+Non-negative integer outcomes, the variance-mean relationship $\mathrm{Var}(Y) = \phi \mu$ (linear in the mean), and independent observations. For quadratic variance-mean (typical of strongly overdispersed counts), negative binomial is more appropriate.
+
+## R Implementation
+
+```r
+set.seed(2026)
+d <- data.frame(x = rnorm(200))
+d$y <- rnbinom(200, mu = exp(1 + 0.5 * d$x), size = 2)   # overdispersed
+
+fit_pois <- glm(y ~ x, data = d, family = poisson)
+fit_qp   <- glm(y ~ x, data = d, family = quasipoisson)
+
+# Dispersion estimate
+summary(fit_qp)$dispersion
+# Compare SE
+summary(fit_pois)$coefficients
+summary(fit_qp)$coefficients
+```
+
+## Output & Results
+
+The `quasipoisson` family produces the same point estimates as Poisson but with inflated standard errors. The dispersion estimate is in `summary(fit)$dispersion`; comparing the two coefficient summaries shows how much SEs change.
+
+## Interpretation
+
+A reporting sentence: "Quasi-Poisson regression estimated a dispersion of $\hat\phi = 2.8$, indicating substantial overdispersion; standard errors were inflated by $\sqrt{2.8} = 1.67$ relative to Poisson, giving a 95 % confidence interval for the rate ratio per unit $x$ of 1.30 to 2.00 (Poisson misleadingly gave 1.45 to 1.85)." Always quote the dispersion alongside the inflated SEs.
+
+## Practical Tips
+
+- Quasi-Poisson is acceptable for estimation and confidence intervals, but it lacks a proper likelihood — no AIC, BIC, or LRTs in the usual sense.
+- For formal model selection by AIC, switch to negative binomial (`MASS::glm.nb` or `glmmTMB(family = nbinom2)`); the additional dispersion parameter is genuinely estimated.
+- Quasi-Poisson assumes linear variance-mean ($\mathrm{Var}(Y) = \phi \mu$); NB assumes quadratic ($\mathrm{Var}(Y) = \mu + \mu^2/\theta$). Inspect Pearson residuals against fitted values to choose between them.
+- For large dispersion ($\hat\phi > 3$), neither quasi-Poisson nor NB may suffice; consider zero-inflated or mixture models.
+- Use F-tests (`anova(fit, test = "F")`) for nested quasi-Poisson model comparisons; LRTs are not available.
+- For longitudinal or clustered counts, `glmmTMB(family = nbinom2)` is preferable to quasi-Poisson because it provides random effects and a proper likelihood.
+
+## R Packages Used
+
+Base R `glm()` with `family = quasipoisson`; `MASS::glm.nb()` for negative binomial as the recommended alternative; `glmmTMB` for mixed-effects count models with proper likelihoods; `DHARMa` for residual diagnostics across count-model families.

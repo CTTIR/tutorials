@@ -1,0 +1,67 @@
+---
+title: Model Selection with AIC and BIC
+date: "2026-04-17"
+description: "Information criteria for comparing models: Akaike's and Bayesian"
+categories:
+  - "Regression & Modelling"
+  - aic
+  - bic
+  - model-selection
+  - information-criteria
+---
+
+## Introduction
+
+AIC (Akaike information criterion) and BIC (Bayesian information criterion) are penalised likelihood scores for comparing models on the same data. Both reward fit (high likelihood) and penalise complexity (number of parameters). They differ in how aggressively they penalise: BIC's penalty grows with sample size, so BIC favours simpler models in large samples while AIC retains a constant per-parameter cost. Both are essential tools in any model-selection workflow that goes beyond likelihood-ratio tests.
+
+## Prerequisites
+
+A working understanding of maximum likelihood, the log-likelihood as a measure of fit, and the bias-variance trade-off in model complexity.
+
+## Theory
+
+$$\mathrm{AIC} = -2 \log L + 2 k, \qquad \mathrm{BIC} = -2 \log L + k \log n,$$
+
+with $k$ the number of estimated parameters and $n$ the sample size. Lower is better. Conventional thresholds for AIC differences ($\Delta\mathrm{AIC}$): $< 2$ inconclusive, $4$–$7$ moderate preference, $> 10$ decisive. Relative model weights $\exp(-\Delta\mathrm{AIC} / 2)$ give the relative likelihood of each model among those compared.
+
+AIC is asymptotically equivalent to leave-one-out cross-validation under regularity conditions; it targets predictive accuracy. BIC approximates the posterior model probability under a specific prior; it targets identification of the true model when one is in the candidate set. BIC's $\log n$ penalty makes it consistent (it picks the true model as $n \to \infty$ if the true model is among candidates) but conservative in finite samples.
+
+## Assumptions
+
+Models compared must be fitted on the same data, with the same response (no transformation differences). For nested models, both AIC and likelihood-ratio tests apply; for non-nested, only AIC and BIC make sense.
+
+## R Implementation
+
+```r
+fit1 <- lm(mpg ~ wt, data = mtcars)
+fit2 <- lm(mpg ~ wt + hp, data = mtcars)
+fit3 <- lm(mpg ~ wt + hp + cyl + disp, data = mtcars)
+
+AIC(fit1, fit2, fit3)
+BIC(fit1, fit2, fit3)
+
+# Relative likelihood of a model
+delta_aic <- AIC(fit1, fit2, fit3)$AIC - min(AIC(fit1, fit2, fit3)$AIC)
+exp(-delta_aic / 2)     # relative likelihood
+```
+
+## Output & Results
+
+`AIC()` and `BIC()` return tabular comparisons with degrees of freedom and the criterion value. The relative likelihoods, computed as $\exp(-\Delta\mathrm{AIC} / 2)$, give the proportional support each model has from the data.
+
+## Interpretation
+
+A reporting sentence: "Model 2 (mpg ~ wt + hp) had the lowest AIC at 164.0; Model 1 (wt only) differed by $\Delta\mathrm{AIC} = 8.4$, decisive evidence against Model 1, while Model 3 (with cyl and disp added) had $\Delta\mathrm{AIC} = 1.2$, indicating no meaningful improvement over Model 2 despite the additional predictors. BIC also selected Model 2 ($\Delta\mathrm{BIC} = 6.1$ vs Model 1; Model 3 worse by 5.5)." Always quote $\Delta$ values rather than absolute AICs; only differences are interpretable across model sets.
+
+## Practical Tips
+
+- AIC and BIC can disagree; AIC favours larger models, BIC smaller. Choose by question: AIC for prediction, BIC for parsimony or near-true-model selection.
+- Compare only models fitted on the same data with the same response scale; AICs across log-transformed and raw outcomes are not comparable.
+- For nested models, likelihood-ratio tests and AIC both work; for non-nested models, AIC and BIC are the only options.
+- Model averaging (`MuMIn::dredge` and `model.avg`) often outperforms single-model selection for prediction; the resulting predictions average across high-AIC-weight models.
+- AICc (corrected AIC) adds a finite-sample correction and is preferable for small $n$ relative to $k$; the formula is $\mathrm{AICc} = \mathrm{AIC} + 2k(k+1)/(n-k-1)$.
+- Reporting one fit's AIC alone is uninformative; always quote the comparison set.
+
+## R Packages Used
+
+Base R `AIC()` and `BIC()`; `MuMIn::dredge()` and `model.avg()` for exhaustive subset selection and model averaging; `AICcmodavg::AICc()` for small-sample corrections; `performance::compare_performance()` for tidy multi-criterion comparison; `lmtest::lrtest()` for likelihood-ratio tests on nested models.

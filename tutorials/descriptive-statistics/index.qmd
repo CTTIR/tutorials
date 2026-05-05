@@ -1,0 +1,230 @@
+---
+title: Descriptive Statistics
+description: "Summarising data with measures of location, dispersion, and shape, and presenting them in frequency and cross-tabulations"
+---
+
+Before running any inferential procedure, an analyst should understand the shape, centre, and spread of the data at hand. Descriptive statistics provide the vocabulary for that first look: means, medians, variances, quantiles, skewness, kurtosis, and the tables that summarise categorical variables and their relationships.
+
+This area covers the full toolkit for one-variable summaries, two-variable cross-tabulations, and the graphical conventions that accompany each. Every measure is explained in terms of what question it answers, when it is appropriate, and how it is computed and interpreted in R.
+
+## Topics covered
+
+- Measures of central tendency: mean, median, mode, trimmed mean, Winsorised mean
+- Measures of dispersion: variance, standard deviation, MAD, IQR, range, coefficient of variation
+- Measures of shape: skewness, kurtosis, and their interpretation for real data
+- Quantiles, percentiles, and five-number summaries
+- Frequency tables for one categorical variable, with relative and cumulative frequencies
+- Cross-tabulations and contingency tables for two or more categorical variables
+- Summary statistics by group (split-apply-combine) using base R, `dplyr`, and `data.table`
+
+## Practical emphasis
+
+Each tutorial shows both what to report and how to report it. Tables suitable for manuscripts are generated using `gt`, `flextable`, or `kableExtra`. Figures follow publication conventions.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Coefficient of Variation](coefficient-of-variation.qmd)
+Scale-free dispersion: the ratio of the standard deviation to the mean
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Contingency Tables](contingency-tables.qmd)
+r × c tables of counts, their expected values under independence, and standardised residuals
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Cross-Tabulations](cross-tabulations.qmd)
+Two-way and higher-dimensional tables for joint distributions of categorical variables
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Descriptive vs Inferential Statistics](descriptive-vs-inferential.qmd)
+The distinction between summarising the sample and making claims about the population
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Five-Number Summary](five-number-summary.qmd)
+Min, Q1, median, Q3, max: the compact distribution summary that powers the boxplot
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Frequency Tables](frequency-tables.qmd)
+Counting categorical and discrete-numeric variables: absolute, relative, and cumulative frequencies
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Kurtosis](kurtosis.qmd)
+Quantifying tail heaviness of a distribution, and interpreting excess kurtosis
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Mean Absolute Deviation](mean-absolute-deviation.qmd)
+Average absolute deviation from the mean or median: a robust alternative to the standard deviation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Measures of Central Tendency](measures-of-location.qmd)
+Mean, median, mode, and their robust cousins -- when each is appropriate and how to compute them in R
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Measures of Dispersion](measures-of-dispersion.qmd)
+Quantifying how spread out the data are: variance, SD, MAD, IQR, and range
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Measures of Shape](measures-of-shape.qmd)
+Skewness and kurtosis: summarising the asymmetry and tail heaviness of a distribution beyond location and spread
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Outlier Detection Rules](outlier-detection-rules.qmd)
+Univariate rules: 1.5·IQR fences, z-score thresholds, Hampel identifier, and Grubbs' test
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Percentile Ranks](percentile-rank.qmd)
+Converting a raw value to its position in the sample distribution, expressed as a percentage
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Quantiles and Percentiles](quantiles-and-percentiles.qmd)
+Dividing a distribution by cumulative probability: the median, quartiles, percentiles, and R's nine quantile definitions
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Robust Statistics: An Overview](robust-statistics-overview.qmd)
+Estimators designed to remain close to the truth under contamination, with key concepts: breakdown point, influence function, efficiency
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Skewness](skewness.qmd)
+Measuring the asymmetry of a distribution: sample estimators, interpretation, and typical values in applied data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Standardisation and z-Scores](standardisation-zscore.qmd)
+Centring and scaling a variable, and the robust-z alternative
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Stem-and-Leaf Plots](stem-and-leaf-plots.qmd)
+A text-based compact display of small samples that preserves every data value
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Summary by Group](summary-by-group.qmd)
+Split-apply-combine pattern for computing summaries within subgroups of the data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Geometric Mean](geometric-mean.qmd)
+Log-scale averaging for multiplicative data: ratios, growth rates, titres
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Harmonic Mean](harmonic-mean.qmd)
+Reciprocal-averaged summary for rates, speeds, and F1-style composite scores
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Interquartile Range](interquartile-range.qmd)
+Width of the central 50% of the distribution: robust, interpretable, and the basis of Tukey fences
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Weighted Mean](weighted-mean.qmd)
+Averaging with unequal weights: survey inclusion probabilities, meta-analysis pooling, and more
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Trimmed and Winsorised Means](trimmed-winsorized-mean.qmd)
+Robust location estimators that compromise between the mean and the median
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Variance and Standard Deviation](variance-and-sd.qmd)
+Squared and unsquared dispersion, the n vs n-1 divisor, and why the sample SD is biased
+:::
+
+:::

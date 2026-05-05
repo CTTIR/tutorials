@@ -1,0 +1,84 @@
+---
+title: Stacked and Dodged Bars
+date: "2026-04-17"
+description: "Two-factor bar charts: stacking for composition, dodging for side-by-side comparison"
+categories:
+  - Data Visualisation
+  - stacked-bars
+  - dodged-bars
+  - fill
+---
+
+## Introduction
+
+When a bar chart needs to display two categorical variables at once, three layout options compete: stacking the sub-bars within each main bar (showing totals and composition), placing them side by side (showing within-category comparison), or normalising to 100 % (showing proportions independent of total). Each layout answers a different question, and choosing the right one is more important than tweaking colours or fonts. The `position` argument of `geom_bar()` and `geom_col()` selects between the three.
+
+## Prerequisites
+
+A working knowledge of bar charts, the distinction between `geom_bar()` (counts) and `geom_col()` (pre-computed values), and `ggplot2` aesthetic mappings.
+
+## Theory
+
+`position = "stack"` is the default for bar geoms with a fill aesthetic: sub-bars stack vertically inside each main bar, the bar's total height equals the sum of the sub-counts, and segments encode composition.
+
+`position = "dodge"` (or `position_dodge(width = ...)` for finer control) places sub-bars side by side, one per fill level, at the same x-tick. Each sub-bar's height equals its own count, making within-x comparison direct.
+
+`position = "fill"` stacks but normalises every main bar to height 1 (or 100 %), hiding the absolute totals to expose proportional structure across the x-axis.
+
+The choice maps directly onto the analytical question: "How big is each group?" → stack; "How does subgroup A compare to subgroup B within each main category?" → dodge; "How does the proportion of subgroup A shift across main categories?" → fill.
+
+## Assumptions
+
+Two categorical variables (or one categorical and one ordered) and a count or summary that makes sense to add across sub-bars.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+d <- data.frame(
+  stage = factor(rep(c("I", "II", "III"), 2)),
+  sex   = factor(rep(c("F", "M"), each = 3)),
+  count = c(30, 45, 25, 25, 50, 30)
+)
+
+# Stacked
+ggplot(d, aes(stage, count, fill = sex)) +
+  geom_col(position = "stack") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal()
+
+# Dodged
+ggplot(d, aes(stage, count, fill = sex)) +
+  geom_col(position = position_dodge(width = 0.8)) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal()
+
+# Filled (proportions)
+ggplot(d, aes(stage, count, fill = sex)) +
+  geom_col(position = "fill") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal()
+```
+
+## Output & Results
+
+Three views of the same disease-stage-by-sex data: a stacked bar showing the total cases per stage decomposed by sex, a dodged bar enabling direct sex-vs-sex comparison within stage, and a filled bar showing the female-to-male proportion balance across stages with the y-axis as a percentage.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Stacked bars show total case counts per stage decomposed by sex; dodged bars display male and female counts side by side for direct comparison within each stage; filled bars normalise to 100 % to expose the sex proportion across stages." Always describe which layout was chosen and why; it is the most common source of bar-chart misreading.
+
+## Practical Tips
+
+- Stacked bars communicate totals cleanly but obscure within-stage comparisons because the segments above the first sub-bar do not start at zero — readers cannot judge their lengths accurately.
+- Dodged bars need adequate bar width and stage spacing; with three or more fill levels, the figure widens quickly and benefits from `coord_flip()` for horizontal layouts.
+- Filled bars hide absolute counts entirely; pair them with a text or table summary giving the per-stage $n$.
+- For more than four fill levels, stacking and dodging both become hard to read; consider a heatmap, a faceted small-multiple, or a Sankey diagram instead.
+- Order fill levels deliberately (`forcats::fct_relevel()`); the legend reads top-to-bottom and the bar reads bottom-to-top, so the visual flow depends on factor order.
+- Use `geom_text(aes(label = count), position = position_stack(vjust = 0.5))` to label segments with their counts when the total alone is not enough.
+
+## R Packages Used
+
+`ggplot2` for `geom_bar()`, `geom_col()`, and the `position_*` family; `forcats` for factor reordering of the fill levels; `scales` for percent and comma label formatters; `ggalluvial` for flow-style alternatives when stacked bars at three or more levels become confusing.

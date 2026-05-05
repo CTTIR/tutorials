@@ -1,0 +1,65 @@
+---
+title: rstanarm
+date: "2026-04-17"
+description: Pre-compiled Stan models with a frequentist-like R interface
+categories:
+  - Bayesian Statistics
+  - rstanarm
+  - stan
+  - bayesian-glm
+---
+
+## Introduction
+
+`rstanarm` is a sister package to `brms` from the Stan team. Where `brms` translates each formula into a fresh Stan program and compiles it on the fly, `rstanarm` ships with a fixed catalogue of pre-compiled models — `stan_lm`, `stan_glm`, `stan_glmer`, `stan_polr`, `stan_betareg`, and a handful of others — that match the most common R regression interfaces. The trade-off is straightforward: no compilation latency at fit time, weakly informative defaults curated by experts, and a learning curve identical to base-R modelling functions, in exchange for less flexibility when the model deviates from the standard catalogue.
+
+## Prerequisites
+
+A working knowledge of generalised linear models, an idea of what a prior and a posterior are, and comfort with R's `lm()` / `glm()` / `lmer()` syntax. No C++ toolchain is needed beyond what installing the package itself requires, since the Stan models are pre-compiled.
+
+## Theory
+
+Each `stan_*` function is a thin R wrapper around a Stan program that has been compiled when the package was built. The program already includes weakly informative default priors centred at zero with scales determined by the standard deviation of each predictor. Override defaults through the `prior`, `prior_intercept`, `prior_aux`, and `prior_covariance` arguments, each accepting one of `normal()`, `student_t()`, `cauchy()`, `laplace()`, `exponential()`, or `decov()`. Because the priors are scaled to the predictors, the same numerical scale (e.g. `normal(0, 2.5)`) is sensible across very different predictor ranges.
+
+## Assumptions
+
+The assumptions of the underlying GLM or GLMM apply: linearity in the linear predictor, independence after grouping, the appropriate link / variance relationship for the family. Convergence ($\hat R < 1.01$, no divergent transitions) is a precondition for trusting the posterior summary that `rstanarm` returns.
+
+## R Implementation
+
+```r
+library(rstanarm)
+
+set.seed(2026)
+d <- data.frame(y = rnorm(100), x = rnorm(100))
+
+# Same syntax as lm() but Bayesian
+fit <- stan_glm(y ~ x, data = d,
+                prior = normal(0, 2.5),
+                prior_intercept = normal(0, 5),
+                prior_aux = exponential(1),
+                chains = 4, iter = 2000, refresh = 0)
+summary(fit)
+posterior_interval(fit, prob = 0.95)
+```
+
+## Output & Results
+
+`summary(fit)` lists the posterior mean, standard deviation, 10 / 50 / 90 % quantiles, mean posterior predictive checks (PPP), $\hat R$, and effective sample size for each parameter. `posterior_interval()` returns the requested credible interval. Because the same Stan program is reused, fits typically take seconds rather than minutes.
+
+## Interpretation
+
+A reporting sentence: "A Bayesian linear regression (`stan_glm`, weakly informative priors, four chains × 2,000 iterations) estimated the slope at 0.47 (95 % CrI 0.27 to 0.68); the posterior overlaps the OLS point estimate but quantifies the residual uncertainty rather than just standard errors." Compared with frequentist output, the credible interval has the direct probability interpretation that students often (incorrectly) assign to confidence intervals.
+
+## Practical Tips
+
+- Use `prior_summary(fit)` to verify exactly which priors were applied — the auto-scaling can surprise you when predictors are on unusual scales.
+- For mixed models, `stan_glmer()` mirrors `lme4::glmer()` syntax including correlated random slopes.
+- `pp_check(fit)` provides graphical posterior predictive checks; `bayes_R2()` returns the Bayesian counterpart of $R^2$ as a posterior distribution.
+- `loo(fit)` and `waic(fit)` attach information criteria with Pareto-$k$ diagnostics, ready for `loo_compare()` between models.
+- When the model you need is not in the catalogue (for example, custom likelihoods, censored data, ordinal-with-arbitrary-link), reach for `brms` or raw Stan; `rstanarm` is deliberately scoped.
+- For very small datasets, prefer `student_t(df = 3)` priors over `normal()` to reduce posterior sensitivity to a single influential observation.
+
+## R Packages Used
+
+`rstanarm` for the pre-compiled Stan models, `bayesplot` for diagnostic plots underlying `pp_check()`, `loo` for cross-validation, and `posterior` for working with the underlying draws.

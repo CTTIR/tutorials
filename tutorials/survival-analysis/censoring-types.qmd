@@ -1,0 +1,74 @@
+---
+title: Censoring Types
+date: "2026-04-17"
+description: "Right, left, interval, and informative censoring in time-to-event data"
+categories:
+  - Survival Analysis
+  - censoring
+  - right-censored
+  - interval-censored
+---
+
+## Introduction
+
+Censoring is the defining feature of survival data: the exact event time is unknown but partially observed, because follow-up ended, the event was screened periodically, or the subject was lost to observation. Handling censoring correctly is what separates survival analysis from ordinary regression on time-to-event endpoints. The wrong censoring assumption is one of the most consequential analytic errors in clinical studies, so identifying the censoring type and choosing methods that respect it is the first step of any time-to-event workflow.
+
+## Prerequisites
+
+A working understanding of time-to-event concepts, follow-up windows, and the difference between an event and an end-of-follow-up timestamp.
+
+## Theory
+
+The main censoring categories:
+
+- **Right censoring**: the event had not yet occurred when observation ended. The most common type, the default in clinical trials.
+- **Left censoring**: the event occurred before the first observation; the exact time is unknown but is in $[0, t_{\text{first observation}}]$.
+- **Interval censoring**: the event occurred within a known interval $(L, R]$, typical in studies with periodic check-ups.
+
+Two design-based subtypes of right censoring:
+
+- **Type I**: fixed follow-up time; censoring time is identical for all administratively censored subjects.
+- **Type II**: follow until a pre-specified number of events occur; censoring time depends on the data realisation.
+
+**Informative censoring** is the most dangerous failure mode: the censoring mechanism is related to the underlying event risk (e.g., subjects drop out because they are doing badly). It violates the independence assumption that nearly every standard method requires and can severely bias estimates without warning.
+
+## Assumptions
+
+Non-informative censoring conditional on covariates included in the model. If censoring depends on prognosis through unobserved variables, sensitivity analyses (informative-censoring bounds, multiple imputation) are needed.
+
+## R Implementation
+
+```r
+library(survival)
+
+# Right-censored data: time and status
+Surv(time = c(5, 8, 12, 6), event = c(1, 1, 0, 1))
+
+# Interval-censored: event occurred between left and right
+Surv(time = c(5, 8), time2 = c(10, 12), type = "interval2")
+
+# Counting-process style (time-varying covariates): start, stop, status
+Surv(time = c(0, 5, 10), time2 = c(5, 10, 15), event = c(0, 0, 1),
+     type = "counting")
+```
+
+## Output & Results
+
+`Surv` objects display censoring through a `+` suffix on right-censored times, brackets for interval-censored intervals, and pairs for counting-process intervals. Every downstream survival function (`survfit`, `coxph`, `survreg`) takes a `Surv` object as the response and dispatches on its censoring type.
+
+## Interpretation
+
+A reporting sentence: "Of 228 patients, 165 (72 %) experienced the event and 63 (28 %) were administratively right-censored at study end (median follow-up 310 days, range 5 to 1,022). No interval-censored or left-censored events were present. Censoring is assumed non-informative; a sensitivity analysis under tipping-point assumptions confirmed conclusions are robust to plausible departures." Always quantify censoring and discuss its assumed mechanism.
+
+## Practical Tips
+
+- Right censoring is the default; specifying other types requires the `type` argument to `Surv()`.
+- Interval-censored data require `icenReg` or `survival` with `Surv(L, R, type = "interval2")`; treating intervals as exact event times biases estimates.
+- Check for informative censoring by comparing baseline characteristics of censored vs event subjects; large differences are a warning sign.
+- Distinguish administrative censoring (study end) from loss to follow-up (subject left); the two have different mechanisms and warrant separate sensitivity analyses.
+- Plot censoring patterns: a histogram of censoring times alongside event times often reveals administrative cut-offs and dropout clusters that affect interpretation.
+- For competing risks, treating competing events as censoring is itself a censoring choice; cumulative incidence analysis avoids it.
+
+## R Packages Used
+
+`survival` for `Surv()` with all censoring types and the standard estimators; `icenReg` for interval-censored regression; `cmprsk` and `tidycmprsk` for competing-risks alternatives; `epi` for tools targeted at epidemiological censoring scenarios.

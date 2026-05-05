@@ -1,0 +1,65 @@
+---
+title: "STAR: Spliced Alignment"
+date: "2026-04-17"
+description: Fast splice-aware RNA-seq aligner capable of detecting novel junctions
+categories:
+  - Bioinformatics
+  - star
+  - spliced-alignment
+  - rna-seq
+---
+
+## Introduction
+
+STAR (Spliced Transcripts Alignment to a Reference) is the de facto standard short-read RNA-seq aligner. It is designed specifically for the splice-aware alignment problem: reads from mature mRNA cross exon-exon junctions, and a naive aligner that requires contiguous matches misses these split alignments and misclassifies them as multi-mappers or unaligned. STAR's seed-extend algorithm splits reads at candidate junctions, aligns the segments to the reference genome, and assembles them into spliced alignments — including across novel (unannotated) junctions.
+
+## Prerequisites
+
+A working understanding of RNA-seq experimental design, the difference between mRNA and DNA sequencing, and basic familiarity with sequence alignment concepts.
+
+## Theory
+
+STAR's two-pass mapping is the standard mode: the first pass aligns each read independently and accumulates a list of candidate splice junctions; the second pass adds those junctions to the reference index and re-aligns, producing more accurate spliced alignments especially across novel junctions. The output is a BAM file plus a tab-separated splice-junction summary (`SJ.out.tab`).
+
+STAR also supports chimeric alignment for fusion-gene detection (reads spanning two distinct genomic loci), expectation-maximisation-based multi-mapper resolution, and stranded alignment when library protocols preserve transcript orientation.
+
+## Assumptions
+
+Short RNA-seq reads (typically 50–150 bp Illumina); a reference genome and (preferably) a gene annotation in GTF format; sufficient memory — STAR's index for human genome takes about 30 GB of RAM.
+
+## R Implementation
+
+```r
+library(Rsubread)
+
+# Rsubread::align is Subjunc (splice-aware) or align
+# index <- "subread_index"
+# buildindex(basename = index, reference = "genome.fa")
+
+# Splice-aware alignment
+# align(index = index, readfile1 = "reads.fastq.gz",
+#       output_file = "aligned.bam",
+#       type = "rna", useAnnotation = TRUE,
+#       annot.inbuilt = "hg38")
+```
+
+## Output & Results
+
+The primary output is a BAM file containing spliced alignments and a `SJ.out.tab` file summarising splice junctions detected (including their support count and annotation status). For typical RNA-seq experiments, 90–95 % of reads align uniquely; a much lower rate signals contamination, library-prep problems, or annotation mismatch.
+
+## Interpretation
+
+A reporting sentence: "STAR (v2.7.10a) two-pass alignment to GRCh38 with the GENCODE v44 annotation aligned 94 % of reads uniquely; 2.3 million splice junctions were detected, of which 98 % matched annotated junctions, suggesting limited novel splicing in the experimental conditions." Always report the genome assembly, annotation version, and unique-mapping rate.
+
+## Practical Tips
+
+- STAR needs about 30 GB of RAM for the human genome index; for smaller genomes (yeast, bacteria), it runs comfortably on a laptop.
+- Two-pass mode (`twopassMode = "Basic"`) is standard for novel-junction detection; the first-pass-only mode is faster but less accurate.
+- For transcript-level quantification, pair STAR alignments with RSEM, Salmon, or Kallisto; the BAM is the input to abundance estimation.
+- HISAT2 is a faster, lower-memory alternative aligner with similar accuracy; use it when memory is constrained.
+- Pseudo-aligners (Salmon, Kallisto) skip the BAM-producing alignment entirely; faster but less suitable when isoform-level alignments are needed (variant calling, fusion detection).
+- Use a reference GTF annotation to improve junction accuracy; novel-junction detection works without it but is more error-prone.
+
+## R Packages Used
+
+`Rsubread` provides splice-aware alignment via `subjunc` and feature counting via `featureCounts`; `Rsamtools` and `GenomicAlignments` for downstream BAM manipulation; `tximport` for importing transcript-level abundance estimates from Salmon, Kallisto, or RSEM into Bioconductor; STAR itself is a command-line tool but its output integrates with all standard R/Bioconductor RNA-seq workflows.

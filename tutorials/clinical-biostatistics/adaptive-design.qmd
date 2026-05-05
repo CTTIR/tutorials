@@ -1,0 +1,69 @@
+---
+title: Adaptive Trial Designs
+date: "2026-04-17"
+description: Pre-specified modifications to trial conduct based on interim data
+categories:
+  - Clinical Biostatistics
+  - adaptive
+  - design
+  - re-estimation
+---
+
+## Introduction
+
+Adaptive designs allow pre-specified modifications -- sample size, randomisation ratios, treatment-arm selection -- based on data accrued during the trial. They promise efficiency but require careful statistical control to preserve Type I error. The FDA and EMA both provide detailed guidance on acceptable adaptive modifications.
+
+## Prerequisites
+
+Group-sequential trials; alpha spending; sample-size calculation.
+
+## Theory
+
+Common adaptive features:
+- **Sample-size re-estimation** (blinded or unblinded).
+- **Early stopping** for efficacy or futility.
+- **Arm selection** (drop inferior arms in multi-arm trials).
+- **Response-adaptive randomisation** (shift allocation toward effective arms).
+- **Population enrichment** (restrict to a responsive subgroup).
+
+Maintaining Type I error under pre-specified adaptations requires methods like group-sequential boundaries, combination tests, or conditional error functions.
+
+## Assumptions
+
+Adaptation rules are fully pre-specified (protocol, SAP); unblinded information access is tightly controlled (Data Monitoring Committee); adjustments are statistically valid.
+
+## R Implementation
+
+```r
+library(rpact)
+
+# Group-sequential design with O'Brien-Fleming boundary, 3 analyses
+design <- getDesignGroupSequential(
+  sided = 2, alpha = 0.025, beta = 0.2,
+  typeOfDesign = "OF",
+  informationRates = c(0.5, 0.75, 1)
+)
+kable_summary <- summary(design)
+print(design)
+
+# Plan sample size for a two-arm trial with continuous outcome
+ssr <- getSampleSizeMeans(design = design,
+                          alternative = 0.3, stDev = 1)
+print(ssr)
+```
+
+## Output & Results
+
+Group-sequential boundaries and associated sample sizes per stage; cumulative Type I error preserved at alpha.
+
+## Interpretation
+
+"The adaptive design applied O'Brien-Fleming boundaries at 50 %, 75 %, and 100 % information; stage-1 interim inefficacy boundary would stop at p > 0.0002, preserving overall alpha = 0.025."
+
+## Practical Tips
+
+- Pre-specify every adaptation (including the decision rule) in the protocol.
+- FDA/EMA require a detailed justification of the adaptive feature and its operating characteristics.
+- Independent data monitoring committee is essential for efficacy or futility stopping.
+- Simulation is often used to verify operating characteristics; report them.
+- Post-hoc adaptations ("seamless" trial extensions) are exploratory, not confirmatory.

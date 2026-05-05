@@ -1,0 +1,70 @@
+---
+title: Random-Intercept Models
+date: "2026-04-17"
+description: Mixed model with cluster-specific intercepts but common slopes
+categories:
+  - "Regression & Modelling"
+  - random-intercept
+  - mixed-effects
+  - icc
+---
+
+## Introduction
+
+A random-intercept model allows each cluster (subject, hospital, school) its own baseline intercept while constraining all clusters to share the same regression slope. It is the simplest mixed-effects model and the natural starting point for repeated-measures, longitudinal, or clustered data. The single new parameter beyond ordinary regression — the variance of the random intercept — captures between-cluster heterogeneity in baseline level and is the primary handle for partial pooling and intraclass correlation.
+
+## Prerequisites
+
+A working understanding of mixed-effects models, the difference between fixed and random effects, and basic familiarity with `lme4` formula syntax.
+
+## Theory
+
+The random-intercept model is
+
+$$Y_{ij} = \beta_0 + u_i + \beta_1 X_{ij} + \varepsilon_{ij}, \qquad u_i \sim \mathcal N(0, \sigma_u^2), \qquad \varepsilon_{ij} \sim \mathcal N(0, \sigma^2).$$
+
+The cluster-specific intercept $\beta_0 + u_i$ varies around the population intercept $\beta_0$ with variance $\sigma_u^2$. The intraclass correlation coefficient is
+
+$$\rho = \frac{\sigma_u^2}{\sigma_u^2 + \sigma^2},$$
+
+interpretable as the proportion of total variance attributable to between-cluster differences. A high ICC ($> 0.30$) indicates substantial cluster-level structure; a low ICC ($< 0.05$) suggests the random effect is unnecessary and ordinary regression suffices.
+
+## Assumptions
+
+Random intercepts are independent and Normally distributed across clusters; residuals are independent and Normal conditional on random effects; all clusters share a common slope (relax via random slopes when this fails).
+
+## R Implementation
+
+```r
+library(lme4); library(lmerTest)
+
+data(sleepstudy, package = "lme4")
+fit <- lmer(Reaction ~ Days + (1 | Subject), data = sleepstudy)
+summary(fit)
+
+# ICC
+vc <- as.data.frame(VarCorr(fit))
+icc <- vc$vcov[1] / sum(vc$vcov)
+icc
+```
+
+## Output & Results
+
+`summary(fit)` reports the fixed effects (common slope and population intercept) with `lmerTest`-supplied $p$-values, plus the random-intercept SD and residual SD. The ICC is computed from the variance components and is the primary single-number summary of cluster-level structure.
+
+## Interpretation
+
+A reporting sentence: "A random-intercept model estimated the population-level slope at 10.47 ms per day of sleep deprivation (95 % CI 8.92 to 12.02, $p < 0.001$); between-subject variation in baseline reaction time was substantial ($\hat\sigma_u = 37$ ms), with intraclass correlation 0.39 indicating that 39 % of total variance is attributable to between-subject differences." Always report the ICC alongside fixed effects.
+
+## Practical Tips
+
+- Always report the ICC; it is the headline measure of cluster-level structure and tells readers whether the random-intercept model was warranted.
+- For small numbers of clusters ($< 5$), random-effect variance estimates are unstable; consider a simpler model with fixed effects per cluster, or move to Bayesian estimation with weakly informative priors.
+- Compare against a no-random-effects model via likelihood-ratio test (with the $\chi^2_0$ / $\chi^2_1$ mixture reference for the boundary null).
+- Use `confint(fit, method = "profile")` for profile-likelihood confidence intervals on random-effect variances; Wald intervals are unreliable on the boundary.
+- If slopes clearly vary across clusters (visible in spaghetti plots), add random slopes via `(1 + X | cluster)`; reporting only random intercepts when slopes vary biases inference.
+- For non-Gaussian outcomes, the same syntax extends via `glmer()` with the appropriate family.
+
+## R Packages Used
+
+`lme4` for `lmer()`, `glmer()`, and `VarCorr()`; `lmerTest` for Satterthwaite or Kenward-Roger $p$-values; `performance::icc()` for tidy ICC computation; `pbkrtest::PBmodcomp()` for parametric-bootstrap LRTs; `glmmTMB` for an alternative implementation that handles complex error structures.

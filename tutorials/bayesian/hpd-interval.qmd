@@ -1,0 +1,65 @@
+---
+title: Highest Posterior Density Interval
+date: "2026-04-17"
+description: Shortest interval containing a specified posterior probability mass
+categories:
+  - Bayesian Statistics
+  - hpd
+  - credible-interval
+  - posterior
+---
+
+## Introduction
+
+The highest posterior density (HPD) interval is the narrowest range that contains a chosen probability mass — typically 95 % — under a posterior distribution. Two intervals can both cover 95 % of the posterior, yet the HPD will always be at least as short as the equal-tailed interval (ETI) and will include only those parameter values whose density is above some threshold. For unimodal posteriors the two intervals are similar; for skewed or bimodal posteriors they can disagree dramatically, and the choice between them shapes how readers perceive the result.
+
+## Prerequisites
+
+A working understanding of posterior distributions and credible intervals, and access to MCMC draws (via `brms`, `rstanarm`, raw Stan, or any other sampler).
+
+## Theory
+
+For a posterior $p(\theta \mid y)$, the $(1-\alpha)$ HPD region is
+
+$$\{\theta : p(\theta \mid y) \ge h\}, \quad \text{with } h \text{ such that } P(\theta \in \text{region}) = 1 - \alpha.$$
+
+For a unimodal posterior this region is a single interval centred near the mode; for a multimodal posterior it can be a union of disjoint intervals, one per mode that exceeds the threshold. The ETI, by contrast, places the same tail probability $\alpha/2$ in each tail, so for a skewed posterior it shifts toward the heavier tail and is wider. HPD therefore favours the shape of the posterior; ETI favours interpretability and invariance to monotone transformations.
+
+## Assumptions
+
+Adequate MCMC draws (after warm-up, with $\hat R$ near 1.00) or a closed-form posterior density. The HPD is sensitive to noisy density estimates in the tails, so very short chains can yield unstable interval endpoints.
+
+## R Implementation
+
+```r
+library(HDInterval)
+
+set.seed(2026)
+theta <- c(rbeta(5000, 5, 15), rbeta(5000, 15, 5))  # bimodal
+
+# Equal-tailed (may span both modes)
+quantile(theta, c(0.025, 0.975))
+
+# HPD (disjoint regions)
+hdi(theta, credMass = 0.95, allowSplit = TRUE)
+```
+
+## Output & Results
+
+`hdi()` returns a numeric vector of two endpoints when the HPD is a single interval, or a matrix of begin / end pairs when `allowSplit = TRUE` and the posterior is multimodal. `quantile()` returns the ETI for direct comparison; the gap between ETI and HPD widths is the most direct numerical signal of posterior asymmetry.
+
+## Interpretation
+
+A reporting sentence: "The 95 % HPD interval for $\theta$ was $(0.13, 0.38) \cup (0.60, 0.89)$, reflecting the bimodal posterior; the equal-tailed interval $(0.13, 0.89)$ obscures this structure by including the low-density valley between modes." When the posterior is unimodal and roughly symmetric, the two intervals will agree and the choice does not matter; when they disagree, prefer the one whose definition matches the inferential question — HPD for "where does the posterior concentrate?" and ETI for "what range of values is at most 2.5 % above / below the truth?"
+
+## Practical Tips
+
+- Set `allowSplit = TRUE` whenever multimodality is plausible; a single interval reported across modes can be misleading.
+- HPD is *not* invariant under non-linear reparameterisation: the HPD for $\sigma^2$ is not in general the square of the HPD for $\sigma$, while the ETI quantile-based interval is. Decide on the reporting scale before computing the interval.
+- For bounded parameters (probabilities, variances) the HPD often touches the boundary; report this explicitly so readers know the posterior is not symmetric there.
+- Use post-warm-up MCMC draws and check that the chains have mixed; HPD endpoints are noisier than means, so bigger effective sample sizes help.
+- `bayestestR::hdi()` provides a similar interface and integrates with model objects from `brms`, `rstanarm`, and `posterior`.
+
+## R Packages Used
+
+`HDInterval` for the canonical `hdi()` function with `allowSplit`, `bayestestR` for an integrated wrapper around model objects, and `posterior` for handling MCMC draw arrays consistently across backends.

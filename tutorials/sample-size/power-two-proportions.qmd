@@ -1,0 +1,73 @@
+---
+title: Power for Two-Proportion Test
+date: "2026-04-17"
+description: Sample size for comparing proportions between two independent groups
+categories:
+  - "Sample Size & Power"
+  - power
+  - two-proportion
+  - cohen-h
+  - unequal-n
+---
+
+## Introduction
+
+Comparing proportions between two independent groups is one of the most common designs in clinical research, public-health epidemiology, and quality-control. Whenever the primary outcome is binary — event vs no event, response vs non-response, success vs failure — the trial's sample-size calculation reduces to a two-proportion power analysis. Several closely-related approaches are widely used: Cohen's arcsine-transformed effect size $h$ that maps cleanly to a Normal-approximation formula, direct sample-size formulas in the original-proportion scale (e.g., Kelsey's formula with continuity correction), and exact Fisher-based methods for rare events. The choice depends on the expected event rates, the desired allocation ratio, and the regulatory or methodological context.
+
+## Prerequisites
+
+A working understanding of the two-proportion test, the arcsine variance-stabilising transformation, and Cohen's $h$ as the standardised effect-size measure for proportion-difference designs.
+
+## Theory
+
+Cohen's $h$ is the arcsine-transformed proportion difference
+
+$$h = 2 \arcsin\sqrt{p_1} - 2 \arcsin\sqrt{p_2}.$$
+
+For balanced two-arm designs, the sample size per group at two-sided $\alpha$ and power $1 - \beta$ is approximately
+
+$$n \approx 2 \left(\frac{z_{1-\alpha/2} + z_{1-\beta}}{h}\right)^2 \text{ per group}.$$
+
+For unequal allocation with ratio $k = n_2 / n_1$, the total sample size grows by a factor $(1 + 1/k)(1 + k)/4$ relative to the balanced minimum. Cohen's benchmarks for $h$ are 0.20 (small), 0.50 (medium), and 0.80 (large).
+
+## Assumptions
+
+The two groups are independent, the standard Normal-approximation conditions $np \geq 10$ and $n(1-p) \geq 10$ are satisfied for each group, and the proportions under the alternative hypothesis are pre-specified.
+
+## R Implementation
+
+```r
+library(pwr); library(Hmisc)
+
+pwr.2p.test(h = ES.h(0.20, 0.10), sig.level = 0.05, power = 0.80)
+
+bsamsize(p1 = 0.20, p2 = 0.10, alpha = 0.05, power = 0.80)
+
+pwr.2p2n.test(h = ES.h(0.20, 0.10), n1 = 100, sig.level = 0.05)
+n1_fix <- 100
+n2_vals <- seq(40, 300, 10)
+pw <- sapply(n2_vals, function(n2)
+  pwr.2p2n.test(h = ES.h(0.20, 0.10), n1 = n1_fix, n2 = n2)$power)
+n2_vals[which(pw >= 0.80)[1]]
+```
+
+## Output & Results
+
+`pwr.2p.test()` returns the per-group sample size at specified $h$, $\alpha$, and power; `Hmisc::bsamsize()` provides the same calculation directly in the original-proportion scale. For $p_1 = 0.20$ vs $p_2 = 0.10$ at 80 % power, $n \approx 199$ per group (398 total). The unequal-allocation analysis shows that fixing $n_1 = 100$ requires roughly $n_2 = 280$ to maintain 80 % power, illustrating the inefficiency of imbalanced designs.
+
+## Interpretation
+
+A reporting sentence: "To detect a difference in event rates from 10 % (historical control) to 20 % (active treatment) at $\alpha = 0.05$ two-sided with 80 % power, 199 patients per arm are required (398 total) under a 1:1 allocation. The protocol enrols 440 patients to allow for 10 % attrition. Sensitivity analyses across $p_2 \in [0.15, 0.25]$ yield required per-arm $n$ from 392 to 105, bracketing the assumed effect; the conservative end of this range was used to justify the operational sample size." Always report the assumed proportions and the allocation ratio.
+
+## Practical Tips
+
+- Equal allocation (1:1) is most efficient for detecting a difference between two proportions; unequal allocation (2:1, 3:1) costs 10–30 % more total $n$ for the same power and is justified only when the cost or feasibility of the two arms differs substantially.
+- For rare events ($p < 0.01$ in either arm), the Normal-approximation formulas are unreliable; use exact Fisher's-test-based power calculations or simulation, available in `Exact::power.exact.test()` or via Monte Carlo enumeration.
+- Continuity correction (Yates) inflates the required sample size slightly and is the historical default for $2 \times 2$ chi-squared tests; modern practice often omits it for likelihood-ratio or score tests, so verify what your software is computing.
+- For cluster-randomised designs, inflate the calculated $n$ by the design effect $1 + (\bar m - 1) \mathrm{ICC}$, where $\bar m$ is the average cluster size and ICC is the intraclass correlation; ignoring clustering grossly under-powers cluster trials.
+- Cohen's $h$ benchmarks (0.20 / 0.50 / 0.80) are useful for translating effect-size language into sample-size expectations, but tying the calculation to the actual expected proportions via `ES.h(p1, p2)` is more defensible than invoking the benchmarks directly.
+- For non-inferiority or equivalence designs, the calculation differs from a superiority test; use `pwr.2p.test()` with the appropriate margin or specialised tools like `bsamsize()` with non-inferiority arguments.
+
+## R Packages Used
+
+`pwr::pwr.2p.test()` and `pwr::pwr.2p2n.test()` for canonical Cohen's $h$ Normal-approximation calculations; `Hmisc::bsamsize()` for direct-proportion-scale calculations with optional continuity correction; `Exact::power.exact.test()` for exact-binomial power across small-sample two-proportion designs; `clusterPower` for cluster-randomised two-proportion power; `Mediana` for trial-design simulation including two-proportion power across complex designs.

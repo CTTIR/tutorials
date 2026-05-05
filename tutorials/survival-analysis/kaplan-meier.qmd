@@ -1,0 +1,84 @@
+---
+title: Kaplan-Meier Estimation
+date: "2026-04-17"
+description: "Non-parametric estimation of the survival function from right-censored data, with confidence intervals and group comparisons"
+categories:
+  - Survival Analysis
+  - kaplan-meier
+  - survival-function
+  - censoring
+  - log-rank-test
+---
+
+## Introduction
+
+The Kaplan-Meier (KM) estimator is the non-parametric maximum-likelihood estimator of the survival function from right-censored time-to-event data. Its signature step-function plot is the single most recognisable figure in clinical research. The estimator makes no distributional assumption about the time-to-event variable; it simply accumulates the conditional probability of surviving each observed event time.
+
+## Prerequisites
+
+The reader should understand that a survival analysis studies time until an event, and that "right censoring" means some subjects are observed only up to a point before their event has occurred. Familiarity with R's `survival` package is not required but helps.
+
+## Theory
+
+Let $t_1 < t_2 < \ldots < t_k$ denote the distinct event times observed in the data. At time $t_j$, let $d_j$ be the number of events and $n_j$ the number of subjects still at risk (not yet having had the event and not yet censored). The Kaplan-Meier estimator of the survival function is
+
+$$\hat{S}(t) = \prod_{j : t_j \leq t} \left(1 - \frac{d_j}{n_j}\right).$$
+
+The estimator is a step function that drops at each event time by the fraction of the at-risk set experiencing the event. Censored subjects contribute to the risk set up to their censoring time but do not cause drops.
+
+The standard-error estimator due to Greenwood is
+
+$$\widehat{\text{Var}}[\hat{S}(t)] = \hat{S}(t)^2 \sum_{j : t_j \leq t} \frac{d_j}{n_j (n_j - d_j)}.$$
+
+Pointwise confidence intervals are typically constructed on the complementary log-log scale to ensure they lie in $[0, 1]$.
+
+The **log-rank test** compares survival between two or more groups. It sums the observed-minus-expected events at each event time across groups, yielding a test statistic that follows a $\chi^2_{k-1}$ distribution under the null hypothesis of equal survival functions.
+
+## Assumptions
+
+Kaplan-Meier estimation assumes:
+
+1. Censoring is **non-informative** -- subjects who are censored at time $t$ have the same future risk as those who remain under observation. Violated when, for example, patients drop out because they feel worse.
+2. Subjects are independent.
+3. Risk of event does not depend on calendar time beyond what covariates capture (important when accrual spans a long period).
+
+## R Implementation
+
+```r
+library(survival)
+library(survminer)
+
+data(lung, package = "survival")
+
+fit <- survfit(Surv(time, status) ~ sex, data = lung)
+
+print(fit)
+
+ggsurvplot(fit,
+           data = lung,
+           conf.int = TRUE,
+           pval = TRUE,
+           risk.table = TRUE,
+           legend.labs = c("Male", "Female"),
+           xlab = "Days from diagnosis",
+           ylab = "Survival probability",
+           palette = "Set2")
+```
+
+The `Surv()` call packages the time and event-indicator columns into a single survival object; `survfit()` with a right-hand side of `sex` produces separate KM curves for each sex. `ggsurvplot()` draws the curves with pointwise confidence bands, a log-rank p-value, and a risk table below.
+
+## Output & Results
+
+The `lung` dataset has 138 male and 90 female patients with advanced lung cancer. The KM median survival is 270 days for males (95% CI 212 to 310) and 426 days for females (95% CI 348 to 550). The log-rank test gives $\chi^2_1 = 10.3$, $p = 0.0013$, indicating a significantly higher survival for females.
+
+## Interpretation
+
+Reporting follows the CONSORT conventions: "Median overall survival was 270 days (95% CI 212-310) for males and 426 days (95% CI 348-550) for females; log-rank $p = 0.001$ (Figure X)." The figure should always be shown with a risk table beneath it -- the curve is nearly meaningless once the number at risk drops below a handful.
+
+## Practical Tips
+
+- Always include a risk table. Survival curves at late follow-up with only 2 or 3 subjects remaining can swing wildly and mislead readers.
+- Do not rely on the median alone as a comparison statistic; if the curves cross, the median can flip direction as the study matures.
+- The log-rank test is most powerful when the proportional-hazards assumption holds. For curves that cross or diverge late, consider the Renyi (weighted) log-rank or a restricted mean survival time comparison.
+- Do not attempt a KM estimate without an event in the at-risk set; the curve will simply be flat at 1.
+- When follow-up is short relative to the event rate, many subjects will be censored and the KM estimate at late times will have wide confidence bands. Report the cumulative event count at a clinically relevant landmark (1-year, 5-year) rather than the tail of the curve.

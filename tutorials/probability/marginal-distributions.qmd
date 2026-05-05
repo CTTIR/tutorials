@@ -1,0 +1,98 @@
+---
+title: Marginal Distributions
+date: "2026-04-17"
+description: Recovering the distribution of a single variable from a joint distribution by integrating out the others
+categories:
+  - Probability Theory
+  - marginal
+  - integration
+  - joint
+---
+
+## Introduction
+
+Given a joint distribution of several random variables, the marginal distribution of any one of them is obtained by integrating (or summing) out the others. Marginalisation is the probability-theoretic version of "don't care": collapsing multi-dimensional information into a single dimension.
+
+## Prerequisites
+
+Joint distributions, integration/summation over probability densities.
+
+## Theory
+
+For a joint density $f_{X,Y}(x, y)$:
+
+$$f_X(x) = \int_{-\infty}^{\infty} f_{X,Y}(x, y) \, dy.$$
+
+Analogously, for a joint PMF: $p_X(x) = \sum_y p_{X,Y}(x, y)$.
+
+The joint CDF gives marginals by pushing the other argument to infinity: $F_X(x) = F_{X,Y}(x, \infty)$.
+
+**Key property**: the marginals do not determine the joint. Many joint distributions share the same marginals but differ in dependence structure (verified by Sklar's theorem: marginals + copula = joint).
+
+For a multivariate normal, the marginal of each component is univariate normal with the corresponding mean and variance; more generally, any subset of a multivariate normal is multivariate normal.
+
+## Assumptions
+
+Integrability of the joint density; otherwise standard probability-space assumptions.
+
+## R Implementation
+
+```r
+library(mvtnorm)
+set.seed(2026)
+
+# Bivariate normal with correlation 0.6
+Sigma <- matrix(c(1, 0.6, 0.6, 1), 2, 2)
+XY <- rmvnorm(5000, sigma = Sigma)
+
+# Marginal distributions of X and Y
+c(mean_X = mean(XY[, 1]), sd_X = sd(XY[, 1]),
+  mean_Y = mean(XY[, 2]), sd_Y = sd(XY[, 2]))
+
+# Each marginal is standard normal regardless of correlation
+ks.test(XY[, 1], "pnorm")
+ks.test(XY[, 2], "pnorm")
+
+# Demonstrate: same marginals, different joints
+# Joint 1: correlation 0.6 (bivariate normal)
+# Joint 2: same marginals but comonotonic (perfect rank correlation)
+U <- pnorm(XY[, 1])   # uniform marginal via probability integral transform
+X1 <- qnorm(U); Y1 <- qnorm(U)   # perfectly dependent copy
+cov(XY)
+cov(cbind(X1, Y1))
+```
+
+## Output & Results
+
+```
+   mean_X      sd_X    mean_Y      sd_Y
+   0.0099    1.0050   -0.0027    1.0018
+
+        One-sample Kolmogorov-Smirnov test
+D = 0.012, p-value = 0.4672          # X marginal matches N(0,1)
+
+        One-sample Kolmogorov-Smirnov test
+D = 0.015, p-value = 0.2132          # Y marginal matches N(0,1)
+
+          [,1]      [,2]
+[1,]     1.00     0.61
+[2,]     0.61     1.00
+
+          X1       Y1
+X1       1.00     1.00       # comonotonic: correlation 1 with same marginals
+Y1       1.00     1.00
+```
+
+Same marginals (both standard normal), very different joint distributions: correlation 0.6 versus perfect dependence.
+
+## Interpretation
+
+In reporting, marginal summaries (marginal mean, SD) are usually what Table 1 presents. When dependence matters -- pair-of-eyes measurements, twin pairs, repeated measures -- a marginal analysis is incomplete and must be complemented with joint or conditional reporting.
+
+## Practical Tips
+
+- Always report marginals alongside any joint analysis; they provide basic sanity checks.
+- Marginalisation is trivial for multivariate normals: take the relevant subvector of the mean and the submatrix of the covariance.
+- For continuous joint densities without closed form, marginalise numerically via `integrate()` or Monte Carlo.
+- Empirical marginals are obtained by projection: for a sample $\{(X_i, Y_i)\}$, the marginal sample of $X$ is $\{X_i\}$.
+- In latent-variable models, marginalising over the latent gives the observed-data likelihood -- the central quantity in EM and MCMC.

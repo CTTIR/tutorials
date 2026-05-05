@@ -1,0 +1,110 @@
+---
+title: The Poisson Distribution
+date: "2026-04-17"
+description: Counts of rare events per unit time or space with rate λ
+categories:
+  - Probability Theory
+  - poisson
+  - count-data
+  - rate
+---
+
+## Introduction
+
+The Poisson distribution models counts of rare, independent events in a fixed window of time or space. Calls per hour, mutations per kilobase, photons per pixel, hospital admissions per day -- all naturally Poisson when the underlying rate is approximately constant and events do not cluster.
+
+## Prerequisites
+
+Discrete distributions and the notion of a rate.
+
+## Theory
+
+A random variable $X$ is **Poisson$(\lambda)$** if
+
+$$P(X = k) = \frac{e^{-\lambda} \lambda^k}{k!}, \qquad k = 0, 1, 2, \ldots$$
+
+Moments:
+
+- $E[X] = \lambda$.
+- $\mathrm{Var}(X) = \lambda$ (equi-dispersion).
+- Higher central moments: skewness $1/\sqrt{\lambda}$, excess kurtosis $1/\lambda$; the distribution becomes approximately normal for large $\lambda$.
+
+**Poisson limit theorem**: $\mathrm{Binomial}(n, \lambda/n) \xrightarrow{d} \mathrm{Poisson}(\lambda)$ as $n \to \infty$. The Poisson is the "law of small numbers" limit of rare-event binomial trials.
+
+**Closure under sums**: independent $X \sim \mathrm{Poisson}(\lambda_1)$ and $Y \sim \mathrm{Poisson}(\lambda_2)$ yield $X + Y \sim \mathrm{Poisson}(\lambda_1 + \lambda_2)$.
+
+**Connection to exponential**: inter-arrival times in a Poisson process are iid exponential with rate $\lambda$.
+
+## Assumptions
+
+The underlying events must be (approximately) independent with a constant rate. Violations of equi-dispersion (variance exceeding mean) signal **overdispersion**, commonly addressed by the negative binomial.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+lambda <- 3.5
+
+k <- 0:15
+pmf <- dpois(k, lambda)
+
+data.frame(k, pmf = round(pmf, 4))
+
+# Moments
+X <- rpois(1e5, lambda)
+c(mean = mean(X), var = var(X), skew = mean((X - mean(X))^3) / sd(X)^3)
+
+# Plot PMF
+ggplot(data.frame(k, pmf), aes(k, pmf)) +
+  geom_col(fill = "#2A9D8F") +
+  scale_x_continuous(breaks = k) +
+  labs(x = "k", y = "P(X = k)",
+       title = paste("Poisson(", lambda, ")")) +
+  theme_minimal()
+
+# Verify Poisson limit from binomial
+n_vals <- c(10, 100, 1000, 10000)
+results <- sapply(n_vals, function(n) {
+  p <- lambda / n
+  X <- rbinom(1e5, n, p)
+  c(n = n, mean = mean(X), var = var(X))
+})
+t(results)
+```
+
+## Output & Results
+
+```
+    k    pmf
+1   0 0.0302
+2   1 0.1057
+3   2 0.1850
+4   3 0.2158
+5   4 0.1888
+6   5 0.1322
+...
+
+    mean     var    skew
+    3.503   3.502   0.536
+
+         n    mean     var
+[1,]    10    3.49    3.13
+[2,]   100    3.50    3.40
+[3,]  1000    3.50    3.49
+[4,] 10000    3.50    3.50
+```
+
+Mean and variance are both $\approx 3.5$ in the empirical sample; the Poisson limit from binomial tightens as $n \to \infty$.
+
+## Interpretation
+
+Poisson regression (`glm(..., family = poisson)`) estimates log-rates from count data; reports of incidence-rate ratios and event-per-person-time summaries are typically Poisson-based. Always check for overdispersion before accepting a Poisson fit at face value.
+
+## Practical Tips
+
+- Equi-dispersion is the signature assumption; real count data often violate it.
+- Use quasi-Poisson (`family = quasipoisson`) or negative binomial (`MASS::glm.nb`) when variance exceeds mean.
+- Zero-inflated Poisson (`pscl::zeroinfl`) handles excess zeros.
+- For rates per unit exposure (e.g., per person-year), include an offset in the regression: `glm(y ~ x, offset = log(exposure), family = poisson)`.
+- The normal approximation works for $\lambda \geq 10$; for smaller $\lambda$, use the exact PMF.

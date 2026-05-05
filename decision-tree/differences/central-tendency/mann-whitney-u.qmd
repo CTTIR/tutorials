@@ -94,15 +94,3 @@ Rank-biserial correlation $r_{rb}$ = $2 \times U / (n_1 n_2) - 1$. Range $[-1, 1
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 00747d2adc7e4822a6935888fd80a3de -->
-<img src="https://vg09.met.vgwort.de/na/00747d2adc7e4822a6935888fd80a3de"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

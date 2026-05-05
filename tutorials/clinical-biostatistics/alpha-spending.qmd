@@ -1,0 +1,74 @@
+---
+title: Alpha-Spending Functions
+date: "2026-04-17"
+description: Flexible interim alpha allocation via Lan-DeMets spending functions
+categories:
+  - Clinical Biostatistics
+  - alpha-spending
+  - lan-demets
+  - group-sequential
+---
+
+## Introduction
+
+Alpha-spending functions (Lan & DeMets, 1983) allow interim analyses at unscheduled times while preserving overall Type I error. The spending function $f(t)$ specifies the cumulative alpha budget at information fraction $t \in [0, 1]$; nominal alpha at each analysis is the increment $f(t_k) - f(t_{k-1})$.
+
+## Prerequisites
+
+Group-sequential designs; information fraction.
+
+## Theory
+
+Common spending functions:
+- **OF-type**: $f(t) = 2 - 2\Phi(z_{\alpha/2} / \sqrt{t})$. Approximates the OF boundary.
+- **Pocock-type**: $f(t) = \alpha \log(1 + (e - 1) t)$. Approximates Pocock.
+- **Power family**: $f(t) = \alpha t^\rho$ with $\rho > 0$.
+- **Custom**: any non-decreasing $f$ with $f(0) = 0, f(1) = \alpha$.
+
+Flexibility: interim analyses can occur at arbitrary information fractions, re-solving the boundary each time.
+
+## Assumptions
+
+Information fractions are known (approximately); stopping rule applied as specified; test statistic is normal.
+
+## R Implementation
+
+```r
+library(rpact)
+
+# OF spending, flexible information fractions
+design <- getDesignGroupSequential(
+  sided = 1, alpha = 0.025, beta = 0.2,
+  typeOfDesign = "asOF",          # alpha-spending OF-type
+  informationRates = c(0.4, 0.75, 1)
+)
+
+print(design$stageLevels)
+plot(design, type = 1)
+
+# Compare spending functions
+f_of  <- getDesignGroupSequential(sided = 1, alpha = 0.025,
+                                  typeOfDesign = "asOF",
+                                  informationRates = seq(0.1, 1, 0.1))
+f_poc <- getDesignGroupSequential(sided = 1, alpha = 0.025,
+                                  typeOfDesign = "asP",
+                                  informationRates = seq(0.1, 1, 0.1))
+cbind(OF = cumsum(f_of$stageLevels),
+      Pocock = cumsum(f_poc$stageLevels))
+```
+
+## Output & Results
+
+Cumulative alpha at each information fraction for both spending families; OF delays alpha consumption, Pocock distributes it earlier.
+
+## Interpretation
+
+"The alpha-spending design at information fractions 0.4, 0.75, 1.0 under OF-type spending allocated cumulative alpha of 0.001, 0.013, 0.025 respectively, enabling flexibility in interim timing without inflating Type I error."
+
+## Practical Tips
+
+- Alpha spending is the **standard** for modern confirmatory group-sequential trials.
+- Re-estimate information fractions at each interim if accrual deviates from plan.
+- Information is usually subject-count for continuous outcomes, event-count for time-to-event.
+- Never spend more alpha than the planned cumulative function at the current information fraction.
+- For futility, use separate **beta-spending** functions (non-binding boundaries are standard).

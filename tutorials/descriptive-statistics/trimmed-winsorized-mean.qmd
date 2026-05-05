@@ -1,0 +1,74 @@
+---
+title: Trimmed and Winsorised Means
+date: "2026-04-17"
+description: Robust location estimators that compromise between the mean and the median
+categories:
+  - Descriptive Statistics
+  - trimmed-mean
+  - winsorized-mean
+  - robust
+  - location
+---
+
+## Introduction
+
+A trimmed mean drops a proportion of observations from each tail before computing the mean. A Winsorised mean replaces those observations with the nearest non-trimmed values and then averages. Both estimators compromise between the arithmetic mean (efficient but sensitive to outliers) and the median (robust but inefficient). They are useful when the data are heavy-tailed but you want to retain most of the sample's information.
+
+## Prerequisites
+
+The reader should know what the arithmetic mean and the median are.
+
+## Theory
+
+For a sample of size $n$ and a trim proportion $\alpha \in [0, 0.5)$:
+
+- **Trimmed mean**: sort the data, discard the smallest and largest $\lfloor n\alpha \rfloor$ observations, and average the rest.
+- **Winsorised mean**: replace the smallest $\lfloor n\alpha \rfloor$ values with the $(\lfloor n\alpha \rfloor + 1)$-th smallest, and similarly at the upper end; then compute the mean.
+
+Special cases: $\alpha = 0$ gives the arithmetic mean; $\alpha = 0.5$ gives the median (exactly for odd $n$, almost for even $n$). A 10% or 20% trim is a common compromise.
+
+Trimmed means have a positive breakdown point (proportional to $\alpha$): a trim of 20% tolerates up to 20% contamination without being affected. Winsorised means have the same breakdown but retain the influence of the replaced values through their "pinning" behaviour.
+
+## Assumptions
+
+These estimators are descriptive; no distributional assumption. Their *efficiency* depends on the distribution: the 20% trimmed mean is nearly as efficient as the arithmetic mean under normality but much more robust under heavy tails.
+
+## R Implementation
+
+```r
+library(psych)
+library(DescTools)
+
+set.seed(2026)
+x <- c(rnorm(48, mean = 50, sd = 8), 200, 250)  # two outliers
+
+mean(x)
+median(x)
+mean(x, trim = 0.10)
+mean(x, trim = 0.20)
+DescTools::Winsorize(x, probs = c(0.10, 0.90)) |> mean()
+```
+
+## Output & Results
+
+```
+[1] 56.62       # arithmetic mean (pulled up by outliers)
+[1] 50.30       # median
+[1] 51.82       # 10% trimmed mean
+[1] 50.78       # 20% trimmed mean
+[1] 51.50       # 10% Winsorised mean
+```
+
+The trimmed and Winsorised means align closely with the median, demonstrating their robustness. The arithmetic mean is dragged up by the two extreme points.
+
+## Interpretation
+
+Report a trimmed or Winsorised mean when outliers are present, their exclusion is justified, and you want a more efficient summary than the median. Explicitly state the trim proportion.
+
+## Practical Tips
+
+- The 10% trim is a useful default; 20% is stronger but loses efficiency.
+- Don't let the trim serve as a clean-up for genuine heterogeneity; investigate the outliers first.
+- Inference for trimmed means requires a Yuen test (`WRS2::yuen`) rather than the usual t-test.
+- Winsorising is preferred when you want to retain the sample size but soften the influence of extremes.
+- Combined with robust scale (MAD, Sn), the trimmed mean / SD pair gives a fully robust location / spread summary.

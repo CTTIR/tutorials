@@ -1,0 +1,80 @@
+---
+title: GARCH Models
+date: "2026-04-17"
+description: "Conditional heteroscedasticity models: volatility clustering in financial and other series"
+categories:
+  - Time Series Analysis
+  - garch
+  - volatility
+  - conditional-variance
+---
+
+## Introduction
+
+GARCH (Generalised Autoregressive Conditional Heteroscedasticity) models capture time-varying conditional variance — the volatility clustering pattern in which quiet periods alternate with volatile ones. Financial returns are the prototypical application: stock prices show stretches of low daily variability punctuated by high-volatility crisis episodes, a structure that conditional-Normal ARMA models cannot accommodate. GARCH extends ARMA by adding an autoregressive equation for the conditional variance itself, making volatility a forecastable quantity.
+
+## Prerequisites
+
+A working understanding of ARMA models, conditional distributions, and the distinction between unconditional and conditional variance.
+
+## Theory
+
+The GARCH(1, 1) model decomposes returns as
+
+$$r_t = \mu + \varepsilon_t, \qquad \varepsilon_t = \sigma_t z_t, \quad z_t \sim \mathcal N(0, 1),$$
+
+with the conditional variance evolving as
+
+$$\sigma_t^2 = \omega + \alpha \varepsilon_{t-1}^2 + \beta \sigma_{t-1}^2.$$
+
+The mean structure can be combined with an ARMA component; GARCH specifically models the variance of the innovations. Stationary unconditional variance requires $\alpha + \beta < 1$; values close to 1 indicate highly persistent volatility (typical for daily financial returns).
+
+Extensions handle asymmetric responses to positive vs negative shocks (EGARCH, TGARCH, APARCH), variance feedback into the mean (GARCH-M), and multivariate volatility (DCC, BEKK). For non-Normal returns, $t$- or skewed-$t$-distributed innovations are standard.
+
+## Assumptions
+
+Conditional Normality (or $t$, skewed-$t$) of innovations $z_t$; stationarity of the conditional variance ($\alpha + \beta < 1$); the chosen GARCH order is appropriate for the data.
+
+## R Implementation
+
+```r
+library(rugarch)
+
+# Simulate GARCH(1,1) returns
+spec <- ugarchspec(variance.model = list(model = "sGARCH", garchOrder = c(1, 1)),
+                   mean.model = list(armaOrder = c(0, 0), include.mean = TRUE),
+                   distribution.model = "norm")
+
+set.seed(2026)
+sim <- ugarchpath(spec = ugarchspec(
+  variance.model = list(garchOrder = c(1, 1)),
+  mean.model = list(armaOrder = c(0, 0))),
+  n.sim = 500)
+r <- as.numeric(fitted(sim))
+
+# Fit
+fit <- ugarchfit(spec, data = r)
+show(fit)
+plot(fit, which = 3)   # conditional sd
+```
+
+## Output & Results
+
+`ugarchfit()` returns parameter estimates ($\omega, \alpha, \beta$, mean parameters), log-likelihood, AIC/BIC, and Ljung-Box-style tests on standardised and squared standardised residuals. The conditional-standard-deviation plot shows the time-varying volatility extracted by the model.
+
+## Interpretation
+
+A reporting sentence: "A GARCH(1, 1) fit to daily returns estimated $\hat\omega = 0.0001$, $\hat\alpha = 0.08$, $\hat\beta = 0.91$ ($\hat\alpha + \hat\beta = 0.99$, very persistent volatility); standardised residuals showed no remaining ARCH effects (Ljung-Box on squared residuals $p = 0.42$). Conditional-volatility forecasts widen modestly over the 30-day horizon." Always report the persistence sum and standardised-residual diagnostics.
+
+## Practical Tips
+
+- Check standardised residuals (`residuals(fit, standardize = TRUE)`); they should be approximately iid and often heavier-tailed than Normal, motivating $t$ or skewed-$t$ innovations.
+- For asymmetric responses to positive vs negative shocks (the leverage effect in equity returns), use EGARCH or TGARCH; standard GARCH is symmetric and misses this.
+- `rugarch` is the industry standard for univariate GARCH; for multivariate volatility (covariance matrices), `rmgarch` extends to DCC, BEKK, and copula-GARCH.
+- Value-at-Risk forecasts come from the conditional-variance forecast plus a quantile of the innovation distribution; `ugarchforecast()` and `ugarchroll()` support rolling VaR estimation.
+- GARCH on returns is conventional, but the framework applies to any series with volatility clustering — physiological signals, atmospheric data, traffic counts.
+- For very long series, the parameter estimates can be stable but the conditional-volatility series may need recursive re-estimation; use `ugarchroll()` for genuine out-of-sample evaluation.
+
+## R Packages Used
+
+`rugarch` for univariate GARCH and its many extensions; `rmgarch` for multivariate GARCH (DCC, BEKK); `fGarch` as an alternative implementation; `bayesGARCH` for Bayesian GARCH; `tsgarch` for the modern tidyverse-flavoured interface.

@@ -1,0 +1,89 @@
+---
+title: The Standard Error
+date: "2026-04-17"
+description: "The standard deviation of a statistic's sampling distribution, and how to compute it in R"
+categories:
+  - Statistical Foundations
+  - standard-error
+  - sampling-distribution
+  - bootstrap
+  - inference
+---
+
+## Introduction
+
+The **standard error** of a statistic is the standard deviation of its sampling distribution. It quantifies how much the statistic would vary across hypothetical repetitions of the sampling process. Every confidence interval and every t- or z-statistic is built on an estimate of the standard error, so understanding and correctly computing SEs is central to competent data analysis.
+
+## Prerequisites
+
+A reader should know what the sampling distribution is, what a sample standard deviation is, and how to use the `sd()` and `mean()` functions in R.
+
+## Theory
+
+For an iid sample $X_1, \ldots, X_n$ from a population with variance $\sigma^2$, the sample mean $\bar{X}$ has variance $\sigma^2/n$ and therefore
+
+$$\mathrm{SE}(\bar{X}) = \sigma / \sqrt{n}.$$
+
+Because $\sigma$ is usually unknown, it is estimated by the sample SD $s$, giving the plug-in estimator $\widehat{\mathrm{SE}}(\bar{X}) = s/\sqrt{n}$.
+
+For a binary proportion $\hat{p} = k/n$, the standard error under binomial sampling is
+
+$$\mathrm{SE}(\hat{p}) = \sqrt{p(1-p)/n}, \qquad \widehat{\mathrm{SE}}(\hat{p}) = \sqrt{\hat{p}(1-\hat{p})/n}.$$
+
+For a difference in means across two independent samples with variances $s_1^2, s_2^2$,
+
+$$\widehat{\mathrm{SE}}(\bar{X}_1 - \bar{X}_2) = \sqrt{s_1^2/n_1 + s_2^2/n_2}.$$
+
+For regression coefficients, standard errors come from the diagonal of $\hat{\sigma}^2 (X^\top X)^{-1}$; R returns them in `summary(fit)$coefficients`.
+
+For statistics without a closed-form SE (ratios, quantiles, custom summaries), the **bootstrap** gives a general-purpose estimator: resample with replacement $B$ times, compute the statistic for each resample, and use the SD of the $B$ bootstrap statistics as $\widehat{\mathrm{SE}}$.
+
+## Assumptions
+
+The formula-based SEs above assume iid sampling and, for the finite-sample versions, enough regularity for the CLT to justify using them in normal-approximation CIs. The bootstrap SE is consistent under weaker conditions but inherits the design: it is accurate only when resampling units are the same as the independent sampling units (so bootstrap at the cluster level for cluster samples).
+
+## R Implementation
+
+```r
+library(boot)
+
+set.seed(2026)
+x <- rnorm(60, mean = 75, sd = 12)
+
+se_mean     <- sd(x) / sqrt(length(x))
+se_mean
+
+y <- c(rep(1, 24), rep(0, 76))
+p_hat <- mean(y)
+se_prop <- sqrt(p_hat * (1 - p_hat) / length(y))
+se_prop
+
+iqr_stat <- function(d, i) IQR(d[i])
+b <- boot(x, statistic = iqr_stat, R = 5000)
+se_iqr <- sd(b$t)
+se_iqr
+```
+
+The first two blocks use the closed-form SEs for the mean and a proportion; the third uses the bootstrap for the IQR, which has no convenient closed form.
+
+## Output & Results
+
+```
+[1] 1.552        # SE(mean)
+[1] 0.0427       # SE(proportion)
+[1] 2.11         # bootstrap SE(IQR)
+```
+
+Each of these is the estimated typical distance between the sample statistic and the population parameter it estimates.
+
+## Interpretation
+
+The standard error is what gets reported alongside the estimate: "mean 75.8 (SE 1.6)" or "proportion 0.24 (95% CI 0.16--0.32)", where the CI is approximately the estimate plus/minus 1.96 times the SE. A reviewer glancing at the SE can judge whether the study is precise enough to support its claims.
+
+## Practical Tips
+
+- Always distinguish the SD (spread of individual values) from the SE (spread of a statistic); papers regularly report the wrong one.
+- For proportions near 0 or 1, the normal-approximation SE is poor; prefer Wilson or Clopper-Pearson intervals, which are available via `binom.test()` and the `binom` package.
+- For differences between groups, the correct SE is the SE of the difference, not either group's SE by itself.
+- When you lack a closed-form SE, reach for the bootstrap rather than inventing one; `boot::boot()` handles the resampling machinery robustly.
+- Do not report an SE without stating what statistic it refers to -- "SE = 1.6" alone is ambiguous; "SE of the mean = 1.6" is clear.

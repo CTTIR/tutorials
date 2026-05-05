@@ -1,0 +1,75 @@
+---
+title: Integration with Harmony
+date: "2026-04-17"
+description: Removing batch effects in scRNA-seq while preserving biological variation
+categories:
+  - Bioinformatics
+  - scrnaseq
+  - integration
+  - harmony
+---
+
+## Introduction
+
+Datasets from different batches, donors, or technologies cluster by batch rather than biology without correction. Integration methods align shared cell types across datasets while preserving dataset-specific populations. Harmony iteratively centres cell embeddings by batch; Seurat's CCA/RPCA anchors cells between batches.
+
+## Prerequisites
+
+Multiple scRNA-seq datasets with shared cell populations; normalised expression; PCA embeddings.
+
+## Theory
+
+**Harmony** alternates (i) soft cluster assignment in PCA space, (ii) per-cluster batch centroid computation, (iii) shifting cells within each cluster by its batch-specific correction vector. Converges in a few iterations and scales to millions of cells.
+
+**Seurat CCA/RPCA integration** finds anchor pairs across datasets via mutual nearest neighbours in a shared low-dimensional space and uses anchors to transform embeddings.
+
+## Assumptions
+
+Shared cell types span batches; batch effects are corrective in PCA space; biology and batch are not perfectly confounded.
+
+## R Implementation
+
+```r
+library(harmony); library(Seurat)
+
+set.seed(2026)
+# Simulate two batches with shared biology + batch shift
+n <- 150
+batch <- rep(c("A", "B"), each = n)
+
+counts <- matrix(rpois(300 * 200, lambda = 2), 200, 300)
+rownames(counts) <- paste0("g", 1:200)
+colnames(counts) <- paste0("c", 1:300)
+counts[, batch == "B"] <- counts[, batch == "B"] + 3   # batch effect
+
+so <- CreateSeuratObject(counts)
+so$batch <- batch
+so <- NormalizeData(so, verbose = FALSE)
+so <- FindVariableFeatures(so, nfeatures = 100, verbose = FALSE)
+so <- ScaleData(so, verbose = FALSE)
+so <- RunPCA(so, npcs = 10, verbose = FALSE)
+
+so <- RunHarmony(so, group.by.vars = "batch", dims.use = 1:10,
+                 verbose = FALSE)
+so <- RunUMAP(so, reduction = "harmony", dims = 1:10, verbose = FALSE)
+so <- FindNeighbors(so, reduction = "harmony", dims = 1:10, verbose = FALSE)
+so <- FindClusters(so, resolution = 0.3, verbose = FALSE)
+
+table(Batch = so$batch, Cluster = Idents(so))
+```
+
+## Output & Results
+
+A Harmony-corrected embedding; after clustering, batches should be represented in each cluster (shared cell types) rather than segregating by batch.
+
+## Interpretation
+
+"After Harmony integration, all seven major cell types contained cells from both donors (mixing LISI = 1.84 / 2.0), indicating successful batch correction without over-mixing."
+
+## Practical Tips
+
+- Use Harmony for speed; CCA/RPCA for heavier anchor-based correction when batches have unique cell types.
+- Quantify integration quality with kBET, LISI, or silhouette by batch vs cell type.
+- Never integrate across tissues; integrate within tissue with donors/batches as covariates.
+- Over-integration destroys biology; always inspect cell-type marker expression post-integration.
+- Batch as a fixed effect in the DE model is an alternative to explicit embedding integration for focused comparisons.

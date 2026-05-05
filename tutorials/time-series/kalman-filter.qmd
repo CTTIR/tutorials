@@ -1,0 +1,74 @@
+---
+title: The Kalman Filter
+date: "2026-04-17"
+description: Recursive optimal estimation for linear-Gaussian state-space models
+categories:
+  - Time Series Analysis
+  - kalman
+  - filtering
+  - state-space
+---
+
+## Introduction
+
+The Kalman filter is the workhorse algorithm for state-space models with linear-Gaussian observation and transition equations. It recursively combines the previous state estimate with each new observation to produce an updated state estimate together with its uncertainty, in a closed-form Gaussian update that is provably optimal under the linear-Gaussian assumptions. Originally developed for aerospace tracking, it now underpins virtually every classical time-series filtering application — economic indicators, signal processing, target tracking, financial volatility estimation.
+
+## Prerequisites
+
+A working understanding of state-space models, linear algebra, and the multivariate Normal distribution.
+
+## Theory
+
+For a linear-Gaussian state-space model with observation $y_t = F x_t + v_t$ and transition $x_t = G x_{t-1} + w_t$, the Kalman filter alternates two steps at each time:
+
+**Predict**:
+$$x_{t \mid t-1} = G x_{t-1 \mid t-1}, \qquad P_{t \mid t-1} = G P_{t-1 \mid t-1} G^\top + W.$$
+
+**Update**:
+$$x_{t \mid t} = x_{t \mid t-1} + K_t (y_t - F x_{t \mid t-1}), \qquad P_{t \mid t} = (I - K_t F) P_{t \mid t-1},$$
+
+with Kalman gain $K_t = P_{t \mid t-1} F^\top (F P_{t \mid t-1} F^\top + V)^{-1}$.
+
+The smoother (Rauch-Tung-Striebel) is a backward recursion that combines forward filter estimates with future observations to produce smoothed estimates $x_{t \mid T}$. Non-linear extensions include the extended Kalman filter (linearisation around the current estimate) and the unscented Kalman filter (sigma-point sampling); particle filters handle fully non-Gaussian and non-linear models via Monte Carlo.
+
+## Assumptions
+
+Linear Gaussian observation and transition equations with known parameters $(F, G, V, W)$. Parameters can be estimated by MLE on the innovations.
+
+## R Implementation
+
+```r
+library(dlm)
+
+# Local-level model on Nile
+mod <- dlmModPoly(order = 1, dV = 15100, dW = 1470)
+filt <- dlmFilter(Nile, mod)
+
+plot(Nile)
+lines(dropFirst(filt$m), col = "red", lwd = 2)
+
+# Smoother
+smo <- dlmSmooth(filt)
+lines(dropFirst(smo$s), col = "blue", lwd = 2)
+```
+
+## Output & Results
+
+`dlmFilter()` returns the filtered state estimates ($x_{t \mid t}$) and their covariances. `dlmSmooth()` produces the retrospective smoothed estimates ($x_{t \mid T}$). Plotting both on the original series shows the filter's adaptation in real time and the smoother's retrospective best estimate.
+
+## Interpretation
+
+A reporting sentence: "The Kalman filter applied to the Nile river-flow series produced one-step-ahead forecasts (filtered states) that adapt to each new observation; the smoothed estimate, using the full series in retrospect, identified a sharp level drop near 1899 that the forward filter takes several years to track." Distinguish filtered (real-time) from smoothed (retrospective) estimates in any report.
+
+## Practical Tips
+
+- For non-linear models, use the extended Kalman filter (`KFAS::EKF` or hand-coded) for mild non-linearity, the unscented Kalman filter for stronger non-linearity, or particle filters (`SMCSamplers`, `SMC2`) for arbitrary non-linear / non-Gaussian models.
+- Uncertainty propagates naturally through both predict and update steps; report state estimates with their estimated standard errors.
+- The log-likelihood of the model can be computed from the innovations (`dlmLL` in `dlm`) and used for MLE-based parameter estimation; the Kalman filter is the engine, MLE is the parameter-fitting wrapper.
+- The choice of initial state $x_{0 \mid 0}$ and initial variance $P_{0 \mid 0}$ matters for the first few time steps; diffuse initialisation ($P_{0 \mid 0}$ very large) is the standard choice when no prior information is available.
+- For extremely high-dimensional state spaces (large meteorological models), the ensemble Kalman filter approximates the covariance with a low-rank ensemble; standard Kalman fails in that setting.
+- Pair filtering with diagnostic checks on the innovations (one-step-ahead residuals); they should be approximately white noise under correct model specification.
+
+## R Packages Used
+
+`dlm` for `dlmFilter()`, `dlmSmooth()`, and `dlmLL()`; `KFAS` for fast filtering with non-Gaussian observations; `FKF` for the fast Kalman filter implementation; `bsts` for Bayesian structural time-series alternatives; `nimble` for hand-built non-linear filters via probabilistic programming.

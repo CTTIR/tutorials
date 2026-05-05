@@ -1,0 +1,79 @@
+---
+title: Poisson Regression
+date: "2026-04-17"
+description: Log-linear count regression with rates and offsets
+categories:
+  - "Regression & Modelling"
+  - poisson
+  - count-regression
+  - offset
+  - rate
+---
+
+## Introduction
+
+Poisson regression models count data with a log link, making it the canonical GLM for events per unit exposure: hospital admissions per month, mutations per kilobase, falls per resident-year. The log-linear structure means coefficients are interpretable as log-rate ratios, and the model accommodates varying exposures naturally through an offset term. The defining assumption — equidispersion, $\mathrm{Var}(Y) = \mathbb E[Y]$ — is also its main limitation: real count data are typically overdispersed, and either quasi-Poisson, negative binomial, or zero-inflated extensions are then required.
+
+## Prerequisites
+
+A working understanding of the Poisson distribution, generalised linear models, the log link, and the role of an offset for modelling rates rather than counts.
+
+## Theory
+
+The model is $Y \sim \mathrm{Poisson}(\mu)$ with $\log \mu = X^\top \beta$. Exponentiated coefficients are rate ratios: $\exp(\beta_j)$ multiplies the expected count per unit increase in $X_j$, all else equal. For rate-per-exposure problems, an offset of $\log(\text{exposure})$ converts the model into a rate model:
+
+$$\log \mathbb E[Y] = \log(\text{exposure}) + X^\top \beta.$$
+
+The offset's coefficient is fixed at 1, so the remaining $\beta$ represent log-rate ratios per unit covariate change.
+
+Equidispersion is the central assumption; if the variance exceeds the mean, standard errors are underestimated and inference is anti-conservative. Pearson chi-squared divided by residual degrees of freedom is the standard dispersion check; values much greater than 1 motivate quasi-Poisson or negative binomial.
+
+## Assumptions
+
+Non-negative integer outcomes, independent observations, equidispersion (variance equal to mean), and a linear relationship between covariates and the log-rate.
+
+## R Implementation
+
+```r
+library(broom)
+
+# Simulated: event counts per patient-year
+set.seed(2026)
+d <- data.frame(
+  age = rnorm(300, 60, 12),
+  smoker = rbinom(300, 1, 0.3),
+  exposure_years = runif(300, 0.5, 5)
+)
+d$events <- rpois(nrow(d),
+  lambda = d$exposure_years * exp(-2 + 0.02 * d$age + 0.6 * d$smoker))
+
+fit <- glm(events ~ age + smoker, data = d, family = poisson,
+           offset = log(exposure_years))
+tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+glance(fit)
+
+# Check overdispersion
+dispersion <- sum(resid(fit, type = "pearson")^2) / fit$df.residual
+dispersion
+```
+
+## Output & Results
+
+`tidy(fit, exponentiate = TRUE)` returns rate ratios and confidence intervals; `glance()` provides AIC, deviance, and other model-level summaries. The dispersion ratio close to 1 confirms Poisson is appropriate; values $\gg 1$ suggest overdispersion that needs different family handling.
+
+## Interpretation
+
+A reporting sentence: "After adjusting for age (rate ratio 1.02 per year, 95 % CI 1.01 to 1.03), smokers had an event rate 1.81 times that of non-smokers (95 % CI 1.40 to 2.34, $p < 0.001$); the dispersion ratio of 1.05 is consistent with the Poisson assumption." Always report rate ratios on the multiplicative scale and check dispersion.
+
+## Practical Tips
+
+- Check the dispersion statistic immediately after fitting; if $\gg 1$, switch to quasi-Poisson (`family = quasipoisson`) for inflated SEs or to negative binomial (`MASS::glm.nb`) for explicit overdispersion modelling.
+- Include an offset whenever exposure varies across observations; without it, coefficients absorb the exposure variation and are biased.
+- Coefficients are on the log-rate scale; exponentiate for rate ratios in publication-friendly units.
+- For excessive zero counts beyond what Poisson predicts, fit a zero-inflated or hurdle model (`pscl::zeroinfl`, `glmmTMB`).
+- For count data with hierarchical structure (repeated measures, clustered observations), use Poisson mixed models (`glmer(family = poisson)` or `glmmTMB(family = poisson)`).
+- Pearson residuals should look approximately uniformly scattered; systematic patterns suggest model misspecification (missing covariates, non-linear effects, overdispersion).
+
+## R Packages Used
+
+Base R `glm()` with `family = poisson`; `MASS::glm.nb()` for negative binomial; `pscl::zeroinfl()` for zero-inflated Poisson; `glmmTMB` for mixed-effects Poisson, NB, and zero-inflated count models with cleaner overdispersion handling; `broom::tidy()` and `glance()` for tidy summaries.

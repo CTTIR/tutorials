@@ -1,0 +1,65 @@
+---
+title: Power for ICC
+date: "2026-04-17"
+description: Sample size for the intraclass correlation coefficient in reliability studies
+categories:
+  - "Sample Size & Power"
+  - power
+  - icc
+  - reliability
+  - continuous-rating
+---
+
+## Introduction
+
+The intraclass correlation coefficient (ICC) is the standard reliability statistic for continuous ratings — agreement between raters on quantitative scales, test-retest stability, instrument repeatability across multiple measurements per subject. Sample-size planning for an ICC study depends on the number of subjects, the number of raters or replicate measurements per subject, the target ICC value to detect (or estimate), and whether the goal is hypothesis testing (rejecting a null ICC value) or precision (achieving a target confidence-interval width). Both questions admit closed-form solutions under standard assumptions, and explicit power planning is now expected for any prospective reliability study aiming for FDA, IVDR, or guideline acceptance.
+
+## Prerequisites
+
+A working understanding of ICC variants — one-way random ICC(1,1), two-way random ICC(2,1), two-way mixed ICC(3,1), single-measurement vs average-measurement variants — and the distinction between hypothesis-testing and precision-based sample-size questions.
+
+## Theory
+
+Following Walter, Eliasziw, and Donner (1998), the sample size for testing $H_0: \rho \leq \rho_0$ against $H_1: \rho \geq \rho_1$ with $k$ raters or measurements per subject and target power $1 - \beta$ has a closed-form expression based on the $F$-distribution under the variance-component decomposition. For precision-based planning, the approximate formula
+
+$$n \approx \frac{(1 - \rho^2)^2 \cdot 8 \cdot (k - 1)}{\epsilon^2 \cdot k}$$
+
+gives the number of subjects needed for a 95 % CI half-width of $\epsilon$ around the expected ICC $\rho$ — useful when the goal is a tight reliability estimate rather than rejecting a specific null.
+
+## Assumptions
+
+The outcome is continuous and approximately Normal, subjects are independent, and each subject is rated by the same $k$ raters (or measured at $k$ replicate occasions); the ICC variant assumed in the calculation matches the design (one-way random vs two-way random vs two-way mixed).
+
+## R Implementation
+
+```r
+library(ICC.Sample.Size)
+
+calculateIccSampleSize(p = 0.8, p0 = 0.6, k = 2,
+                       alpha = 0.05, tails = 2, power = 0.80)
+
+k <- 2; rho <- 0.75; eps <- 0.1
+n_prec <- (1 - rho^2)^2 * 8 * (k - 1) / (eps^2 * k)
+ceiling(n_prec)
+```
+
+## Output & Results
+
+`calculateIccSampleSize()` returns the required number of subjects for the hypothesis test. For ICC$_1 = 0.8$ vs ICC$_0 = 0.6$ at $k = 2$ raters, $n \approx 84$. The precision-based calculation gives roughly 19 subjects for a 95 % CI half-width of 0.10 around an expected ICC of 0.75 — a much smaller sample because precision tolerates a wider range than rejecting a specific null.
+
+## Interpretation
+
+A reporting sentence: "Each subject will be rated by two independent raters; $n = 84$ subjects are required for 80 % power to detect an ICC of 0.80 against a null hypothesis of ICC = 0.60 at two-sided $\alpha = 0.05$. The protocol enrols 100 subjects to allow for 15 % missing or unevaluable ratings. Sensitivity analyses show $n = 110$ for the more conservative null of 0.65 and $n = 65$ for $k = 3$ raters; the design report includes both alternatives in the supplement." Always state which ICC form and how many raters.
+
+## Practical Tips
+
+- More raters per subject reduces the required number of subjects, but at linear cost in rater-hours; the trade-off depends on the relative cost and availability of subjects vs raters and is project-specific.
+- Specify which ICC variant matches the design exactly — one-way random (ICC(1,1)) for fully crossed designs without rater identity, two-way random (ICC(2,1)) when raters are sampled from a population, two-way mixed (ICC(3,1)) when raters are fixed and chosen — because the sample-size formula and the analytic ICC differ across variants.
+- Small $n$ produces wide ICC confidence intervals; for reliability claims supporting clinical use, aim for a 95 % CI lower bound above 0.75 (good) or 0.90 (excellent), per Koo and Li (2016) recommendations.
+- Sensitivity analysis varying the expected $\rho$ across a realistic range is standard practice; protocols with a single point estimate of $\rho$ are increasingly flagged by reviewers, who expect an honest acknowledgement of uncertainty.
+- Published reliability studies historically have small samples and produce poorly characterised ICC estimates; planning conservatively (assuming $\rho$ at the lower end of pilot CIs) protects against under-powered ICC validation.
+- For agreement on categorical ratings, use Cohen's or Fleiss's kappa rather than ICC; the sample-size frameworks differ but the planning principles are analogous.
+
+## R Packages Used
+
+`ICC.Sample.Size::calculateIccSampleSize()` for canonical hypothesis-test sample-size calculation; `irr::icc()` and `psych::ICC()` for ICC analysis after data collection; `ICC` for advanced ICC inference and CI methods; `simr` for simulation-based ICC power across complex designs; `MBESS::ci.reliability()` for confidence-interval-driven sample-size planning across reliability statistics.

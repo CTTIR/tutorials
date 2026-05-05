@@ -1,0 +1,96 @@
+---
+title: Cochran-Mantel-Haenszel Test
+date: "2026-04-17"
+description: Stratified analysis of 2x2 tables across levels of a confounding variable
+categories:
+  - Inferential Statistics
+  - cmh
+  - stratified
+  - 2x2
+  - confounding
+---
+
+## Introduction
+
+The Cochran-Mantel-Haenszel (CMH) test combines 2x2 tables across levels of a stratifying variable, producing a pooled odds ratio and a single test of association adjusted for the stratifier. It is the categorical analogue of Mantel-Haenszel stratified analysis in epidemiology and of two-way ANOVA without interaction.
+
+## Prerequisites
+
+Fisher's exact test, chi-squared independence, odds ratios.
+
+## Theory
+
+Given $K$ 2x2 tables from $K$ strata, the CMH statistic is
+
+$$\chi^2_{\text{CMH}} = \frac{\left[\sum_k (a_k - E[a_k])\right]^2}{\sum_k \mathrm{Var}(a_k)} \sim \chi^2_1 \text{ under } H_0.$$
+
+Under the null of no association in any stratum, expected cell counts and variances are computed stratum by stratum.
+
+The Mantel-Haenszel pooled odds ratio is
+
+$$\widehat{OR}_{MH} = \frac{\sum_k a_k d_k / n_k}{\sum_k b_k c_k / n_k}.$$
+
+This weights strata so that smaller strata contribute less; it is a weighted average of stratum-specific ORs.
+
+The **Breslow-Day test** (or Woolf test) checks the assumption of homogeneity of the OR across strata. If homogeneity is rejected, the pooled OR is misleading.
+
+## Assumptions
+
+- Independent observations within strata.
+- Stratified 2x2 data.
+- Homogeneous OR across strata (for the pooled OR to be meaningful).
+
+## R Implementation
+
+```r
+# Three strata: age groups
+# Each stratum: 2x2 table of exposure vs. outcome
+tab <- array(c(30, 10,  5, 55,   # stratum 1
+               25, 15, 10, 50,   # stratum 2
+               20, 20, 15, 45),  # stratum 3
+             dim = c(2, 2, 3),
+             dimnames = list(Exposure = c("Yes", "No"),
+                             Outcome  = c("Event", "No"),
+                             Stratum  = paste0("S", 1:3)))
+
+mantelhaen.test(tab, correct = FALSE)
+
+# Pooled OR via epitools::oddsratio (Mantel-Haenszel)
+library(epitools)
+or_stratified <- lapply(1:3, function(k) oddsratio(tab[, , k])$measure)
+or_stratified
+
+# Breslow-Day test for OR homogeneity
+library(DescTools)
+BreslowDayTest(tab)
+```
+
+## Output & Results
+
+```
+        Mantel-Haenszel chi-squared test without continuity correction
+
+data:  tab
+Mantel-Haenszel X-squared = 67.5, df = 1, p-value < 2.2e-16
+alternative hypothesis: true common odds ratio is not equal to 1
+95 percent confidence interval: 4.82  13.87
+sample estimates: common odds ratio 8.17
+
+        Breslow-Day Test on Homogeneity of Odds Ratios
+
+X-squared = 1.5, df = 2, p-value = 0.47
+```
+
+Pooled OR = 8.17 (95 % CI 4.82 to 13.87); no evidence that stratum-specific ORs differ (Breslow-Day p = 0.47), so the pooled OR is a valid summary.
+
+## Interpretation
+
+Reporting: "In a Mantel-Haenszel stratified analysis across three age groups, the pooled odds ratio was 8.17 (95 % CI 4.82 to 13.87; $\chi^2_{MH}(1) = 67.5$, $p < 0.001$). The Breslow-Day test gave no evidence of heterogeneity of association across strata (p = 0.47)."
+
+## Practical Tips
+
+- Always test OR homogeneity (Breslow-Day) before reporting a pooled OR.
+- For heterogeneous strata, report stratum-specific ORs or model the interaction.
+- Logistic regression with the stratifier as a covariate is a more flexible modern alternative.
+- CMH also has a conditional logistic version (`survival::clogit`) for individually matched pairs.
+- Small strata may dominate the pooled estimate under MH weighting; inspect weights.

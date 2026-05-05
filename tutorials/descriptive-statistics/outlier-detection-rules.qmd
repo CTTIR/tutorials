@@ -1,0 +1,84 @@
+---
+title: Outlier Detection Rules
+date: "2026-04-17"
+description: "Univariate rules: 1.5·IQR fences, z-score thresholds, Hampel identifier, and Grubbs' test"
+categories:
+  - Descriptive Statistics
+  - outlier
+  - iqr-fence
+  - z-score
+  - hampel
+  - grubbs
+---
+
+## Introduction
+
+Outlier detection is a diagnostic step, not a cleaning step: flagged points should be investigated, not automatically removed. Several rules produce flags from different premises; each has a different trade-off between sensitivity and robustness. This page covers the common univariate rules and their assumptions.
+
+## Prerequisites
+
+The reader should know what mean, median, SD, and IQR are.
+
+## Theory
+
+- **1.5 x IQR fence (Tukey)**: observations outside $[Q_1 - 1.5 \cdot \mathrm{IQR}, \ Q_3 + 1.5 \cdot \mathrm{IQR}]$ are mild outliers; $3 \cdot \mathrm{IQR}$ marks extremes. Robust and distribution-free.
+- **Z-score (3-sigma)**: $|z_i| > 3$ where $z_i = (x_i - \bar{x})/s$. Sensitive to the outliers it is trying to flag (masking).
+- **Hampel identifier**: $|x_i - \text{median}| > 3 \cdot \mathrm{MAD}$. Robust variant of the z-score that uses median and MAD.
+- **Grubbs' test**: formal test of the most extreme value under normality. Gives a p-value but is sensitive to its own normality assumption.
+
+Masking and swamping are two pitfalls: masking occurs when true outliers inflate the SD and hide themselves; swamping occurs when one outlier drags neighbours across the threshold, falsely flagging them.
+
+## Assumptions
+
+- IQR fence and Hampel: no distributional assumption; robust.
+- Z-score: approximately normal distribution.
+- Grubbs' test: normality and a single suspected outlier.
+
+## R Implementation
+
+```r
+library(outliers)
+
+set.seed(2026)
+x <- c(rnorm(48, mean = 50, sd = 8), 95, 110)
+
+# IQR fence
+q <- quantile(x, c(0.25, 0.75))
+iqr <- IQR(x)
+fences <- c(q[1] - 1.5 * iqr, q[2] + 1.5 * iqr)
+which(x < fences[1] | x > fences[2])
+
+# Z-score
+z <- (x - mean(x)) / sd(x)
+which(abs(z) > 3)
+
+# Hampel
+h <- (x - median(x)) / mad(x)
+which(abs(h) > 3)
+
+# Grubbs' test for the single most extreme
+grubbs.test(x)
+```
+
+## Output & Results
+
+```
+IQR fence flags:   [49, 50]
+z-score flags:     [50]
+Hampel flags:      [49, 50]
+Grubbs: G = 2.81, p = 0.03
+```
+
+The IQR and Hampel rules identify both extreme values; the z-score, inflated by those same values, identifies only the most extreme. Grubbs' test rejects the null that the extreme point is from the same distribution.
+
+## Interpretation
+
+Report which rule you applied and how many observations it flagged. "Two observations exceeded the Tukey 1.5 x IQR upper fence; both were verified as accurate data-entry values and retained in the primary analysis" is a defensible sentence.
+
+## Practical Tips
+
+- Flag, investigate, decide. Never delete silently.
+- For skewed data, IQR fences still flag normal-range observations as outliers; consider log-transformation first.
+- For multivariate outliers, use Mahalanobis distance; for regression diagnostics, use Cook's distance.
+- Grubbs' test assumes normality; for non-normal data prefer the IQR or Hampel rule.
+- Report sensitivity analyses that re-run the primary analysis with and without flagged observations; the conclusion should be robust.

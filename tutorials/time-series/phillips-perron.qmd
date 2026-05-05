@@ -1,0 +1,64 @@
+---
+title: Phillips-Perron Test
+date: "2026-04-17"
+description: Non-parametric adjustment of the Dickey-Fuller test for autocorrelation and heteroscedasticity
+categories:
+  - Time Series Analysis
+  - phillips-perron
+  - unit-root
+  - non-parametric
+---
+
+## Introduction
+
+The Phillips-Perron (PP) test is a unit-root test that modifies the Dickey-Fuller statistic to account for autocorrelation and heteroscedasticity in the errors non-parametrically. Where the augmented Dickey-Fuller test handles serial correlation by including lagged differences in the regression, PP applies a Newey-West long-run variance correction directly to the test statistic. The two approaches usually agree; PP is preferable when the lag specification of ADF is uncertain or when heteroscedasticity is suspected.
+
+## Prerequisites
+
+A working understanding of the augmented Dickey-Fuller test, the Newey-West long-run variance estimator, and the unit-root vs stationarity distinction.
+
+## Theory
+
+PP fits the unit-root regression $\Delta y_t = \alpha + \gamma y_{t-1} + \varepsilon_t$ (without lagged differences) and computes a test statistic that is non-parametrically corrected for residual autocorrelation and heteroscedasticity using the Newey-West estimator of the long-run variance. Two flavours exist: $Z(\alpha)$ (based on the OLS coefficient) and $Z(t)$ (based on the $t$-statistic). The asymptotic distribution under the unit-root null is the same Dickey-Fuller distribution as ADF, so critical values are tabulated.
+
+The non-parametric correction sidesteps the ADF lag-order choice but requires a bandwidth choice for the long-run variance estimator; defaults work for most series.
+
+## Assumptions
+
+Errors are stationary after the unit-root transformation; the long-run variance bandwidth is appropriate for the autocorrelation horizon.
+
+## R Implementation
+
+```r
+library(tseries)
+
+x <- cumsum(rnorm(100))
+
+pp.test(x)                     # default
+pp.test(x, type = "Z(alpha)")
+pp.test(diff(x))
+
+# Compare with ADF
+adf.test(x)
+```
+
+## Output & Results
+
+`pp.test()` returns the test statistic and a $p$-value computed from the Dickey-Fuller distribution. Comparing PP and ADF on the same series is a useful robustness check; large discrepancies signal autocorrelation or heteroscedasticity issues that one test handles better than the other.
+
+## Interpretation
+
+A reporting sentence: "The Phillips-Perron test on the random-walk series gave $p = 0.58$, failing to reject the unit-root null; the augmented Dickey-Fuller agreed ($p = 0.52$). After first-differencing both tests rejected the null at $p < 0.01$, confirming the series is integrated of order 1." Always pair PP with ADF and ideally with KPSS for the most robust unit-root verdict.
+
+## Practical Tips
+
+- PP and ADF usually agree; if they disagree, examine the residual autocorrelation structure to identify which test is more appropriate.
+- PP's non-parametric correction avoids the ADF lag-order sensitivity but introduces a bandwidth choice; the default Newey-West truncation is usually fine.
+- Both PP and ADF have low power against near-unit-root stationary processes (e.g., AR(1) with coefficient 0.95); for borderline series, no test gives a confident answer.
+- Combine PP with KPSS for the two-sided perspective: PP / ADF test the unit-root null while KPSS tests the stationarity null.
+- For series with structural breaks, PP is invalid; use Zivot-Andrews (`urca::ur.za()`) instead.
+- For panel data, panel unit-root tests (Im-Pesaran-Shin, Levin-Lin-Chu) extend the framework to multiple series simultaneously.
+
+## R Packages Used
+
+`tseries::pp.test()` for the canonical Phillips-Perron implementation; `urca::ur.pp()` for richer output with multiple critical values; `tseries::adf.test()` and `urca::ur.df()` for the complementary ADF; `urca::ur.za()` for Zivot-Andrews when structural breaks are plausible.

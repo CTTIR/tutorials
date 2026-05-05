@@ -1,0 +1,69 @@
+---
+title: Bayesian Linear Regression
+date: "2026-04-17"
+description: "Linear regression with priors on coefficients, fit via MCMC in brms or rstanarm"
+categories:
+  - Bayesian Statistics
+  - bayesian-regression
+  - brms
+  - rstanarm
+---
+
+## Introduction
+
+Bayesian linear regression keeps the same linear predictor and Normal residual structure as ordinary least squares but treats every parameter as a random variable with a prior. Inference returns a joint posterior over coefficients and the residual scale rather than a point estimate plus standard errors. The practical gain is direct: credible intervals carry the probability statement that students often (incorrectly) attribute to confidence intervals, predictions inherit propagated uncertainty automatically, and small-sample analyses no longer rely on asymptotic approximations of $t$ distributions.
+
+## Prerequisites
+
+A working understanding of multiple linear regression, comfort with the idea of a likelihood, and a basic sense of priors. A Stan-capable backend (`rstan` or `cmdstanr`) is needed because `brms` compiles models on demand; `rstanarm` ships with pre-compiled models if compile time is a concern.
+
+## Theory
+
+The model is
+
+$$y_i = X_i \beta + \varepsilon_i, \qquad \varepsilon_i \sim \mathcal N(0, \sigma^2),$$
+
+with priors $\beta_j \sim \mathcal N(0, \tau_j)$ and $\sigma \sim \mathrm{Exponential}(\lambda)$ or a half-$t$. With weakly informative priors and reasonable sample size, the posterior mean is close to the OLS estimate while small-$n$ inference is regularised toward the prior. The default sampler is Hamiltonian Monte Carlo with the No-U-Turn termination criterion (NUTS); convergence is assessed through $\hat R$, bulk and tail effective sample size, and divergent-transition counts.
+
+## Assumptions
+
+Linearity in the linear predictor, additive Normal residuals with constant variance, independence of observations, and proper priors. Convergence diagnostics are part of the model assumptions in practice — a chain that has not mixed cannot deliver a credible posterior summary.
+
+## R Implementation
+
+```r
+library(brms)
+
+set.seed(2026)
+d <- data.frame(x = rnorm(100), y = 2 + 1.5 * rnorm(100))
+
+fit <- brm(y ~ x, data = d,
+           prior = prior(normal(0, 2.5), class = "b") +
+                   prior(normal(0, 5),   class = "Intercept") +
+                   prior(exponential(1), class = "sigma"),
+           chains = 4, iter = 2000, refresh = 0)
+
+summary(fit)
+plot(fit)
+```
+
+## Output & Results
+
+`summary(fit)` returns posterior mean, standard error of the mean, posterior standard deviation, 95 % credible interval, $\hat R$, and bulk and tail effective sample size for every parameter. `plot(fit)` shows trace plots (one line per chain) alongside marginal density plots; well-mixed chains overlap throughout warm-up and produce indistinguishable density plots.
+
+## Interpretation
+
+A reporting sentence: "A Bayesian linear regression with weakly informative priors estimated the slope at 1.53 (95 % CrI 1.23 to 1.84) and the residual scale at 1.02 (95 % CrI 0.90 to 1.17); $\hat R = 1.00$ for all parameters, with $n_{\text{eff}} > 3{,}500$." Always report a convergence statistic alongside the interval — without it, a reader cannot tell whether the posterior summary is trustworthy.
+
+## Practical Tips
+
+- Standardise predictors before fitting so a single $\mathcal N(0, 2.5)$ prior on slopes is sensible across columns.
+- Run a prior predictive check (`sample_prior = "only"`) and look at the implied range of `y`; if it spans implausible values, tighten the prior before fitting to the data.
+- For interactions or polynomials, use `bs()` or `poly()` inside the formula but check that the prior scale still makes sense after the transformation.
+- Use `bayesplot::pp_check(fit)` to overlay replicated datasets on the observed outcome; systematic deviation in the tails signals the wrong family.
+- Compare nested models with `loo_compare(loo(fit1), loo(fit2))` rather than $F$-tests; the difference in expected log predictive density and its standard error is a richer summary than a $p$-value.
+- For non-Gaussian outcomes, change `family = gaussian` to `bernoulli()`, `poisson()`, `student()`, or any other supported family — the prior structure carries over unchanged.
+
+## R Packages Used
+
+`brms` for formula-based Bayesian regression, `rstan` or `cmdstanr` as the sampling backend, `bayesplot` for diagnostic and posterior predictive plots, and `loo` for cross-validation.

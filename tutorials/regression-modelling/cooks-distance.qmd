@@ -1,0 +1,69 @@
+---
+title: "Cook's Distance"
+date: "2026-04-17"
+description: Single-number influence measure combining leverage and residual
+categories:
+  - "Regression & Modelling"
+  - cooks-distance
+  - influence
+  - diagnostic
+---
+
+## Introduction
+
+Cook's distance is the most widely used single-number summary of an observation's influence on a regression fit. It answers a direct question: how much would the fitted values change if we removed this observation? Cook's distance combines the residual (how badly the model fits this point) and the leverage (how unusual this point is in the predictor space) into one quantity, making it the first port of call for influence diagnostics in linear regression.
+
+## Prerequisites
+
+A working understanding of leverage (hat values), standardised residuals, and the leave-one-out perspective on regression diagnostics.
+
+## Theory
+
+For observation $i$ with standardised residual $r_i$ and hat value $h_{ii}$,
+
+$$D_i = \frac{r_i^2}{p + 1} \cdot \frac{h_{ii}}{(1 - h_{ii})^2},$$
+
+where $p + 1$ is the number of regression parameters. The product structure makes Cook's distance large only when both the residual is sizable *and* the leverage is non-trivial; either alone is insufficient.
+
+Conventional thresholds: $D_i > 1$ indicates strong influence (the regression effectively hinges on this point); $D_i > 4/n$ indicates moderate influence and warrants investigation. The relative magnitude across observations is often more informative than absolute thresholds — a few points dominating the Cook's distance distribution deserve scrutiny regardless of cutoffs.
+
+## Assumptions
+
+Classical OLS assumptions, including residual Normality (Cook's distance is sensitive to outliers in the response). For robust alternatives, DFBETA (per-coefficient influence) or robust regression with leverage diagnostics is preferable.
+
+## R Implementation
+
+```r
+fit <- lm(mpg ~ wt + hp, data = mtcars)
+
+cooks <- cooks.distance(fit)
+head(sort(cooks, decreasing = TRUE))
+
+# Visualise
+plot(fit, which = 4)
+abline(h = 4 / nrow(mtcars), col = "red", lty = 2)
+
+# Influential cars
+mtcars[cooks > 4 / nrow(mtcars), ]
+```
+
+## Output & Results
+
+`cooks.distance(fit)` returns a vector of $D_i$ for every observation. The diagnostic plot (`plot(fit, which = 4)`) displays them as sticks, with the largest values labelled. Subsetting at the threshold identifies candidate influential observations for further inspection.
+
+## Interpretation
+
+A reporting sentence: "Three vehicles had Cook's distance exceeding $4/n = 0.125$ — the Maserati Bora, the Cadillac Fleetwood, and the Lincoln Continental — but refitting without them changed the coefficient on weight from $-3.88$ to $-3.65$ (95 % CI $-5.65$ to $-1.65$ vs $-5.20$ to $-2.10$ originally), with conclusions unchanged." Always run a sensitivity analysis after identifying influential points; never silently remove them.
+
+## Practical Tips
+
+- Cook's distance is sensitive to residual outliers as well as leverage; for robust alternatives, examine DFBETAs and consider robust regression.
+- An observation with $D_i > 1$ essentially guarantees the regression hinges on it; investigate the data point for errors before deciding whether to retain or exclude.
+- Report sensitivity analyses with influential points removed; do not silently exclude.
+- Cook's distance summarises overall influence; DFBETAs identify which specific coefficients are most affected by each observation.
+- For GLMs, use `influence.measures(fit)`, which returns DFBETAs, hat values, and Cook's-distance analogues for the chosen family.
+- Influence diagnostics are not a substitute for substantive judgement — a high-leverage observation may be the most informative data point in the sample if it is correct.
+
+## R Packages Used
+
+Base R `cooks.distance()`, `influence.measures()`, `dfbetas()`, `hatvalues()`; `car::influencePlot()` for an integrated visual; `performance::check_outliers()` for a tidy diagnostic interface; `MASS::rlm()` and `robustbase::lmrob()` for robust regression alternatives.

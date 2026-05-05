@@ -1,0 +1,84 @@
+---
+title: Density Plots
+date: "2026-04-17"
+description: Smooth distribution display via kernel density estimation
+categories:
+  - Data Visualisation
+  - density
+  - kde
+  - distribution
+---
+
+## Introduction
+
+A density plot estimates the underlying probability density of a continuous variable via kernel smoothing, producing a smooth curve instead of the binned bars of a histogram. Densities are easier to compare across groups (overlaid translucent fills are more legible than dodged or transparent bars) and they sidestep the histogram's bin-boundary arbitrariness — at the cost of introducing a different arbitrary parameter, the bandwidth. Choosing a sensible bandwidth and being explicit about it is the main craft of density-plot design.
+
+## Prerequisites
+
+A working understanding of histograms, kernel density estimation basics, and the role of bandwidth as the smoothness parameter.
+
+## Theory
+
+A kernel density estimate (KDE) is
+
+$$\hat f(x) = \frac{1}{n h} \sum_{i=1}^n K\!\left(\frac{x - x_i}{h}\right),$$
+
+where $K$ is a kernel (Gaussian by default) and $h$ is the bandwidth. The bandwidth controls smoothness: small $h$ undersmooths and produces a noisy curve that follows individual observations, large $h$ oversmooths and hides modes or skew. R's default uses Silverman's rule of thumb (`bw = "nrd0"`), which works well for unimodal Normal-like data but can oversmooth multi-modal distributions; Sheather–Jones plug-in (`bw = "SJ"`) is a more flexible default that adapts to local variability.
+
+The choice of kernel ($K$) matters far less than the bandwidth in practice — Gaussian, Epanechnikov, and rectangular kernels produce visually indistinguishable density curves at the same $h$.
+
+## Assumptions
+
+Observations are independent and identically distributed; the underlying distribution has a density (not a discrete spike). For bounded variables (proportions, durations), the kernel density spills past the boundary and a reflection or truncation method is required to keep the estimate inside the support.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+# Basic density
+ggplot(mtcars, aes(mpg)) +
+  geom_density(fill = "#2A9D8F", alpha = 0.5) +
+  theme_minimal()
+
+# Density by group
+ggplot(iris, aes(Sepal.Length, fill = Species)) +
+  geom_density(alpha = 0.5) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal()
+
+# Bandwidth control
+ggplot(faithful, aes(eruptions)) +
+  geom_density(bw = 0.05, colour = "red") +      # undersmoothed
+  geom_density(bw = 0.5,  colour = "black") +    # default-ish
+  geom_density(bw = 2.0,  colour = "blue") +     # oversmoothed
+  theme_minimal()
+
+# Histogram + density overlay
+ggplot(mtcars, aes(mpg)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 15,
+                 fill = "#2A9D8F", alpha = 0.4) +
+  geom_density(linewidth = 1) +
+  theme_minimal()
+```
+
+## Output & Results
+
+Four illustrative views: a single-group density, a three-group overlay for the iris dataset, a bandwidth comparison on the bimodal Old Faithful data showing how bandwidth choices alternately reveal or hide the second mode, and a histogram with a density overlay aligned on a common density y-axis.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Kernel density estimate of sepal length per species (n = 50 each), Gaussian kernel with Silverman bandwidth; setosa is well-separated from the other two species, which overlap considerably." Always state the bandwidth method (or value) and the kernel; both shape the visible structure.
+
+## Practical Tips
+
+- Show a histogram alongside the density during exploratory work; the density alone can hide binning artefacts that the histogram makes visible.
+- For bounded data (proportions on $[0, 1]$, response times bounded below by zero), use `density(..., from = 0, to = 1)` or a reflection-based estimator; default kernels spill past the boundary and produce artificially low density at the edges.
+- For small samples ($n < 30$), the density estimate is noisy and misleading; show a strip plot, dot plot, or histogram instead.
+- Compare densities across groups via `fill` (with `alpha = 0.4`) for translucent overlays or `colour` for line-only renderings; the latter scales better to many groups.
+- For 2D joint densities, `geom_density_2d()` draws contours and `stat_density_2d(aes(fill = after_stat(level)), geom = "polygon")` renders filled level sets.
+- When in doubt, plot the same data with three bandwidths (Silverman, Sheather-Jones, and one tighter) and pick whichever respects the structure you already know exists; do not let bandwidth invent features.
+
+## R Packages Used
+
+`ggplot2` for `geom_density()` and `stat_density()`; `KernSmooth` for advanced bandwidth selectors; `ks` for multivariate kernel densities; `ggdist` for slabinterval geoms that combine density and credible-interval annotation.

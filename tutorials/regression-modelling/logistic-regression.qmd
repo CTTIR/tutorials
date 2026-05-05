@@ -1,0 +1,71 @@
+---
+title: Logistic Regression
+date: "2026-04-17"
+description: "Regression for binary outcomes: odds ratios, logit link, and MLE fitting"
+categories:
+  - "Regression & Modelling"
+  - logistic
+  - binary-outcome
+  - logit
+  - odds-ratio
+---
+
+## Introduction
+
+Logistic regression models binary outcomes via the logit link, mapping the probability of "event" to the entire real line so that linear regression machinery applies on the log-odds scale. It is the most widely used GLM in clinical, epidemiological, and behavioural research, producing odds ratios that directly answer the question "how does the odds of the outcome change with this covariate?" The fit is by iteratively reweighted least squares (IRLS), maximising the binomial likelihood.
+
+## Prerequisites
+
+A working understanding of the binomial distribution, maximum likelihood estimation, the logit link, and the distinction between odds ratios and relative risks.
+
+## Theory
+
+The model is
+
+$$Y \sim \mathrm{Bernoulli}(p), \qquad \mathrm{logit}(p) = \log\frac{p}{1-p} = \beta_0 + \sum_j \beta_j X_j.$$
+
+IRLS produces $\hat\beta$ on the log-odds scale; exponentiating gives odds ratios, which are interpretable as the multiplicative change in the odds of the outcome per unit increase in the covariate, all else equal. For rare events (prevalence below ~10 %), the odds ratio approximates the relative risk; for common events the two diverge and odds ratios overstate the relative risk.
+
+## Assumptions
+
+Binary outcome, independent observations, linearity on the logit scale (the log-odds is a linear function of the covariates), absence of severe multicollinearity, and adequate events per variable (EPV $\ge 10$ as a working rule for stable estimation).
+
+## R Implementation
+
+```r
+library(broom); library(pROC); library(performance)
+
+d <- mtcars
+d$am <- factor(d$am)
+
+fit <- glm(am ~ wt + hp, data = d, family = binomial)
+tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+glance(fit)
+
+# Discrimination
+pred <- predict(fit, type = "response")
+roc(d$am, pred, quiet = TRUE) |> auc()
+
+check_model(fit)
+```
+
+## Output & Results
+
+`tidy(fit, exponentiate = TRUE)` returns odds ratios with confidence intervals; `glance()` provides AIC, deviance, and pseudo-$R^2$ summaries. The AUC quantifies discrimination on the same data; for honest assessment, cross-validate or hold out a test set.
+
+## Interpretation
+
+A reporting sentence: "A multivariable logistic regression of transmission type on weight and horsepower estimated that each additional 1000 lbs of weight reduced the odds of manual transmission by a factor of 0.10 (95 % CI 0.02 to 0.43, $p = 0.003$), adjusted for horsepower; the model's in-sample AUC was 0.93 (95 % CI 0.84 to 1.00)." Always report odds ratios, not raw coefficients on the log-odds scale.
+
+## Practical Tips
+
+- Report odds ratios with confidence intervals; coefficients on the log-odds scale are rarely the most communicative summary for clinical readers.
+- For rare events (prevalence < 10 %), OR ≈ RR; for common events, OR overstates RR. Switch to `logbin` or modified Poisson for direct relative-risk regression when needed.
+- Small samples can produce complete separation, where MLE drifts to $\pm\infty$; use Firth correction (`logistf::logistf`) or weakly informative Bayesian priors (`brms`) for finite estimates.
+- Calibration matters as much as discrimination; assess with `performance::check_model()` calibration plots and the Hosmer-Lemeshow test (with caveats about its known limitations).
+- For matched case-control data, use conditional logistic regression (`survival::clogit`) which preserves the matched-pair structure.
+- For high-dimensional or correlated predictors, switch to penalised logistic regression via `glmnet(family = "binomial")`.
+
+## R Packages Used
+
+Base R `glm()` with `family = binomial`; `broom::tidy()` and `glance()` for tidy summaries; `pROC` for ROC and AUC; `performance::check_model()` for diagnostic plots; `logistf` for Firth-penalised logistic regression; `glmnet` for elastic-net logistic regression; `survival::clogit` for matched designs.

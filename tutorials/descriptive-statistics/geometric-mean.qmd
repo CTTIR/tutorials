@@ -1,0 +1,81 @@
+---
+title: The Geometric Mean
+date: "2026-04-17"
+description: "Log-scale averaging for multiplicative data: ratios, growth rates, titres"
+categories:
+  - Descriptive Statistics
+  - geometric-mean
+  - log-transformation
+  - multiplicative
+---
+
+## Introduction
+
+The geometric mean is the arithmetic mean on the log scale, back-transformed to the original scale. It is the appropriate summary for variables that combine multiplicatively rather than additively: antibody titres, concentrations, growth rates, investment returns. For log-normal data, the geometric mean is the median and is thus a natural measure of typicality.
+
+## Prerequisites
+
+The reader should know the arithmetic mean and be comfortable with natural logarithms.
+
+## Theory
+
+For positive values $x_1, \ldots, x_n$:
+
+$$\mathrm{GM}(x) = \left(\prod x_i\right)^{1/n} = \exp\!\left(\frac{1}{n} \sum \log x_i\right).$$
+
+The second form is numerically stable and matches how the geometric mean is computed in practice. Key properties:
+
+- $\mathrm{GM}(x) \leq \bar{x}$, with equality only when all $x_i$ are equal (AM-GM inequality, a consequence of Jensen).
+- For log-normal data, the geometric mean equals the population median.
+- The ratio of the geometric mean to the arithmetic mean is a simple measure of skewness.
+
+## Assumptions
+
+- All values must be strictly positive; a single zero or negative value renders the geometric mean undefined.
+- For inference (confidence intervals), log-normality of the data is typically assumed.
+
+## R Implementation
+
+```r
+library(psych)
+
+set.seed(2026)
+titres <- 2^sample(4:12, 50, replace = TRUE)  # antibody titres in 2^n form
+
+mean(titres)
+median(titres)
+psych::geometric.mean(titres)
+exp(mean(log(titres)))
+
+# 95% CI for the geometric mean
+n <- length(titres)
+log_x <- log(titres)
+log_mean <- mean(log_x)
+log_se   <- sd(log_x) / sqrt(n)
+exp(log_mean + c(-1, 1) * qt(0.975, n - 1) * log_se)
+```
+
+## Output & Results
+
+```
+[1] 1157         # arithmetic mean
+[1] 512          # median
+[1] 588          # geometric mean
+[1] 588          # (equivalent computation)
+
+[1] 441 782      # 95% CI for GM
+```
+
+The geometric mean (588) sits close to the median (512) and well below the arithmetic mean (1157). This is typical of log-normal or multiplicative data: the arithmetic mean is pulled up by the upper tail.
+
+## Interpretation
+
+Report the geometric mean for titres, viral loads, drug concentrations, and any other multiplicatively combining variable. In a paper: "the geometric mean antibody titre was 588 (95% CI 441-782)".
+
+## Practical Tips
+
+- Non-positive values require imputation or exclusion; adding a small constant (e.g., 0.5) before log is common but distorts small values.
+- The geometric mean of ratios is the exponent of the mean of log-ratios; reporting log-scale effects is cleaner.
+- For growth rates, the geometric mean equals the arithmetic mean of $(1 + r_i)$ values minus 1.
+- In meta-analysis of ratios, log transformation + normal approximation is the standard pipeline.
+- When data are centred around 1 (e.g., hazard ratios), the difference between AM and GM is small.

@@ -103,15 +103,3 @@ Model-based clustering via Gaussian mixture models (`mclust`) provides likelihoo
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 00eb70662207471db2d103015480b8b0 -->
-<img src="https://vg09.met.vgwort.de/na/00eb70662207471db2d103015480b8b0"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

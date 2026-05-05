@@ -1,0 +1,72 @@
+---
+title: NMA Consistency and Inconsistency
+date: "2026-04-17"
+description: Loop-specific and global tests for direct-indirect evidence agreement
+categories:
+  - Meta-Analysis
+  - consistency
+  - nma
+  - inconsistency
+---
+
+## Introduction
+
+Network meta-analysis combines direct evidence from head-to-head trials with indirect evidence inferred through common comparators. The validity of this synthesis hinges on the consistency assumption: across closed loops in the network, the direct and indirect estimates of any pairwise contrast must agree up to sampling error. When they disagree systematically — when, for example, the direct A-vs-C estimate from head-to-head trials differs materially from the indirect estimate inferred via B — the network is inconsistent, and the pooled NMA estimates cannot be interpreted at face value. Detecting and characterising inconsistency is therefore a mandatory step in any rigorous NMA workflow, and modern guidance (NICE DSU, ISPOR, PRISMA-NMA) requires that consistency be reported alongside the league table and SUCRA results.
+
+## Prerequisites
+
+A working understanding of network meta-analysis structure (treatments, designs, contrasts), the difference between direct and indirect evidence, and the transitivity assumption that underpins indirect comparisons.
+
+## Theory
+
+Three complementary tests address different scales of inconsistency. The loop-specific Bucher test, for a triangle A-B-C, compares the direct A-vs-C estimate against the indirect estimate $\hat\theta_{AB} + \hat\theta_{BC}$ via a Wald-type difference. Node-splitting (Dias et al., 2010) generalises this for any contrast: it splits the evidence for one contrast into direct-only and indirect-only components and tests whether they agree. The design-by-treatment interaction model (Higgins et al., 2012) provides a global test via the generalised-inconsistency framework, comparing the consistent NMA model against an unconstrained model that allows different contrasts to take different values across study designs.
+
+## Assumptions
+
+The network contains at least one closed loop (otherwise consistency cannot be tested), transitivity holds in principle, and the underlying meta-analytic model is correctly specified. Inconsistency tests have low power when loops are short or sparsely populated; absence of detected inconsistency does not prove consistency.
+
+## R Implementation
+
+```r
+library(netmeta)
+
+set.seed(2026)
+net_df <- data.frame(
+  study = c("S1", "S1", "S2", "S2", "S3", "S3", "S4", "S4",
+            "S5", "S5", "S6", "S6"),
+  treat = c("A", "B", "A", "C", "B", "C", "A", "D",
+            "B", "D", "C", "D"),
+  TE    = c(0, -0.3, 0, -0.5, 0.4, 0.2, 0, -0.2,
+            0.1, 0.3, 0, 0.4),
+  seTE  = rep(0.25, 12)
+)
+
+p_df <- pairwise(treat = treat, TE = TE, seTE = seTE,
+                 studlab = study, data = net_df)
+net  <- netmeta(p_df, common = FALSE, reference = "A")
+
+netsplit(net)
+
+decomp.design(net)
+```
+
+## Output & Results
+
+`netsplit()` returns per-comparison direct vs indirect estimates, their difference, and a Wald test on the difference. `decomp.design()` decomposes the heterogeneity statistic $Q$ into within-design and between-design components and reports the global design-by-treatment interaction test. Non-significant results in both diagnostics support the consistency assumption.
+
+## Interpretation
+
+A reporting sentence: "Node-splitting (`netsplit`) showed agreement between direct and indirect estimates for all six pairwise comparisons (smallest two-sided $p$-value $= 0.15$). The global design-by-treatment interaction test (`decomp.design`) was non-significant ($p = 0.36$), and the between-design heterogeneity component was negligible ($Q_{\text{inc}} = 1.2$, df $= 3$). The consistency assumption is therefore supported, and the random-effects league table can be interpreted as reflecting the joint direct and indirect evidence." Always report both tests.
+
+## Practical Tips
+
+- Always test consistency; reporting an NMA without any consistency check is no longer acceptable in major journals or HTA submissions.
+- If inconsistency is detected, investigate study-level effect modifiers (population age, baseline severity, dose, year, risk of bias) that differ across designs; meta-regression within the NMA framework can then partially resolve the inconsistency.
+- `netsplit` provides per-comparison tests (high resolution, low power per test); `decomp.design` provides the global test (low resolution, higher power overall) — they are complementary, not redundant.
+- For simple triangles with sufficient direct evidence, the Bucher test is a quick first-pass diagnostic; it is what node-splitting reduces to in the three-treatment case.
+- Inconsistency can be local (a single loop) or global (the whole network); the diagnostic patterns differ, and the discussion section should reflect which kind was found.
+- Bayesian implementations in `gemtc` and `multinma` provide UME (unrelated mean effects) consistency models that compare against the consistent NMA via DIC; this is the Bayesian analogue of the design-by-treatment test.
+
+## R Packages Used
+
+`netmeta::netsplit()` and `netmeta::decomp.design()` for the canonical frequentist consistency diagnostics, alongside `netmeta()` itself; `gemtc` and `multinma` for Bayesian NMA with built-in UME and node-splitting; `pcnetmeta` for component-NMA inconsistency analysis; `BUGSnet` for combined Bayesian NMA workflow including consistency reporting.

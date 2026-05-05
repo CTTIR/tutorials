@@ -1,0 +1,75 @@
+---
+title: Partial Dependence Plots
+date: "2026-04-17"
+description: Marginal effect of a feature on model predictions
+categories:
+  - Machine Learning
+  - pdp
+  - partial-dependence
+  - marginal
+---
+
+## Introduction
+
+Partial dependence plots (PDPs), introduced by Friedman in 2001, show the average model prediction as a feature varies while holding other features at their observed values. They provide a visual answer to "how does the model's prediction change with $x_j$?" — exposing non-linear effects and interactions in black-box models that variable-importance scores alone cannot reveal. Combined with variable importance (which features matter) and SHAP values (per-prediction explanations), PDPs are the third pillar of interpretation for opaque ML models.
+
+## Prerequisites
+
+A working understanding of trained black-box classifiers or regressors (random forest, gradient boosting, neural networks), variable importance, and the difference between marginal and conditional effects.
+
+## Theory
+
+Partial dependence at value $x_j = v$ is
+
+$$\mathrm{PD}_j(v) = \frac{1}{n} \sum_{i=1}^n \hat f(v, x_{-j,i}),$$
+
+i.e., set the feature of interest to $v$ across all rows in the dataset, predict, and average. The PDP is the curve of $\mathrm{PD}_j(v)$ as $v$ varies over the observed range of $x_j$.
+
+Individual Conditional Expectation (ICE) plots show one curve per observation rather than the average; the PDP is the mean of the ICE curves. ICE plots expose heterogeneity in feature effects: if all ICE curves are roughly parallel, the effect of $x_j$ is homogeneous; if they diverge, an interaction with another feature is implied.
+
+Accumulated Local Effects (ALE) plots address PDP's extrapolation problem when features are correlated; they integrate the prediction's local derivative rather than averaging predictions at potentially out-of-distribution feature combinations.
+
+## Assumptions
+
+For PDP interpretation, features are approximately independent; otherwise the average over $x_{-j}$ at fixed $x_j = v$ may include low-density regions of the joint distribution and produce misleading curves. For correlated features, use ALE plots instead.
+
+## R Implementation
+
+```r
+library(pdp); library(ranger)
+
+set.seed(2026)
+n <- 500
+df <- data.frame(
+  x1 = rnorm(n), x2 = rnorm(n), x3 = rnorm(n),
+  y  = sin(rnorm(n)) + 0.3 * rnorm(n)^2
+)
+
+rf <- ranger(y ~ ., data = df, num.trees = 300)
+pd <- partial(rf, pred.var = "x1", plot = FALSE, train = df)
+
+plot(pd$x1, pd$yhat, type = "l", lwd = 2, col = "#2A9D8F",
+     xlab = "x1", ylab = "PD(x1)",
+     main = "Partial dependence of x1")
+```
+
+## Output & Results
+
+`pdp::partial()` returns a data frame with the feature value and the partial-dependence prediction. Plotting it as a curve shows how the average prediction varies with the feature; non-linear shapes reveal effects that linear models would miss.
+
+## Interpretation
+
+A reporting sentence: "The partial-dependence plot revealed a non-monotone sinusoidal relationship between $x_1$ and the outcome (peak prediction near $x_1 = -0.5$, trough near $x_1 = 1.5$); this structure was not visible from variable importance alone, which simply ranked $x_1$ as the strongest predictor. ICE curves were broadly parallel, indicating no major interaction with other features." Always pair PDP with ICE for heterogeneity detection.
+
+## Practical Tips
+
+- Pair PDP with variable importance: importance answers "which features matter?", PDP answers "how do they affect the prediction?".
+- Use ICE plots to detect interactions: ICE curves diverging from the PDP indicate heterogeneous effects driven by another feature.
+- PDPs extrapolate into low-density regions when features are correlated; for correlated-feature contexts, use Accumulated Local Effects (ALE) plots via `iml::FeatureEffect` or `ALEPlot`.
+- Two-dimensional PDPs (pair of features) reveal interactions but are computationally expensive; use a sampled feature grid for large datasets.
+- `DALEX::model_profile()` offers a unified interpretation interface across tree, linear, and deep models with consistent API.
+- For per-prediction explanations rather than global ones, use SHAP values (`shapviz`, `iml`); SHAP and PDP answer related but distinct interpretation questions.
+
+## R Packages Used
+
+`pdp` for the canonical PDP implementation; `iml::FeatureEffect()` for PDP, ICE, and ALE within a unified interpretation framework; `DALEX::model_profile()` for model-agnostic PDPs; `ALEPlot` for ALE specifically; `shapviz` and `fastshap` for SHAP-based per-prediction explanations.

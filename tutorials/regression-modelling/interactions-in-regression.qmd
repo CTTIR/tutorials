@@ -1,0 +1,75 @@
+---
+title: Interactions in Regression
+date: "2026-04-17"
+description: "Product terms in regression, centring, and the interpretation of conditional effects"
+categories:
+  - "Regression & Modelling"
+  - interaction
+  - product-term
+  - moderator
+---
+
+## Introduction
+
+An interaction term — a product of two predictors entered alongside the main effects — expresses the substantive idea that the effect of one predictor depends on the value of another. Without interactions, a linear model assumes purely additive effects: a unit increase in $X_1$ produces the same change in $Y$ regardless of $X_2$. Interactions relax this assumption and often capture the actual scientific hypothesis (treatment effect varies by age, biomarker effect varies by sex, dose-response curve depends on baseline severity). Reporting interactions correctly requires moving beyond main-effect coefficients to conditional effects at specific covariate values.
+
+## Prerequisites
+
+A working understanding of multiple linear regression, the geometric meaning of regression coefficients, and centring continuous predictors as a tool for reducing collinearity.
+
+## Theory
+
+For two continuous predictors $X_1, X_2$ and an interaction:
+
+$$Y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \beta_3 X_1 X_2 + \varepsilon.$$
+
+The conditional effect of $X_1$ is $\beta_1 + \beta_3 X_2$ — a function of $X_2$ rather than a single number. The "main effect" $\beta_1$ is the conditional effect of $X_1$ when $X_2 = 0$; if $X_2 = 0$ is outside the data range or not a meaningful reference, the main-effect coefficient is uninterpretable.
+
+**Centring** continuous predictors before adding interactions makes $X_2 = 0$ correspond to the mean of $X_2$ and gives the main-effect coefficient the interpretation "effect at the average of the other predictor". It also reduces the mechanical collinearity between $X_1, X_2$, and $X_1 X_2$.
+
+For categorical-by-continuous interactions, the continuous coefficient is the effect within the reference category and the interaction is the difference for the non-reference category.
+
+## Assumptions
+
+Same as the underlying regression: linearity in the linear predictor (after the interaction is included), independent observations, etc. The interaction itself is a model choice, not an assumption.
+
+## R Implementation
+
+```r
+library(emmeans); library(ggeffects)
+
+d <- mtcars
+d$wt_c <- scale(d$wt, center = TRUE, scale = FALSE)[, 1]
+d$hp_c <- scale(d$hp, center = TRUE, scale = FALSE)[, 1]
+
+fit <- lm(mpg ~ wt_c * hp_c, data = d)
+summary(fit)
+
+# Marginal effects at selected levels
+emtrends(fit, ~ hp_c, var = "wt_c",
+         at = list(hp_c = c(-50, 0, 50)))
+
+# Interaction plot
+ggpredict(fit, terms = c("wt_c", "hp_c [-50, 0, 50]")) |> plot()
+```
+
+## Output & Results
+
+The interaction coefficient is on the product scale. `emtrends()` returns the conditional slope of one variable at chosen values of the other. `ggpredict()` plots predicted $Y$ against $X_1$ at multiple levels of $X_2$, the canonical visualisation of an interaction.
+
+## Interpretation
+
+A reporting sentence: "The effect of weight on mpg was more negative at high horsepower than at low (interaction coefficient 0.030, 95 % CI 0.007 to 0.053, $p = 0.01$); at the mean horsepower, each 1000-lb increase in weight reduced mpg by 3.5 (95 % CI $-4.6$ to $-2.4$); at horsepower 50 above the mean, the slope was $-4.9$, and at 50 below it was $-2.0$." Always report simple slopes at meaningful covariate values, not just the interaction coefficient.
+
+## Practical Tips
+
+- Centre continuous predictors before adding interactions; this gives interpretable main effects ("effect at the mean of the other") and reduces collinearity between main and interaction terms.
+- Never interpret "main effects" when a significant interaction is present without specifying the reference value of the moderator; the main effect alone is incomplete.
+- Use `emmeans::emtrends()` or `marginaleffects::slopes()` to compute simple slopes at meaningful covariate values; pair with confidence intervals.
+- Visualise interactions with `ggeffects::ggpredict()` plots showing $Y$ against the focal predictor at several values of the moderator; this communicates the interaction far better than coefficient tables.
+- For categorical-by-categorical interactions, an interaction plot with separate lines per group is the standard display; for categorical-by-continuous, use facets or colour groups.
+- Higher-order interactions (three-way and beyond) require much larger samples and careful interpretation; usually best avoided in confirmatory analyses.
+
+## R Packages Used
+
+`emmeans` for marginal means, simple slopes, and contrast-stable post-hoc inference; `ggeffects` for ggplot-style predicted-effect plots; `marginaleffects` for unified marginal-effect computation across many model classes; `interactions` for purpose-built interaction probing tools.

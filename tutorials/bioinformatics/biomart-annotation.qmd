@@ -1,0 +1,88 @@
+---
+title: Gene Annotation with biomaRt
+date: "2026-04-17"
+description: "Programmatic queries against Ensembl for IDs, coordinates, and annotations"
+categories:
+  - Bioinformatics
+  - biomart
+  - annotation
+  - ensembl
+---
+
+## Introduction
+
+`biomaRt` provides a programmatic interface to Ensembl BioMart for converting between gene identifier systems (Ensembl gene IDs, Entrez IDs, HGNC symbols, RefSeq, UniProt), retrieving genomic coordinates, transcript structures, GO term annotations, and orthologues across species. It is indispensable whenever a gene list — from differential expression, GWAS, or any other genomic analysis — needs to be enriched with curated annotation. The `biomaRt` workflow builds queries that filter, attribute, and merge in a single call, replacing dozens of manual lookups across web interfaces.
+
+## Prerequisites
+
+A working understanding of gene identifier types (Ensembl vs Entrez vs HGNC symbol vs RefSeq), the difference between gene-level and transcript-level annotation, and basic familiarity with R data frames.
+
+## Theory
+
+A `biomaRt` query targets a Mart (database) and dataset (species), specifying:
+
+- **Filters**: which genes to query (input IDs and their type).
+- **Attributes**: which annotations to return.
+- **Values**: the actual identifier values.
+
+The core call `getBM(attributes, filters, values, mart)` issues the query and returns a data frame. For reproducibility, pin the Ensembl release with `host = "<month><year>.archive.ensembl.org"`; the default `host = "www.ensembl.org"` points to the current release, which changes over time.
+
+`biomaRt` also supports cross-species queries via `getLDS()` (linked datasets) for orthologue lookup, transcript-level queries for splicing analyses, and SNP queries against Ensembl variation.
+
+## Assumptions
+
+Internet connectivity to the Ensembl BioMart server (rare downtime can interrupt workflows); input identifiers match the chosen Mart's species and identifier type.
+
+## R Implementation
+
+```r
+library(biomaRt)
+
+# Illustrative (requires internet; swap to offline cache in production):
+# mart <- useMart("ensembl", dataset = "hsapiens_gene_ensembl",
+#                 host = "www.ensembl.org")
+#
+# genes_symbol <- c("TP53", "BRCA1", "EGFR")
+# annot <- getBM(
+#   attributes = c("hgnc_symbol", "ensembl_gene_id",
+#                  "entrezgene_id", "chromosome_name",
+#                  "start_position", "end_position"),
+#   filters    = "hgnc_symbol",
+#   values     = genes_symbol,
+#   mart       = mart
+# )
+# annot
+
+# Simulated equivalent for offline illustration
+set.seed(2026)
+annot <- data.frame(
+  hgnc_symbol      = c("TP53", "BRCA1", "EGFR"),
+  ensembl_gene_id  = c("ENSG00000141510", "ENSG00000012048", "ENSG00000146648"),
+  entrezgene_id    = c(7157, 672, 1956),
+  chromosome_name  = c("17", "17", "7"),
+  start_position   = c(7668402, 43044295, 55019032),
+  end_position     = c(7687550, 43125483, 55211628)
+)
+annot
+```
+
+## Output & Results
+
+A data frame mapping the input identifiers to all requested attributes. In practice, the output is merged with differential-expression results or other gene-level tables to attach genomic coordinates, alternative identifiers, and functional annotation.
+
+## Interpretation
+
+A reporting sentence: "Gene annotation was retrieved from Ensembl release 110 via biomaRt with `host = 'jul2023.archive.ensembl.org'` for reproducibility; TP53 was localised to chr17:7{,}668{,}402–7{,}687{,}550, with Entrez ID 7157 for downstream KEGG/Reactome pathway analyses." Always pin the Ensembl release version when attaching annotation to published results.
+
+## Practical Tips
+
+- Pin the release host (`host = "jul2023.archive.ensembl.org"`) for reproducibility; the default points to the current release, which silently drifts over time.
+- `biomaRt` queries can time out for large requests; split into chunks of a few thousand IDs and combine the results.
+- For high-throughput annotation (re-running annotations on large gene sets), cache the results locally; re-querying 50{,}000 genes is slow.
+- For offline workflows, use `org.Hs.eg.db` (and species-specific equivalents) or `AnnotationHub` for pre-packaged annotation.
+- For cross-species orthologue lookup, `getLDS()` queries the homology Mart; this is the standard approach for translating findings between human and mouse studies.
+- When the BioMart server is down, fall back to `AnnotationHub` or local packages; never let a transient network failure block downstream analysis.
+
+## R Packages Used
+
+`biomaRt` for Ensembl BioMart queries; `org.Hs.eg.db` and species-specific equivalents for offline annotation; `AnnotationHub` for pre-curated annotation packages; `ensembldb` for offline Ensembl annotation in SQLite form; `tximeta` for metadata-aware annotation in RNA-seq workflows.

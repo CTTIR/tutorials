@@ -1,0 +1,70 @@
+---
+title: Protein Structure Prediction
+date: "2026-04-17"
+description: From sequence to 3-D structure with AlphaFold and RoseTTAFold
+categories:
+  - Bioinformatics
+  - protein
+  - alphafold
+  - structure
+---
+
+## Introduction
+
+AlphaFold 2 (2021) achieved near-experimental accuracy in predicting protein 3-D structure from amino-acid sequence, transforming structural biology. RoseTTAFold and ESMFold offer competitive alternatives with different speed/accuracy trade-offs. Downstream analyses include structural alignment, docking, and mutation impact prediction.
+
+## Prerequisites
+
+Amino-acid sequence; familiarity with protein structure (secondary/tertiary elements).
+
+## Theory
+
+AlphaFold uses attention-based deep learning trained on PDB structures and multiple-sequence-alignment (MSA) features. The model outputs per-residue (x, y, z) coordinates plus a per-residue confidence score (**pLDDT**, 0-100) and an inter-residue confidence (**PAE**).
+
+pLDDT > 70 = confident; 50-70 = low confidence; < 50 = disordered/unreliable.
+
+## Assumptions
+
+The protein has evolutionary neighbours (sufficient MSA) or is not unusually divergent; post-translational modifications and co-factors are not modelled.
+
+## R Implementation
+
+AlphaFold prediction itself runs outside R (ColabFold, AlphaFold Docker, OpenFold). R is used for structural analysis via `bio3d`:
+
+```r
+library(bio3d)
+
+# Read a PDB (here a built-in example: human CDK2)
+pdb <- read.pdb(system.file("examples/hivp.pdb", package = "bio3d"))
+summary(pdb)
+
+# Secondary structure, residue count, chains
+head(pdb$atom[, c("resno", "resid", "chain", "elety")])
+
+# Torsion angles
+tor <- torsion.pdb(pdb)
+head(tor$phi)
+
+# Structural alignment of two chains (illustrative)
+chain_a <- atom.select(pdb, chain = "A", elety = "CA")
+chain_b <- atom.select(pdb, chain = "B", elety = "CA")
+xyz_a <- pdb$xyz[chain_a$xyz]
+xyz_b <- pdb$xyz[chain_b$xyz]
+c(n_a = length(xyz_a) / 3, n_b = length(xyz_b) / 3)
+```
+
+## Output & Results
+
+A parsed PDB structure with atoms, residues, and chains accessible programmatically; torsion angles (phi, psi) define the backbone conformation.
+
+## Interpretation
+
+"AlphaFold prediction of the novel kinase scored pLDDT 88.3 overall; the activation loop (residues 185-210) had pLDDT < 60, consistent with conformational flexibility seen in homologous kinases."
+
+## Practical Tips
+
+- Always check pLDDT per residue; low-confidence regions are unreliable for structural analysis.
+- PAE plots reveal inter-domain uncertainty; two confident domains with high PAE between them means the relative orientation is unreliable.
+- For mutation impact, combine AlphaFold + molecular-dynamics simulation with Gromacs or AMBER.
+- AlphaFold-Multimer handles complexes; standard AlphaFold is monomer-focused.
+- ESMFold is faster but less accurate for novel folds; use for screening large sequence sets.

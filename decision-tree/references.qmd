@@ -40,15 +40,3 @@ The example R code is pinned to specific package versions in `renv.lock` at the 
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 00f1d0d167ad464d925b4ab2cddd76a5 -->
-<img src="https://vg09.met.vgwort.de/na/00f1d0d167ad464d925b4ab2cddd76a5"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

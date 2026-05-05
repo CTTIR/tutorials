@@ -1,0 +1,90 @@
+---
+title: Quantiles and Percentiles
+date: "2026-04-17"
+description: "Dividing a distribution by cumulative probability: the median, quartiles, percentiles, and R's nine quantile definitions"
+categories:
+  - Descriptive Statistics
+  - quantile
+  - percentile
+  - median
+  - quartile
+---
+
+## Introduction
+
+A quantile is a cut-point that divides a distribution by cumulative probability: the $p$-quantile is the value below which a proportion $p$ of the data lies. The median is the 0.5-quantile; quartiles are the 0.25, 0.50, and 0.75 quantiles; percentiles are quantiles rescaled to the 0-100 range. Quantiles underlie boxplots, five-number summaries, reference ranges in lab medicine, and non-parametric confidence intervals.
+
+## Prerequisites
+
+The reader should know what a cumulative distribution function is and be comfortable with sorted vectors in R.
+
+## Theory
+
+For a sample $x_1, \ldots, x_n$ sorted as $x_{(1)} \leq x_{(2)} \leq \ldots \leq x_{(n)}$, the sample $p$-quantile is not uniquely defined when $p \cdot (n+1)$ is not an integer. R offers nine definitions, selected via the `type` argument of `quantile()`:
+
+- `type = 1`: inverse of the empirical CDF, giving a step-function quantile.
+- `type = 4`: linear interpolation of the empirical CDF (SAS default).
+- `type = 6`: linear interpolation based on plotting positions (Minitab, SPSS).
+- `type = 7`: R's default; linear interpolation between order statistics with no offset.
+- `type = 8`: approximately unbiased for continuous distributions (Hyndman-Fan recommendation).
+
+The different types give slightly different numeric values in small samples; they converge as $n$ grows. Type 7 is the default in R's `quantile()`, but reproducibility across software requires specifying the type.
+
+## Assumptions
+
+Quantiles are purely descriptive; they require no distributional assumption.
+
+## R Implementation
+
+```r
+library(dplyr)
+
+set.seed(2026)
+x <- rnorm(60, mean = 75, sd = 10)
+
+# Default quantile types
+quantile(x, probs = c(0.25, 0.50, 0.75))
+
+# Compare five R types
+sapply(c(1, 4, 6, 7, 8), function(t) quantile(x, probs = 0.25, type = t))
+
+# Five-number summary via fivenum
+fivenum(x)
+
+# Deciles (10th, 20th, ..., 90th percentiles)
+quantile(x, probs = seq(0.1, 0.9, by = 0.1))
+
+# Quantiles by group
+diabetes <- tibble::tibble(
+  arm = factor(rep(c("Placebo", "Active"), each = 40)),
+  hba1c = c(rnorm(40, 7.4, 0.6), rnorm(40, 6.8, 0.7))
+)
+diabetes |> group_by(arm) |>
+  summarise(q25 = quantile(hba1c, 0.25),
+            q50 = quantile(hba1c, 0.50),
+            q75 = quantile(hba1c, 0.75))
+```
+
+## Output & Results
+
+```
+25% 50% 75%
+71.2 74.8 80.6
+
+   1    4    6    7    8
+72.3 71.8 71.0 71.2 71.3
+```
+
+The five types differ by less than 2 units at $n = 60$. For `diabetes`, the active arm's quartiles are shifted lower than placebo's, as expected.
+
+## Interpretation
+
+Report quantiles when the distribution is skewed, ordinal, or otherwise not well-summarised by a mean: median with IQR (25th and 75th percentiles) is the standard form. In reference-range contexts (clinical chemistry), the 2.5 and 97.5 percentiles define the central 95% "normal range".
+
+## Practical Tips
+
+- Always specify `type` in `quantile()` when reproducing results across software.
+- The boxplot uses Type 2 (`fivenum()`) for its hinges; this differs from Type 7 quantiles.
+- Quantiles respect monotonic transformations: `quantile(log(x), 0.5) == log(quantile(x, 0.5))` (exactly for the median, approximately for others depending on `type`).
+- For very small samples ($n < 10$), quantile estimates are unstable; report the order statistics directly instead.
+- Empirical quantiles are biased estimators of population quantiles; use Harrell-Davis (`Hmisc::hdquantile`) for a smoother estimator.

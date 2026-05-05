@@ -1,0 +1,70 @@
+---
+title: 2^k Factorial Designs
+date: "2026-04-17"
+description: Full factorial experiments with k two-level factors
+categories:
+  - Experimental Design
+  - factorial
+  - 2k
+  - interactions
+---
+
+## Introduction
+
+The $2^k$ factorial design studies $k$ factors, each at exactly two levels conventionally coded as $-1$ (low) and $+1$ (high), and runs every one of the $2^k$ possible combinations of factor levels. Because the design is balanced and orthogonal, every main effect and every interaction up to the $k$-way is estimable independently of every other, with all estimates having the same standard error. This combination of compactness, orthogonality, and full-information estimation makes the $2^k$ factorial the workhorse of industrial design of experiments (DoE), the natural starting point for product development and process improvement, and the foundation on which fractional factorials and response-surface designs are built.
+
+## Prerequisites
+
+A working understanding of ANOVA with multiple factors, the concept of an interaction effect, and the use of coded factor levels (the orthogonal $\pm 1$ scheme that simplifies computation and interpretation).
+
+## Theory
+
+With coded levels $\pm 1$, every factor effect is an orthogonal contrast: the main effect of factor A is the average response at $A = +1$ minus the average response at $A = -1$, and analogously for any interaction (a product of $\pm 1$ columns averaged across runs). Orthogonality means each effect is estimated independently of every other effect, that the effects are uncorrelated, and that the analysis can proceed by simple linear regression with the coded factors and their products as predictors.
+
+For an unreplicated $2^k$ run, residual degrees of freedom are zero and conventional ANOVA inference is impossible; Daniel's normal-probability plot of effects provides a graphical alternative that flags large effects against the inert ones, which form a Normal-distributed reference.
+
+## Assumptions
+
+Two-level factor effects suffice to capture variation in the response (no curvature within the design region requiring a third level), runs are independent, and the residual error is approximately Normal with constant variance. Replicated designs satisfy these assumptions more transparently and allow formal $F$-tests; unreplicated designs rely on the small number of large effects against many inert effects ("effect sparsity") for inference.
+
+## R Implementation
+
+```r
+library(FrF2)
+
+fac <- FrF2(nruns = 8, nfactors = 3, replications = 2,
+            randomize = TRUE, seed = 2026)
+head(fac)
+
+fac$A <- as.numeric(as.character(fac$A))
+fac$B <- as.numeric(as.character(fac$B))
+fac$C <- as.numeric(as.character(fac$C))
+
+set.seed(2026)
+fac$y <- 10 + 2 * fac$A + 1.5 * fac$B + 0.8 * fac$A * fac$B +
+         rnorm(nrow(fac), 0, 0.7)
+
+fit <- lm(y ~ A * B * C, data = fac)
+summary(fit)
+```
+
+## Output & Results
+
+`FrF2()` generates a randomised $2^k$ layout with replication. The fitted regression returns coefficients for all main effects and all interactions; in coded units these coefficients are exactly half the conventional "factor effect" magnitudes. With replication, residual degrees of freedom support standard $t$-tests and an ANOVA partitioning into main, interaction, and residual sums of squares.
+
+## Interpretation
+
+A reporting sentence: "The $2^3$ factorial design with two replicates estimated significant main effects of factor A (2.1, $p < 0.001$) and factor B (1.4, $p < 0.001$) and a significant AB interaction (0.8, $p = 0.01$); factor C and all higher-order interactions were not significantly different from zero. Combined with an interaction plot, the AB synergy suggests using both factors at their high levels yields the optimal response." Always pair the regression output with an interaction plot when AB-type interactions are significant.
+
+## Practical Tips
+
+- Always randomise the run order to protect against time-trend confounding; running treatments in factor-level order produces designs in which a temporal drift could be mistaken for a factor effect.
+- With replication, residual degrees of freedom allow formal $t$-tests and $F$-tests; without replication, Daniel's normal-probability plot of effects (or Lenth's pseudo-standard-error procedure) is the standard inferential tool, exploiting effect sparsity.
+- Screen large factor counts ($k \geq 5$) first with fractional factorials of resolution III or IV, then follow up with a full factorial on the small subset of active effects identified — the classic two-stage industrial DoE workflow.
+- Code factors as $\pm 1$ rather than the natural units; coded coefficients are directly comparable, orthogonal, and interpretable as half-effects, while natural-unit coefficients depend on factor scale and confound location with effect.
+- Always report effect size alongside the $p$-value; a statistically significant tiny effect rarely justifies a process change, while a large but underpowered effect may motivate follow-up experimentation regardless of significance.
+- Pair main-effect plots and interaction plots with the regression table; visual diagnostics are far more informative than coefficient lists alone for engineers and scientists who must act on the result.
+
+## R Packages Used
+
+`FrF2` for the canonical $2^k$ design generation, including replication and randomisation, and Daniel's plot via `DanielPlot()`; `DoE.base` for general orthogonal-array construction including $2^k$ as a special case; base R `lm()` and `aov()` for analysis; `unrepx` for unreplicated-design effect identification (Lenth, half-Normal, Box-Meyer); `daewr` for textbook companion datasets and analysis helpers.

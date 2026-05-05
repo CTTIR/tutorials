@@ -1,0 +1,98 @@
+---
+title: Mixed ANOVA
+date: "2026-04-17"
+description: "Designs combining between-subjects and within-subjects factors, with the interaction as key"
+categories:
+  - Inferential Statistics
+  - mixed-anova
+  - split-plot
+  - between-within
+---
+
+## Introduction
+
+A mixed ANOVA combines at least one between-subjects factor (treatment arm, sex) with at least one within-subjects factor (time point, condition). It is the standard analysis for longitudinal trials and for split-plot designs. The typical primary question is the **group-by-time interaction**: does the change over time differ between groups?
+
+## Prerequisites
+
+Repeated-measures ANOVA, factorial designs.
+
+## Theory
+
+For a design with between factor A ($a$ levels, independent groups) and within factor B ($b$ levels, measured on each subject):
+
+$$Y_{ijk} = \mu + \alpha_i + \pi_{k(i)} + \beta_j + (\alpha\beta)_{ij} + \varepsilon_{ijk},$$
+
+where $\pi_{k(i)}$ is the subject-level random effect nested in A.
+
+Three effects are tested:
+
+- Main effect of A (between): uses between-subjects MS as denominator.
+- Main effect of B (within): uses within-subjects MS as denominator.
+- A x B interaction: uses within-subjects MS as denominator.
+
+Sphericity applies to the within factor (and to its interaction with A); Greenhouse-Geisser or Huynh-Feldt corrections are used when needed.
+
+## Assumptions
+
+- Independent subjects within each between-group.
+- Normal residuals, separately for within and between components.
+- Homogeneous variance-covariance structure across between groups (Box's M, rarely formally tested).
+- Sphericity of the within factor.
+
+## R Implementation
+
+```r
+library(afex); library(emmeans); library(ggplot2)
+set.seed(2026)
+
+# 30 subjects per arm, measured at 3 times
+n <- 30
+subj  <- rep(1:(2 * n), each = 3)
+arm   <- factor(rep(rep(c("Placebo", "Active"), each = 3), n))
+time  <- factor(rep(c("t0", "t1", "t2"), 2 * n))
+
+df <- data.frame(
+  subject = factor(subj),
+  arm, time,
+  y = rnorm(6 * n, mean = 100, sd = 10) +
+      ifelse(time == "t1", 3, 0) +
+      ifelse(time == "t2", 5, 0) +
+      ifelse(arm == "Active" & time == "t2", -8, 0)
+)
+
+fit <- aov_car(y ~ arm * time + Error(subject/time), data = df)
+fit
+
+# Interaction plot
+emm <- emmeans(fit, ~ arm * time)
+plot(emm, comparisons = TRUE)
+
+# Simple effects of arm at each time
+pairs(emm, by = "time", adjust = "bonferroni")
+```
+
+## Output & Results
+
+```
+Anova Table (Type 3 tests)
+
+ Effect          df  MSE      F     ges     p.value
+ arm            1, 58  245  8.12   0.09   0.0062 **
+ time           2, 116  45   9.55  0.03  <.001 ***
+ arm:time       2, 116  45   4.72  0.02   0.011 *
+```
+
+Significant main effects of arm and time, and a significant interaction. Simple-effects analysis localises the interaction.
+
+## Interpretation
+
+"A 2 (arm) x 3 (time) mixed ANOVA revealed a significant interaction, F(2, 116) = 4.72, p = 0.011, $\eta_G^2 = 0.02$. Simple-effects comparisons showed that at time 2, the Active arm was 8.0 points lower than Placebo (p = 0.003)."
+
+## Practical Tips
+
+- For longitudinal trials, the interaction is typically the primary endpoint.
+- Sphericity corrections apply only to the within-subjects parts of the model.
+- Missing measurements on a within-subject factor cause listwise deletion of that subject; prefer a linear mixed model for unbalanced data.
+- Report the interaction plot; it is often more interpretable than the numeric ANOVA table.
+- Simple main effects (one factor fixed at a level of the other) give the most interpretable decomposition when the interaction is significant.

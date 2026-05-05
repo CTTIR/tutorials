@@ -1,0 +1,73 @@
+---
+title: Weighted Log-Rank Tests
+date: "2026-04-17"
+description: "Peto-Peto, Fleming-Harrington, and other weighted variants for non-proportional hazards"
+categories:
+  - Survival Analysis
+  - weighted-log-rank
+  - peto-peto
+  - fleming-harrington
+---
+
+## Introduction
+
+The standard log-rank test gives every event time equal weight in the comparison between groups. That is the optimal weighting under proportional hazards but loses power when the difference between groups is concentrated at one end of follow-up — early differences that wane (typical of immunotherapy run-in effects), late differences that emerge after a delay (typical of immune-checkpoint inhibitors), or crossing-curve patterns. Weighted log-rank tests recover power in these settings by emphasising the time region where the difference is expected.
+
+## Prerequisites
+
+A working understanding of the log-rank test, the proportional-hazards assumption, and the relationship between hazard ratios and survival curves at different follow-up times.
+
+## Theory
+
+The general form of a weighted log-rank test is
+
+$$\chi^2 = \frac{\bigl(\sum_j w(t_j) [O_j - E_j]\bigr)^2}{\sum_j w(t_j)^2 V_j},$$
+
+where $O_j - E_j$ is the observed-minus-expected event count at $t_j$ and $V_j$ is its variance. Common weighting schemes:
+
+- **Log-rank**: $w(t) = 1$. Optimal under proportional hazards.
+- **Wilcoxon / Gehan-Breslow**: $w(t_j) = n_j$ (size of risk set). Emphasises early differences.
+- **Peto-Peto**: $w(t) = \hat S(t)$. Similar to Wilcoxon but uses the pooled survival estimator.
+- **Fleming-Harrington $G^{\rho, \gamma}$**: $w(t) = \hat S(t^-)^\rho \, [1 - \hat S(t^-)]^\gamma$. $G^{1, 0}$ emphasises early differences; $G^{0, 1}$ emphasises late differences; $G^{1, 1}$ emphasises mid-follow-up differences.
+
+Combination tests (max-combo) compute several weights simultaneously and apply a multiple-testing correction; this preserves Type I control while gaining power across a range of alternative shapes.
+
+## Assumptions
+
+Independent non-informative censoring. The chosen weight reflects the hazard pattern actually expected; post-hoc weight selection inflates Type I error and is statistical malpractice.
+
+## R Implementation
+
+```r
+library(survival)
+
+data(lung)
+# Standard log-rank (rho = 0)
+survdiff(Surv(time, status) ~ sex, data = lung, rho = 0)
+
+# Peto-Peto (rho = 1): weights early differences
+survdiff(Surv(time, status) ~ sex, data = lung, rho = 1)
+
+# Fleming-Harrington via nphRCT or similar package (conceptually)
+```
+
+## Output & Results
+
+`survdiff()` reports the chi-squared statistic, degrees of freedom, $p$-value, and observed-vs-expected counts under the chosen weight (`rho` argument). The `nph` and `nphRCT` packages add Fleming-Harrington $G^{\rho, \gamma}$ tests and combination tests with formal Type I control.
+
+## Interpretation
+
+A reporting sentence: "The pre-specified Peto-Peto weighted log-rank test rejected the null of equal survival ($\chi^2_1 = 12.8$, $p < 0.001$); the standard log-rank produced a similar conclusion ($\chi^2_1 = 10.3$, $p = 0.001$). The Peto-Peto weighting was chosen a priori based on prior evidence that the treatment effect is concentrated in the first 18 months." Always state the weight in advance and justify it; weight-shopping is the most common abuse of these tests.
+
+## Practical Tips
+
+- Pre-specify the weighting scheme in the protocol; switching weights after seeing the data inflates Type I error far above the nominal level.
+- For trials with expected delayed treatment effects (immunotherapy), Fleming-Harrington $G^{0, 1}$ or a max-combo test is increasingly the standard.
+- Restricted-mean survival time (RMST) is a complementary approach for non-proportional hazards; report both when proportional hazards is in question.
+- Combination tests (max-combo: standard log-rank, $G^{1, 0}$, $G^{0, 1}$, $G^{1, 1}$) preserve Type I control via Hochberg-style adjustment; `nph::nphRCT` implements them.
+- Inspect the Kaplan-Meier curve before choosing a weight; a clearly delayed effect rules out the standard log-rank as the primary test.
+- Modern immuno-oncology trials routinely pre-specify a max-combo or RMST primary analysis; the era of one-size-fits-all log-rank reporting is closing.
+
+## R Packages Used
+
+`survival` for `survdiff()` with `rho` weighting; `nph` and `nphRCT` for Fleming-Harrington $G^{\rho, \gamma}$ tests and max-combo statistics; `survRM2` for RMST as an alternative summary; `coin` for permutation-based exact weighted log-rank tests.

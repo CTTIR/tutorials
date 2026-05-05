@@ -1,0 +1,67 @@
+---
+title: Conditional Survival
+date: "2026-04-17"
+description: "Updating prognosis for survivors: P(T > t + s | T > s)"
+categories:
+  - Survival Analysis
+  - conditional-survival
+  - prognosis
+---
+
+## Introduction
+
+Conditional survival is the probability of surviving an additional time $t$ given that a patient has already survived to time $s$. It answers the clinically relevant question that absolute survival cannot: a five-year survival probability of 30 % at diagnosis says little to a patient who has already lived three years. The conditional five-year-from-now estimate may be 70 % or higher, dramatically updating the prognosis. Survivorship clinics, oncology long-term follow-up, and patient counselling all rely on conditional rather than unconditional survival.
+
+## Prerequisites
+
+A working understanding of the survival function $S(t)$, conditional probability, and the Kaplan-Meier estimator.
+
+## Theory
+
+By the definition of conditional probability,
+
+$$\mathrm P(T > t + s \mid T > s) = \frac{\mathrm P(T > t + s)}{\mathrm P(T > s)} = \frac{S(t + s)}{S(s)}.$$
+
+A patient who has survived $s$ years is now in the risk set at $s$; their next-$t$-year survival is the ratio of survival probabilities. For Kaplan-Meier estimates, this is computed from $\hat S(s)$ and $\hat S(t + s)$ directly. Confidence intervals require variance propagation through the ratio; the log or log-log transformation gives intervals that respect the $[0, 1]$ bounds.
+
+## Assumptions
+
+A reliable Kaplan-Meier or parametric survival estimate at both $s$ and $t + s$; in practice this means sufficient follow-up so that $\hat S(t + s)$ is not based on a tiny remaining cohort.
+
+## R Implementation
+
+```r
+library(survival)
+
+data(lung)
+fit <- survfit(Surv(time, status) ~ 1, data = lung)
+
+# Unconditional 2-year survival
+summary(fit, times = c(500, 1000))$surv   # approximate 2- and 3-year
+
+# Conditional 1-year survival given 1-year survivorship
+times <- summary(fit, times = c(365, 730))
+cond_surv <- times$surv[2] / times$surv[1]
+cond_surv
+```
+
+## Output & Results
+
+The ratio of two KM survival estimates at chosen landmark times. For confidence intervals, transform onto the log-log scale, compute SEs by the delta method, and back-transform. The `condsurv` package automates the computation including bootstrap intervals.
+
+## Interpretation
+
+A reporting sentence: "Unconditional one-year survival was 48 %; conditional on having survived one year, the probability of surviving an additional year was 66 % (95 % CI 56 % to 75 %); conditional on having survived two years, the next-year survival rose to 78 %." Always report the landmark time $s$ explicitly; conditional survival is meaningless without it.
+
+## Practical Tips
+
+- Report conditional survival at clinically meaningful landmarks: one-year, five-year, ten-year survivor checkpoints in oncology, post-transplant 90-day survival in transplantation.
+- `condsurv` automates the computation and produces clean tables and plots; it handles confidence intervals via the log-log transformation by default.
+- Confidence intervals must respect the $[0, 1]$ bounds; the log-log transformation is the standard choice and is preferable to the naive Wald interval.
+- For dynamic prediction (conditional survival as a function of $s$), landmark analyses or joint longitudinal-survival models give more refined estimates that incorporate post-baseline information.
+- Conditional survival is particularly useful in patient counselling because it answers the question patients actually ask: "Given that I'm still alive, how much longer can I expect to live?" rather than the population-level survival reported at diagnosis.
+- Pair conditional-survival reports with the underlying KM curve so readers can see how the conditional estimate evolves across the cohort's experience.
+
+## R Packages Used
+
+`survival` for the Kaplan-Meier baseline; `condsurv` for tabular conditional survival with CIs; `survminer::ggsurvplot()` for KM curves to display alongside conditional summaries; `dynpred` and `JM` for dynamic prediction beyond the simple ratio of survival probabilities.

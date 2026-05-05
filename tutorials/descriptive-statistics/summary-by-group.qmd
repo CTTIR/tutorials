@@ -1,0 +1,102 @@
+---
+title: Summary by Group
+date: "2026-04-17"
+description: Split-apply-combine pattern for computing summaries within subgroups of the data
+categories:
+  - Descriptive Statistics
+  - dplyr
+  - group-by
+  - summarise
+  - split-apply-combine
+---
+
+## Introduction
+
+Split-apply-combine is the workhorse pattern of applied data analysis: split the data by a grouping variable, apply a summary function to each group, and combine the results. It produces the per-group means, medians, counts, and other statistics that populate Table 1 of most scientific papers.
+
+## Prerequisites
+
+The reader should know what the mean, median, and SD are, and be comfortable with R's `dplyr` pipe syntax.
+
+## Theory
+
+For a dataset with $n$ observations and a grouping variable $g$ taking values $g_1, \ldots, g_k$, split-apply-combine computes
+
+$$s_j = f(\{x_i : g_i = g_j\})$$
+
+for each group $j$, where $f$ is the summary function (mean, median, quantile, any aggregator). The returned object has $k$ rows, one per group.
+
+R implements this via base `aggregate()`, `tapply()`, and `by()`, and via the modern `dplyr::group_by() |> summarise()` and `data.table` equivalents.
+
+## Assumptions
+
+Purely descriptive; no distributional assumption. The grouping variable should have enough observations per group for the summary to be meaningful (a mean based on $n = 2$ is noisy).
+
+## R Implementation
+
+```r
+library(dplyr)
+library(data.table)
+library(gtsummary)
+
+set.seed(2026)
+trial <- tibble::tibble(
+  arm      = factor(rep(c("Placebo", "Active"), each = 75)),
+  sex      = factor(sample(c("F", "M"), 150, replace = TRUE)),
+  age      = round(rnorm(150, 58, 12)),
+  hba1c    = round(c(rnorm(75, 7.3, 0.7), rnorm(75, 6.9, 0.8)), 1),
+  event    = rbinom(150, 1, 0.15)
+)
+
+# dplyr
+trial |>
+  group_by(arm) |>
+  summarise(
+    n         = n(),
+    age_mean  = mean(age),
+    age_sd    = sd(age),
+    hba1c_med = median(hba1c),
+    hba1c_iqr = IQR(hba1c),
+    event_rate = mean(event)
+  )
+
+# Multi-variable grouping
+trial |>
+  group_by(arm, sex) |>
+  summarise(across(c(age, hba1c), list(mean = mean, sd = sd)),
+            .groups = "drop")
+
+# data.table
+dt <- as.data.table(trial)
+dt[, .(n = .N, age_mean = mean(age), hba1c_median = median(hba1c)),
+   by = .(arm)]
+
+# Publication-ready
+trial |>
+  tbl_summary(by = arm, include = c(age, sex, hba1c, event),
+              statistic = list(all_continuous() ~ "{mean} ({sd})"))
+```
+
+## Output & Results
+
+```
+# A tibble: 2 x 6
+  arm       n age_mean age_sd hba1c_med hba1c_iqr event_rate
+  <fct> <int>    <dbl>  <dbl>     <dbl>     <dbl>      <dbl>
+1 Placebo  75     57.9   12.1       7.3       0.9     0.173
+2 Active   75     57.8   11.8       6.9       1.1     0.120
+```
+
+The two arms differ in HbA1c (medians 7.3 vs. 6.9) while being comparable in age and sex distribution -- the typical pattern in a Table 1 balance check.
+
+## Interpretation
+
+Report grouped summaries for every important subgrouping in a study: treatment arms, sex, study site, risk stratum. The `gtsummary::tbl_summary(by = ...)` call produces a fully formatted Table 1 with p-values on request.
+
+## Practical Tips
+
+- Always include `n` per group so readers know the denominator.
+- Handle missing values explicitly: `summarise(mean(x, na.rm = TRUE))` or pre-filter.
+- For many summary statistics per variable, `across(everything(), list(mean = mean, sd = sd))` is concise.
+- `data.table` is faster for very large datasets; the syntax differs but the logic is identical.
+- Report median + IQR for skewed variables and mean + SD for approximately normal ones; mix the two when the Table 1 covers both types.

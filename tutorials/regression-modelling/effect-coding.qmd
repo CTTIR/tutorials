@@ -1,0 +1,69 @@
+---
+title: Effect (Deviation) Coding
+date: "2026-04-17"
+description: "Sum-to-zero contrasts: coefficients as deviations from the grand mean"
+categories:
+  - "Regression & Modelling"
+  - effect-coding
+  - deviation-contrast
+  - sum-to-zero
+---
+
+## Introduction
+
+Effect coding — also called deviation coding or sum-to-zero coding — represents a factor's levels as deviations from the grand mean rather than as differences from a single reference level. The intercept becomes the grand mean and each coefficient becomes a level-vs-grand-mean deviation, with all level deviations summing to zero. This symmetric interpretation is the right framing for factorial ANOVA and for any analysis where no single level is naturally privileged as "reference".
+
+## Prerequisites
+
+A working understanding of dummy (treatment) coding, factorial ANOVA, and the difference between Type I, II, and III sums of squares in unbalanced designs.
+
+## Theory
+
+For a $k$-level factor, effect coding produces $k - 1$ coded columns. Each column codes one non-reference level as $+1$, the implicit reference level as $-1$, and all other levels as $0$. The intercept then equals the grand mean of cell means; the coefficient on each column is the deviation of that level from the grand mean. The implicit reference level's deviation is the negative sum of the explicit coefficients (since deviations sum to zero by construction).
+
+Effect coding matters most in factorial ANOVA with unbalanced designs: Type III sums of squares (the standard ANOVA approach in many disciplines) require orthogonal contrasts to give interpretable interaction tests, and effect coding (or Helmert) is the right choice. Treatment contrasts give Type II SS that confound main effects with interactions.
+
+## Assumptions
+
+Same as regression; the contrast choice does not change fit or predictions, only coefficient interpretation.
+
+## R Implementation
+
+```r
+d <- mtcars
+d$cyl <- factor(d$cyl)
+
+# Default: treatment contrasts
+contrasts(d$cyl)
+
+# Effect (sum-to-zero) contrasts
+contrasts(d$cyl) <- contr.sum(3)
+contrasts(d$cyl)
+
+fit_eff <- lm(mpg ~ cyl, data = d)
+summary(fit_eff)
+
+# Intercept = grand mean of cell means
+mean(tapply(d$mpg, d$cyl, mean))
+```
+
+## Output & Results
+
+The intercept equals the grand mean (or grand mean of cell means in unbalanced designs). Each coefficient on a coded column equals the deviation of that level from the grand mean. The deviation of the implicit reference level equals minus the sum of the explicit coefficients.
+
+## Interpretation
+
+A reporting sentence: "Under effect coding (`contr.sum`), the intercept (22.5 mpg) is the grand mean of cell means; 4-cylinder cars averaged 4.4 mpg above the grand mean ($p < 0.001$), 6-cylinder cars 0.5 mpg below ($p = 0.66$), and 8-cylinder cars (implied as the negative sum of the other two coefficients) 3.9 mpg below. Effect coding was used to support Type III SS interpretation of interactions in the factorial design." Always state the contrast choice when reporting ANOVA-style coefficients.
+
+## Practical Tips
+
+- Use effect coding for factorial ANOVA with Type III SS; combine with `car::Anova(fit, type = 3)` for interpretable interaction tests in unbalanced designs.
+- Set effect coding via `contrasts(factor) <- contr.sum(k)` *before* fitting; changing contrasts on a fitted model does not retroactively reinterpret coefficients.
+- Effect coding's interpretation is symmetric across levels; no level is privileged as "reference".
+- Treatment (dummy) coding is more common in clinical reporting where a placebo or control condition naturally serves as reference; effect coding dominates experimental psychology and factorial ANOVA.
+- For Type III SS with unbalanced factorial designs, effect coding (or Helmert) is essentially required; treatment coding produces non-orthogonal SS that depend on factor order.
+- The implicit reference level (typically the last) is silent in the output; the user must compute its deviation as the negative sum of the explicit coefficients.
+
+## R Packages Used
+
+Base R `contr.sum()` and `contrasts<-`; `car::Anova()` with `type = 3` for orthogonal-contrast Type III ANOVA; `emmeans` for marginal means and contrast-stable post-hoc inference; `afex` for repeated-measures ANOVA with effect-coded contrasts as the default.

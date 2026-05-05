@@ -1,0 +1,62 @@
+---
+title: Bayesian Hypothesis Testing
+date: "2026-04-17"
+description: Region of practical equivalence (ROPE) and Bayes factors for Bayesian decisions
+categories:
+  - Bayesian Statistics
+  - hypothesis-testing
+  - rope
+  - bayes-factor
+---
+
+## Introduction
+
+Bayesian decision-making about effects splits into two cultural traditions that complement rather than replace each other. The Bayes-factor school computes a ratio of marginal likelihoods and reads strength of evidence from Jeffreys' scale. The Region of Practical Equivalence (ROPE) school, popularised by Kruschke, defines a range of effects that are practically null and asks how much of the posterior lies inside it. Both produce decisions about hypotheses, but they answer slightly different questions: Bayes factors compare models, while ROPE asks whether the data have ruled out a substantively negligible effect.
+
+## Prerequisites
+
+A working understanding of posterior distributions, credible intervals, marginal likelihoods, and the difference between statistical significance and practical importance.
+
+## Theory
+
+**ROPE.** Specify, before looking at the data, a parameter range $[a, b]$ inside which an effect is considered practically zero — for example $\beta \in (-0.1, 0.1)$ on a standardised scale. After fitting, compute the proportion of the 95 % HPD (or the full posterior) inside that range. Conventional rules: $> 95 \%$ inside means accept the null for practical purposes, $0 \%$ inside means reject it, and intermediate values are inconclusive.
+
+**Bayes factor.** Ratio of marginal likelihoods under two models; for a point null nested in a continuous alternative, the Savage-Dickey density ratio gives the same answer as the ratio of posterior to prior densities at the null. Both quantities depend on the prior under the alternative, so disclosing the prior is part of the report.
+
+## Assumptions
+
+ROPE assumes a domain-relevant equivalence margin set in advance; chasing margins after seeing the posterior is a Bayesian variant of $p$-hacking. Bayes factors assume proper priors and a likelihood that admits stable marginal-likelihood computation.
+
+## R Implementation
+
+```r
+library(bayestestR); library(brms)
+
+set.seed(2026)
+d <- data.frame(y = rnorm(200), x = rnorm(200))
+fit <- brm(y ~ x, data = d, chains = 4, iter = 2000, refresh = 0)
+
+rope(fit, range = c(-0.1, 0.1))
+bayesfactor_parameters(fit)
+describe_posterior(fit)
+```
+
+## Output & Results
+
+`rope()` returns the percentage of the HPD (or full posterior, depending on the chosen `ci`) inside the equivalence region for each parameter. `bayesfactor_parameters()` returns the Savage-Dickey Bayes factor against the point null. `describe_posterior()` is a one-stop summary that combines the two with point estimates and credible intervals.
+
+## Interpretation
+
+A reporting sentence: "The posterior for $\beta_x$ had 4 % of its 95 % HPD inside the practical-equivalence region $(-0.1, 0.1)$ and a Savage-Dickey Bayes factor of $\mathrm{BF}_{10} = 7.2$ — substantial evidence for a non-null effect on Jeffreys' scale, with most of the posterior lying outside the practical-null region." When the two methods disagree (ROPE inconclusive but Bayes factor decisive, or vice versa), report both and explain which question your study was designed to answer.
+
+## Practical Tips
+
+- Pre-register the ROPE based on what is practically relevant in your field; for standardised effects, $\pm 0.1$ is a common default but is arbitrary in absolute terms.
+- For ROPE on raw scales, work out the smallest effect that would change clinical or business behaviour and use that as the half-width.
+- Bayes factors are sensitive to the prior under the alternative (Lindley–Bartlett paradox); always run a sensitivity analysis with at least two prior scales.
+- Use `bayestestR::describe_posterior()` to deliver a single block of summaries that includes credible intervals, ROPE, Bayes factors, and probability of direction; consistent reporting reduces ambiguity.
+- ROPE is easier to communicate to non-statistical audiences ("most of the posterior is outside the negligible-effect range") than Bayes factors are; choose the framing that fits your reader.
+
+## R Packages Used
+
+`bayestestR` for `rope()`, `bayesfactor_parameters()`, and `describe_posterior()`; `brms` or `rstanarm` for the underlying Bayesian fit; `bridgesampling` for marginal-likelihood-based Bayes factors when the Savage-Dickey shortcut does not apply.

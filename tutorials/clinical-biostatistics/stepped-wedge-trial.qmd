@@ -1,0 +1,78 @@
+---
+title: Stepped-Wedge Trial
+date: "2026-04-17"
+description: Sequential rollout cluster design with all clusters eventually treated
+categories:
+  - Clinical Biostatistics
+  - stepped-wedge
+  - rollout
+  - cluster
+---
+
+## Introduction
+
+Stepped-wedge cluster-randomised trials (SW-CRTs) randomise not whether each cluster receives the intervention but the time at which each cluster transitions from control to intervention. By the end of the trial all clusters have received the intervention, which gives the design particular ethical and pragmatic appeal: it is well suited to settings where investigators believe the intervention is likely beneficial (so withholding it from some clusters indefinitely would be ethically uncomfortable), where logistical constraints prevent simultaneous rollout across all clusters, or where a programme rollout is happening anyway and the trial is exploiting the staggered implementation to learn the effect. Analysis must carefully separate the secular time trend that affects all clusters from the treatment effect that is realised at different calendar times in different clusters.
+
+## Prerequisites
+
+A working understanding of cluster-randomised trials, time-trend modelling, and mixed-effects models with cluster random intercepts and (optionally) cluster-time random effects.
+
+## Theory
+
+Clusters are randomised to sequence rather than to arm; at each step (period) a new subset of clusters crosses over from control to intervention. The resulting data structure provides two complementary contrasts: a between-cluster comparison at each period (like a parallel-arm CRT at that period) and a within-cluster before-after comparison around each cluster's switch-point. The standard analysis is a mixed-effects model with fixed effects for time period and treatment status and a random intercept for cluster:
+
+$$y_{ijk} = \mu + \tau_t + \beta \cdot X_{jk} + u_j + \varepsilon_{ijk},$$
+
+with $\tau_t$ the period effect, $X_{jk}$ the treatment indicator for cluster $j$ at time $k$, and $u_j \sim N(0, \sigma_c^2)$ the cluster random effect. Including the period fixed effects is mandatory because secular trends confound the treatment estimate.
+
+## Assumptions
+
+Secular time trends are common across clusters (any cluster-specific time trend should be modelled explicitly), the treatment effect is immediate and stable after switch (or any fade-in/fade-out is explicitly modelled), and the within-cluster correlation structure is correctly specified.
+
+## R Implementation
+
+```r
+library(lme4); library(lmerTest)
+
+set.seed(2026)
+n_cl <- 10; n_per <- 20; n_period <- 5
+cluster <- rep(1:n_cl, each = n_period * n_per)
+period  <- rep(rep(1:n_period, each = n_per), n_cl)
+
+start_t <- sample(2:5, n_cl, replace = TRUE)
+trt <- as.numeric(period >= rep(start_t, each = n_period * n_per))
+
+time_trend <- 0.1 * (period - 1)
+cl_re      <- rep(rnorm(n_cl, 0, 0.5), each = n_period * n_per)
+
+y <- cl_re + time_trend + 0.4 * trt +
+     rnorm(length(cluster), 0, 1)
+
+df <- data.frame(cluster = factor(cluster),
+                 period  = factor(period),
+                 trt     = trt, y = y)
+
+fit <- lmer(y ~ trt + period + (1 | cluster), data = df)
+summary(fit)$coefficients["trt", ]
+```
+
+## Output & Results
+
+The mixed-effects model returns the treatment effect estimate with a standard error that reflects both the within-cluster and between-cluster information available in the staggered design. Including the period fixed effects absorbs the secular time trend; the random cluster intercept absorbs the between-cluster baseline variation; the residual captures within-cluster, within-period noise.
+
+## Interpretation
+
+A reporting sentence: "The stepped-wedge mixed-effects analysis estimated a treatment effect of 0.38 SD (95 % CI 0.19 to 0.57, $p < 0.001$), adjusting for the calendar-period secular trend (which itself was significant, $\hat\tau_5 - \hat\tau_1 = 0.41$) and the cluster random intercepts (cluster ICC 0.20). Reporting follows the CONSORT extension for stepped-wedge CRTs." Always report both the secular trend and the treatment effect.
+
+## Practical Tips
+
+- Always adjust for time period in the analysis; an unadjusted analysis confounds treatment with secular trend, and the bias can be substantial in any health-system setting where outcomes are improving (or worsening) over time independent of the intervention.
+- Report per the CONSORT extension for stepped-wedge cluster-randomised trials (Hemming et al., 2018), which specifies the trial design figure, time-by-cluster matrix, and standard reporting requirements.
+- Consider modelling time-varying treatment effects (a ramp-up over a few periods after the switch) for interventions that take time to implement fully; assuming an immediate stable effect when the intervention requires phased rollout biases the estimate downward.
+- Sample-size calculation for stepped-wedge designs is intrinsically more complex than for parallel CRTs because it depends on the design matrix, the within-cluster correlation, and the number of steps; use `swCRTdesign::swPwr()` or the Hussey-Hughes (2007) closed-form formula, and avoid naive parallel-CRT power approximations.
+- The ethical advantage — all clusters eventually receive the intervention — is real but does not eliminate the need for equipoise; if investigators are confident the intervention works, the trial is arguably unnecessary regardless of design.
+- Sensitivity analyses to the assumed correlation structure (compound symmetry vs Hooper-Girling vs more complex) are increasingly required by reviewers; report several specifications and check that conclusions are robust.
+
+## R Packages Used
+
+`lme4::lmer()` and `lmerTest` for canonical stepped-wedge mixed-effects analysis; `swCRTdesign::swPwr()` and `swCRTdesign::swSummary()` for design and power calculation; `clusterPower` for general cluster-trial power including stepped wedge; `geepack::geeglm()` for GEE-based marginal-model analysis as an alternative; `glmmTMB` for stepped-wedge analyses with non-Normal outcomes (count, binary).

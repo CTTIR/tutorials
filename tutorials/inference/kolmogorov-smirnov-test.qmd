@@ -1,0 +1,74 @@
+---
+title: Kolmogorov-Smirnov Test
+date: "2026-04-17"
+description: CDF-based goodness-of-fit for one-sample and two-sample comparisons
+categories:
+  - Inferential Statistics
+  - kolmogorov-smirnov
+  - goodness-of-fit
+  - ecdf
+---
+
+## Introduction
+
+The Kolmogorov-Smirnov (KS) test compares an empirical distribution function (ECDF) against either a hypothesised theoretical CDF (one-sample test) or another empirical distribution (two-sample test). Its test statistic is the supremum of the absolute difference between the two CDFs, a measure of the largest vertical gap on a CDF plot. KS is the prototypical CDF-based goodness-of-fit test, valued for being fully non-parametric and distribution-free in the one-sample case (the null distribution of $D$ does not depend on the specific $F_0$ for continuous distributions). It is widely used as a quick distributional diagnostic and as a flexible two-sample test sensitive to differences in location, scale, and shape.
+
+## Prerequisites
+
+A working understanding of empirical CDFs, the Glivenko-Cantelli theorem, and the difference between testing a fully specified hypothesised distribution and testing a parametric family with parameters estimated from the data.
+
+## Theory
+
+For the **one-sample** test with sample $X_1, \dots, X_n$ and hypothesised CDF $F_0$,
+
+$$D = \sup_x |\hat F_n(x) - F_0(x)|;$$
+
+under $H_0: X \sim F_0$, $\sqrt n \cdot D$ has the Kolmogorov limiting distribution. For the **two-sample** test with empirical CDFs $\hat F_n$ and $\hat G_m$,
+
+$$D_{n,m} = \sup_x |\hat F_n(x) - \hat G_m(x)|.$$
+
+KS is distribution-free in the continuous one-sample case: the null distribution of $D$ depends only on the sample size, not the specific $F_0$. When parameters of $F_0$ are estimated from the same data, the nominal $p$-values are anti-conservative; the Lilliefors correction provides the appropriate adjustment for testing Normality with estimated mean and SD.
+
+## Assumptions
+
+The underlying distribution is continuous (ties produce warnings and approximate $p$-values), observations are independent and identically distributed, and parameters of $F_0$ are either fully specified or appropriately corrected for if estimated from the sample.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+x <- rlnorm(100, meanlog = 0, sdlog = 0.8)
+ks.test(x, "pnorm", mean = mean(x), sd = sd(x))
+
+z <- scale(x)
+ks.test(z, "pnorm")
+
+x1 <- rnorm(50, 0, 1)
+x2 <- rnorm(60, 0.4, 1.2)
+ks.test(x1, x2)
+
+library(nortest)
+lillie.test(x)
+```
+
+## Output & Results
+
+The script demonstrates the four standard use cases. The one-sample KS against a Normal with sample-estimated parameters rejects the null but the $p$-value is anti-conservative; the Lilliefors-corrected variant gives the proper rejection. The two-sample KS detects the location and scale shift between $X_1$ and $X_2$ ($D = 0.31$, $p = 0.007$), illustrating the test's sensitivity to general distributional differences.
+
+## Interpretation
+
+A reporting sentence: "The Lilliefors-corrected Kolmogorov-Smirnov test rejected Normality of the residuals from the regression model ($D = 0.16$, $p < 0.001$), confirming the visual impression of right-skew in the Q-Q plot. A log transformation was applied before re-fitting; the residuals on the transformed scale passed the same test ($D = 0.05$, $p = 0.21$). The two-sample KS comparing transformed-residual distributions across treatment arms detected no significant difference in shape ($D = 0.08$, $p = 0.52$)." Always pair KS with a Q-Q plot.
+
+## Practical Tips
+
+- KS is generally less powerful than Shapiro-Wilk for testing Normality in small to moderate samples; prefer Shapiro-Wilk as the default Normality test and use KS when the hypothesised distribution is non-Normal or when a two-sample distributional comparison is needed.
+- Ties in the sample invalidate the strict KS $p$-value and R issues a warning; prefer Anderson-Darling or the Cramér-von Mises test with discretised or rounded data, which handle ties more gracefully.
+- The Lilliefors correction must be used when testing Normality with sample-estimated mean and SD; the standard `ks.test()` against `pnorm` with sample estimates gives anti-conservative $p$-values that reject too rarely.
+- The two-sample KS detects any distributional difference — location, scale, shape — and is therefore a useful omnibus diagnostic when the analyst is unsure which aspect of the distribution might differ; it is generally less powerful than the Mann-Whitney $U$ test for pure location shifts.
+- For very large samples, KS will reject almost any parametric fit because real data have rounding, ceiling effects, and other minor non-Normalities; use effect-size summaries and Q-Q plots in large samples rather than relying on the $p$-value alone.
+- The Anderson-Darling test gives more weight to the tails of the distribution than KS does; for tail-sensitive applications (extreme-value detection, financial risk), Anderson-Darling is often preferred.
+
+## R Packages Used
+
+Base R `ks.test()` for one- and two-sample Kolmogorov-Smirnov; `nortest::lillie.test()` for the Lilliefors-corrected Normality variant; `nortest::ad.test()` and `nortest::cvm.test()` for Anderson-Darling and Cramér-von Mises alternatives; `dgof::ks.test()` for discrete-data extensions; `car::qqPlot()` for graphical complements to the formal test.

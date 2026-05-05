@@ -1,0 +1,312 @@
+---
+title: Bayesian Statistics
+description: "Bayesian inference from first principles: priors, likelihoods, posteriors, MCMC, and practical model building with Stan and brms"
+---
+
+Bayesian methods treat unknown quantities as random variables with probability distributions updated by data. The approach yields direct probability statements about parameters, principled uncertainty for predictions, and a natural framework for combining evidence across studies.
+
+This area develops Bayesian thinking from its axiomatic foundations, through conjugate examples that can be worked by hand, to modern MCMC-based fitting of complex models using `rstan` and `brms`. Emphasis is placed on prior choice, posterior diagnostics, and the interpretation of posterior summaries in a research report.
+
+## Coverage
+
+- The Bayesian update: prior, likelihood, posterior, and posterior predictive distribution
+- Conjugate models: beta-binomial, normal-normal, gamma-Poisson
+- Informative, weakly informative, and reference priors; prior-predictive checks
+- Posterior summaries: credible intervals, highest posterior density regions, Bayes factors
+- MCMC methods: Metropolis-Hastings, Gibbs sampling, Hamiltonian Monte Carlo
+- Convergence diagnostics: R-hat, effective sample size, trace plots, divergence checks in Stan
+- Bayesian linear and generalised linear models via `brms` and `rstanarm`
+- Bayesian mixed-effects and hierarchical models
+- Bayesian model comparison: WAIC, LOO-CV, Bayes factors
+- Bayesian hypothesis testing and the Savage-Dickey ratio
+- Posterior predictive checks for model criticism
+
+Every model is fit end-to-end: prior specification, sampling, diagnostics, posterior summaries, and manuscript reporting. The `tidybayes` and `bayesplot` packages are used for tabulation and visualisation throughout.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bayes Factors](bayes-factors.qmd)
+Ratio of marginal likelihoods under two models, the Bayesian analogue of a likelihood-ratio test
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bayes' Theorem for Parameters](bayes-theorem-for-parameters.qmd)
+Using Bayes' theorem to update beliefs about parameters given data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bayesian ANOVA](bayesian-anova.qmd)
+Posterior inference on group differences with credible intervals and contrast comparisons
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bayesian Hierarchical Models](bayesian-hierarchical-intro.qmd)
+Partial pooling through prior structure for grouped / multilevel data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bayesian Hypothesis Testing](bayes-hypothesis-testing.qmd)
+Region of practical equivalence (ROPE) and Bayes factors for Bayesian decisions
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bayesian Linear Regression](linear-regression-bayes.qmd)
+Linear regression with priors on coefficients, fit via MCMC in brms or rstanarm
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bayesian Logistic Regression](logistic-regression-bayes.qmd)
+Logistic regression with MCMC-based posterior for binary outcomes
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bayesian Mediation Analysis](bayesian-mediation.qmd)
+Testing indirect effects with posterior samples
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bayesian Meta-Analysis](bayesian-meta-analysis.qmd)
+Hierarchical meta-analysis with explicit prior on between-study heterogeneity
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bayesian Mixed Models](bayesian-mixed-models.qmd)
+Multilevel regression with random effects, fit via Bayesian MCMC
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Conjugate Priors](conjugate-priors.qmd)
+When the prior and posterior share the same distributional family: the beta-binomial, normal-normal, and gamma-Poisson models
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Credible Intervals](credible-intervals.qmd)
+Bayesian analogue of confidence intervals: equal-tailed and highest-posterior-density regions
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Divergences and Pairs Plots](divergences-pairs-plots.qmd)
+Diagnosing HMC sampling problems via divergent transitions and pair-plot visualisations
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Gibbs Sampling](gibbs-sampling.qmd)
+MCMC via sequential sampling from conditional distributions
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Hamiltonian Monte Carlo](hamiltonian-monte-carlo.qmd)
+Gradient-based MCMC using Hamiltonian dynamics; NUTS variant in Stan
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Highest Posterior Density Interval](hpd-interval.qmd)
+Shortest interval containing a specified posterior probability mass
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Informative Priors](informative-priors.qmd)
+Priors derived from previous studies, expert elicitation, or mechanistic knowledge
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Jeffreys' Prior](jeffreys-prior.qmd)
+Invariant reference prior proportional to the square root of the Fisher information
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Leave-One-Out Cross-Validation](loo-cv.qmd)
+Efficient Bayesian LOO-CV via Pareto-smoothed importance sampling (PSIS-LOO)
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Metropolis-Hastings](metropolis-hastings.qmd)
+The foundational MCMC algorithm with proposal distribution and accept/reject rule
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Posterior Mean and Variance](posterior-mean-variance.qmd)
+Point estimates and uncertainty summaries from a posterior distribution
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Posterior Predictive Checks](posterior-predictive-checks.qmd)
+Comparing simulated data from the fitted model to observed data for model criticism
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Prior Specification](prior-specification.qmd)
+Choosing priors: informative, weakly informative, flat, and the risks of each
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [R-hat and ESS Diagnostics](rhat-ess-diagnostics.qmd)
+Convergence (R-hat) and effective sample size (ESS) for MCMC quality control
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Stan: Introduction](stan-introduction.qmd)
+Writing probabilistic models in Stan's data-parameters-model blocks
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Beta-Binomial Model](beta-binomial-model.qmd)
+Conjugate Bayesian inference for a binomial proportion with a Beta prior
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Gamma-Poisson Model](gamma-poisson-model.qmd)
+Conjugate Bayesian inference for a Poisson rate with Gamma prior
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Normal-Normal Model](normal-normal-model.qmd)
+Conjugate Bayesian inference for a normal mean with known variance
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Posterior Predictive Distribution](posterior-predictive-distribution.qmd)
+Distribution of a new observation integrating over posterior uncertainty about parameters
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Savage-Dickey Density Ratio](savage-dickey-ratio.qmd)
+Bayes factor for a point null via posterior/prior density ratio
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [WAIC](waic.qmd)
+Widely applicable information criterion: Bayesian out-of-sample prediction score
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Weakly Informative Priors](weakly-informative-priors.qmd)
+Priors that regularise without imposing substantive constraints
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [brms Basics](brms-basics.qmd)
+High-level R interface to Stan: formula syntax, families, prior specification
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [rstanarm](rstanarm.qmd)
+Pre-compiled Stan models with a frequentist-like R interface
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [tidybayes Workflow](tidybayes-workflow.qmd)
+Extract, manipulate, and visualise posterior draws in tidyverse style
+:::
+
+:::

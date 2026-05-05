@@ -1,0 +1,97 @@
+---
+title: Characteristic Functions
+date: "2026-04-17"
+description: "Fourier transforms of distributions: always exist, uniquely identify the distribution, and drive convergence theorems"
+categories:
+  - Statistical Foundations
+  - characteristic-function
+  - fourier
+  - convergence
+---
+
+## Introduction
+
+A **characteristic function** is the Fourier transform of a probability distribution. Unlike the moment generating function, the characteristic function always exists -- even for distributions without finite moments, like the Cauchy. Characteristic functions provide the cleanest proofs of classical limit theorems (CLT, LLN) and the most elegant derivations of closure properties of distributional families.
+
+## Prerequisites
+
+The reader should know complex numbers, elementary calculus, and the concept of an expectation.
+
+## Theory
+
+For a random variable $X$, the **characteristic function** is
+
+$$\varphi_X(t) = E[e^{itX}] = E[\cos(tX)] + i E[\sin(tX)], \qquad t \in \mathbb{R}.$$
+
+Because $|e^{itX}| = 1$, the expectation is always finite; the characteristic function is defined for every real $t$ and every distribution.
+
+**Properties.**
+
+- $\varphi_X(0) = 1$ and $|\varphi_X(t)| \leq 1$ for all $t$.
+- $\varphi_{aX + b}(t) = e^{itb} \varphi_X(at)$.
+- For independent $X, Y$: $\varphi_{X + Y}(t) = \varphi_X(t) \varphi_Y(t)$.
+- **Uniqueness**: two random variables with the same characteristic function have the same distribution.
+- **Inversion**: the density (when it exists) can be recovered from $\varphi$ by an inverse Fourier transform.
+- **Derivatives**: if $E[|X|^k] < \infty$, then $\varphi_X^{(k)}(0) = i^k E[X^k]$.
+
+**Continuity theorem (Levy).** $X_n \xrightarrow{d} X$ if and only if $\varphi_{X_n}(t) \to \varphi_X(t)$ for every $t$, provided $\varphi_X$ is continuous at 0. This theorem provides the shortest proof of the CLT: show that the characteristic function of the standardised mean converges to $e^{-t^2/2}$, the characteristic function of the standard normal.
+
+**Examples.**
+
+- Normal $\mathcal{N}(\mu, \sigma^2)$: $\varphi(t) = \exp(i\mu t - \sigma^2 t^2/2)$.
+- Cauchy: $\varphi(t) = e^{-|t|}$. (The MGF does not exist; the CF does.)
+- Poisson$(\lambda)$: $\varphi(t) = \exp[\lambda(e^{it} - 1)]$.
+- Exponential$(\lambda)$: $\varphi(t) = \lambda / (\lambda - it)$.
+
+## Assumptions
+
+Characteristic functions require no moments or distributional regularity -- just that $X$ is a random variable on a probability space. This generality is their chief virtue.
+
+## R Implementation
+
+```r
+set.seed(2026)
+n <- 1e5
+
+# Empirical characteristic function of samples from a Cauchy
+x <- rcauchy(n)
+t_vals <- seq(-3, 3, length.out = 61)
+cf_empirical <- sapply(t_vals,
+                       function(t) mean(exp(1i * t * x)))
+
+cf_theoretical <- exp(-abs(t_vals))
+
+data.frame(t          = t_vals,
+           theoretical = cf_theoretical,
+           Re_empir    = Re(cf_empirical),
+           Im_empir    = Im(cf_empirical))[seq(1, 61, by = 10), ]
+```
+
+We estimate the characteristic function of the Cauchy distribution from a sample and compare to the known form $e^{-|t|}$.
+
+## Output & Results
+
+```
+       t  theoretical  Re_empir    Im_empir
+1   -3.0    0.0498     0.0512     -0.0006
+11  -2.0    0.1353     0.1358     -0.0017
+21  -1.0    0.3679     0.3689      0.0023
+31   0.0    1.0000     1.0000      0.0000
+41   1.0    0.3679     0.3689     -0.0023
+51   2.0    0.1353     0.1358      0.0017
+61   3.0    0.0498     0.0512      0.0006
+```
+
+The empirical CF closely matches the theoretical $e^{-|t|}$; the imaginary part is near zero because the Cauchy distribution is symmetric.
+
+## Interpretation
+
+Characteristic functions are rarely used directly by applied practitioners but appear everywhere in theoretical proofs. They are the canonical tool for proving that a sequence of distributions converges to a specific limit.
+
+## Practical Tips
+
+- When the MGF fails (heavy tails), reach for the characteristic function.
+- For computing convolutions (sums of independent variables), multiplying CFs is often simpler than convolving densities.
+- Empirical characteristic functions estimated from data can be used for parameter estimation in specific classes of models (stable distributions, alpha-stable processes).
+- Inversion to recover densities can be done numerically via FFT; this is how many specialised distributions (e.g., alpha-stable) are computed in R.
+- The continuity theorem (Levy) is the standard tool for proving convergence in distribution; many textbook CLT proofs rely on it.

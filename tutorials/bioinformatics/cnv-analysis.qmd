@@ -1,0 +1,68 @@
+---
+title: Copy Number Variation Analysis
+date: "2026-04-17"
+description: Inferring genomic copy-number changes from sequencing or array data
+categories:
+  - Bioinformatics
+  - cnv
+  - segmentation
+  - copy-number
+---
+
+## Introduction
+
+Copy number variations (CNVs) are large-scale gains or losses of genomic regions, critical in oncology (tumour aneuploidy), developmental disorders (trisomies, deletions), and population genetics. WGS, exome, or array-based readouts feed segmentation algorithms that partition the genome into constant-copy-number segments.
+
+## Prerequisites
+
+Coverage or intensity data (read depth, log R ratio); genome windowing.
+
+## Theory
+
+**Read-depth CNV calling**: normalised read counts in windows scale linearly with copy number. The log-ratio series is smoothed and segmented via **Circular Binary Segmentation (CBS)** (DNAcopy), HMMs (`HMMcopy`), or Bayesian segmentation.
+
+For tumour sequencing, methods like `ASCAT` and `FACETS` jointly estimate purity, ploidy, and allele-specific copy number from B-allele frequencies.
+
+## Assumptions
+
+Coverage uniformity (controlled by GC / mappability correction); matched normal for tumour calling (ideal); segments have consistent copy number within.
+
+## R Implementation
+
+```r
+library(DNAcopy)
+
+set.seed(2026)
+n_probes <- 1000
+chrom <- rep(1:5, each = n_probes / 5)
+maploc <- rep(seq(1, 1e7, length.out = n_probes / 5), 5)
+
+# Simulated log ratios with two CNV segments
+logR <- rnorm(n_probes, 0, 0.2)
+logR[201:300] <- logR[201:300] + 0.8    # duplication on chr2
+logR[601:680] <- logR[601:680] - 1.0    # deletion   on chr4
+
+cna <- CNA(genomdat = logR, chrom = chrom, maploc = maploc,
+           data.type = "logratio", sampleid = "tumor1")
+smoothed <- smooth.CNA(cna)
+seg <- segment(smoothed, verbose = 0)
+seg$output                     # segment means and boundaries
+
+plot(seg)
+```
+
+## Output & Results
+
+A segment table with chromosome, start, end, number of probes, and mean log ratio; the simulated duplication and deletion are recovered as distinct segments.
+
+## Interpretation
+
+"CNV segmentation of the tumour identified gain on 17q (log2 ratio 0.85) and loss on 13q (log2 ratio -1.1); the 13q deletion spans RB1, consistent with the retinoblastoma diagnosis."
+
+## Practical Tips
+
+- GC bias correction (`QDNAseq`) is essential for low-coverage sequencing; uncorrected data produces spurious segments.
+- For tumour studies, always use a matched normal to control germline CNVs and sequencing artefacts.
+- Integer copy-number calls require ploidy and purity estimates (ASCAT, FACETS); log ratios alone give only relative copy number.
+- Report CNV frequencies across cohorts with GISTIC2, which controls for background aneuploidy.
+- For rare-CNV studies, focus on large events ($> 100$ kb); small events are dominated by noise in array data.

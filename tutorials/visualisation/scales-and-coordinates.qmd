@@ -1,0 +1,97 @@
+---
+title: Scales and Coordinates
+date: "2026-04-17"
+description: Controlling how data values are mapped to visual values (scales) and how the plot area is organised (coordinates)
+categories:
+  - Data Visualisation
+  - ggplot2
+  - scales
+  - coordinates
+  - axes
+---
+
+## Introduction
+
+Scales and coordinates are the two layers of `ggplot2` that turn raw data into visual marks on a page. **Scales** map data values to visual properties — numbers to positions, factor levels to colours, ordered values to sizes — while **coordinates** describe the geometry of the plot area itself — Cartesian, polar, log, fixed aspect ratio. Most figure customisation happens at the scale level; coordinates change less often, but understanding the difference between them is what lets you switch between zooming, transforming, and projecting without breaking the rest of the plot.
+
+## Prerequisites
+
+A working knowledge of `ggplot2` aesthetics and geoms, and basic familiarity with how `aes()` mappings flow through to scale choices.
+
+## Theory
+
+Every aesthetic has a family of scales:
+
+- `scale_x_continuous`, `scale_x_discrete`, `scale_x_log10`, `scale_x_date`, `scale_x_datetime` for x; `scale_y_*` for y.
+- `scale_colour_*` and `scale_fill_*` for colour and fill, with continuous, discrete, viridis, brewer, gradient, and manual variants.
+- `scale_size_*`, `scale_alpha_*`, `scale_shape_*`, `scale_linetype_*` for the remaining aesthetics.
+
+Each scale exposes `breaks`, `labels`, `limits`, `trans`, and (for continuous) `expand` arguments that control tick placement, label formatting, axis range, monotone transformations, and padding.
+
+Coordinates change the geometry of the panel:
+
+- `coord_cartesian()` is the default; supplying `xlim` / `ylim` zooms without dropping data.
+- `coord_flip()` swaps x and y axes after scales are applied.
+- `coord_polar()` produces pie charts and radial layouts.
+- `coord_fixed(ratio = 1)` enforces equal aspect ratio, essential for maps and structural diagrams.
+- `coord_sf()` and `coord_map()` apply geographic projections.
+
+The crucial distinction: `scale_x_continuous(limits = c(a, b))` *filters* observations outside `[a, b]` and recomputes statistics on the remaining data; `coord_cartesian(xlim = c(a, b))` *zooms* without filtering, leaving statistics untouched.
+
+## Assumptions
+
+The data supplied are valid for the chosen scale (no negative values for log scales, no fractional dates for date scales).
+
+## R Implementation
+
+```r
+library(ggplot2); library(scales)
+
+# Log-scale y with sensible breaks
+ggplot(diamonds, aes(carat, price)) +
+  geom_point(alpha = 0.1) +
+  scale_y_log10(labels = scales::dollar_format()) +
+  theme_minimal()
+
+# Manual colour and custom axis formatting
+ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+  geom_point(size = 3) +
+  scale_colour_manual(values = c("4" = "#2A9D8F",
+                                 "6" = "#F4A261",
+                                 "8" = "#6A4C93")) +
+  scale_x_continuous(breaks = 1:5, labels = paste0(1:5, "K lbs")) +
+  theme_minimal()
+
+# Coord flip: horizontal bar chart
+ggplot(mpg, aes(class)) +
+  geom_bar(fill = "#2A9D8F") +
+  coord_flip() +
+  theme_minimal()
+
+# Zoom without filtering
+ggplot(diamonds, aes(carat, price)) +
+  geom_point(alpha = 0.1) +
+  coord_cartesian(xlim = c(0, 2)) +
+  theme_minimal()
+```
+
+## Output & Results
+
+Four illustrative plots: a log-scale price axis with currency formatting, a manual colour scale with custom x-axis labels, a horizontal bar chart via `coord_flip()`, and a zoomed-in scatter that preserves the full underlying dataset for accurate statistical layers.
+
+## Interpretation
+
+A reporting sentence: "Price is shown on a base-10 log scale (`scale_y_log10`); the linear relationship between log-price and carat reflects an approximately power-law pricing structure." Note any non-default scale or coordinate in the figure caption — a log-scale axis is easy to overlook and can mislead readers expecting linear interpretation.
+
+## Practical Tips
+
+- Reach for `scale_y_log10()` whenever the y-axis spans orders of magnitude; constant-rate growth then reads as a straight line.
+- Use `coord_cartesian()` to zoom — `scale_x_continuous(limits = ...)` *removes* the filtered data and recomputes any smoother or summary, which can mislead.
+- Always label axis units; "Weight" alone is ambiguous, "Weight (1000 lbs)" is informative.
+- For date axes, use `scale_x_date(date_breaks = "1 year", date_labels = "%Y")` and pick break frequencies that match the publication width.
+- Reverse a scale with `scale_x_reverse()` (continuous) or `scale_x_discrete(limits = rev)` (categorical); avoid hand-flipping data frames.
+- For diverging numeric scales centred at zero, combine `scale_fill_gradient2()` with explicit `low`, `mid`, `high` colours; avoid one-sided palettes that misrepresent symmetry.
+
+## R Packages Used
+
+`ggplot2` for the scale and coordinate functions; `scales` for label formatters (`dollar_format`, `percent_format`, `comma_format`, `label_log`); `ggh4x` for nested axis labels and per-panel scale control; `cowplot` for `theme_cowplot()` paired with these scales for a publication look.

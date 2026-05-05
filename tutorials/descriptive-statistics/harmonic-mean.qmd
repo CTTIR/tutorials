@@ -1,0 +1,77 @@
+---
+title: The Harmonic Mean
+date: "2026-04-17"
+description: "Reciprocal-averaged summary for rates, speeds, and F1-style composite scores"
+categories:
+  - Descriptive Statistics
+  - harmonic-mean
+  - rates
+  - f1-score
+---
+
+## Introduction
+
+The harmonic mean is the reciprocal of the arithmetic mean of reciprocals. It is appropriate when averaging rates, speeds, or ratios where the denominator is fixed -- for example, when a traveller covers equal distances at different speeds and you want the average speed. In machine learning, the harmonic mean of precision and recall gives the F1 score.
+
+## Prerequisites
+
+The reader should know the arithmetic mean and be comfortable taking reciprocals in R.
+
+## Theory
+
+For positive values $x_1, \ldots, x_n$,
+
+$$\mathrm{HM}(x) = \frac{n}{\sum 1/x_i}.$$
+
+The harmonic mean is always less than or equal to the geometric mean, which is less than or equal to the arithmetic mean: HM $\leq$ GM $\leq$ AM, with equality when all $x_i$ are equal.
+
+The F1 score in binary classification is the harmonic mean of precision and recall:
+
+$$F_1 = \frac{2 \cdot P \cdot R}{P + R} = \frac{1}{\frac{1}{2}\left(\frac{1}{P} + \frac{1}{R}\right)} \cdot \text{(rescaled)}.$$
+
+## Assumptions
+
+All values must be strictly positive. Negative values or zeros make the harmonic mean undefined or infinite.
+
+## R Implementation
+
+```r
+library(psych)
+
+speeds <- c(40, 60, 80)  # km/h over three equal distances
+psych::harmonic.mean(speeds)
+mean(speeds)                  # incorrect for average speed over equal distances
+
+# F1 score
+precision <- 0.80
+recall    <- 0.60
+f1 <- 2 * precision * recall / (precision + recall)
+f1
+
+# Harmonic mean is appropriate for average rates
+n <- 3
+hm_speed <- n / sum(1 / speeds)
+hm_speed
+```
+
+## Output & Results
+
+```
+[1] 55.38       # harmonic mean of speeds
+[1] 60          # arithmetic mean (incorrect for equal-distance travel)
+[1] 0.686       # F1 score with P=0.80, R=0.60
+```
+
+Travelling equal distances at 40, 60, 80 km/h gives an average speed of 55.4 km/h, not 60 km/h. The F1 of 0.69 splits the difference between P and R, penalising the lower value more than the arithmetic mean would.
+
+## Interpretation
+
+Use the harmonic mean when averaging rates with a fixed numerator or denominator (e.g., average speed when distance is constant). Use the F1 form when balancing two normalised scores where both values matter.
+
+## Practical Tips
+
+- Zero or negative inputs break the harmonic mean; guard against them.
+- The harmonic mean weights small values more heavily; a single small observation drives the result down.
+- In meta-analysis of rates per unit time, harmonic-mean sample size is sometimes used in effective-sample-size calculations.
+- The F-beta score generalises F1: $F_\beta = (1 + \beta^2) PR / (\beta^2 P + R)$, with $\beta = 2$ emphasising recall and $\beta = 0.5$ emphasising precision.
+- Reporting a harmonic mean without explanation is rare; specify why it is the appropriate summary in the methods.

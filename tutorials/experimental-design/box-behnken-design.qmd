@@ -1,0 +1,66 @@
+---
+title: Box-Behnken Designs
+date: "2026-04-17"
+description: Three-level rotatable designs for RSM without factorial-corner runs
+categories:
+  - Experimental Design
+  - box-behnken
+  - rsm
+  - three-level
+---
+
+## Introduction
+
+Box-Behnken designs (BBD), introduced by Box and Behnken in 1960, are rotatable three-level response-surface designs whose distinguishing feature is that they never run the extreme-corner combinations of the factorial cube. Each factor is set at one of three coded levels ($-1$, $0$, or $+1$), but every experimental run leaves at least one factor at the centre level — so no run combines all factors at their most extreme settings simultaneously. This makes the design particularly useful when extreme corner conditions are infeasible (safety limits, equipment constraints, prohibitive cost, or unstable chemistry at extremes), while still allowing estimation of the full second-order response-surface model with main effects, quadratic terms, and two-factor interactions.
+
+## Prerequisites
+
+A working understanding of factorial designs, response-surface methodology (RSM), the second-order polynomial model, and the concept of design rotatability — that prediction variance depends only on distance from the design centre, not on direction.
+
+## Theory
+
+For $k$ factors a Box-Behnken design places each factor at one of $\{-1, 0, +1\}$, with runs taken only at combinations where two factors are at $\pm 1$ and all remaining factors are at the centre level $0$. Replicated centre runs provide pure-error estimation and a lack-of-fit test. For $k = 3$ a BBD requires 12 factorial-style runs plus typically 3 centre points (15 runs total), comparable in size to a central composite design (CCD) with 14–20 runs.
+
+BBDs are exactly rotatable for $k = 4$ and $k = 7$; for other values of $k$ they are nearly rotatable. The absence of axial (star) points means prediction near the cube's corners is extrapolation with elevated variance.
+
+## Assumptions
+
+A second-order polynomial response surface is adequate over the design region (no strong curvature beyond quadratic), corner-extreme runs are either infeasible or unnecessary, and the residual error is approximately Normal with constant variance. The pure-error replications at the centre allow these assumptions to be diagnosed.
+
+## R Implementation
+
+```r
+library(rsm)
+
+bbd <- bbd(~ x1 + x2 + x3, n0 = 3, randomize = FALSE)
+bbd
+
+set.seed(2026)
+bbd$y <- 10 + 2 * bbd$x1 + 1.5 * bbd$x2 - 1 * bbd$x3 -
+         0.9 * bbd$x1^2 + 0.5 * bbd$x1 * bbd$x2 +
+         rnorm(nrow(bbd), 0, 0.4)
+
+fit <- rsm(y ~ SO(x1, x2, x3), data = bbd)
+summary(fit)
+```
+
+## Output & Results
+
+`bbd()` constructs the layout; the `rsm()` second-order model returns coefficients for all linear, quadratic, and two-factor-interaction terms together with a lack-of-fit test against the pure-error replicates. The canonical analysis includes a stationary-point analysis and an eigenvalue decomposition that classifies the surface as a maximum, minimum, or saddle.
+
+## Interpretation
+
+A reporting sentence: "The 15-run Box-Behnken design with 3 centre points estimated all linear, quadratic, and pairwise-interaction effects of the three factors. The fit revealed dominant curvature in $x_1$ (quadratic coefficient $-0.9$, $p < 0.001$) with significant linear effects on all three factors and one interaction ($x_1 \times x_2 = 0.5$, $p = 0.03$). The lack-of-fit test was non-significant ($p = 0.42$), supporting the second-order model. Predicted maximum lies at $x_1 = 1$, $x_2 = 1$, $x_3 = -1$." Always report the lack-of-fit test outcome.
+
+## Practical Tips
+
+- Prefer BBD over CCD when corner combinations are infeasible (extreme operating conditions, safety limits, equipment constraints, regulatory bounds, or unstable chemistry at extremes); BBD is the design of choice in such settings.
+- BBD has no axial points and so does not extend beyond the cube; prediction near or beyond the cube corners is extrapolation with elevated variance, and the design region should be chosen with this in mind.
+- Centre-point replications are essential — they provide pure-error estimation and the lack-of-fit test that diagnoses inadequacy of the second-order model. Three to five replicated centre points is the typical compromise between cost and inferential value.
+- BBD is generally less efficient than CCD in prediction variance over the cube; the choice between them is driven by feasibility of corner runs and the practical cost of extra axial-point experimentation.
+- BBD is not defined for $k = 2$; for two-factor RSM, use a central composite design or a face-centred CCD.
+- For mixed-precision designs (some factors continuous, others two-level discrete), `rsm` can fit hybrid models, but pre-specified screening followed by RSM follow-up is usually clearer.
+
+## R Packages Used
+
+`rsm::bbd()` and `rsm::rsm()` for the canonical Box-Behnken construction and second-order analysis with stationary-point and canonical analysis; `DoE.base` for general orthogonal-array DoE construction; `daewr` for textbook companion examples; `qualityTools` for an alternative RSM toolkit including BBD; `Vdgraph` for variance-dispersion graphs comparing BBD to CCD.

@@ -1,0 +1,65 @@
+---
+title: 3^k Factorial Designs
+date: "2026-04-17"
+description: Full factorial experiments with k three-level factors
+categories:
+  - Experimental Design
+  - factorial
+  - 3k
+  - quadratic
+---
+
+## Introduction
+
+The $3^k$ factorial design uses three coded levels per factor — low ($-1$), middle ($0$), and high ($+1$) — and runs all $3^k$ combinations. The third level is what distinguishes the $3^k$ family from the simpler $2^k$ family: with three levels the design supports estimation of pure quadratic terms in each factor, and therefore the second-order polynomial approximation to a smooth response surface. The $3^k$ factorial is the simplest full-factorial construction that captures curvature and is the conceptual ancestor of the modern response-surface designs (central composite, Box-Behnken) that economise on the run count by replacing the dense $3^k$ grid with sparser alternatives carrying the same second-order information.
+
+## Prerequisites
+
+Familiarity with $2^k$ factorial designs, the concept of an interaction effect, and quadratic regression for capturing curvature in a response.
+
+## Theory
+
+For $k$ three-level factors a full factorial has $3^k$ runs. With coded levels $\{-1, 0, +1\}$ the standard analysis model is the second-order polynomial
+
+$$y = \beta_0 + \sum_i \beta_i x_i + \sum_i \beta_{ii} x_i^2 + \sum_{i<j} \beta_{ij} x_i x_j + \varepsilon,$$
+
+with linear, pure-quadratic, and two-factor-interaction terms. The design grows quickly: $3^3 = 27$, $3^4 = 81$, $3^5 = 243$. For screening purposes the $3^k$ becomes impractical at $k = 4$ or beyond, and fractional $3^k$ designs or central composite / Box-Behnken layouts are far more economical for the same second-order information.
+
+## Assumptions
+
+The response is well approximated by a second-order polynomial within the design region (no strong cubic or higher curvature), residuals are approximately Normal with constant variance, and the three levels span a range over which the polynomial approximation is plausible.
+
+## R Implementation
+
+```r
+library(rsm)
+
+set.seed(2026)
+df <- expand.grid(A = c(-1, 0, 1), B = c(-1, 0, 1))
+df$y <- 10 + 2 * df$A + 1.5 * df$B - df$A^2 +
+        0.8 * df$A * df$B + rnorm(nrow(df), 0, 0.5)
+
+fit <- rsm(y ~ SO(A, B), data = df)
+summary(fit)
+```
+
+## Output & Results
+
+`rsm()` with the second-order specification returns coefficients for linear, pure-quadratic, and two-factor-interaction terms together with a stationary-point analysis (eigenvalue classification of the quadratic-form matrix as maximum, minimum, or saddle) and a lack-of-fit test against centre replicates when present. Reporting all components of the canonical analysis is the standard summary.
+
+## Interpretation
+
+A reporting sentence: "The $3^2$ full factorial estimated linear effects of A (2.0, $p < 0.001$) and B (1.5, $p = 0.002$), a significant quadratic term in A ($-0.9$, $p = 0.004$), and a mild interaction (0.7, $p = 0.07$). The stationary point of the fitted surface lay inside the design region and was a maximum, consistent with the expected concave behaviour. Predicted optimum was 12.4 at $(A, B) = (0.9, 0.8)$." Always pair the coefficient table with the canonical-analysis classification.
+
+## Practical Tips
+
+- For $k \geq 3$, prefer central composite or Box-Behnken designs over full $3^k$ factorials; both deliver the same second-order information with far fewer runs and are the modern industrial-DoE default for response-surface modelling.
+- Replicate the centre point ($x = 0$ for all factors) several times in any three-level design; the centre replicates supply pure-error degrees of freedom and a lack-of-fit test that diagnoses inadequacy of the second-order model.
+- Coded levels $\{-1, 0, +1\}$ keep the design balanced and orthogonal, ensuring that linear, quadratic, and interaction effects are estimated independently and on directly comparable scales.
+- Quadratic effects matter only when the response shows genuine curvature within the design region; if a $2^k$ factorial with replicated centre points fails to detect curvature, a $3^k$ or RSM follow-up is unnecessary.
+- A $3^k$ full factorial is often a precursor to formal response-surface methodology; once the second-order surface is mapped, sequential experimentation along the path of steepest ascent or descent locates the optimum.
+- For mixed-level designs (some factors at three levels, others at two) use orthogonal-array layouts via `DoE.base`; full crossed factorials become quickly unwieldy in mixed-level cases.
+
+## R Packages Used
+
+`rsm` for second-order polynomial fitting with stationary-point and canonical analysis; `FrF2.mix` for fractional three-level and mixed-level designs; `DoE.base` for general orthogonal-array construction including $3^k$ as a special case; `agricolae` for textbook three-level layouts; `Vdgraph` for variance-dispersion comparisons across $3^k$, CCD, and BBD alternatives.

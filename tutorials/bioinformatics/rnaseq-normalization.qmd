@@ -1,0 +1,75 @@
+---
+title: RNA-seq Normalisation
+date: "2026-04-17"
+description: "TMM, RLE, upper-quartile, and CPM: making samples comparable"
+categories:
+  - Bioinformatics
+  - normalization
+  - tmm
+  - rle
+  - cpm
+---
+
+## Introduction
+
+Raw RNA-seq read counts depend on library size and library composition; normalisation removes these technical sources of variation so that samples can be compared on equal footing. The standard methods — TMM (edgeR), RLE (DESeq2), upper-quartile, and CPM — differ in how aggressively they handle compositional differences and which assumption they make about the bulk of genes. Choosing the right normalisation is foundational; downstream differential-expression tools incorporate the normalisation factors as offsets in their GLM, so a poor choice undermines every conclusion that follows.
+
+## Prerequisites
+
+A working understanding of count data, library size, and the difference between technical (sequencing depth) and biological (true expression) variation between samples.
+
+## Theory
+
+The four standard methods:
+
+- **CPM (counts per million)**: simple division of each count by the total library size in millions. Adjusts only for sequencing depth; does not address compositional differences (where one sample has a few highly expressed genes pulling resources from others).
+- **TMM (Trimmed Mean of M-values)**: edgeR's default. Computes log-fold-changes between each sample and a reference, trims extreme values, and uses the trimmed mean as the normalisation factor. Robust to highly expressed compositional outliers.
+- **RLE (Relative Log Expression)**: DESeq2's `estimateSizeFactors`. Takes the median of the ratio of each gene's count to its geometric mean across samples. Equivalent to TMM in spirit; both adjust for composition.
+- **Upper-quartile**: scaling by the 75th-percentile count; less robust than TMM/RLE but useful for very sparse data.
+
+TMM and RLE are the de facto standards; CPM is appropriate only for visualisation, not for statistical comparison.
+
+## Assumptions
+
+Most genes are not differentially expressed (the "majority is unchanged" assumption that motivates trimmed-mean and median-based normalisation); samples are technical replicates of comparable biological material.
+
+## R Implementation
+
+```r
+library(edgeR); library(DESeq2)
+
+counts <- matrix(rpois(1000, lambda = 10), 100, 10)
+rownames(counts) <- paste0("g", 1:100)
+
+# edgeR TMM
+dge <- DGEList(counts = counts)
+dge <- calcNormFactors(dge, method = "TMM")
+dge$samples$norm.factors
+
+# DESeq2 size factors
+dds <- DESeqDataSetFromMatrix(counts, colData = DataFrame(id = 1:10),
+                              design = ~ 1)
+dds <- estimateSizeFactors(dds)
+sizeFactors(dds)
+```
+
+## Output & Results
+
+`calcNormFactors()` returns per-sample TMM normalisation factors (centred near 1, with deviations indicating compositional differences); `estimateSizeFactors()` returns DESeq2 size factors with similar interpretation. Both are used as offsets in downstream GLMs by edgeR, DESeq2, and limma-voom.
+
+## Interpretation
+
+A reporting sentence: "TMM normalisation factors ranged from 0.85 to 1.18 across the 10 samples, with no factor exceeding the conventional ±20 % concern threshold; the corresponding DESeq2 RLE size factors agreed within 5 %, confirming the normalisation is robust to method choice." Quote the range of normalisation factors; extreme values signal compositional anomalies.
+
+## Practical Tips
+
+- TMM and RLE adjust for compositional differences; CPM does not. For statistical comparison, always use TMM or RLE; CPM is only appropriate for visualisation.
+- Extreme normalisation factors (above 2 or below 0.5) warrant investigation; they often indicate a few very highly expressed genes dominating a sample.
+- For single-cell RNA-seq, different normalisation methods apply (scran's pooling-based size factors, sctransform's regularised regression); bulk methods underperform on the sparser, lower-coverage single-cell data.
+- Normalisation factors enter the downstream GLM as an offset: `log(\hat\mu_{ij}) = \log(\mathrm{NF}_j \cdot \ell_j) + X_i^\top \beta`. The DE method handles this automatically.
+- TMM with `refColumn` set to a specific reference sample is useful when one sample is known to be representative; the default chooses an automatic reference.
+- For mixed-tissue or very heterogeneous experiments, the "majority unchanged" assumption can fail; consider quantile normalisation (`limma::normalizeQuantiles`) or condition-aware alternatives.
+
+## R Packages Used
+
+`edgeR::calcNormFactors()` for TMM, upper-quartile, and RLE alternatives; `DESeq2::estimateSizeFactors()` for the canonical RLE; `limma::cpm()` and `voom()` for normalisation in the limma framework; `scran` and `sctransform` for single-cell normalisation.

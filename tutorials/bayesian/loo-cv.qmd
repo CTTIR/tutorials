@@ -1,0 +1,69 @@
+---
+title: Leave-One-Out Cross-Validation
+date: "2026-04-17"
+description: Efficient Bayesian LOO-CV via Pareto-smoothed importance sampling (PSIS-LOO)
+categories:
+  - Bayesian Statistics
+  - loo
+  - psis
+  - cross-validation
+  - model-comparison
+---
+
+## Introduction
+
+Leave-one-out cross-validation (LOO-CV) is the gold standard for estimating out-of-sample predictive performance, but exact LOO requires refitting the model once per observation — prohibitive for any Bayesian model that takes more than a few seconds to sample. Pareto-Smoothed Importance Sampling LOO (PSIS-LOO), introduced by Vehtari, Gelman, and Gabry, approximates exact LOO from a single full-data posterior using importance weights, while providing per-observation diagnostics that flag where the approximation breaks down. It has become the standard model-comparison tool for `brms`, `rstanarm`, and raw Stan workflows.
+
+## Prerequisites
+
+A working understanding of cross-validation, importance sampling, and the role of the log pointwise predictive density (elpd) in measuring predictive performance.
+
+## Theory
+
+The expected log predictive density under leave-one-out is
+
+$$\mathrm{elpd}_{\mathrm{loo}} = \sum_{i=1}^n \log p(y_i \mid y_{-i}),$$
+
+where $y_{-i}$ is the data with observation $i$ removed. PSIS approximates each $p(y_i \mid y_{-i})$ via importance weights $w_i^{(s)} \propto 1 / p(y_i \mid \theta^{(s)})$ applied to the full-data posterior draws $\theta^{(s)}$. To stabilise the right tail of the importance weights, PSIS fits a generalised Pareto distribution to the largest weights and replaces them with order-statistic estimates. The shape parameter $\hat k$ of that fit acts as a per-observation diagnostic: $\hat k < 0.5$ is excellent, $0.5 \le \hat k < 0.7$ acceptable, and $\hat k > 0.7$ indicates that PSIS-LOO is unreliable for that point.
+
+## Assumptions
+
+Exchangeable observations and a posterior with sufficient effective sample size to estimate the importance-weight tail; for hierarchical or temporal data, replace standard LOO with leave-one-cluster-out or leave-future-out variants whose theoretical properties match the dependence structure.
+
+## R Implementation
+
+```r
+library(loo); library(brms)
+
+data(mtcars)
+fit1 <- brm(mpg ~ wt, data = mtcars, chains = 2, iter = 2000, refresh = 0)
+fit2 <- brm(mpg ~ wt + hp, data = mtcars, chains = 2, iter = 2000, refresh = 0)
+
+loo1 <- loo(fit1)
+loo2 <- loo(fit2)
+
+loo_compare(loo1, loo2)
+
+# k-hat diagnostic
+plot(loo2)
+```
+
+## Output & Results
+
+`loo()` returns the elpd, the effective parameter count $p_{\mathrm{loo}}$, and a vector of per-observation $\hat k$ values. `loo_compare()` aligns two `loo` objects and returns the elpd difference with its standard error, ordered from best to worst. `plot(loo)` displays $\hat k$ values against observation index, immediately revealing influential points.
+
+## Interpretation
+
+A reporting sentence: "PSIS-LOO favoured the two-predictor model with $\Delta\mathrm{elpd} = 6$ (SE 2.3); all $\hat k < 0.5$, so the importance-sampling approximation is reliable, and no observation needs an exact refit." When some $\hat k$ values exceed 0.7, rerun with `loo(fit, reloo = TRUE)` to refit the model on the affected leave-out folds; the elpd estimate is then a hybrid of PSIS for safe folds and exact fits for the troublesome ones.
+
+## Practical Tips
+
+- Check $\hat k$ values *before* interpreting an elpd comparison; a single high-leverage observation can dominate the ranking.
+- For time-series, use leave-future-out CV via `loo::loo_subsample()` or `loo_moment_match()`; standard LOO leaks future information into past folds and biases elpd downward.
+- For hierarchical models with few clusters, leave-one-cluster-out CV is the appropriate generalisation: it answers the prediction question that matters in practice ("how would the model perform on a new cluster?").
+- Differences in elpd are interpretable in absolute terms: $\Delta\mathrm{elpd} > 4 \times \mathrm{SE}$ is decisive; $|\Delta\mathrm{elpd}| < 2 \times \mathrm{SE}$ is inconclusive.
+- LOO is well-defined for non-nested models, unlike likelihood-ratio tests, which makes it the natural tool when comparing models that differ in family, link, or predictor set.
+
+## R Packages Used
+
+`loo` for `loo()`, `loo_compare()`, `loo_subsample()`, and `loo_moment_match()`, `brms` and `rstanarm` for fits that expose pointwise log-likelihoods automatically, and `bayesplot` for posterior predictive plots that complement the elpd-based comparison.

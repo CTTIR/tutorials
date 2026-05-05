@@ -1,0 +1,74 @@
+---
+title: FASTQ Quality Control
+date: "2026-04-17"
+description: Inspecting sequencing read quality via Phred scores and FastQC-style reports
+categories:
+  - Bioinformatics
+  - fastq
+  - phred
+  - fastqc
+---
+
+## Introduction
+
+Every high-throughput sequencing analysis starts with FASTQ quality control. Before alignment, before quantification, before any downstream interpretation, you should inspect per-base quality, adapter contamination, GC content, and duplicate rate to decide on trimming and filtering strategies. The cost of skipping this step is high: low-quality data quietly degrade alignment accuracy, inflate variant-calling false positives, and bias differential-expression conclusions in ways that are hard to detect retrospectively.
+
+## Prerequisites
+
+A working understanding of the FASTQ format, Phred quality scores, and basic Illumina sequencing biology.
+
+## Theory
+
+The Phred quality score is $Q = -10 \log_{10} P(\text{error})$, so Q30 means 1 in 1000 probability of base-call error and Q40 means 1 in 10{,}000. Modern Illumina runs aim for Q30 or higher across most of each read, with quality typically dropping toward the 3' end.
+
+Standard FastQC-style metrics:
+
+- **Per-base sequence quality**: boxplot of Phred scores at each position; declines toward 3' are normal but should not drop below Q20.
+- **Per-sequence quality**: histogram of mean read quality; bi-modal histograms suggest mixed-quality libraries.
+- **GC content**: should match expected genomic GC; deviations indicate contamination or biased library prep.
+- **Adapter contamination**: presence of known adapter sequences at 3' ends.
+- **Overrepresented sequences**: top recurring sequences often pinpoint adapters or contamination.
+
+## Assumptions
+
+Modern Illumina FASTQ files with Sanger-encoded Phred (Phred+33). Older Illumina encodings (Phred+64) require explicit specification.
+
+## R Implementation
+
+```r
+library(ShortRead); library(Rqc)
+
+# Assume demo FASTQ file path
+fq_file <- system.file("extdata", "ex1.fq", package = "ShortRead")
+
+# Basic inspection
+reads <- readFastq(fq_file)
+length(reads)
+head(width(reads))
+mean(as.numeric(encoding(quality(reads))))   # mean Phred base
+
+# Rqc for systematic QC
+qc <- rqcQA(fq_file, workers = 1)
+rqcReport(qc)
+```
+
+## Output & Results
+
+`Rqc::rqcQA()` produces an interactive HTML report covering per-position quality, GC content, duplicate rate, length distribution, and adapter flags. `ShortRead::readFastq()` provides programmatic access for custom diagnostics.
+
+## Interpretation
+
+A reporting sentence: "FastQC-style QC on the 12 RNA-seq samples showed mean per-base Phred ranging from 35 to 38 across the read length, adapter contamination below 1 %, and GC content centred at 49 % (within the expected range for human transcriptome). After fastp trimming at Q15 with adapter removal, approximately 95 % of bases were retained per sample." Always report pre- and post-trim QC.
+
+## Practical Tips
+
+- Use `fastp` or `trim_galore` at the command line for production QC and trimming; R tools (`Rqc`, `ShortRead`) are useful for exploration but are slower than the dedicated command-line utilities on large datasets.
+- Report pre- and post-trim QC; the QC improvement validates the trimming step.
+- GC content far from the expected genomic value suggests contamination, library prep biases, or species mismatch; investigate before alignment.
+- Overrepresented sequences often pinpoint adapter sequences, rRNA contamination, or PCR duplicates of single dominant transcripts.
+- For multiple samples, MultiQC aggregates per-sample reports into a single dashboard; this is essential for reviewing dozens or hundreds of samples consistently.
+- Phred Q20 is the conventional threshold for "good" bases; trimming at Q15 retains more data while removing the worst calls.
+
+## R Packages Used
+
+`ShortRead` for general FASTQ manipulation in R; `Rqc` for systematic QC reports; `Rfastp` as a wrapper around fastp for fast trimming and QC; `ngsReports` for parsing and aggregating MultiQC and FastQC outputs into R objects.

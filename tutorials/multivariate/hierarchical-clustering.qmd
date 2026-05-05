@@ -1,0 +1,76 @@
+---
+title: Hierarchical Clustering
+date: "2026-04-17"
+description: Agglomerative (bottom-up) clustering with various linkage criteria and dendrogram display
+categories:
+  - Multivariate Statistics
+  - hierarchical
+  - ward
+  - linkage
+  - dendrogram
+---
+
+## Introduction
+
+Hierarchical clustering builds a nested family of partitions: at the bottom every observation is its own cluster, at the top all observations form a single cluster, and intermediate levels correspond to all the partitions you might consider. Agglomerative methods (the practical default) merge the two closest clusters at each step until everything is connected; divisive methods reverse the process. The output is a dendrogram — a tree that can be cut at any height to produce a partition with the corresponding number of clusters. The dendrogram is the headline visual that distinguishes hierarchical clustering from partitioning methods.
+
+## Prerequisites
+
+A working understanding of distance metrics, the difference between distance between observations and distance between clusters, and the dendrogram as a graphical representation of the merging sequence.
+
+## Theory
+
+Linkage criteria define the distance between two clusters $A$ and $B$:
+
+- **Single linkage**: $\min_{a \in A, b \in B} d(a, b)$. Prone to chaining: it joins clusters by their nearest pair, producing long stringy structures.
+- **Complete linkage**: $\max_{a \in A, b \in B} d(a, b)$. Produces compact, roughly equal-size clusters.
+- **Average linkage**: average of pairwise distances; intermediate behaviour.
+- **Ward's linkage**: at each merge, choose the pair that minimises the increase in within-cluster sum of squares. Produces compact spherical clusters and is the most popular default.
+
+The dendrogram is cut at a user-chosen height (or at $k$ clusters via `cutree()`); the height of the cut is itself a diagnostic — short merges below the cut indicate tight clusters, tall merges above suggest meaningful separation.
+
+## Assumptions
+
+A meaningful distance metric on the data and roughly independent observations. The chosen linkage criterion matches the expected cluster geometry; Ward's assumes Euclidean distance.
+
+## R Implementation
+
+```r
+library(factoextra)
+
+X <- scale(iris[, 1:4])
+d <- dist(X)
+
+hc_ward <- hclust(d, method = "ward.D2")
+fviz_dend(hc_ward, k = 3, rect = TRUE, palette = "Set2")
+
+# Compare linkages
+par(mfrow = c(2, 2))
+for (m in c("single", "complete", "average", "ward.D2")) {
+  plot(hclust(d, method = m), main = m, hang = -1)
+}
+
+# Cluster assignments at k = 3
+cutree(hc_ward, k = 3)
+```
+
+## Output & Results
+
+`hclust()` returns the merging sequence and per-merge heights as an `hclust` object. `fviz_dend()` plots the dendrogram with cluster boxes and a colour palette. `cutree()` extracts cluster assignments at a chosen $k$. The four-panel comparison shows how dramatically linkage choice changes the resulting tree.
+
+## Interpretation
+
+A reporting sentence: "Ward-linkage agglomerative clustering on standardised iris data, cut at $k = 3$, produced three clusters matching the species labels with 95 % agreement; single linkage produced a chained 1-iris-vs-149 partition that is uninformative for this dataset, illustrating the linkage choice's importance." Always disclose the linkage method and the distance metric used.
+
+## Practical Tips
+
+- Ward's linkage (`ward.D2`) is the most reliable default for spherical clusters of similar size; it agrees with $k$-means in spirit but produces a tree.
+- Single linkage often produces stringy chains; reach for it only when chain-like structures are substantively meaningful (e.g. minimum spanning trees in network analysis).
+- Visualise the dendrogram before choosing $k$; the height of merges above the cut suggests meaningful versus arbitrary splits.
+- For very large datasets, hierarchical clustering is $O(n^2)$ in memory and time; switch to $k$-means or DBSCAN above tens of thousands of observations.
+- For mixed numeric-categorical data, compute Gower distance with `cluster::daisy()` and feed it to `hclust()`; Ward's then needs `method = "ward.D"` (not D2).
+- Consider `cluster::agnes()` over `hclust()` for an agglomerative coefficient that quantifies the strength of the clustering structure (close to 1 = strong structure).
+
+## R Packages Used
+
+Base R `hclust()` and `cutree()`; `cluster::agnes()` and `diana()` for agglomerative and divisive variants with structure indices; `factoextra` for `fviz_dend()` and `fviz_cluster()` ggplot-style visualisation; `dendextend` for advanced dendrogram manipulation including tanglegrams comparing two trees.

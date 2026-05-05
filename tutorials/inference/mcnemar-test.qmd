@@ -1,0 +1,93 @@
+---
+title: "McNemar's Test"
+date: "2026-04-17"
+description: "Paired / matched binary data: comparing two measurements on the same units, using discordant pairs only"
+categories:
+  - Inferential Statistics
+  - mcnemar
+  - paired-binary
+  - discordant-pairs
+---
+
+## Introduction
+
+When the same units are measured on a binary outcome twice (before/after, two tests, two raters), the observations are paired and a standard two-proportion test is invalid. McNemar's test analyses the 2x2 table of paired responses, using only the **discordant pairs** -- those where the two measurements differ.
+
+## Prerequisites
+
+Contingency tables, paired design.
+
+## Theory
+
+Arrange paired binary data in a 2x2 table:
+
+|                    | Test 2: +     | Test 2: -     |
+|--------------------|---------------|---------------|
+| **Test 1: +**      | $a$ (agree)   | $b$ (discordant) |
+| **Test 1: -**      | $c$ (discordant) | $d$ (agree) |
+
+McNemar's null: the probability of switching from + to - equals the probability of switching from - to +; equivalently, the marginal prevalences are equal.
+
+Test statistic:
+
+$$\chi^2_{\text{McNemar}} = \frac{(b - c)^2}{b + c} \sim \chi^2_1 \quad \text{under } H_0.$$
+
+For small $b + c$, an exact binomial test on $b$ out of $b + c$ with $p_0 = 0.5$ is preferred.
+
+The concordant cells $a$ and $d$ do not enter the test; only the discordant $b$ and $c$ do.
+
+## Assumptions
+
+- Paired binary data.
+- Independent pairs.
+- $b + c$ sufficiently large (>= 25) for the chi-squared approximation; otherwise exact.
+
+## R Implementation
+
+```r
+# Paired data: a diagnostic test evaluated before and after training
+tab <- matrix(c(45, 12,
+                25, 18), nrow = 2, byrow = TRUE,
+              dimnames = list(Before = c("+", "-"),
+                              After  = c("+", "-")))
+tab
+
+# McNemar (with continuity correction disabled)
+mcnemar.test(tab, correct = FALSE)
+
+# Exact McNemar via exact2x2
+library(exact2x2)
+mcnemar.exact(tab)
+
+# Manual McNemar
+b <- tab[1, 2]; c <- tab[2, 1]
+chi <- (b - c)^2 / (b + c)
+p_val <- 1 - pchisq(chi, df = 1)
+c(chi = chi, p = p_val)
+```
+
+## Output & Results
+
+```
+        McNemar's Chi-squared test
+McNemar's chi-squared = 4.568, df = 1, p-value = 0.0326
+
+Exact McNemar test (exact2x2):
+proportion +1 to -1: 0.324
+95% CI: 0.037 to 0.586
+p-value = 0.041
+```
+
+Discordant pairs: 12 (before+ / after-) vs. 25 (before- / after+). McNemar $\chi^2(1) = 4.57$, p = 0.033; exact p = 0.041.
+
+## Interpretation
+
+Reporting: "Of 37 discordant pairs, 25 switched from negative to positive and 12 switched in the opposite direction; McNemar's exact test gave p = 0.041, indicating a significant change after training."
+
+## Practical Tips
+
+- Report only the discordant counts and the p-value; concordant counts are irrelevant to McNemar.
+- For $b + c < 25$, use the exact version.
+- McNemar's odds ratio is $b/c$; its CI is computed by inverting the exact test.
+- For more than two categories per assessment (paired, more than two outcomes), use Bowker's symmetry test or Stuart-Maxwell.
+- Stratified McNemar: use conditional logistic regression (`survival::clogit`) for a set of matched pairs with covariates.

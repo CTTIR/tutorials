@@ -1,0 +1,65 @@
+---
+title: Correspondence Analysis
+date: "2026-04-17"
+description: Low-dimensional biplot representation of contingency tables via chi-squared distance
+categories:
+  - Multivariate Statistics
+  - correspondence-analysis
+  - ca
+  - biplot
+---
+
+## Introduction
+
+Correspondence analysis (CA) is the categorical analogue of principal components analysis. It takes a two-way contingency table and produces a low-dimensional map in which rows and columns become points whose proximity reflects association beyond what would be expected under independence. CA decomposes the chi-squared statistic into row and column contributions across a small number of dimensions, much as PCA decomposes covariance variance, and the resulting biplot is one of the most intuitive ways to visualise the association structure of a contingency table.
+
+## Prerequisites
+
+A working understanding of contingency tables, the chi-squared statistic for independence, principal components analysis, and singular value decomposition.
+
+## Theory
+
+For an $r \times c$ contingency table with cell counts $n_{ij}$ and margins $n_{i\cdot}$, $n_{\cdot j}$, total $n$:
+
+1. Compute expected counts under independence $e_{ij} = n_{i\cdot} n_{\cdot j} / n$.
+2. Form the matrix of standardised residuals $z_{ij} = (n_{ij} - e_{ij}) / \sqrt{e_{ij}}$.
+3. Apply singular value decomposition $Z = U D V^\top$.
+4. Row coordinates and column coordinates come from $U$ and $V$ scaled by $D$ and the row/column masses; the squared singular values sum to the total inertia $\chi^2 / n$.
+
+The biplot places row points close to column points with positive association; points close to the origin are near the average profile and contribute little to the structure. Multiple correspondence analysis (MCA) generalises CA to more than two categorical variables.
+
+## Assumptions
+
+Count data in a rectangular contingency table with no zero marginal sums (all rows and columns have at least one observation), and a meaningful chi-squared interpretation of association.
+
+## R Implementation
+
+```r
+library(FactoMineR); library(factoextra)
+
+data(smoke)
+ca_res <- CA(smoke, graph = FALSE)
+fviz_ca_biplot(ca_res)
+summary(ca_res)
+```
+
+## Output & Results
+
+`CA()` returns row and column coordinates, contributions to each axis, total inertia, and inertia per axis (the categorical analogue of variance explained). `fviz_ca_biplot()` displays both row and column points on the first two principal axes, with axis labels showing the proportion of inertia captured.
+
+## Interpretation
+
+A reporting sentence: "Correspondence analysis of the smoke dataset (5 rank levels × 4 smoking categories) decomposed total inertia of 0.085 into three principal axes; the first axis (88 % of inertia) placed senior employees close to the 'heavy smoker' category and junior managers near 'none', suggesting an age-rank-smoking association beyond chance ($\chi^2 = 16.4$, $p = 0.17$ — the visual association is strong but the statistical test is underpowered for this small table)." Always quote the proportion of inertia displayed and complement with the chi-squared test.
+
+## Practical Tips
+
+- Report the proportion of inertia retained in the displayed dimensions; if the first two axes capture less than 70 %, much of the structure is not visible in the biplot.
+- For more than two categorical variables, switch to multiple correspondence analysis (MCA, `FactoMineR::MCA`); supplementary continuous covariates can be projected on top.
+- Remove or merge zero-count rows or columns before fitting; they break the chi-squared transformation and produce undefined coordinates.
+- The symmetric biplot scales rows and columns comparably; the row-principal or column-principal alternatives are useful when one dimension is the focus but distort the joint geometry.
+- Pair CA with a chi-squared test on the original table; the inertia decomposition shows where the association concentrates, while the test quantifies whether it exceeds chance.
+- For supplementary categories that should not influence the axes (e.g. demographic markers on the original survey items), pass them through the `quali.sup` argument; they are projected after fitting but do not affect axis estimation.
+
+## R Packages Used
+
+`FactoMineR` for `CA()`, `MCA()`, and the broader factor-analysis family; `factoextra` for `fviz_ca_biplot()`, `fviz_ca_row()`, `fviz_ca_col()` ggplot-style visualisation; `ca` for an alternative implementation with classic biplot styling; `ade4::dudi.coa()` for ecology-flavoured CA.

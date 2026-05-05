@@ -1,0 +1,75 @@
+---
+title: Subgroup Forest Plots
+date: "2026-04-17"
+description: Visual summary of subgroup-specific effects and interaction tests
+categories:
+  - Clinical Biostatistics
+  - forest-plot
+  - subgroup
+  - visualisation
+---
+
+## Introduction
+
+Subgroup forest plots display, on a single figure, the treatment effect estimate and confidence interval for each pre-specified subgroup of a clinical trial alongside the overall effect. They are the standard tool for visually communicating effect modification — whether the intervention works differently in men and women, in older and younger patients, in mild and severe disease — and they are now a near-universal element of CONSORT-compliant trial reporting. The compact horizontal-error-bar layout makes the magnitude and precision of each subgroup-specific effect immediately legible, while a vertical reference line at the null anchors interpretation. The plot's strength is also its risk: readers eye-ball heterogeneity at a glance and may infer effect modification where the formal interaction test does not support it.
+
+## Prerequisites
+
+A working understanding of pre-specified subgroup analysis, the difference between within-subgroup tests and the test for interaction, and confidence-interval visualisation.
+
+## Theory
+
+Each row of a forest plot shows the subgroup name, sample sizes per arm, the point estimate of the treatment effect (or the within-subgroup analogue), and its 95 % confidence interval as a horizontal whisker. An overall effect — the marginal estimate across the full trial population — appears at the top or bottom of the plot for reference. A vertical line at the null value (0 for differences, 1 for ratios) anchors interpretation, and the formal test for interaction (whether the effect varies across subgroups beyond chance) is reported either in the figure or alongside it.
+
+## Assumptions
+
+Subgroups are pre-specified in the trial protocol or statistical analysis plan rather than chosen post hoc, the effect estimates and confidence intervals are correctly computed for each subgroup, and the formal interaction test (rather than within-subgroup $p$-value comparisons) is the basis for any claim of effect modification.
+
+## R Implementation
+
+```r
+library(ggplot2); library(dplyr)
+
+set.seed(2026)
+subgroups <- data.frame(
+  group   = c("Overall", "Male", "Female",
+              "Age < 65", "Age >= 65",
+              "Mild", "Moderate", "Severe"),
+  n1      = c(200, 105, 95, 90, 110, 70, 80, 50),
+  n2      = c(200, 98, 102, 92, 108, 72, 79, 49),
+  effect  = c(0.30, 0.18, 0.43, 0.22, 0.38, 0.12, 0.32, 0.55),
+  lower   = c(0.15, -0.02, 0.21, 0.02, 0.18, -0.14, 0.10, 0.28),
+  upper   = c(0.45, 0.38, 0.65, 0.42, 0.58, 0.38, 0.54, 0.82)
+)
+
+ggplot(subgroups, aes(y = factor(group, levels = rev(group)),
+                      x = effect)) +
+  geom_vline(xintercept = 0, linetype = 2, colour = "grey50") +
+  geom_errorbarh(aes(xmin = lower, xmax = upper), height = 0.15) +
+  geom_point(size = 3, colour = "#2A9D8F") +
+  labs(x = "Treatment effect (with 95% CI)", y = NULL,
+       title = "Subgroup forest plot") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
+```
+
+## Output & Results
+
+The resulting plot is a vertical list of subgroups with horizontal confidence intervals referenced to the null line. Combining this with a column of sample sizes and an interaction-test $p$-value column produces a publication-ready forest plot. Most clinical-trial reports also include the formal interaction $p$-value at the right of the figure or in the figure caption.
+
+## Interpretation
+
+A reporting sentence: "The forest plot showed the treatment effect was present across all eight pre-specified subgroups; directional heterogeneity was observed by sex (point estimate 0.43 in women vs 0.18 in men) and disease severity (0.55 in severe vs 0.12 in mild patients). Formal tests for interaction were not significant ($p_{\mathrm{sex}} = 0.11$, $p_{\mathrm{severity}} = 0.07$), suggesting the observed within-subgroup differences may reflect sampling rather than genuine effect modification. Subgroups were pre-specified in the SAP." Always report formal interaction tests, not within-subgroup $p$-values.
+
+## Practical Tips
+
+- Always display subgroup sample sizes alongside each row; a small subgroup with a wide CI can look extreme on the plot but carry very little weight in the overall conclusion, and readers benefit from seeing the precision context directly.
+- Order subgroups by category (sex, age, disease severity, geographic region) — never by point estimate. Post-hoc ordering is a recurring source of biased visual interpretation and is increasingly flagged by trial reviewers.
+- Show the overall trial effect prominently, at the top or bottom of the plot, as the reference against which subgroup deviations are read; subgroup forest plots without an overall reference line are difficult to interpret.
+- For odds ratios, hazard ratios, or risk ratios, use a logarithmic scale on the horizontal axis; on the linear scale, ratios appear asymmetric and visual judgements of "large" vs "small" effects become misleading.
+- Include the formal interaction $p$-value in the figure or directly beside it; this discourages the well-known fallacy of comparing within-subgroup $p$-values, which are always under-powered and routinely yield "significant in one subgroup, not the other" patterns by chance alone.
+- Keep the number of subgroups manageable (typically 5–10); too many subgroups crowd the plot and create false-positive risk through multiple comparisons even with correct interaction-test reporting.
+
+## R Packages Used
+
+`ggplot2` for custom forest plots with full layout control; `forestplot` for highly customised clinical-trial forest plots with multiple columns and risk-of-bias annotation; `forester` for tidyverse-friendly forest-plot construction with built-in subgroup-table integration; `metafor::forest()` when the underlying analysis is meta-analytic; `survminer` for survival-specific forest plots when subgroup effects are hazard ratios.

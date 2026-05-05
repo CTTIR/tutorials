@@ -97,15 +97,3 @@ For the model: $R^2$, adjusted $R^2$, and Cohen's $f^2$. For individual predicto
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 004c030351094c638d32bc95edb81ad2 -->
-<img src="https://vg09.met.vgwort.de/na/004c030351094c638d32bc95edb81ad2"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

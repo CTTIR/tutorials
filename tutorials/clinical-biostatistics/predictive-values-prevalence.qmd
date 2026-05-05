@@ -1,0 +1,69 @@
+---
+title: Predictive Values and Prevalence
+date: "2026-04-17"
+description: "How disease prevalence determines PPV and NPV via Bayes' theorem"
+categories:
+  - Clinical Biostatistics
+  - ppv
+  - npv
+  - prevalence
+  - bayes
+---
+
+## Introduction
+
+Sensitivity and specificity are properties of a diagnostic test, not its clinical utility. **Positive predictive value (PPV)** -- the probability that a positive test indicates disease -- and **negative predictive value (NPV)** depend on disease prevalence. The same test can have very high PPV in a high-prevalence setting and very low PPV in a screening setting.
+
+## Prerequisites
+
+Sensitivity and specificity; Bayes' theorem.
+
+## Theory
+
+$$\text{PPV} = \frac{\text{Sens} \cdot \text{Prev}}{\text{Sens} \cdot \text{Prev} + (1 - \text{Spec}) \cdot (1 - \text{Prev})}.$$
+$$\text{NPV} = \frac{\text{Spec} \cdot (1 - \text{Prev})}{(1 - \text{Sens}) \cdot \text{Prev} + \text{Spec} \cdot (1 - \text{Prev})}.$$
+
+For a fixed test, PPV rises with prevalence and NPV falls. A high-specificity test is essential for screening in low-prevalence populations.
+
+## Assumptions
+
+Test characteristics (Sens, Spec) generalise to the target population; prevalence is correctly estimated.
+
+## R Implementation
+
+```r
+library(epiR)
+
+# 2x2 table from a diagnostic study
+tab <- as.table(matrix(c(90, 10,     # TP, FP
+                         20, 880),   # FN, TN
+                        nrow = 2, byrow = FALSE,
+                        dimnames = list(Test = c("+", "-"),
+                                        Disease = c("yes", "no"))))
+
+epi.tests(tab, conf.level = 0.95)
+
+# What happens when prevalence is only 1%?
+sens <- 0.82; spec <- 0.99
+for (p in c(0.5, 0.2, 0.05, 0.01)) {
+  ppv <- sens * p / (sens * p + (1 - spec) * (1 - p))
+  npv <- spec * (1 - p) / ((1 - sens) * p + spec * (1 - p))
+  cat(sprintf("Prev=%.2f  PPV=%.3f  NPV=%.3f\n", p, ppv, npv))
+}
+```
+
+## Output & Results
+
+Test statistics including PPV/NPV in the sample; manual computation shows PPV dropping sharply as prevalence falls, from 0.98 at 50 % prevalence to 0.45 at 1 %.
+
+## Interpretation
+
+"In a population with 1 % prevalence, a positive test (sens 82 %, spec 99 %) has a PPV of only 0.45; most positives are false. For screening, test specificity drives PPV far more than sensitivity does."
+
+## Practical Tips
+
+- Always report PPV and NPV at the **target** population's prevalence, not the study sample's.
+- For low-prevalence settings, confirmatory testing after a positive screen is usually essential.
+- Likelihood ratios avoid dependence on prevalence and combine multiplicatively with prior odds.
+- Bayes' post-test probability: $P(D \mid +) = \text{LR}(+) \cdot \text{Prev} / (1 + \text{LR}(+) \cdot \text{Prev})$ using prior odds.
+- Decision curves (Vickers-Elkin) integrate PPV / NPV at different thresholds into a utility measure.

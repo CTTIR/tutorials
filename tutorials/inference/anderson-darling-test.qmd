@@ -1,0 +1,87 @@
+---
+title: Anderson-Darling Test
+date: "2026-04-17"
+description: A distribution goodness-of-fit test with emphasis on the tails
+categories:
+  - Inferential Statistics
+  - anderson-darling
+  - goodness-of-fit
+  - normality
+  - tails
+---
+
+## Introduction
+
+The Anderson-Darling (AD) test is a goodness-of-fit test that weights the tails of the distribution more heavily than the Kolmogorov-Smirnov test. It is widely used for normality testing in engineering and quality-control contexts, where tail behaviour often determines pass/fail decisions.
+
+## Prerequisites
+
+Empirical CDF, goodness-of-fit testing.
+
+## Theory
+
+For a hypothesised CDF $F$ and empirical CDF $\hat{F}_n$, the AD statistic is
+
+$$A^2 = n \int \frac{(\hat{F}_n(x) - F(x))^2}{F(x)(1 - F(x))} dF(x).$$
+
+The denominator $F(1 - F)$ gives less weight to the middle of the distribution and more to the tails, where departures from the hypothesised distribution are often clinically or industrially important.
+
+A computational form for a sample sorted as $y_{(1)} \leq \ldots \leq y_{(n)}$:
+
+$$A^2 = -n - \frac{1}{n} \sum_{i=1}^n (2i - 1) \left[\log F(y_{(i)}) + \log(1 - F(y_{(n - i + 1)}))\right].$$
+
+Critical values depend on whether the distribution's parameters are known or estimated from the sample.
+
+## Assumptions
+
+- iid observations.
+- The hypothesised distribution is fully specified or parameters are consistently estimated.
+
+## R Implementation
+
+```r
+library(nortest)
+set.seed(2026)
+
+# Normal sample: AD should not reject
+x_norm <- rnorm(100)
+ad.test(x_norm)
+
+# Heavy-tailed sample: AD should reject
+x_t3 <- rt(100, df = 3)
+ad.test(x_t3)
+
+# Compare to Shapiro-Wilk
+shapiro.test(x_norm)$p.value
+shapiro.test(x_t3)$p.value
+```
+
+## Output & Results
+
+```
+        Anderson-Darling normality test
+data:  x_norm
+A = 0.35, p-value = 0.47          # normality not rejected
+
+        Anderson-Darling normality test
+data:  x_t3
+A = 2.10, p-value = 2.8e-05        # strongly rejects normality
+
+Shapiro-Wilk p-values:
+  normal sample: 0.42
+  t(3) sample:   0.0001
+```
+
+Both tests correctly reject the heavy-tailed sample; AD has moderately higher power than Shapiro-Wilk in the tails.
+
+## Interpretation
+
+"The Anderson-Darling test did not reject normality for the biomarker residuals ($A = 0.35$, $p = 0.47$), supporting the use of parametric methods."
+
+## Practical Tips
+
+- AD is more sensitive to tail departures than Kolmogorov-Smirnov and often more powerful than Shapiro-Wilk for detecting heavy tails.
+- `nortest::ad.test()` handles normality; `goftest::ad.test()` supports arbitrary reference distributions.
+- For testing fit to a parametric distribution with estimated parameters, use the correct tabled critical values (nortest handles this for normality).
+- Very large samples will reject any hypothesised distribution because real data have atoms and rounding.
+- For quality-control contexts where tail behaviour governs defect rates, AD is the preferred GoF test.

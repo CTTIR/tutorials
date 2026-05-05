@@ -1,0 +1,74 @@
+---
+title: Spline Regression
+date: "2026-04-17"
+description: Piecewise-polynomial regression with natural cubic splines for flexible non-linear fits
+categories:
+  - "Regression & Modelling"
+  - spline
+  - natural-cubic-spline
+  - knots
+---
+
+## Introduction
+
+Splines are piecewise polynomials joined smoothly at points called knots. They give flexible non-linear fits without the wild extrapolation behaviour of high-degree polynomials, which makes them the canonical tool for modelling non-linear continuous predictor effects in regression. Natural cubic splines and restricted cubic splines are the workhorses in clinical and epidemiological work; their constraint of linear behaviour beyond the boundary knots prevents the implausible curls that ordinary polynomials produce in the tails.
+
+## Prerequisites
+
+A working understanding of polynomial regression, the limitations of high-degree polynomials at the extremes of the data, and the concept of basis functions in regression.
+
+## Theory
+
+A natural cubic spline with $k$ internal knots is a piecewise cubic polynomial that is continuous together with its first and second derivatives at each knot, and linear beyond the boundary knots. It uses $k + 1$ degrees of freedom for the non-linear effect. Knot placement is typically at quantiles of $X$ (3 knots: 10/50/90; 4 knots: 5/35/65/95; 5 knots: 5/27.5/50/72.5/95 percentiles). Three to five knots are adequate for most biomedical applications; more invites over-fitting.
+
+Restricted cubic splines (RCS) impose linearity beyond the outer knots, preventing the polynomial from curling away in the tails — useful for clinical reporting where extrapolation into low-data regions is a real concern.
+
+## Assumptions
+
+Standard regression assumptions on residuals; residuals vs. fitted should show no remaining structure after the spline is included; the chosen number and placement of knots are adequate for the underlying functional form.
+
+## R Implementation
+
+```r
+library(splines); library(rms)
+
+set.seed(2026)
+x <- runif(200, 0, 10)
+y <- 2 + sin(x) * 2 + rnorm(200, 0, 0.5)
+
+# Natural cubic spline via splines::ns
+fit_ns <- lm(y ~ ns(x, df = 4))
+summary(fit_ns)
+
+# Visualise
+plot(x, y, pch = 20)
+xg <- seq(0, 10, length.out = 200)
+lines(xg, predict(fit_ns, newdata = data.frame(x = xg)),
+      col = "#2A9D8F", lwd = 2)
+
+# rms::rcs for restricted cubic splines with plot
+dd <- datadist(data.frame(x, y)); options(datadist = "dd")
+fit_rcs <- ols(y ~ rcs(x, 4))
+plot(Predict(fit_rcs, x = seq(0, 10, 0.2)))
+```
+
+## Output & Results
+
+`splines::ns()` and `rms::rcs()` produce basis matrices that enter `lm()` like any other predictor. The resulting fit object has the usual summary, coefficients (which are not individually interpretable), and predictions. Visualising the partial effect of $X$ on $Y$ via `predict()` or `rms::Predict()` is the primary inferential output.
+
+## Interpretation
+
+A reporting sentence: "A natural cubic spline with 4 degrees of freedom captured the underlying sinusoidal pattern of $y$ on $x$ ($R^2 = 0.92$); a likelihood-ratio test against the linear-only model strongly rejected linearity ($\chi^2_3 = 287$, $p < 0.001$)." Always test for non-linearity formally and report the test result; a smooth curve in a plot is not enough.
+
+## Practical Tips
+
+- Use 3–5 knots for most applications; more risks overfitting and hard-to-interpret partial effects.
+- Restricted cubic splines (`rms::rcs`) constrain the tails to be linear, avoiding the wild extrapolation that natural cubic splines can produce when knots are sparse.
+- Test for non-linearity with a likelihood-ratio test of the spline model against a linear-only specification; report the test result alongside any non-linear visualisation.
+- Spline coefficients are not individually interpretable; communicate results via `Predict()` plots or `ggeffects::ggpredict()`.
+- For multiple continuous predictors with potential non-linear effects, consider GAMs (`mgcv::gam`) which automate smoothness selection.
+- For survival or logistic regression, the same `rcs()` syntax inside `cph()` or `lrm()` extends the spline machinery to the relevant likelihood.
+
+## R Packages Used
+
+`splines` for `ns()` and `bs()` basis functions; `rms` for `rcs()`, `Predict()`, and `datadist`-aware regression workflows; `mgcv` for GAMs as the more general alternative; `ggeffects` for predicted-effect visualisation; `Hmisc::rcspline.eval()` for low-level RCS basis construction.

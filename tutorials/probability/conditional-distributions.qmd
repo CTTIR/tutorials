@@ -1,0 +1,106 @@
+---
+title: Conditional Distributions
+date: "2026-04-17"
+description: "The distribution of one random variable given the value of another, and conditional expectations"
+categories:
+  - Probability Theory
+  - conditional-distribution
+  - conditional-expectation
+  - tower-property
+---
+
+## Introduction
+
+A conditional distribution describes how one random variable behaves given a specific value (or values) of another. Conditional expectations are what regression models estimate; conditional variances quantify residual uncertainty. Together they are the language of predictive statistics.
+
+## Prerequisites
+
+Joint distributions, marginal distributions, conditional probability.
+
+## Theory
+
+For continuous joint density $f_{X,Y}$ with marginal $f_Y > 0$, the **conditional density of $X$ given $Y = y$** is
+
+$$f_{X \mid Y}(x \mid y) = \frac{f_{X, Y}(x, y)}{f_Y(y)}.$$
+
+Analogous expression for discrete variables using PMFs.
+
+**Conditional expectation** of $X$ given $Y = y$:
+
+$$E[X \mid Y = y] = \int x f_{X \mid Y}(x \mid y) \, dx.$$
+
+As a function of $y$, $E[X \mid Y]$ is itself a random variable.
+
+**Tower property (law of total expectation)**:
+
+$$E[X] = E[E[X \mid Y]].$$
+
+**Conditional variance**: $\mathrm{Var}(X \mid Y = y) = E[X^2 \mid Y = y] - (E[X \mid Y = y])^2$.
+
+**Law of total variance**: $\mathrm{Var}(X) = E[\mathrm{Var}(X \mid Y)] + \mathrm{Var}(E[X \mid Y])$. Within-group variance plus between-group variance.
+
+For a bivariate normal with correlation $\rho$: $X \mid Y = y \sim \mathcal{N}\!\big(\mu_X + \rho \sigma_X \sigma_Y^{-1}(y - \mu_Y), \sigma_X^2 (1 - \rho^2)\big)$.
+
+## Assumptions
+
+$f_Y(y) > 0$ (or the conditional probability is defined via an alternate limiting procedure); $E[|X|] < \infty$ for the conditional expectation to exist.
+
+## R Implementation
+
+```r
+library(mvtnorm)
+set.seed(2026)
+
+# Bivariate normal
+mu <- c(0, 0); Sigma <- matrix(c(1, 0.7, 0.7, 1), 2, 2)
+rho <- Sigma[1, 2] / sqrt(prod(diag(Sigma)))
+XY <- rmvnorm(5e4, mean = mu, sigma = Sigma)
+
+# Conditional on Y near y0, distribution of X
+y0 <- 1.0; window <- 0.05
+X_given_Y <- XY[abs(XY[, 2] - y0) < window, 1]
+
+c(n_window    = length(X_given_Y),
+  emp_mean    = mean(X_given_Y),
+  theor_mean  = mu[1] + rho * (y0 - mu[2]),
+  emp_sd      = sd(X_given_Y),
+  theor_sd    = sqrt(Sigma[1, 1] * (1 - rho^2)))
+
+# Tower property: E[X] = E[E[X | Y]]
+c(E_X = mean(XY[, 1]),
+  tower = mean(mu[1] + rho * (XY[, 2] - mu[2])))
+
+# Law of total variance
+var_total <- var(XY[, 1])
+var_within <- Sigma[1, 1] * (1 - rho^2)
+var_between <- rho^2 * Sigma[1, 1]
+c(total = var_total,
+  sum_of_parts = var_within + var_between)
+```
+
+## Output & Results
+
+```
+n_window   emp_mean theor_mean     emp_sd   theor_sd
+  4094        0.693      0.700      0.708      0.714
+
+       E_X       tower
+     0.003      -0.001
+
+       total sum_of_parts
+        1.000        1.000
+```
+
+Empirical conditional moments match theoretical; tower property and law of total variance hold exactly (up to Monte Carlo error).
+
+## Interpretation
+
+Regression is the enterprise of estimating $E[Y \mid X = x]$ as a function of $x$. When a manuscript reports "for every 1-unit increase in $x$, $y$ increases by $\beta$", it is interpreting a slope of the conditional expectation.
+
+## Practical Tips
+
+- Conditional distributions require the conditioning event to have positive probability (or a limiting argument for continuous variables).
+- $E[Y \mid X]$ is a function of $X$ and therefore a random variable; $E[Y \mid X = x]$ is a specific number.
+- The conditional expectation is the best predictor of $Y$ from $X$ under squared-error loss (Hilbert projection).
+- Jensen's inequality extends to conditional expectations: $E[g(X) \mid Y] \geq g(E[X \mid Y])$ for convex $g$.
+- In high-dimensional conditioning, direct computation is intractable; regression models (linear, generalised, spline-based) estimate $E[Y \mid X]$ directly.

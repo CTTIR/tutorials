@@ -1,0 +1,59 @@
+---
+title: Bubble Plots
+date: "2026-04-17"
+description: Scatter plots with a third variable encoded by point size
+categories:
+  - Data Visualisation
+  - bubble
+  - size-aesthetic
+  - scatter
+---
+
+## Introduction
+
+A bubble plot is a scatter plot enriched with a third continuous variable encoded by point size. It is a standard idiom in business analytics ("revenue × growth × market share") and in international development reporting (Hans Rosling's life-expectancy × income × population). The third dimension comes at a real perceptual cost — humans judge area less accurately than position — so a bubble plot's size aesthetic should be reserved for variables where rank order and rough magnitude matter more than precise comparison.
+
+## Prerequisites
+
+A working knowledge of scatter plots, `ggplot2`'s aesthetic mappings, and the perceptual principles of position vs area encoding.
+
+## Theory
+
+A bubble plot maps three continuous variables: $x$, $y$, and `size`. The size mapping must use an *area* scale — `scale_size_area()` — so that perceived magnitude (area) is proportional to the data value. The default `scale_size()` maps the data to point radius, which means a doubled data value occupies four times the visual area; this is a long-standing bug-as-feature in many bubble-chart implementations and produces misleading impressions of magnitude. Colour can encode a fourth variable, but four-variable bubble plots tend to overwhelm readers; alternatives include a facet on the categorical fourth variable or an animated time slider for longitudinal data.
+
+## Assumptions
+
+All three (or four) variables are continuous (or treated as such). The size variable is non-negative and on a scale where zero means "absent"; mapping size to a centred or signed quantity is undefined.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+ggplot(mtcars, aes(wt, mpg, size = hp, colour = factor(cyl))) +
+  geom_point(alpha = 0.7) +
+  scale_size_area(max_size = 12, name = "Horsepower") +
+  scale_colour_brewer(palette = "Set2", name = "Cylinders") +
+  theme_minimal()
+```
+
+## Output & Results
+
+A scatter of weight vs. miles-per-gallon with bubble area proportional to horsepower and colour encoding cylinder count. Heavy, high-horsepower cars cluster in the lower-right corner; light four-cylinder cars cluster in the upper-left. The combination of size and colour makes structural patterns visible that would require a four-panel facet to communicate without bubbles.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Bubble plot of vehicle weight vs fuel economy (n = 32); bubble area is proportional to horsepower (`scale_size_area`, max area 12), and colour encodes cylinder count." Always specify that area (not radius) is the encoding; readers familiar with poorly designed bubble charts will otherwise assume the wrong mapping.
+
+## Practical Tips
+
+- Always use `scale_size_area()` so the visual area is proportional to the data; the default radius mapping double-counts magnitude.
+- Set `max_size` deliberately (typically 8–15) to avoid enormous bubbles dominating the panel and obscuring smaller observations.
+- For many overlapping bubbles, lower `alpha` to 0.4–0.6 and prefer a sequential fill so density still reads through the transparency.
+- Do not map size to negative or signed values; area is undefined for negatives, and the visual mapping is ambiguous.
+- For a fourth dimension, prefer a facet over a colour aesthetic on top of size; combining both fights for the reader's attention.
+- For time series of bubbles ("Rosling-style"), use `gganimate::transition_time(year)` rather than a static panel; the temporal dimension is the variable that makes bubble plots compelling.
+
+## R Packages Used
+
+`ggplot2` for the underlying scatter, `scale_size_area()` for correct area encoding, `gganimate` for time-animated bubble charts, and `ggrepel` for non-overlapping bubble labels when individual observations need to be named.

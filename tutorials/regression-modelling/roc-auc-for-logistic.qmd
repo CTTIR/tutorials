@@ -1,0 +1,72 @@
+---
+title: ROC and AUC for Logistic Models
+date: "2026-04-17"
+description: Discrimination quality of logistic regression via receiver operating characteristic curves
+categories:
+  - "Regression & Modelling"
+  - roc
+  - auc
+  - logistic
+  - discrimination
+---
+
+## Introduction
+
+The receiver operating characteristic (ROC) curve and its area-under-curve (AUC) summary quantify how well a logistic regression's predicted probabilities rank observed events above non-events. AUC ranges from 0.5 (chance) to 1.0 (perfect ranking) and is the conventional discrimination metric for binary classifiers in clinical and epidemiological work. It is invariant to the threshold chosen for class assignment, making it a property of the model's ranking ability rather than any specific cut-off.
+
+## Prerequisites
+
+A working understanding of logistic regression, classification thresholds, sensitivity, and specificity.
+
+## Theory
+
+For a binary outcome $Y \in \{0, 1\}$ and a continuous score (predicted probability) $\hat p$, the AUC equals the probability that a randomly chosen positive case has a higher predicted probability than a randomly chosen negative case:
+
+$$\mathrm{AUC} = \mathrm P(\hat p_i > \hat p_j \mid Y_i = 1, Y_j = 0).$$
+
+It is mathematically equivalent to the Mann-Whitney U statistic divided by the sample sizes. Rough conventional benchmarks: 0.5–0.7 poor, 0.7–0.8 acceptable, 0.8–0.9 excellent, above 0.9 outstanding (and worth scrutinising for over-fitting in small samples). DeLong's test compares two correlated AUCs from models fit on the same data.
+
+## Assumptions
+
+A binary outcome and a continuous score (predicted probability or any monotone transformation thereof). AUC is invariant to monotone transformations of the score, so calibration is irrelevant to AUC; thresholding decisions, however, do depend on calibration.
+
+## R Implementation
+
+```r
+library(pROC)
+
+d <- mtcars
+d$am <- factor(d$am)
+fit <- glm(am ~ wt + hp, data = d, family = binomial)
+probs <- predict(fit, type = "response")
+
+roc_obj <- roc(d$am, probs, quiet = TRUE)
+auc(roc_obj); ci.auc(roc_obj)
+plot(roc_obj, col = "#2A9D8F", lwd = 2)
+
+# DeLong test: compare two models' AUCs
+fit2 <- glm(am ~ wt, data = d, family = binomial)
+roc2 <- roc(d$am, predict(fit2, type = "response"), quiet = TRUE)
+roc.test(roc_obj, roc2)
+```
+
+## Output & Results
+
+`auc(roc_obj)` returns the point estimate, `ci.auc()` the bootstrap confidence interval. The plot displays the ROC curve with a diagonal reference for chance. `roc.test()` performs DeLong's test for the AUC difference between two correlated ROC curves.
+
+## Interpretation
+
+A reporting sentence: "The full logistic regression had an in-sample AUC of 0.93 (95 % CI 0.84 to 1.00); a reduced model with weight only had AUC 0.89, and DeLong's test for the difference yielded $\Delta\mathrm{AUC} = 0.04$ ($p = 0.12$), suggesting horsepower contributes little additional discrimination beyond weight." Report AUC with confidence interval and pair with at least one operating-point summary (sensitivity / specificity at a clinically chosen threshold).
+
+## Practical Tips
+
+- Always report AUC with its 95 % confidence interval; the point estimate alone is uninterpretable for assessing precision.
+- For honest internal validation, use bootstrap with the `0.632+` correction for optimism; the package `rms::validate` automates this.
+- In severe class imbalance, precision-recall curves communicate operating-point trade-offs better than ROC; report both when positives are rare.
+- AUC is independent of prevalence; calibration and predictive values (PPV, NPV) are not. Report calibration alongside AUC for any clinical prediction tool.
+- For survival outcomes, use time-dependent ROC (`timeROC::timeROC`) and time-specific AUCs at clinically meaningful horizons.
+- Compare nested models via DeLong's test (`pROC::roc.test`); for non-nested models, treat the comparison as exploratory and avoid hypothesis-test framing.
+
+## R Packages Used
+
+`pROC` for ROC objects, AUC, confidence intervals, and DeLong's test; `ROCit` for an alternative API with bootstrap CIs and Hand's M-statistic; `yardstick` for tidy classifier metrics in `tidymodels`; `rms::validate` for bootstrap-based optimism correction.

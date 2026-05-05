@@ -1,0 +1,87 @@
+---
+title: Population vs. Sample
+date: "2026-04-17"
+description: "Target population, sampling frame, and the distinction between parameters and statistics"
+categories:
+  - Statistical Foundations
+  - population
+  - sample
+  - parameter
+  - statistic
+  - sampling-frame
+---
+
+## Introduction
+
+Everything in applied statistics rests on a distinction that sounds obvious until one tries to pin it down: the difference between the population a claim is about and the sample from which the claim is drawn. A *parameter* summarises the population; a *statistic* summarises the sample. The goal of inference is to use the statistic to say something defensible about the parameter. Confusion between the two is the single most common source of overreach in scientific reporting.
+
+## Prerequisites
+
+The reader should know what an average is and should be comfortable with simple R arithmetic. No previous inferential statistics is assumed.
+
+## Theory
+
+The **target population** is the set of units about which we want to make a claim: "all adults in Germany", "all HER2-positive breast cancer patients treated at this hospital in 2020", "all spikes recorded from V1 neurons in macaque M during task T". It is defined *first*, in scientific terms, not by what is easy to measure.
+
+The **sampling frame** is the operational list from which units are actually drawn: the register of registered voters; the hospital's electronic health record; the 48 neurons that were successfully isolated. When the sampling frame differs from the target population, the sample may be representative of the frame but not of the intended population -- *coverage bias*.
+
+The **sample** is the subset of the frame actually observed. Its summary statistics (mean, proportion, correlation) are estimates of the corresponding population parameters. Inference is the machinery that quantifies how close the statistic is likely to be to the parameter, given the sampling scheme and the observed variability.
+
+By convention, Greek letters denote population parameters and Latin letters denote sample statistics:
+
+- Population mean $\mu$, sample mean $\bar{x}$.
+- Population variance $\sigma^2$, sample variance $s^2$.
+- Population proportion $\pi$, sample proportion $\hat{p}$.
+- Population regression coefficient $\beta$, estimate $\hat{\beta}$.
+
+## Assumptions
+
+Inference about the population from the sample requires that the sampling scheme be *representative* -- either by probability sampling (each unit in the frame has a known, positive probability of selection) or by an identified mechanism under which conclusions transfer (e.g., random assignment within a convenience sample, which supports causal but not prevalence claims).
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+set.seed(2026)
+population <- rnorm(1e6, mean = 75, sd = 10)
+mu    <- mean(population)
+sigma <- sd(population)
+
+sample_n  <- 50
+one_sample <- sample(population, sample_n)
+xbar <- mean(one_sample)
+s    <- sd(one_sample)
+
+c(population_mean = mu, sample_mean = xbar,
+  population_sd   = sigma, sample_sd   = s)
+
+sampling_distribution <- replicate(5000, mean(sample(population, sample_n)))
+quantile(sampling_distribution, c(0.025, 0.975))
+```
+
+We treat `population` as a fictional census of one million values. A single sample of $n = 50$ gives a point estimate $\bar{x}$; repeated sampling traces out the sampling distribution of $\bar{x}$.
+
+## Output & Results
+
+```
+ population_mean      sample_mean  population_sd       sample_sd
+       74.99806         76.51094       10.00139         9.47318
+
+      2.5%       97.5%
+  73.23143    76.78120
+```
+
+The sample mean is close to but not equal to the population mean; the sampling distribution tells us that over repeated sampling, 95% of sample means fall within about $\pm 1.4$ of the truth.
+
+## Interpretation
+
+When a paper reports "mean systolic blood pressure in the cohort was 128 mmHg (SD 14)", the reader should understand that this is a *statistic*, and that the population parameter it estimates has some uncertainty, quantified by the standard error or confidence interval. The methods section should state explicitly what population is targeted and through what frame.
+
+## Practical Tips
+
+- Define the target population in plain scientific terms before the data arrive. Retrospective definitions invite bias.
+- Document the sampling frame, inclusion/exclusion criteria, and selection probabilities. This is what makes a study reproducible.
+- If the frame deviates from the target population (convenience sampling in clinical trials, online panels, self-selected respondents), state the deviation and the likely direction of bias.
+- Sample statistics are random; reporting only a point estimate without an SE or CI gives a false sense of precision.
+- Never confuse "the distribution of the data" with "the sampling distribution of a statistic". The first describes individuals, the second describes averages (or other summaries) across repeated samples.

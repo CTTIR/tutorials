@@ -1,0 +1,75 @@
+---
+title: Heatmaps
+date: "2026-04-17"
+description: "Matrix displays with colour-encoded cell values, optionally with row/column ordering"
+categories:
+  - Data Visualisation
+  - heatmap
+  - geom_tile
+  - pheatmap
+  - complexheatmap
+---
+
+## Introduction
+
+A heatmap displays a matrix as a grid of coloured cells, with numerical values encoded by colour. The geom is a workhorse across genomics (gene-expression matrices), clinical research (cross-tabulations of conditions and measurements), classifier evaluation (confusion matrices), and exploratory data analysis (correlation matrices). Two design choices dominate readability: the colour palette (sequential, diverging, or qualitative) and the row / column order, which often comes from hierarchical clustering on rows, columns, or both.
+
+## Prerequisites
+
+A working understanding of matrices, hierarchical clustering, and colour palette selection (sequential vs diverging).
+
+## Theory
+
+Two ecosystems handle heatmaps in R:
+
+- **`ggplot2` + `geom_tile()`**: flexible but requires long-format data and manual handling of clustering. Best when the heatmap is one panel in a larger composition.
+- **`pheatmap` and `ComplexHeatmap`**: dedicated packages that handle clustering, dendrograms, row/column annotations, and z-scoring natively. Best when the heatmap is the figure and customisation focus is on annotation tracks.
+
+The colour scale must match the data semantics: sequential (`viridis`, `Blues`) for ordered values without a meaningful zero, diverging (`RdBu`, `BrBG`) for z-scored data or any quantity centred on zero. Heatmaps with a one-sided palette applied to centred data are misleading because the visual midpoint does not match the numerical midpoint.
+
+## Assumptions
+
+A matrix or matrix-like structure with rows and columns that admit a sensible reordering. For clustering, rows and columns must be on comparable scales (or pre-scaled per row).
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+# ggplot tile heatmap
+d <- as.data.frame(scale(as.matrix(mtcars)))
+d$car <- rownames(d)
+d_long <- reshape2::melt(d, id.vars = "car")
+ggplot(d_long, aes(variable, car, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = 0) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# pheatmap with hierarchical clustering
+library(pheatmap)
+pheatmap(scale(mtcars), clustering_method = "ward.D2",
+         color = colorRampPalette(c("blue", "white", "red"))(100))
+```
+
+## Output & Results
+
+Two heatmaps of the z-scored `mtcars` matrix: a hand-built `ggplot2` tile heatmap (no clustering, alphabetical row order) and a `pheatmap` version with Ward's hierarchical clustering on both rows and columns plus accompanying dendrograms. The clustered version reveals two clear groups of cars distinguished by their efficiency-versus-power profile; the unclustered version requires the reader to find that structure unaided.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Heatmap of z-scored vehicle attributes (n = 32 cars × 11 variables); colour encodes z-score on a blue-white-red diverging scale centred at zero, and rows and columns are clustered with Ward's method on Euclidean distance." Always state the scaling, the distance metric, and the linkage method; results depend on all three.
+
+## Practical Tips
+
+- Centre and scale rows (z-score per row) before clustering whenever variables are on different scales; otherwise, large-magnitude variables dominate the distance metric.
+- Use a diverging palette with an explicit midpoint for z-scored data; one-sided sequential palettes collapse the visual midpoint and obscure structure.
+- For large matrices (thousands of rows or columns), `ComplexHeatmap` scales better than `pheatmap` and supports complex annotation tracks (categorical, continuous, mark-driven).
+- Add side annotations (group, condition, batch) to help readers spot whether clustering tracks biology or technical artefacts.
+- Cluster only the dimensions that should be ordered; force the other dimension's order when biological or temporal meaning matters.
+- Use `cluster_rows = FALSE` (or `cluster_cols = FALSE`) when an existing ordering carries information you want preserved (e.g. chromosome position).
+
+## R Packages Used
+
+`ggplot2` for `geom_tile()` and flexible composition; `pheatmap` for one-call heatmaps with clustering; `ComplexHeatmap` for large-scale heatmaps with rich annotations; `superheat` for an alternative ggplot-flavoured heatmap with linked summary plots; `viridis` and `RColorBrewer` for palette selection.

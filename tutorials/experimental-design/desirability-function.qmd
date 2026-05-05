@@ -1,0 +1,73 @@
+---
+title: Desirability Functions
+date: "2026-04-17"
+description: Multi-response optimisation via geometric-mean desirability scores
+categories:
+  - Experimental Design
+  - desirability
+  - multi-response
+  - optimisation
+---
+
+## Introduction
+
+Many experiments produce more than one response that must be optimised jointly: maximise yield while minimising impurity, hit a target dissolution time while keeping particle size within spec, maximise tensile strength while minimising weight. Desirability functions, introduced by Harrington in 1965 and refined by Derringer and Suich in 1980, are the standard tool for combining multiple responses into a single overall optimisation criterion. Each response is converted to a $[0, 1]$ desirability scale via a transformation specific to that response's goal (maximise, minimise, or hit a target), and the individual desirabilities are combined into an overall desirability via the geometric mean. The compound score is then maximised over the factor space, often using the response surfaces fit during the second-order RSM phase.
+
+## Prerequisites
+
+A working understanding of response-surface methodology, multi-objective optimisation concepts, and the difference between geometric and arithmetic aggregation of normalised scores.
+
+## Theory
+
+For each response $y_i$, define a desirability function $d_i(y_i) \in [0, 1]$ — larger values are more desirable, irrespective of which direction is "good" on the original scale. The standard forms (Derringer–Suich) are:
+
+- **Maximise**: $d_i = 0$ below a lower limit, $d_i = 1$ above a target value, linearly increasing between.
+- **Minimise**: mirror of the maximise form.
+- **Target**: $d_i = 0$ at lower and upper limits, $d_i = 1$ at the target, with linear or power transitions.
+
+The overall desirability is $D = \left(\prod_i d_i\right)^{1/n}$, the geometric mean. Crucially, if any single $d_i = 0$ then $D = 0$ — the geometric mean is "non-compensatory", meaning no amount of excellence on one response can rescue an unacceptable value on another.
+
+## Assumptions
+
+Each $d_i$ is appropriately parameterised with realistic limits and target values, the geometric-mean aggregation is acceptable to the decision-maker (alternative weighted-power means exist for differential weighting), and the underlying response surfaces are reasonably well estimated.
+
+## R Implementation
+
+```r
+library(desirability)
+
+set.seed(2026)
+df <- data.frame(x1 = runif(100, -1, 1), x2 = runif(100, -1, 1))
+df$yield  <- 70 + 10 * df$x1 + 5 * df$x2 + rnorm(100)
+df$cost   <- 20 - 2 * df$x1 + 4 * df$x2 + rnorm(100)
+
+d_yield <- dMax(low = 60, high = 85)
+d_cost  <- dMin(low = 10, high = 25)
+dOverall <- dOverall(d_yield, d_cost)
+
+df$d_overall <- predict(dOverall, with(df,
+                                       cbind(yield = yield, cost = cost)))
+
+head(df[order(-df$d_overall), ], 5)
+```
+
+## Output & Results
+
+The `desirability` package returns per-response and overall desirability for each observation or grid point. Combined with a fitted response-surface model, the workflow is to predict each response over a dense grid of factor settings, compute the overall desirability at each grid point, and identify the factor combination that maximises $D$. Reporting the achieved desirability for each individual response alongside the overall $D$ communicates both the compromise and its quality.
+
+## Interpretation
+
+A reporting sentence: "The best factor combination achieved yield 82 (90 % of the maximum desirability range) and cost 13 (85 % of the minimum desirability range), with overall $D = 0.87$. Pure yield optimisation would have driven yield to 88 but at cost 19 ($D = 0.42$); pure cost optimisation would have minimised cost to 11 but at yield 65 ($D = 0.31$). The desirability-balanced optimum is therefore meaningfully different from either single-objective optimum and is recommended for production." Always report the per-response desirabilities alongside $D$.
+
+## Practical Tips
+
+- Use the geometric mean rather than the arithmetic mean to combine individual desirabilities; the geometric mean penalises low-desirability responses heavily and prevents one response from dominating the aggregate, while the arithmetic mean allows compensation that the decision-maker may not actually accept.
+- Set realistic lower and upper limits for each desirability function; unrealistic limits flatten the function (everything inside is fully desirable, everything outside is zero) and the optimisation becomes uninformative.
+- Differential weighting is achieved by exponentiating each desirability before averaging: $d_i^{s_i}$ with $s_i > 1$ increases the influence of response $i$, $s_i < 1$ decreases it. The Derringer–Suich formulation has this exponent as a built-in parameter.
+- For fitted response surfaces, predict each response over a fine grid (or use a numerical optimiser) and maximise the overall desirability; the maximum is rarely at a corner of the design region and benefits from explicit search.
+- Desirability functions are a heuristic for combining responses; for high-stakes decisions, complement them with formal multi-objective Pareto analysis to expose the trade-off curve and let the decision-maker choose explicitly.
+- Document the desirability-function specifications (limits, targets, exponents) in the protocol; reviewers and downstream users cannot reproduce the optimisation without them, and the choices materially affect the recommended factor settings.
+
+## R Packages Used
+
+`desirability` for canonical Derringer–Suich functions (`dMax`, `dMin`, `dTarget`) and combined-desirability prediction (`dOverall`); `qualityTools::desirability()` for an alternative interface integrated with RSM workflow; `mco` for formal multi-objective Pareto-front analysis as a complement to desirability heuristics; `rsm` for fitting the response surfaces that feed into the desirability optimisation.

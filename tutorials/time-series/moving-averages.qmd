@@ -1,0 +1,72 @@
+---
+title: Moving Averages
+date: "2026-04-17"
+description: Smoothing a time series by averaging over a sliding window
+categories:
+  - Time Series Analysis
+  - moving-average
+  - smoothing
+  - weighted
+---
+
+## Introduction
+
+A moving average smooths a time series by replacing each observation with an average of nearby values. It is the oldest and simplest tool for highlighting trend by suppressing high-frequency noise; it underpins more sophisticated techniques (X-11 decomposition, Henderson trend filters) and is fundamental to financial chart analysis. The choice between trailing, centred, and weighted moving averages governs the trade-off between smoothness and lag, and choosing the right window size for the application is the principal craft of moving-average smoothing.
+
+## Prerequisites
+
+A working understanding of time series, the trade-off between smoothness and lag, and the role of window size in noise suppression.
+
+## Theory
+
+Three main variants:
+
+- **Simple moving average**: arithmetic mean of $k$ consecutive observations. Trailing alignment uses the last $k$ values up to time $t$ (one-sided, introduces lag); centred alignment averages $(k-1)/2$ before and after (two-sided, no lag but undefined at the boundaries).
+- **Weighted moving average**: assigns weights to each observation in the window — triangular, Hamming, Spencer 15-term (used in classical seasonal adjustment), or any user-defined kernel.
+- **Exponential moving average**: geometrically declining weights, $\hat y_t = \alpha y_t + (1 - \alpha) \hat y_{t-1}$. Closely related to simple exponential smoothing.
+
+A centred MA with window equal to the seasonal period eliminates the seasonal component, leaving trend plus residual; this is the foundation of classical seasonal decomposition.
+
+## Assumptions
+
+Regular sampling intervals (irregular spacing requires alternative methods); stationarity is not required, but the moving-average filter assumes a slowly-varying trend.
+
+## R Implementation
+
+```r
+library(zoo); library(TTR)
+
+x <- AirPassengers
+
+# Trailing mean
+sm_3 <- rollmean(x, 3, align = "right", fill = NA)
+
+# Centred 12-month MA (removes annual seasonality)
+sm_12 <- rollmean(x, 12, align = "center", fill = NA)
+
+# Weighted MA
+sm_w <- TTR::WMA(x, n = 12, wts = 1:12)
+
+plot(x); lines(sm_12, col = "red", lwd = 2)
+```
+
+## Output & Results
+
+`rollmean()` returns the smoothed series with NA at boundaries (trailing alignment leaves NAs at the start; centred alignment leaves NAs at both ends). `TTR::WMA()` produces weighted alternatives. Plotting the centred 12-month MA on top of the raw series reveals the trend that the seasonal cycle hides.
+
+## Interpretation
+
+A reporting sentence: "A centred 12-month moving average revealed the secular trend in monthly air-passenger counts, with the smoothed series showing approximately 5 % annual growth and the seasonal cycle largely eliminated by averaging over a full period." Quote the window size and alignment in any report.
+
+## Practical Tips
+
+- A centred moving average of window equal to the seasonal period eliminates the seasonal cycle exactly; this is the X-11 first step.
+- Trailing moving averages introduce lag proportional to half the window size; use only when real-time estimation is needed and the lag is acceptable.
+- For smoother curves with minimal lag, exponential smoothing, LOESS, or spline smoothers are often preferable to wide moving averages.
+- Centred MA is undefined at the start and end of the series; for the boundary, use one-sided MA, asymmetric weights, or an end-effects correction.
+- Weighted MAs with carefully chosen kernels (Spencer's 15-term, Henderson's filters) are used in official-statistics seasonal adjustment because they preserve cubic polynomial trends while suppressing irregular components.
+- Pair MA smoothing with the original series on the same plot; the gap between them is the seasonal-plus-irregular component.
+
+## R Packages Used
+
+`zoo::rollmean()` and `rollmeanr()` for simple moving averages with control over alignment; `TTR::SMA()`, `WMA()`, and `EMA()` for technical-analysis moving averages including weighted and exponential; `forecast::ma()` for centred MAs with seasonal-period defaults; `slider::slide_dbl()` for tidyverse-friendly sliding-window computations.

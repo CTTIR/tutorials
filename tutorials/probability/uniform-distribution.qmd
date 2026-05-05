@@ -1,0 +1,83 @@
+---
+title: The Uniform Distribution
+date: "2026-04-17"
+description: Equal probability over an interval (continuous) or a set (discrete)
+categories:
+  - Probability Theory
+  - uniform
+  - continuous
+  - discrete
+  - simulation
+---
+
+## Introduction
+
+The uniform distribution spreads probability equally across its support. The continuous uniform on $[a, b]$ is the building block of random-number generation; the discrete uniform on $\{1, \ldots, k\}$ describes fair dice and random selection. It is the simplest non-trivial distribution.
+
+## Prerequisites
+
+Continuous and discrete random variables.
+
+## Theory
+
+**Continuous uniform $\mathrm{Uniform}(a, b)$** has PDF
+
+$$f(x) = \frac{1}{b - a}, \qquad a \leq x \leq b,$$
+
+with moments $E[X] = (a + b)/2$ and $\mathrm{Var}(X) = (b - a)^2 / 12$.
+
+**Discrete uniform on $\{x_1, \ldots, x_k\}$**: $P(X = x_i) = 1/k$ for each $i$. For $\{1, \ldots, k\}$: $E[X] = (k+1)/2$, $\mathrm{Var}(X) = (k^2 - 1)/12$.
+
+**Probability integral transform**: if $X$ has a continuous CDF $F_X$, then $F_X(X) \sim \mathrm{Uniform}(0, 1)$. The inverse: $X = F_X^{-1}(U)$ where $U \sim \mathrm{Uniform}(0, 1)$ generates $X$ from uniform draws. This is the inverse-CDF method of simulation.
+
+## Assumptions
+
+Continuous uniform assumes the variable genuinely has constant density; discrete uniform assumes genuinely equal probabilities across a specified set.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+# Continuous uniform
+U <- runif(1e5, min = 0, max = 1)
+c(mean = mean(U), theoretical = 0.5,
+  var  = var(U),  theoretical_var = 1/12)
+
+# Inverse-CDF method: generate exponential from uniform
+lambda <- 2
+E <- -log(1 - U) / lambda   # F^{-1}(u) = -log(1 - u) / lambda
+c(empirical_mean = mean(E), exponential_mean = 1 / lambda)
+
+# Discrete uniform via sample()
+die <- sample(1:6, 1e5, replace = TRUE)
+c(mean_die = mean(die), theoretical = 3.5,
+  var_die  = var(die),  theoretical_var = 35/12)
+```
+
+## Output & Results
+
+```
+       mean theoretical          var  theoretical_var
+    0.5003      0.5000       0.0835           0.0833
+
+empirical_mean  exponential_mean
+        0.4983             0.500
+
+  mean_die  theoretical     var_die  theoretical_var
+     3.504        3.500       2.924             2.917
+```
+
+Empirical moments match theoretical exactly up to Monte Carlo error, and the inverse-CDF method recovers the exponential mean.
+
+## Interpretation
+
+Uniforms rarely appear as substantive models of real data but pervade simulation, randomisation, and Monte Carlo methods. Reporting "trial assignment was simulated via `sample()`" is implicitly invoking a discrete uniform.
+
+## Practical Tips
+
+- `runif(n)` defaults to $[0, 1]$; specify min/max explicitly to avoid surprises.
+- The uniform distribution has zero skewness and excess kurtosis $-1.2$ (light tails).
+- For true randomness from hardware sources, avoid pseudo-random `runif`; use `/dev/urandom` or the `random` R package with online services.
+- Uniform priors are often overly informative on transformed scales (a uniform on $\sigma$ is not uniform on $\sigma^2$).
+- The Jacobian of the inverse-CDF transform is $1/f_X(x)$; this is why the probability integral transform works.

@@ -1,0 +1,77 @@
+---
+title: "Multiple Comparisons: Overview"
+date: "2026-04-17"
+description: Family-wise error vs false discovery rate and when each applies
+categories:
+  - Inferential Statistics
+  - multiple-testing
+  - fwer
+  - fdr
+  - correction
+---
+
+## Introduction
+
+Testing many hypotheses simultaneously inflates the chance of spurious discoveries. Controlling for this inflation is the goal of multiple-comparison corrections. Two broad families exist: **family-wise error rate (FWER)** methods and **false discovery rate (FDR)** methods. Choosing between them depends on the consequences of a false positive.
+
+## Prerequisites
+
+Hypothesis testing, Type I error.
+
+## Theory
+
+Suppose $m$ hypotheses are tested and $V$ of them are falsely rejected (true nulls). Let $R$ be total rejections.
+
+- **FWER** $= P(V \geq 1)$. The probability of any false rejection.
+- **FDR** $= E[V / \max(R, 1)]$. Expected proportion of false positives among rejections.
+
+Bonferroni, Holm, and Hochberg control FWER. Benjamini-Hochberg and Benjamini-Yekutieli control FDR.
+
+**When to use which**:
+
+- FWER: small number of pre-specified comparisons, confirmatory studies, clinical trial endpoints.
+- FDR: exploratory or high-throughput studies with thousands of tests (genomics, imaging), where a few percent false discoveries are acceptable.
+
+## Assumptions
+
+Methods assume valid individual p-values (uniform under null). FWER corrections are robust to arbitrary dependence; FDR methods vary (BH needs positive dependence, BY handles arbitrary).
+
+## R Implementation
+
+```r
+set.seed(2026)
+m <- 100
+pvals <- runif(m) * ifelse(seq_len(m) <= 10, 0.01, 1)   # 10 small, 90 null
+
+adj_methods <- c("bonferroni", "holm", "hochberg", "BH", "BY")
+adj <- sapply(adj_methods, function(m_name)
+  p.adjust(pvals, method = m_name))
+
+data.frame(method = adj_methods,
+           rejections_at_0.05 = colSums(adj < 0.05))
+```
+
+## Output & Results
+
+```
+      method rejections_at_0.05
+1 bonferroni                  8
+2        holm                  8
+3    hochberg                  9
+4          BH                 10
+5          BY                  7
+```
+
+FDR (BH) recovers the full signal set; FWER methods are more conservative. BY is tighter than BH because of its dependence-robust adjustment.
+
+## Interpretation
+
+In a paper: "Multiple testing across 100 primary comparisons was controlled at FWER 0.05 using the Holm procedure (8 of 100 hypotheses rejected)." Or: "Across 50 000 transcripts, differential expression was declared at Benjamini-Hochberg q < 0.05 (2 341 transcripts)."
+
+## Practical Tips
+
+- Correct for **all** tests that belong to the same family; a family is defined by the inferential goal, not by software runs.
+- Pre-specify the family and the method in the protocol; post-hoc changes to the correction are data-snooping.
+- For hierarchically structured hypotheses, gatekeeping procedures maintain FWER at each level.
+- Report both raw and adjusted p-values for transparency.
+- False discovery proportion (FDP) is the realisation of FDR on a given dataset; FDR is the expectation.

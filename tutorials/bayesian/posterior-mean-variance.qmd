@@ -1,0 +1,71 @@
+---
+title: Posterior Mean and Variance
+date: "2026-04-17"
+description: Point estimates and uncertainty summaries from a posterior distribution
+categories:
+  - Bayesian Statistics
+  - posterior
+  - point-estimate
+  - posterior-mean
+---
+
+## Introduction
+
+A Bayesian analysis returns a full posterior distribution, but applied work eventually demands a number to put in a sentence: a coefficient, a probability, an effect size. The posterior mean, median, and mode are the three most common point summaries, each motivated by a different decision-theoretic loss. The posterior variance and standard deviation quantify the uncertainty around the chosen point. Treating the posterior as the headline and the point estimate as a one-line summary derived from it is a more honest reporting style than collapsing the posterior to a single number first and worrying about uncertainty later.
+
+## Prerequisites
+
+A working understanding of Bayes' theorem and the difference between a posterior distribution and a frequentist sampling distribution; basic familiarity with MCMC draws or a closed-form posterior.
+
+## Theory
+
+For a posterior $p(\theta \mid y)$, the standard summaries are:
+
+- **Posterior mean**: $\mathbb E[\theta \mid y]$ minimises expected squared-error loss; it is the Bayes estimator under quadratic loss and the natural target of MCMC averaging.
+- **Posterior median**: minimises expected absolute-error loss; preferred for skewed posteriors because it does not chase a long tail.
+- **Posterior mode (MAP)**: maximises $p(\theta \mid y)$ and often coincides with a penalised maximum-likelihood estimate when the prior is interpreted as a penalty.
+- **Posterior variance**: $\mathrm{Var}(\theta \mid y)$ measures spread; the standard deviation $\sqrt{\mathrm{Var}}$ is on the original scale of $\theta$.
+
+The mean and variance always exist for proper integrable posteriors; the mode may not be unique under multimodal posteriors and the median is unique only for continuous distributions.
+
+## Assumptions
+
+A proper posterior with finite mean and variance, and either closed-form expressions or sufficient MCMC draws. For heavy-tailed posteriors, the mean and variance can be unstable estimators even when they exist mathematically, so report effective sample sizes alongside the summaries.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+# Simulated samples from a posterior (e.g., from MCMC)
+theta <- rbeta(5000, shape1 = 10, shape2 = 4)
+
+c(mean = mean(theta),
+  median = median(theta),
+  mode = density(theta)$x[which.max(density(theta)$y)],
+  sd = sd(theta),
+  var = var(theta))
+
+# Credible interval
+quantile(theta, c(0.025, 0.975))
+```
+
+## Output & Results
+
+Five scalar summaries and a 95 % equal-tailed credible interval. For a Beta(10, 4) posterior the mean is approximately $10/14 \approx 0.71$, the standard deviation is around $0.11$, and the 95 % interval excludes the lower decile of the distribution, communicating both the central tendency and the spread.
+
+## Interpretation
+
+A reporting sentence: "The posterior probability had mean 0.71 (posterior $\mathrm{SD} = 0.11$, 95 % credible interval 0.47 to 0.89), placing high credibility on values above 0.5 and effectively excluding the prior-favoured region near 0.3." When the posterior is roughly symmetric the choice of mean versus median rarely matters; when it is skewed, report both and let readers see the asymmetry.
+
+## Practical Tips
+
+- For symmetric posteriors, mean and median are essentially equal; choose whichever is conventional in your field.
+- For posteriors over bounded parameters (probabilities, variances, $r$-coefficients), the mode can fall on the boundary; the mean stays in the interior and is a safer default.
+- Posterior standard deviation is *not* the same as Monte Carlo standard error — the former is genuine uncertainty in $\theta$, the latter is sampling noise from finite MCMC iterations. Report MCSE separately when it is appreciable relative to the posterior SD.
+- Avoid reporting a "Bayesian point estimate" without specifying which one; default conventions differ across software and journals.
+- For predictions, summarise the posterior predictive distribution rather than transforming a point estimate of $\theta$; only the former propagates parameter uncertainty.
+
+## R Packages Used
+
+Base R suffices for raw summaries (`mean`, `median`, `var`, `sd`, `quantile`), `posterior::summarise_draws()` provides tidy tibbles with Monte Carlo standard errors, and `bayestestR::point_estimate()` exposes mean / median / MAP through one consistent interface for `brms` and `rstanarm` model objects.

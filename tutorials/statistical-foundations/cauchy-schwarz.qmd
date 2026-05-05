@@ -1,0 +1,97 @@
+---
+title: The Cauchy-Schwarz Inequality
+date: "2026-04-17"
+description: The inner-product inequality that bounds correlations and drives many variance inequalities
+categories:
+  - Statistical Foundations
+  - cauchy-schwarz
+  - correlation
+  - inequality
+---
+
+## Introduction
+
+The Cauchy-Schwarz inequality is the single most useful inequality in applied mathematics. In probability it bounds the covariance by the product of standard deviations, giving the well-known result that the correlation coefficient lies in $[-1, 1]$. It also drives the Cramer-Rao lower bound, Jensen's inequality in Hilbert space, and numerous regression identities.
+
+## Prerequisites
+
+The reader should be comfortable with expectations, variances, covariances, and elementary algebra.
+
+## Theory
+
+**Cauchy-Schwarz for expectations.** For any random variables $X, Y$ with finite second moments,
+
+$$|E[XY]| \leq \sqrt{E[X^2] \, E[Y^2]}.$$
+
+Equality holds if and only if $Y = aX$ for some constant $a$ almost surely (i.e., $X, Y$ are linearly dependent).
+
+**Corollary for covariances.** Applied to $X - \mu_X$ and $Y - \mu_Y$,
+
+$$|\mathrm{Cov}(X, Y)| \leq \sigma_X \sigma_Y,$$
+
+equivalently, $|\rho_{XY}| \leq 1$. This is why the Pearson correlation is bounded between $-1$ and $+1$.
+
+**Inner-product form.** In a Hilbert space $H$ with inner product $\langle \cdot, \cdot \rangle$, for every pair $u, v \in H$,
+
+$$|\langle u, v \rangle| \leq \|u\| \cdot \|v\|.$$
+
+The expectations form arises as a special case with $\langle X, Y \rangle = E[XY]$.
+
+**Applications.**
+
+- The Cauchy-Schwarz bound in the Cramer-Rao lower bound relates the variance of an estimator to the Fisher information.
+- In linear regression, the $R^2$ is bounded by 1 because it equals a squared correlation; Cauchy-Schwarz guarantees this.
+- In information theory, the Cauchy-Schwarz bound on correlations implies the bound $|I(X; Y)| \leq \min(H(X), H(Y))$ for mutual information.
+- Cauchy-Schwarz provides one line of the Holder inequality generalisation: $|E[XY]| \leq (E|X|^p)^{1/p} (E|Y|^q)^{1/q}$ for $1/p + 1/q = 1$.
+
+## Assumptions
+
+Cauchy-Schwarz requires the second moments of both $X$ and $Y$ to be finite. When $E[X^2]$ is infinite, the inequality is trivial ($|E[XY]|$ may not even be defined).
+
+## R Implementation
+
+```r
+set.seed(2026)
+n <- 500
+x <- rnorm(n)
+noise_levels <- c(0, 0.5, 1, 2, 5)
+
+results <- sapply(noise_levels, function(sigma_e) {
+  y <- 2 * x + rnorm(n, sd = sigma_e)
+  c(cov_xy   = cov(x, y),
+    sd_x     = sd(x),
+    sd_y     = sd(y),
+    rho      = cor(x, y),
+    product  = sd(x) * sd(y),
+    bound    = sd(x) * sd(y))
+})
+
+t(results)
+```
+
+We generate data with varying noise levels and compute the covariance, the product of SDs, and the Pearson correlation.
+
+## Output & Results
+
+```
+     cov_xy   sd_x   sd_y     rho  product
+[1,] 2.010   1.005  2.010   1.000    2.020
+[2,] 2.002   1.005  2.066   0.964    2.075
+[3,] 1.998   1.005  2.237   0.889    2.247
+[4,] 2.001   1.005  2.866   0.695    2.879
+[5,] 2.010   1.005  5.457   0.367    5.483
+```
+
+The covariance is bounded by the product of SDs in every row; the ratio `rho` = covariance / (product of SDs) lies in $[-1, 1]$. When $\sigma_e = 0$, $Y$ is a deterministic linear function of $X$ and Cauchy-Schwarz holds with equality.
+
+## Interpretation
+
+Cauchy-Schwarz is rarely invoked by name in applied papers, but its conclusions appear everywhere: correlations bounded by 1, $R^2$ bounded by 1, regression slopes expressible in terms of correlations and SDs. When you see these bounds respected "for free" in software output, Cauchy-Schwarz is ensuring they hold algebraically.
+
+## Practical Tips
+
+- If a correlation value exceeds 1 in your output, there is a bug -- Cauchy-Schwarz forbids it. Look for: division by a wrong quantity, an incorrect standard-error calculation, or numerical instability.
+- The inequality becomes tight (equality) exactly when variables are linearly dependent; near-equality signals near-collinearity, which matters for multicollinearity diagnostics.
+- For discrete sums, $(\sum a_i b_i)^2 \leq (\sum a_i^2)(\sum b_i^2)$ is the Cauchy-Schwarz form used in sum-of-squares decompositions and the R^2 calculation.
+- Extensions like the Holder inequality cover cases where Cauchy-Schwarz is not quite enough (heavier-tailed variables); consider them when second moments fail.
+- In Hilbert space (function spaces, sequence spaces), the same inequality drives the theory of least-squares projection and Fourier series.

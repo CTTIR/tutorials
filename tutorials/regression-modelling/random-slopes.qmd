@@ -1,0 +1,73 @@
+---
+title: Random-Slope Models
+date: "2026-04-17"
+description: "Mixed model with cluster-specific slopes, allowing effects to vary across groups"
+categories:
+  - "Regression & Modelling"
+  - random-slope
+  - mixed-effects
+  - heterogeneity
+---
+
+## Introduction
+
+Random-slope models allow each cluster its own slope for one or more predictors, capturing between-cluster heterogeneity in how a covariate affects the outcome. Where random-intercept models assume that all clusters share the same effect of $X$ but differ in baseline, random-slope models drop the shared-slope assumption and let the slope vary. They are essential for any longitudinal analysis where individual trajectories diverge over time and where the population-average slope may hide substantial subject-to-subject variability.
+
+## Prerequisites
+
+A working understanding of random-intercept models, mixed-effects model syntax in `lme4`, and the bivariate Normal distribution for joint random effects.
+
+## Theory
+
+For a predictor $X$ varying within clusters:
+
+$$Y_{ij} = (\beta_0 + u_{0i}) + (\beta_1 + u_{1i}) X_{ij} + \varepsilon_{ij},$$
+
+with $(u_{0i}, u_{1i})^\top \sim \mathcal N(0, \Sigma)$ where $\Sigma$ contains intercept variance $\sigma_0^2$, slope variance $\sigma_1^2$, and correlation $\rho_{01}$. The "correlated random slope" formulation `(X | cluster)` estimates all three parameters jointly; the "uncorrelated" form `(X || cluster)` constrains $\rho_{01} = 0$.
+
+A non-zero $\rho_{01}$ indicates systematic dependence between baseline level and rate of change — for instance, subjects who start higher progress faster (positive correlation) or slower (negative correlation).
+
+## Assumptions
+
+Random effects bivariate Normal, independent across clusters; conditional Normal residuals; the slope variation is real and not driven by a few influential clusters.
+
+## R Implementation
+
+```r
+library(lme4)
+
+data(sleepstudy, package = "lme4")
+
+# Random intercept + slope (correlated)
+fit_rs <- lmer(Reaction ~ Days + (Days | Subject), data = sleepstudy)
+summary(fit_rs)
+
+# Uncorrelated random slope
+fit_rs_unc <- lmer(Reaction ~ Days + (1 | Subject) + (0 + Days | Subject),
+                   data = sleepstudy)
+
+# Compare with random-intercept-only
+fit_ri <- lmer(Reaction ~ Days + (1 | Subject), data = sleepstudy)
+anova(fit_ri, fit_rs)
+```
+
+## Output & Results
+
+`summary(fit_rs)` reports the population-level fixed effects, the standard deviations of the random intercept and random slope, and their correlation. `anova()` between nested models compares them via a likelihood-ratio test (with the boundary-mixture reference for variance components).
+
+## Interpretation
+
+A reporting sentence: "Adding a random slope on `Days` substantially improved fit ($\chi^2(2) = 42.1$, $p < 0.001$); between-subject standard deviation of the slope was 5.9 ms per day, with intercept-slope correlation 0.07. The population-level slope was 10.5 ms per day (95 % CI 7.6 to 13.4)." Always report the random-slope variance and the intercept-slope correlation alongside fixed effects.
+
+## Practical Tips
+
+- Random slopes require enough observations per cluster (rule of thumb: at least 10 per cluster); with fewer, the slope variance is unstable and may produce singular fits.
+- Near-zero random-slope variance signals over-specification; drop the random slope or constrain $\rho_{01} = 0$ via the `||` syntax.
+- Centring the predictor (`X - mean(X)`) often reduces intercept-slope correlation that arises mechanically from the parameterisation rather than the data.
+- Check the random-effects variance-covariance with `VarCorr(fit)`; correlation estimates near $\pm 1$ are a red flag for over-fitting.
+- Use parametric bootstrap (`pbkrtest::PBmodcomp`) for small-sample LRTs on random-slope variance; the asymptotic $\chi^2$ mixture can be unreliable.
+- For non-Gaussian outcomes, the same syntax extends via `glmer()` with the appropriate family.
+
+## R Packages Used
+
+`lme4` for `lmer()` and `glmer()`; `lmerTest` for $p$-values on fixed effects; `pbkrtest` for parametric-bootstrap LRTs on variance components; `glmmTMB` for an alternative implementation that handles complex error structures; `merTools` for prediction intervals that respect random-slope uncertainty.

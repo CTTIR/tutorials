@@ -1,0 +1,67 @@
+---
+title: Schoenfeld Residuals
+date: "2026-04-17"
+description: Residuals that test the proportional-hazards assumption in Cox regression
+categories:
+  - Survival Analysis
+  - schoenfeld
+  - proportional-hazards
+---
+
+## Introduction
+
+Schoenfeld residuals are the standard diagnostic for the proportional-hazards (PH) assumption in Cox regression. They are computed at each event time as the difference between the failing subject's covariate value and the expected covariate value across the risk set. Under PH, Schoenfeld residuals are uncorrelated with time; a trend across time signals that the hazard ratio is itself time-varying, which violates the central assumption of the Cox model and invalidates a single-number hazard-ratio interpretation.
+
+## Prerequisites
+
+A working understanding of Cox proportional-hazards regression, the partial likelihood, and the difference between the proportional-hazards and accelerated-failure-time framings of survival regression.
+
+## Theory
+
+At event time $t_i$ in a Cox model, the Schoenfeld residual for covariate $x$ is
+
+$$r_i = x_i - \hat{\mathbb E}[x \mid \text{risk set at } t_i],$$
+
+with the expectation weighted by the partial-likelihood weights $\hat w_j = \exp(X_j \hat\beta) / \sum_k \exp(X_k \hat\beta)$ over the risk set. Grambsch and Therneau (1994) developed scaled versions whose correlation with a function of time $g(t)$ — typically $\log t$ or rank-time — yields a $\chi^2_1$ test of PH for each covariate, plus a global $\chi^2_p$ test for the joint null. The function `cox.zph()` implements this test and returns smoothed-residual plots that visualise the time-varying effect when one is present.
+
+## Assumptions
+
+A Cox model has been fitted, with sufficient events to estimate the smoothed Schoenfeld residual function.
+
+## R Implementation
+
+```r
+library(survival)
+
+data(lung)
+fit <- coxph(Surv(time, status) ~ age + sex + ph.ecog, data = lung)
+
+zph <- cox.zph(fit)
+print(zph)
+
+# Visualise
+par(mfrow = c(1, 3))
+plot(zph)
+par(mfrow = c(1, 1))
+```
+
+## Output & Results
+
+`print(zph)` returns per-covariate $\chi^2$ statistics, degrees of freedom, and $p$-values, plus a global test against the joint null that all hazard ratios are constant. `plot(zph)` produces one diagnostic panel per covariate showing the smoothed Schoenfeld residual against transformed time, with a horizontal reference line at the constant-hazard-ratio assumption.
+
+## Interpretation
+
+A reporting sentence: "Schoenfeld residual plots for age, sex, and ECOG performance status showed no systematic trend (per-covariate $p$ all > 0.20, global $p = 0.55$); the proportional-hazards assumption is supported." When PH fails: "The hazard ratio for treatment varied with time (Schoenfeld $p < 0.001$, decreasing trend); we report restricted-mean survival difference rather than a single Cox HR."
+
+## Practical Tips
+
+- Always run `cox.zph()` after fitting a Cox model; reporting an HR without a PH check is no longer acceptable in clinical-trial papers.
+- When PH fails for one covariate, options include: stratifying by it (`+ strata(var)`), modelling its effect as time-varying with `tt()` or `survSplit()`, or switching to RMST as the summary of treatment effect.
+- Categorical covariates with $k$ levels produce $k-1$ Schoenfeld tests; PH may hold for some contrasts and fail for others.
+- Small samples have low power to detect PH violations; pair the formal test with a visual inspection of `plot(zph)` rather than relying on $p$-values alone.
+- For strictly time-varying effects, switch to flexible parametric models (`flexsurv::flexsurvreg` with splines on log time) or include `tt(...)` time-transform functions in `coxph()`.
+- A failed PH test in itself is not reason to abandon the Cox model; it is a reason to refine the model, change the summary, or stratify.
+
+## R Packages Used
+
+`survival` for `coxph()` and `cox.zph()`; `survminer::ggcoxzph()` for ggplot-style Schoenfeld diagnostic panels; `timereg` for additive hazards and structured time-varying-coefficient models; `flexsurv` for parametric alternatives when PH fails.

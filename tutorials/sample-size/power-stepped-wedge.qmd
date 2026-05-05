@@ -1,0 +1,67 @@
+---
+title: Power for Stepped-Wedge Trials
+date: "2026-04-17"
+description: Variance of the treatment effect in stepped-wedge cluster designs via the Hussey-Hughes formula
+categories:
+  - "Sample Size & Power"
+  - power
+  - stepped-wedge
+  - hussey-hughes
+  - cluster
+---
+
+## Introduction
+
+Stepped-wedge cluster-randomised trials (SW-CRT) progressively introduce an intervention across clusters over time until every cluster receives it. The design is efficient when the intervention is expected to help and must be rolled out anyway. Power calculations use the Hussey-Hughes (2007) formula.
+
+## Prerequisites
+
+Cluster-RCT, ICC, time effects.
+
+## Theory
+
+For $I$ clusters and $J$ time periods (with one cluster per step crossing over), the Hussey-Hughes variance of the treatment effect is complex and depends on ICC, cluster-period correlation, cluster size, and total steps. A key insight: adding time periods increases efficiency because each cluster contributes both control and intervention observations.
+
+Software (`swCRTdesign`, `SWSamp`) computes the needed number of clusters given ICC, cluster-autocorrelation, cluster size, and effect.
+
+## Assumptions
+
+- Fixed time periods common to all clusters.
+- No lag from randomisation to intervention effect (or explicit lag period).
+- Underlying secular time trend appropriately modelled.
+- ICC and cluster-autocorrelation pre-specified.
+
+## R Implementation
+
+```r
+library(swCRTdesign)
+
+# Design: 8 clusters, 6 time periods, cluster size 20, ICC = 0.05
+swDsn <- swDsn(clusters = c(rep(1, 7), 2))
+swDsn
+
+# Power for effect size 0.3, sigma = 1
+swPwr(design = swDsn,
+      distn = "gaussian",
+      n = 20,
+      mu0 = 0, mu1 = 0.3,
+      tau = 0.05, sigma = 1,
+      alpha = 0.05,
+      retDATA = FALSE)
+```
+
+## Output & Results
+
+Power around 0.85 for 8 clusters x 6 periods x 20 subjects/cluster at effect 0.3, ICC 0.05. The exact number depends heavily on the assumed autocorrelation.
+
+## Interpretation
+
+"With 8 clusters, 6 time periods, cluster size 20, ICC 0.05, and an assumed intervention effect of 0.3 SD, the stepped-wedge trial achieves 85 % power at $\alpha = 0.05$."
+
+## Practical Tips
+
+- Stepped-wedge designs trade statistical efficiency for practical feasibility; a parallel CRT is usually more powerful at equal total observations.
+- The cluster-period autocorrelation is a second nuisance parameter often under-specified; include sensitivity analysis.
+- Longer follow-up and more time periods dramatically improve efficiency.
+- Analyse with mixed models that include cluster, time-period, and (usually) cluster-by-period random effects.
+- Published tools (`swCRTdesign`, `SWSamp`, online calculators from Hemming and Girling) differ slightly; cross-check.

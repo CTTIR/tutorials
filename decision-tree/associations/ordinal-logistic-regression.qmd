@@ -89,15 +89,3 @@ Per-predictor odds ratios. Model fit: McFadden or Nagelkerke pseudo-$R^2$ via `p
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 00529bbe56af4db8835380c2f81c736c -->
-<img src="https://vg09.met.vgwort.de/na/00529bbe56af4db8835380c2f81c736c"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

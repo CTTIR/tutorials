@@ -1,0 +1,65 @@
+---
+title: "Effect Size: Cohen's h"
+date: "2026-04-17"
+description: Standardised effect size for comparisons between proportions via arcsine transformation
+categories:
+  - "Sample Size & Power"
+  - effect-size
+  - cohen-h
+  - proportions
+  - arcsine
+---
+
+## Introduction
+
+Cohen's $h$ is the standard standardised effect size for differences between two proportions. Unlike the raw risk difference (whose interpretation depends on where on the 0-to-1 scale the comparison sits) or the odds ratio (whose multiplicative scale obscures the absolute magnitude), Cohen's $h$ uses an arcsine-square-root variance-stabilising transformation that makes the effect size approximately scale-free and directly suitable as input to Normal-approximation power calculations. It is the natural building block of two-proportion sample-size formulas in the `pwr` package and equivalent tools, and it is the recommended effect-size summary in published power-analysis protocols.
+
+## Prerequisites
+
+A working understanding of binomial proportions, the arcsine variance-stabilising transformation, and the role of standardised effect sizes in sample-size and power calculations.
+
+## Theory
+
+For two proportions $p_1, p_2 \in [0, 1]$, Cohen's $h$ is
+
+$$h = 2 \arcsin\sqrt{p_1} - 2 \arcsin\sqrt{p_2}.$$
+
+The arcsine-square-root transformation stabilises the variance of a sample proportion at approximately $1/n$, independent of the proportion's value. As a result, $h$ is dimensionless, scale-free, and directly comparable across baseline rates. Cohen's conventional thresholds are 0.20 (small), 0.50 (medium), and 0.80 (large). The mapping between raw proportion difference and $h$ is non-linear: the same $|p_1 - p_2|$ corresponds to very different $h$ values depending on where on the unit interval the comparison sits, with extreme proportions (near 0 or 1) yielding larger $h$ for the same absolute difference than mid-range comparisons.
+
+## Assumptions
+
+The two proportions arise from independent Bernoulli outcomes; the standardisation is most useful for moderate sample sizes where the Normal approximation to the binomial holds.
+
+## R Implementation
+
+```r
+library(pwr)
+
+ES.h(p1 = 0.10, p2 = 0.20)
+ES.h(p1 = 0.50, p2 = 0.60)
+ES.h(p1 = 0.80, p2 = 0.90)
+
+pwr.2p.test(h = ES.h(0.10, 0.20), sig.level = 0.05, power = 0.80)
+pwr.2p.test(h = ES.h(0.40, 0.50), sig.level = 0.05, power = 0.80)
+```
+
+## Output & Results
+
+The three example pairs all involve a 10 percentage-point raw difference, but produce very different Cohen's $h$ values: $h = -0.28$ for 10-vs-20 %, $h = -0.20$ for 50-vs-60 %, and $h = -0.29$ for 80-vs-90 %. The corresponding required sample sizes per arm at 80 % power are roughly 200, 388, and 186 — illustrating that the same absolute difference is most expensive to detect near the middle of the proportion range and cheapest at the extremes.
+
+## Interpretation
+
+A reporting sentence: "Assuming an intervention increases response from 50 % to 60 % (Cohen's $h = 0.20$, classed as small by Cohen's conventions), 388 participants per group are required for 80 % power at $\alpha = 0.05$ two-sided. The same 10-percentage-point increase from 10 % to 20 % corresponds to $h = 0.28$ (still small) but requires only 200 per group, and from 80 % to 90 % similarly requires 186 per group. The non-linear mapping between absolute proportion difference and detection cost is why $h$ rather than raw difference is used for sample-size planning." Always translate $h$ back to clinical proportions.
+
+## Practical Tips
+
+- Prefer Cohen's $h$ over the raw risk difference for sample-size and power calculations because $h$ is the natural input to the Normal-approximation formulas and accounts for the non-constant variance of a proportion across the 0-to-1 scale.
+- For rare events (near 0) or common events (near 1), even small raw differences correspond to relatively large $h$ values and are detectable with fewer subjects than mid-range proportions; this counterintuitive property is a consequence of the variance-stabilising transformation and explains why screening trials of rare conditions can detect small absolute increases efficiently.
+- Cohen's $h$ is symmetric: $h(p_1, p_2) = -h(p_2, p_1)$, and the sign carries the direction of the comparison; always report the sign and the directional interpretation.
+- In reporting and interpretation, translate $h$ back to the raw proportions used as inputs; an $h$ of 0.28 means little to a clinical reader without the corresponding "from 10 % to 20 %" framing.
+- For $2 \times 2$ contingency-table tests of independence (rather than two-proportion comparisons), use Cohen's $w$ rather than $h$; the two are related but designed for different test contexts.
+- When the comparison is between a single proportion and a fixed reference (one-sample), Cohen's $h$ still applies — $\mathrm{ES.h}(p_1, p_0)$ — and feeds into `pwr.p.test()` rather than `pwr.2p.test()`.
+
+## R Packages Used
+
+`pwr::ES.h()` for the canonical Cohen's $h$ calculation and `pwr::pwr.p.test()`, `pwr::pwr.2p.test()` for the corresponding power-analysis functions; `effectsize::cohens_h()` as a tidyverse-friendly alternative; `Hmisc::bsamsize()` for direct-proportion sample-size calculations that complement $h$-based planning; `MESS::power_prop_test()` for fast exact alternatives; `Mediana` for trial-design simulation including proportion-difference power.

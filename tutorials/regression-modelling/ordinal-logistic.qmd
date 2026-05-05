@@ -1,0 +1,75 @@
+---
+title: Ordinal Logistic Regression
+date: "2026-04-17"
+description: Regression for ordered categorical outcomes using the proportional-odds model
+categories:
+  - "Regression & Modelling"
+  - ordinal
+  - proportional-odds
+  - polr
+---
+
+## Introduction
+
+Ordinal logistic regression — most commonly the proportional-odds model — handles ordered categorical outcomes such as Likert-scale responses, disease severity grades, NYHA functional class, or cancer stage. It exploits the ordering via a cumulative-probability model: the cumulative odds of being in or below each category share the same set of regression coefficients across all cut-points. Multinomial logistic ignores the ordering and estimates separate coefficients for each non-reference category, which is wasteful when ordering is real and informative.
+
+## Prerequisites
+
+A working understanding of binary logistic regression, ordered categorical variables, and the cumulative-probability framing of ordinal data.
+
+## Theory
+
+The proportional-odds model is
+
+$$\log \frac{\mathrm P(Y \le j)}{\mathrm P(Y > j)} = \alpha_j - X^\top \beta, \qquad j = 1, \dots, k - 1,$$
+
+with $k$ ordered categories. The cut-points $\alpha_j$ shift with $j$, but the regression coefficients $\beta$ are constrained to be identical across all cut-points — the proportional-odds assumption. Exponentiated coefficients are cumulative odds ratios: per unit increase in $X$, the odds of being in a higher category multiplied by $\exp(\beta)$, regardless of which threshold is being crossed.
+
+The proportional-odds assumption is testable with Brant's test or with a likelihood-ratio test against a more flexible partial-proportional-odds or generalised ordered logit model.
+
+## Assumptions
+
+Ordered categorical outcome with at least three levels, proportional odds across all cut-points, independent observations, and adequate counts in each category (rule of thumb: at least 5–10 events per coefficient in the smallest category).
+
+## R Implementation
+
+```r
+library(MASS); library(brant)
+
+d <- data.frame(
+  y = factor(sample(c("low", "med", "high"), 200, replace = TRUE),
+             levels = c("low", "med", "high"), ordered = TRUE),
+  x = rnorm(200)
+)
+d$y <- factor(as.character(d$y)[sample(1:200,
+                                        prob = 1 + plogis(d$x), replace = TRUE)],
+              levels = c("low", "med", "high"), ordered = TRUE)
+
+fit <- polr(y ~ x, data = d, Hess = TRUE)
+summary(fit)
+exp(coef(fit))
+
+# Test proportional odds
+brant(fit)
+```
+
+## Output & Results
+
+`polr()` returns coefficients on the cumulative-logit scale plus the cut-point estimates. Exponentiating gives cumulative odds ratios. `brant()` reports an omnibus test for proportional odds plus per-coefficient tests; significant results indicate the assumption fails for that covariate.
+
+## Interpretation
+
+A reporting sentence: "Ordinal logistic regression estimated that each 1-SD increase in $x$ multiplied the cumulative odds of being in a higher category by 2.10 (95 % CI 1.50 to 2.94, $p < 0.001$); Brant's test did not reject the proportional-odds assumption (omnibus $p = 0.44$, all per-covariate $p > 0.20$). The cumulative odds-ratio interpretation applies uniformly across the low-vs-(med + high) and (low + med)-vs-high cut-points." Always test and report the proportional-odds assumption.
+
+## Practical Tips
+
+- Always test the proportional-odds assumption with Brant's test or LRT against a partial-proportional-odds model; reporting cumulative ORs without a check is incomplete.
+- When proportional odds fails for one or more covariates, use partial-proportional-odds (`VGAM::vglm` with `cumulative(parallel = FALSE ~ x)`) or generalised ordered logit (`oglmx`).
+- For three or four categories with severe non-proportionality, multinomial logistic regression is sometimes simpler than partial-proportional-odds, at the cost of ignoring the ordering.
+- `ordinal::clm()` provides a modern implementation with mixed-effects extensions (`clmm`) and richer post-hoc tools.
+- Report cumulative odds ratios with confidence intervals; the phrasing "odds of being in a higher category" is the clearest way to communicate the cumulative-OR interpretation.
+- For predictions on the absolute-probability scale, use `predict(fit, type = "probs")`; readers absorb predicted category probabilities better than cumulative odds ratios.
+
+## R Packages Used
+
+`MASS::polr()` for the canonical proportional-odds implementation; `ordinal::clm()` for a modern alternative with mixed-effects extensions; `brant` for proportional-odds testing; `VGAM` for partial-proportional-odds and other ordinal extensions; `oglmx` for generalised ordered logit; `gtsummary::tbl_regression()` for publication-ready tables.

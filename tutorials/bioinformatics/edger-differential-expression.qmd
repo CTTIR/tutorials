@@ -1,0 +1,79 @@
+---
+title: Differential Expression with edgeR
+date: "2026-04-17"
+description: NB GLM-based differential expression with exactTest and quasi-likelihood F-test
+categories:
+  - Bioinformatics
+  - edger
+  - differential-expression
+  - glmqlftest
+---
+
+## Introduction
+
+edgeR is one of the three dominant RNA-seq differential-expression frameworks (alongside DESeq2 and limma-voom). It fits a negative-binomial generalised linear model to each gene's counts, with empirical-Bayes shrinkage borrowing information across genes to stabilise per-gene dispersion estimates. The combination of NB likelihood and shrinkage gives edgeR its characteristic strength on small samples and its competitive accuracy on standard RNA-seq experiments.
+
+## Prerequisites
+
+A working understanding of negative-binomial regression, RNA-seq normalisation (TMM), generalised linear models with offsets, and the empirical-Bayes shrinkage approach.
+
+## Theory
+
+Per gene $i$ and sample $j$:
+
+$$Y_{ij} \sim \mathrm{NB}(\mu_{ij}, \phi_i), \qquad \log \mu_{ij} = \log S_j + x_j^\top \beta_i,$$
+
+with $S_j$ the TMM-normalised library size offset and $\phi_i$ the gene-wise dispersion. Empirical-Bayes shrinkage (`estimateDisp`) pulls per-gene dispersions toward a common trend across genes, stabilising estimation.
+
+Three test choices:
+
+- **exactTest**: NB-exact test for two-group comparisons; rarely used today.
+- **glmQLFTest**: quasi-likelihood F-test; the recommended default for nearly all designs because it accounts for uncertainty in dispersion estimation.
+- **glmLRT**: classical likelihood-ratio test; more aggressive but anti-conservative when sample sizes are very small.
+
+## Assumptions
+
+Counts approximately negative-binomial conditional on covariates; the design matrix encodes the biological and technical factors correctly; sufficient sample size for stable dispersion estimation (typically $\ge 3$ per group).
+
+## R Implementation
+
+```r
+library(edgeR)
+
+set.seed(2026)
+counts <- matrix(rpois(20000 * 12, lambda = 30), 20000, 12)
+group <- factor(rep(c("A", "B"), each = 6))
+
+y <- DGEList(counts = counts, group = group)
+y <- calcNormFactors(y)
+
+design <- model.matrix(~ group)
+y <- estimateDisp(y, design)
+
+fit <- glmQLFit(y, design)
+qlf <- glmQLFTest(fit, coef = 2)
+
+topTags(qlf)
+summary(decideTests(qlf))
+```
+
+## Output & Results
+
+`topTags()` returns the top differentially-expressed genes ordered by FDR-adjusted $p$-value, with $\log_2$ fold change, log-CPM, $F$-statistic, and BH-adjusted $p$-value. `decideTests()` summarises significance calls per direction (up / down / not significant) for cross-method comparison.
+
+## Interpretation
+
+A reporting sentence: "edgeR's quasi-likelihood F-test identified 342 differentially expressed genes at FDR < 0.05 between conditions A and B (n = 6 per group), with 180 upregulated and 162 downregulated in condition B; the median absolute $\log_2$ fold change among significant genes was 1.4. Filtering with `filterByExpr` retained 14{,}500 of 20{,}000 genes for testing." Always state the FDR threshold, sample sizes, and pre-filtering decisions.
+
+## Practical Tips
+
+- Use `glmQLFTest()` as the default for nearly all designs; it has better Type I error control than `glmLRT()` at small sample sizes.
+- Filter low-count genes with `filterByExpr()` before dispersion estimation; testing 20{,}000 mostly-zero genes wastes power and produces unstable shrinkage.
+- For paired or blocked designs, include the blocking factor in the `design` matrix; the QLF test handles the corresponding contrast correctly.
+- Use `glmTreat()` for fold-change-thresholded inference (testing |LFC| > a chosen cutoff rather than LFC ≠ 0); this is more biologically meaningful than testing strict zero.
+- Visualise with MA plot, volcano plot, and a heatmap of top genes; `Glimma::glimmaMA()` provides interactive versions for exploration.
+- Compare edgeR results with DESeq2 and limma-voom on the same data; concordance across methods is reassuring, while disagreement signals model-sensitive genes that warrant investigation.
+
+## R Packages Used
+
+`edgeR` for `DGEList`, `calcNormFactors`, `estimateDisp`, `glmQLFit`, `glmQLFTest`, and the canonical NB workflow; `limma` for the voom alternative; `DESeq2` for the third major DE method; `Glimma` for interactive MA and volcano plots; `EnhancedVolcano` for publication-ready volcano plots.

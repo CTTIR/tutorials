@@ -1,0 +1,81 @@
+---
+title: Finding Marker Genes
+date: "2026-04-17"
+description: Identifying cluster-specific genes for cell-type annotation
+categories:
+  - Bioinformatics
+  - scrnaseq
+  - markers
+  - DE
+---
+
+## Introduction
+
+Marker genes are genes differentially expressed in one cluster relative to others; they drive cell-type annotation, functional interpretation, and the connection between unsupervised clustering and known biology. Seurat's `FindMarkers` and `FindAllMarkers` implement the standard differential-expression tests (Wilcoxon rank-sum, MAST hurdle, DESeq2) on log-normalised or SCT-transformed data, per cluster, against either all other cells or a specified comparison cluster.
+
+## Prerequisites
+
+A working understanding of clustered scRNA-seq output, log-fold-change interpretation, and the difference between cluster-vs-all and pairwise cluster comparisons.
+
+## Theory
+
+For each cluster, the marker test compares cells in that cluster to cells in all other clusters (or a specified subset) gene-by-gene. The output for each gene includes:
+
+- **avg_log2FC**: average log-fold change between the target cluster and the reference.
+- **pct.1**: fraction of cells in the target cluster expressing the gene.
+- **pct.2**: fraction of cells in the reference expressing the gene.
+- **p_val_adj**: Benjamini-Hochberg adjusted $p$-value.
+
+Wilcoxon rank-sum is the default test in Seurat (fast, robust); MAST handles zero-inflation more rigorously via a hurdle model; DESeq2 applies the negative-binomial framework (slow but principled).
+
+Conventional marker criteria: $\log_2 \mathrm{FC} > 0.5$, adjusted $p < 0.05$, and `pct.1 > 0.25` (the gene is expressed in at least a quarter of the cluster's cells).
+
+## Assumptions
+
+Cells within a cluster are reasonably homogeneous; the reference set is a valid comparison; multiple testing is corrected across genes within each comparison (but not across the joint cluster set, which would be over-conservative).
+
+## R Implementation
+
+```r
+library(Seurat)
+
+set.seed(2026)
+counts <- matrix(rpois(300 * 200, lambda = 2), 200, 300)
+rownames(counts) <- paste0("g", 1:200)
+colnames(counts) <- paste0("c", 1:300)
+# Inject a marker pattern in cells 1-50
+counts[1:10, 1:50] <- counts[1:10, 1:50] + 10
+
+so <- CreateSeuratObject(counts)
+so <- NormalizeData(so, verbose = FALSE)
+so <- FindVariableFeatures(so, nfeatures = 100, verbose = FALSE)
+so <- ScaleData(so, verbose = FALSE)
+so <- RunPCA(so, npcs = 10, verbose = FALSE)
+so <- FindNeighbors(so, dims = 1:10, verbose = FALSE)
+so <- FindClusters(so, resolution = 0.5, verbose = FALSE)
+
+markers_all <- FindAllMarkers(so, only.pos = TRUE, min.pct = 0.25,
+                              logfc.threshold = 0.25, verbose = FALSE)
+head(markers_all[, c("cluster", "gene", "avg_log2FC", "p_val_adj", "pct.1")])
+```
+
+## Output & Results
+
+`FindAllMarkers()` returns a data frame with one row per significant marker per cluster, including cluster identity, gene name, log-fold change, adjusted $p$-value, and percentage of cells expressing in target vs reference. Filtering to `only.pos = TRUE` retains only up-regulated markers, which are typically the most interpretable for cell-type identification.
+
+## Interpretation
+
+A reporting sentence: "FindAllMarkers (Wilcoxon test, `min.pct = 0.25`, `logfc.threshold = 0.25`, `only.pos = TRUE`) identified 1{,}240 unique markers across 12 clusters; cluster 2's top markers (CD8A, GZMB, PRF1) identify cytotoxic T cells, and cluster 5's markers (MS4A1, CD79A) identify B cells. Annotation followed manual review against the Human Cell Atlas reference." Always state the test, thresholds, and annotation source.
+
+## Practical Tips
+
+- Use `only.pos = TRUE` to retain up-regulated markers; down-regulated markers are less interpretable in scRNA-seq because most genes are dropouts in any given cluster.
+- Set `min.pct = 0.25` to filter out genes with very limited expression in the target cluster; this is a quality gate that prevents spurious markers from low-detection genes.
+- For publication-quality marker calls, use MAST (`test.use = "MAST"`); it handles zero-inflation more rigorously than Wilcoxon and gives more conservative $p$-values.
+- Always annotate clusters using markers *after* clustering — never adjust clusters to fit pre-conceived markers; the latter is circular reasoning.
+- Do not perform DE testing between clusters produced by the same clustering on the same data; this is a form of double-dipping that inflates significance. Use post-hoc validation or independent test data instead.
+- For automated cell-type annotation, pair markers with reference-based tools (`SingleR`, `scType`, `Azimuth`); they reduce manual annotation effort substantially.
+
+## R Packages Used
+
+`Seurat::FindMarkers()` and `FindAllMarkers()` for the canonical workflow; `MAST` for hurdle-based DE testing; `DESeq2` for negative-binomial DE on pseudobulk; `SingleR` and `Azimuth` for reference-based automated annotation; `presto` for fast Wilcoxon implementations on large datasets.

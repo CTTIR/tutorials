@@ -1,0 +1,65 @@
+---
+title: Bayesian ANOVA
+date: "2026-04-17"
+description: Posterior inference on group differences with credible intervals and contrast comparisons
+categories:
+  - Bayesian Statistics
+  - bayesian-anova
+  - contrast
+  - group-comparison
+---
+
+## Introduction
+
+Classical ANOVA reports an $F$-statistic, a $p$-value, and — if the omnibus is significant — pairwise comparisons with a multiple-testing correction tacked on. A Bayesian ANOVA replaces all of that with a single posterior distribution over the group means and any contrast you care to compute. There is no omnibus to clear before contrasts become legitimate, and there is no multiple-comparison adjustment to argue about, because every contrast already has its own honest credible interval reflecting the joint posterior of the parameters that compose it.
+
+## Prerequisites
+
+A working understanding of one-way ANOVA, the distinction between fixed and random effects, and Bayesian regression. Familiarity with `emmeans` for marginal means makes the contrast step natural.
+
+## Theory
+
+The model is $y_{ij} \sim \mathcal N(\mu_i, \sigma^2)$ with $\mu_i = \mu + \alpha_i$. Two parameterisations are common: a fixed-effects parameterisation with weakly informative priors on the contrasts, and a hierarchical parameterisation with $\alpha_i \sim \mathcal N(0, \tau^2)$ that pools group estimates toward the grand mean. The hierarchical version is preferable when group counts are large or when groups represent samples from a broader population. Pairwise contrasts and any linear combination of $\mu_i$ are computed at the level of MCMC draws, so each draw produces a contrast value and the posterior of the contrast is the empirical distribution of those values.
+
+## Assumptions
+
+Approximately Normal residuals within groups, homogeneity of variance unless `sigma` is also modelled by group, exchangeability of groups under the hierarchical version, and proper priors. Independence between observations after group is the same Bayesian assumption as in classical ANOVA.
+
+## R Implementation
+
+```r
+library(brms); library(bayestestR)
+
+data(PlantGrowth)
+
+fit <- brm(weight ~ group, data = PlantGrowth,
+           prior = prior(normal(0, 1), class = "b"),
+           chains = 4, iter = 2000, refresh = 0)
+
+# Pairwise contrasts
+pairs_summary <- pairs(emmeans::emmeans(fit, ~ group))
+pairs_summary
+
+# Bayes factors for effect
+bayesfactor_parameters(fit)
+```
+
+## Output & Results
+
+`emmeans()` returns the posterior marginal mean for each group; `pairs()` returns the posterior of every pairwise difference with an HPD or equal-tailed credible interval. `bayesfactor_parameters()` evaluates the Savage-Dickey density ratio at zero for each contrast, returning a Bayes factor for "non-zero contrast" against the null.
+
+## Interpretation
+
+A reporting sentence: "Posterior contrasts from a Bayesian one-way ANOVA showed `trt1` $-$ `ctrl` $= -0.37$ (95 % credible interval $-0.95$ to $0.21$, $\mathrm{BF}_{10} = 1.1$), `trt2` $-$ `ctrl` $= 0.49$ (95 % CrI 0.04 to 0.94, $\mathrm{BF}_{10} = 4.6$); the data weakly support a treatment-2 effect and are inconclusive about treatment 1." Pair the credible interval with the Bayes factor only when the prior under the alternative is disclosed, since the latter depends sensitively on it.
+
+## Practical Tips
+
+- For more than five or six groups, switch to a hierarchical $(1 \mid \mathrm{group})$ random-effects parameterisation; shrinkage stabilises small-group estimates and gives a principled population-level summary.
+- `emmeans()` works directly on `brms` fits and integrates with `pairs()`, `contrast()`, and `confint()` to produce posterior contrasts on whatever scale you need.
+- Credible intervals already adjust for the joint posterior; multiple-comparison corrections in the frequentist sense are unnecessary, but you can still apply a region-of-practical-equivalence (ROPE) test if you want a decision rule.
+- For unequal variances, fit `bf(weight ~ group, sigma ~ group)` so the residual scale is also estimated per group; the contrast machinery generalises without changes.
+- Report posteriors graphically (`mcmc_areas`, `stat_halfeye`) alongside the numeric summaries; readers absorb the joint structure faster from a plot than from a contrast table.
+
+## R Packages Used
+
+`brms` for model specification and sampling, `emmeans` for posterior marginal means and contrasts, `bayestestR` for Bayes factors and ROPE summaries, and `tidybayes` for tidy posterior draws of contrasts when custom plots are needed.

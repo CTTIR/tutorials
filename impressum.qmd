@@ -188,32 +188,6 @@ nicht unbedingt erforderlich sind.
 Weitere Informationen:
 <https://plausible.io/data-policy>
 
-### VG Wort Zählpixel (Standard)
-
-Auf einzelnen, kennzeichenpflichtig angemeldeten
-Tutorial-Seiten wird ein **Zählpixel** der
-Verwertungsgesellschaft WORT eingebunden:
-
-**Verwertungsgesellschaft WORT (VG WORT)**\
-Untere Weidenstraße 5\
-81543 München\
-Deutschland\
-<https://www.vgwort.de/>
-
-Zweck: Erfassung statistischer Kennzahlen zur Berechnung von
-Vergütungsansprüchen gemäß § 53 UrhG / METIS-Programm. Es
-werden **keine Cookies** gesetzt; zur Erkennung mehrfacher
-Aufrufe wird die IP-Adresse durch VG Wort SHA-256-gehasht und
-gekürzt. Eine Re-Identifikation einzelner Nutzerinnen und Nutzer
-ist VG Wort nach eigener Auskunft technisch nicht möglich. Die
-Verarbeitung erfolgt auf Servern der VG Wort in Deutschland.
-Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes
-Interesse des Autors an einer ordnungsgemäßen Wahrnehmung
-urheberrechtlicher Vergütungsansprüche.
-
-Weitere Informationen:
-<https://www.vgwort.de/datenschutz.html>
-
 ### GitHub Pages
 
 Diese Website wird auf **GitHub Pages** ausgeliefert. Anbieterin:

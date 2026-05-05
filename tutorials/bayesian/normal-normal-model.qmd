@@ -1,0 +1,74 @@
+---
+title: The Normal-Normal Model
+date: "2026-04-17"
+description: Conjugate Bayesian inference for a normal mean with known variance
+categories:
+  - Bayesian Statistics
+  - normal-normal
+  - conjugate
+  - mean
+---
+
+## Introduction
+
+The Normal-Normal model is the simplest example of conjugate Bayesian updating for a continuous parameter: a Normal prior on the mean, a Normal likelihood with known variance, and a Normal posterior obtained by a transparent precision-weighted average. It is the classical pedagogical example, and despite its simplicity it sits at the heart of every hierarchical model that contains a Normal level — random-effects meta-analysis, partial pooling in mixed models, and the mean structure of Gaussian processes all rely on the same closed-form update.
+
+## Prerequisites
+
+A working understanding of the Normal distribution, the concept of conjugacy, and the difference between variance and precision (inverse variance). Basic algebra is enough to follow the derivation.
+
+## Theory
+
+With prior $\mu \sim \mathcal N(\mu_0, \tau_0^2)$ and likelihood $y_i \sim \mathcal N(\mu, \sigma^2)$ for $i = 1, \dots, n$ with known $\sigma$, the posterior is
+
+$$\mu \mid y \sim \mathcal N(\mu_n, \tau_n^2),$$
+
+where the posterior precision is the sum of the prior precision and the data precision,
+
+$$\tau_n^{-2} = \tau_0^{-2} + n / \sigma^2,$$
+
+and the posterior mean is the precision-weighted average
+
+$$\mu_n = \tau_n^2 \left(\tau_0^{-2} \mu_0 + n \bar y / \sigma^2\right).$$
+
+The posterior mean lies between the prior mean and the sample mean, with weight that depends on relative precisions. The precision-additive structure makes the prior's "pseudo-sample-size" interpretable: $\tau_0^2$ corresponds to a prior sample of size $\sigma^2 / \tau_0^2$.
+
+## Assumptions
+
+Known $\sigma^2$ — so the only unknown is the mean — and a Normal prior. If the variance is also unknown, the conjugate setup uses a Normal-Inverse-Gamma prior and the posterior on $\mu$ is a $t$ distribution.
+
+## R Implementation
+
+```r
+# Prior: mu ~ N(100, 10^2); data: xbar = 105, sigma = 15, n = 20
+mu0 <- 100; tau0 <- 10
+xbar <- 105; sigma <- 15; n <- 20
+
+prec_post <- 1/tau0^2 + n/sigma^2
+tau_post  <- 1/sqrt(prec_post)
+mu_post   <- tau_post^2 * (mu0/tau0^2 + n*xbar/sigma^2)
+
+c(posterior_mean = mu_post,
+  posterior_sd   = tau_post,
+  ci95 = mu_post + c(-1, 1) * 1.96 * tau_post)
+```
+
+## Output & Results
+
+Posterior mean approximately 104.2 with posterior standard deviation 2.4 and 95 % credible interval roughly $(99.6, 108.9)$. The shrinkage from the sample mean of 105 toward the prior mean of 100 is small because the data precision ($n / \sigma^2 \approx 0.089$) is much larger than the prior precision ($1 / \tau_0^2 = 0.01$).
+
+## Interpretation
+
+A reporting sentence: "Combining a $\mathcal N(100, 10^2)$ prior with 20 observations of sample mean 105 (known $\sigma = 15$) yielded a posterior mean of 104.2 (95 % credible interval 99.6 to 108.9); the prior contributed the equivalent of approximately 2.25 additional observations." The "equivalent observations" framing is one of the most intuitive ways to communicate prior strength to non-Bayesians.
+
+## Practical Tips
+
+- As $n \to \infty$, the posterior mean tends to the sample mean and the posterior variance tends to $\sigma^2 / n$; the prior's influence vanishes asymptotically but can dominate in small samples.
+- When $\sigma$ is unknown, switch to the Normal–Inverse-Gamma conjugate pair; the marginal posterior on $\mu$ then has $t$ tails.
+- The precision-form update generalises directly to multivariate Normals with covariance matrices in place of variances; everything that was scalar becomes matrix.
+- Use this model as a sanity check for software: any general-purpose Bayesian engine (Stan, JAGS, `brms`) should reproduce the closed-form posterior to within Monte Carlo error.
+- Hierarchical mean structures are built from this update at every level, which is why understanding it deeply pays dividends in mixed models and meta-analysis.
+
+## R Packages Used
+
+Base R is sufficient because the update is closed-form (`dnorm`, `pnorm`, `qnorm`); for didactic plotting compare prior, likelihood, and posterior with `ggplot2`, and for general Bayesian alternatives any of `brms`, `rstanarm`, or `BayesFactor` reproduce the same answer.

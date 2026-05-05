@@ -1,0 +1,68 @@
+---
+title: Robust Regression
+date: "2026-04-17"
+description: M-estimators and MM-estimators for regression resistant to outliers and heavy-tailed errors
+categories:
+  - "Regression & Modelling"
+  - robust
+  - m-estimator
+  - huber
+  - mm-estimator
+---
+
+## Introduction
+
+Robust regression estimators down-weight observations with large residuals to reduce the influence of outliers and heavy-tailed errors. Where ordinary least squares minimises the squared residual — making a single large residual contribute as much as many moderate ones — robust methods cap or smoothly bound the loss function so that extreme observations cannot dominate the fit. Two main families coexist: M-estimators (Huber, bisquare) and MM-estimators that combine a high-breakdown initial fit with a high-efficiency M-step.
+
+## Prerequisites
+
+A working understanding of OLS, residual diagnostics, leverage and influence, and the breakdown-vs-efficiency trade-off in robust statistics.
+
+## Theory
+
+M-estimators minimise $\sum \rho(r_i / s)$ where $\rho$ is a robust loss function: quadratic for small residuals (where it acts like OLS) and bounded or transitioning to linear for large residuals (capping the influence of outliers). Huber's $\rho$ transitions at 1.345 SDs; bisquare's $\rho$ is exactly zero beyond a cutoff, eliminating large outliers entirely.
+
+MM-estimators combine a high-breakdown initial fit (S-estimator with breakdown 50 %, the maximum possible) with a high-efficiency M-estimator using the S-estimate as starting point. The result has breakdown 50 % and 95 % efficiency at Normal errors — the modern default for robust linear regression.
+
+## Assumptions
+
+Outliers in the response variable; for outliers in predictors (high-leverage points), the MM-estimator still resists but the breakdown safeguard is weaker. Errors symmetric or near-symmetric; for severely skewed errors, transformation may be preferable to robust regression.
+
+## R Implementation
+
+```r
+library(MASS); library(robustbase)
+
+# Simulated data with 10% outliers
+set.seed(2026)
+x <- rnorm(100)
+y <- 2 + 1.5 * x + rnorm(100)
+y[sample(100, 10)] <- y[sample(100, 10)] + rnorm(10, 0, 10)
+
+fit_ols <- lm(y ~ x)
+fit_rlm <- rlm(y ~ x)                      # Huber M-estimator
+fit_mm  <- lmrob(y ~ x, method = "MM")     # MM-estimator
+
+rbind(ols = coef(fit_ols), rlm = coef(fit_rlm), mm = coef(fit_mm))
+```
+
+## Output & Results
+
+OLS coefficients are pulled by the contamination; both robust estimators recover values close to the data-generating slope. The MM-estimator typically delivers tighter standard errors than the Huber M-estimator at the same level of robustness, reflecting its better efficiency.
+
+## Interpretation
+
+A reporting sentence: "MM-regression gave slope 1.48 (SE 0.11), close to the true 1.5; OLS on the same 10 %-contaminated data produced 1.35 (SE 0.16), pulled toward zero by the outliers. Reporting both fits illustrates the robustness benefit and the cost of ignoring outliers." Pair OLS with a robust fit when outliers are suspected; large discrepancies signal the influential observations need investigation.
+
+## Practical Tips
+
+- `robustbase::lmrob()` with `method = "MM"` is the modern default for robust linear regression; superior to Huber `MASS::rlm()` in efficiency-breakdown trade-off.
+- Always report both OLS and robust fits; large discrepancies signal outlier influence and motivate investigation of the contaminated points.
+- Robust regression is a fix for outlier influence, not a substitute for understanding why outliers occurred — investigate first, robustify second.
+- For outliers in predictor space (high-leverage points), the MM-estimator still resists but the safeguard is reduced; combine with leverage-aware diagnostics.
+- Robust SEs (sandwich variance) address heteroscedasticity, not outliers; the two are distinct problems requiring distinct fixes.
+- For GLMs, `robustbase::glmrob()` provides analogous robust estimators for binomial, Poisson, and gamma regression.
+
+## R Packages Used
+
+`MASS::rlm()` for Huber M-estimators; `robustbase::lmrob()` for MM-estimators with high-breakdown initialisation; `robustbase::glmrob()` for robust GLMs; `quantreg` for quantile regression as a complementary robust alternative; `WRS2` for Wilcox's robust ANOVA and regression analogues.

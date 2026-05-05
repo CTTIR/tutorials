@@ -1,0 +1,88 @@
+---
+title: The Central Limit Theorem
+date: "2026-04-17"
+description: "Why the sampling distribution of the mean is approximately normal, and what that means for everyday inference"
+categories:
+  - Statistical Foundations
+  - central-limit-theorem
+  - sampling-distribution
+  - normal-distribution
+  - inference
+---
+
+## Introduction
+
+The central limit theorem (CLT) is the single result that makes classical statistical inference work. It says that when you draw samples of size $n$ from a population with mean $\mu$ and finite variance $\sigma^2$, the distribution of the *sample mean* approaches a normal distribution with mean $\mu$ and variance $\sigma^2/n$ as $n$ grows -- and this is true regardless of the shape of the original population. Almost every t-test, z-test, and confidence interval for a mean rests on this theorem. Without it, the normal distribution would have no privileged role; with it, the normal is the attractor toward which sample means are pulled.
+
+## Prerequisites
+
+A reader should be comfortable with the notions of a random variable, its mean and variance, and the distinction between a population parameter and a sample statistic. Familiarity with R's vectorised operations is helpful but not required.
+
+## Theory
+
+Let $X_1, X_2, \ldots, X_n$ be independent, identically distributed random variables with finite mean $\mu$ and finite variance $\sigma^2$. Define the sample mean $\bar{X}_n = \frac{1}{n}\sum_{i=1}^n X_i$. The CLT states that as $n \to \infty$,
+
+$$\sqrt{n}(\bar{X}_n - \mu) \xrightarrow{d} \mathcal{N}(0, \sigma^2),$$
+
+or equivalently, the standardised statistic $Z_n = (\bar{X}_n - \mu)/(\sigma/\sqrt{n})$ converges in distribution to a standard normal. In practical terms, the sampling distribution of $\bar{X}_n$ is approximately $\mathcal{N}(\mu, \sigma^2/n)$ once $n$ is "large enough". What counts as large enough depends on the skewness of the source: a uniform distribution is nearly normal after $n \approx 5$, a right-skewed distribution like the exponential needs $n \approx 30$, and a very heavy-tailed distribution like the Cauchy (which has no finite mean) is never approximated by the CLT because the assumptions fail.
+
+## Assumptions
+
+The theorem requires three conditions:
+
+1. Observations are independent of each other.
+2. Observations are identically distributed -- they come from the same population.
+3. The population has a finite variance.
+
+Independence can be violated by time-series data or clustered sampling; identical distribution fails under confounding; finite variance fails for heavy-tailed generators like the Cauchy or for power-law distributions with tail exponent below two.
+
+## R Implementation
+
+The clearest way to see the CLT is by simulation. We draw many samples from a skewed population, compute the mean of each, and plot the histogram of those means.
+
+```r
+library(ggplot2)
+set.seed(2026)
+
+simulate_clt <- function(n, reps = 10000, rate = 1) {
+  replicate(reps, mean(rexp(n, rate = rate)))
+}
+
+means_n5   <- simulate_clt(n = 5)
+means_n30  <- simulate_clt(n = 30)
+means_n100 <- simulate_clt(n = 100)
+
+df <- data.frame(
+  mean_value = c(means_n5, means_n30, means_n100),
+  n = factor(rep(c(5, 30, 100), each = 10000),
+             levels = c(5, 30, 100))
+)
+
+ggplot(df, aes(x = mean_value)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 bins = 60, fill = "steelblue", colour = "white") +
+  facet_wrap(~ n, scales = "free",
+             labeller = labeller(n = function(x) paste0("n = ", x))) +
+  stat_function(fun = dnorm,
+                args = list(mean = 1, sd = 1 / sqrt(as.numeric(levels(df$n)[1]))),
+                colour = "red", linewidth = 1) +
+  labs(x = expression(bar(X)), y = "Density") +
+  theme_minimal(base_size = 12)
+```
+
+The source distribution here is exponential with rate 1, which has mean 1 and variance 1. At $n = 5$ the histogram is still visibly right-skewed; by $n = 30$ it is symmetric and bell-shaped; by $n = 100$ it is indistinguishable from the theoretical normal curve.
+
+## Output & Results
+
+Running the simulation produces three panels. The empirical standard deviation of the sample means in each panel is close to $1/\sqrt{n}$: about 0.447 at $n = 5$, 0.183 at $n = 30$, and 0.100 at $n = 100$. The empirical mean is close to 1 in every panel, as the CLT requires.
+
+## Interpretation
+
+For a manuscript, the CLT is rarely cited by name; instead it justifies the use of a normal-based confidence interval or a t-test when the raw data are not normal but the sample size is moderate. A reader reports "with $n = 50$ the sampling distribution of the mean is well-approximated by a normal, so we use a t-based 95% confidence interval", not "by the central limit theorem". The theorem is background; the application is the CI.
+
+## Practical Tips
+
+- For strongly skewed populations (income, biomarker concentrations, counts), plan for $n \geq 30$ before relying on CLT-based inference.
+- The CLT applies to the *mean*, not to individual observations: a single new observation is not made approximately normal by a large $n$.
+- When variance is suspected to be infinite or very heavy-tailed, use a robust location estimator (median, trimmed mean) or a bootstrap confidence interval.
+- The convergence rate is governed by the Berry-Esseen theorem, which bounds the distance to the normal in terms of $n$ and the third absolute moment.

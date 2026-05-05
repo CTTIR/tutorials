@@ -1,0 +1,69 @@
+---
+title: Cumulative Meta-Analysis
+date: "2026-04-17"
+description: Sequentially pooling studies in the order they were published
+categories:
+  - Meta-Analysis
+  - cumulative
+  - sequential
+  - temporal
+---
+
+## Introduction
+
+Cumulative meta-analysis plots the running pooled estimate as studies are added one by one in chronological (or any pre-specified) order. Each successive pool incorporates one more study, producing a sequence of estimates that traces how the body of evidence evolved over time. The resulting forest plot reveals when the cumulative effect first crossed a meaningful threshold — clinical relevance, statistical significance, or stability — and whether later studies overturned, attenuated, or simply added precision to the early consensus. Cumulative meta-analysis is widely used in retrospective evidence syntheses to assess research efficiency: if the evidence had been pooled in real time, when would the answer have been clear, and how many subsequent confirmatory trials were arguably redundant?
+
+## Prerequisites
+
+A working understanding of inverse-variance meta-analytic pooling, the sequential-analysis idea, and an awareness of why repeated looks at accumulating evidence raise multiplicity concerns when the goal is decision-making rather than description.
+
+## Theory
+
+For an ordering of studies $1, \dots, k$, the cumulative estimate at step $t$ is the pooled effect computed from studies $1, \dots, t$ under the chosen meta-analysis model. Plotting these $\hat\theta_{(1:t)}$ with their confidence intervals along the ordering axis (typically year) reveals stability and convergence: a horizontal band of overlapping CIs indicates the answer settled early, while a shifting estimate signals that later evidence materially changed conclusions.
+
+The same procedure can use precision-based ordering (largest studies first) to assess sensitivity to the small-study effect, or risk-of-bias ordering (low-risk studies first) to assess whether pooled conclusions hinge on lower-quality evidence.
+
+## Assumptions
+
+Study ordering is correctly recorded; studies are independent; the meta-analysis model used at each step is the same as for the full pool. Cumulative meta-analysis is descriptive, not inferential — formal sequential-testing methods such as trial-sequential analysis adjust for repeated looks; ordinary cumulative meta-analysis does not.
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+k <- 12
+year <- sort(sample(1990:2023, k))
+yi <- rnorm(k, 0.35, 0.2)
+vi <- 1 / sample(50:250, k, replace = TRUE)
+
+df <- data.frame(year, yi, vi)
+
+res <- rma(yi, vi, data = df, method = "REML")
+cum <- cumul(res, order = df$year)
+
+plot(cum, main = "Cumulative meta-analysis by year",
+     xlab = "Year")
+```
+
+## Output & Results
+
+`cumul()` returns a running-pooled estimate, confidence interval, and heterogeneity statistics at each step in the specified ordering. The associated `plot()` method renders a forest-style display where each row corresponds to "evidence after the $t$-th study", making convergence visually obvious. Many pooled effects stabilise after four to six well-powered studies; remaining studies typically tighten the CI without shifting the centre.
+
+## Interpretation
+
+A reporting sentence: "Cumulative meta-analysis ordered by publication year showed that the pooled effect became statistically significant after the third study (1994) and remained essentially unchanged through 2023; the 18 trials published thereafter added precision but did not alter the direction or magnitude of the conclusion, suggesting an opportunity for earlier evidence-based decision-making had a living synthesis been in place." Always describe both when the evidence stabilised and what later studies contributed.
+
+## Practical Tips
+
+- Order primarily by publication date for the temporal interpretation; precision-based and risk-of-bias orderings are useful complementary sensitivity analyses.
+- Cumulative meta-analysis is descriptive — for inferential stopping rules under repeated looks, use trial-sequential analysis (TSA) with appropriate alpha-spending.
+- Convergence to stability after the first few studies often reveals research waste: many subsequent trials confirmed what was already known.
+- Combine with meta-regression on year to formally test whether effect sizes drifted with time, e.g. as practice patterns or populations changed.
+- Plot both point estimate and confidence interval; a shrinking CI without estimate movement is a different signal from a moving estimate.
+- Use cumulative meta-analysis to motivate living-systematic-review infrastructure: continuous evidence updating prevents the "many years late" problem that retrospective cumulative plots so often expose.
+
+## R Packages Used
+
+`metafor::cumul()` for the canonical cumulative pooling and its `plot()` method; `meta::metacum()` for an alternative interface aligned with the `meta` package's forest-plot conventions; `RTSA` and `gsDesign` for trial-sequential analysis when inferential adjustment for multiple looks is required; `metaviz` for richer cumulative-forest visualisations.

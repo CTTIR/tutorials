@@ -1,0 +1,72 @@
+---
+title: Nested vs Crossed Random Effects
+date: "2026-04-17"
+description: Distinguishing hierarchical from partially-overlapping grouping structures in mixed models
+categories:
+  - "Regression & Modelling"
+  - nested
+  - crossed
+  - random-effects
+  - hierarchy
+---
+
+## Introduction
+
+Mixed-effects models require careful specification of the random-effects structure, and the most common confusion is between nested and crossed designs. Nested means one grouping factor's levels sit strictly within another's: patients within hospitals, schools within districts, plots within fields. Crossed means levels of one factor appear across levels of another: subjects each rate the same items, items rated by multiple subjects, students each take the same set of exams. Misspecifying one as the other produces wrong variance components and biased standard errors.
+
+## Prerequisites
+
+A working understanding of mixed-effects models, random intercepts, and the geometric meaning of "grouping factor" in a hierarchical or crossed design.
+
+## Theory
+
+**Nested random effects**: each level of the inner factor belongs to exactly one level of the outer factor. Patient 17 in hospital A is a different conceptual entity from patient 17 in hospital B even if the IDs coincide. `lme4` syntax: `(1 | outer/inner)` or, equivalently, `(1 | outer) + (1 | outer:inner)`. The forward-slash shorthand expands automatically; explicit interaction notation removes ambiguity for readers.
+
+**Crossed random effects**: each level of one factor combines with multiple levels of the other. Subjects rate items, items are rated by subjects. `lme4` syntax: `(1 | subject) + (1 | item)`. The variance components for the two grouping factors are estimated independently, and there is no implied hierarchy.
+
+A practical heuristic: if you can ask "which $A$ does this $B$ belong to?" and get a unique answer, the design is nested. If $B$s are reused across $A$s, the design is crossed.
+
+## Assumptions
+
+The grouping structure is correctly identified; random effects within each grouping factor are independent and Normal; for crossed designs, the two grouping factors are conditionally independent given the model.
+
+## R Implementation
+
+```r
+library(lme4)
+
+# Nested example (simulated)
+set.seed(2026)
+hosp <- gl(5, 20)           # 5 hospitals
+pt   <- factor(seq_along(hosp))   # 100 unique patients
+y    <- rnorm(100) + rep(rnorm(5, 0, 3), each = 20)
+
+fit_nested <- lmer(y ~ 1 + (1 | hosp))
+# Crossed
+item <- gl(10, 10, length = 100)
+y2 <- rnorm(100) + rep(rnorm(10, 0, 2), length.out = 100) +
+                   rep(rnorm(10, 0, 1), length.out = 100)
+fit_crossed <- lmer(y2 ~ 1 + (1 | hosp) + (1 | item))
+summary(fit_crossed)
+```
+
+## Output & Results
+
+`summary(fit)` reports variance components for each random effect. For nested designs the variance is decomposed by hierarchical level; for crossed designs the two grouping factors contribute independently. Likelihood-ratio tests against simpler models confirm whether each random effect is needed.
+
+## Interpretation
+
+A reporting sentence: "Crossed random effects for subject and item revealed substantial subject-level variation ($\hat\sigma_{\mathrm{subject}} = 2.1$) and smaller item-level variation ($\hat\sigma_{\mathrm{item}} = 1.0$); the residual SD was 1.5. The two grouping factors are conceptually independent — every subject saw every item — so the structure is correctly specified as crossed rather than nested." Always describe the grouping structure explicitly in methods.
+
+## Practical Tips
+
+- Nested IDs must be unique within each parent level; if patient IDs repeat across hospitals (e.g. patient 17 in hospital A and a different patient 17 in hospital B), use the explicit `hospital:patient` interaction to disambiguate.
+- Crossed designs with small per-factor cluster counts (< 5 levels) can struggle; verify convergence and watch for singular fits.
+- `(1 | A/B)` shorthand is convenient but can be opaque; documenting the structure as `(1 | A) + (1 | A:B)` explicitly removes ambiguity.
+- `glmmTMB` handles many complex random structures (crossed + non-Normal outcomes, structured covariance) more gracefully than `lme4`.
+- For longitudinal data with crossed item / occasion structure, include both random factors plus any temporal autocorrelation as a within-subject correlation term.
+- A common diagnosis tool: `xtabs(~ A + B, data = d)` shows the crossing pattern directly. A diagonal-block table indicates nesting; a dense table indicates crossing.
+
+## R Packages Used
+
+`lme4` for `lmer()` and `glmer()` with nested and crossed random effects; `lmerTest` for $p$-values via Satterthwaite or Kenward-Roger; `glmmTMB` for complex random structures and non-Normal outcomes; `pbkrtest` for parametric-bootstrap LRTs on variance components.

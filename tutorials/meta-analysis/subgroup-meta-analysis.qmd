@@ -1,0 +1,73 @@
+---
+title: Subgroup Meta-Analysis
+date: "2026-04-17"
+description: Pooling within strata and testing for between-subgroup heterogeneity
+categories:
+  - Meta-Analysis
+  - subgroup
+  - heterogeneity
+  - moderator
+---
+
+## Introduction
+
+Subgroup meta-analysis partitions the included studies according to a pre-specified categorical moderator — intervention intensity (low vs high dose), population (paediatric vs adult), risk of bias (low vs unclear vs high), or any clinically meaningful split — and pools within each level. The within-subgroup pooled effects describe how the intervention behaves in each stratum, and a formal between-subgroup test assesses whether the moderator explains a measurable share of between-study heterogeneity. Subgroup analysis is the standard tool for categorical effect modification in evidence synthesis and is required by the Cochrane Handbook whenever the protocol pre-specifies a moderator hypothesis.
+
+## Prerequisites
+
+A working understanding of pooled meta-analysis (preferably random-effects), the heterogeneity statistics $\tau^2$, $I^2$, and $Q$, and the difference between within-group and between-group sources of variation in stratified analyses.
+
+## Theory
+
+Within each subgroup $g = 1, \dots, G$ the studies are pooled to obtain $\hat\theta_g$ and its standard error. The between-subgroup heterogeneity statistic is
+
+$$Q_B = \sum_g w_g (\hat\theta_g - \hat\theta)^2,$$
+
+with $G - 1$ degrees of freedom; a significant $Q_B$ indicates the moderator accounts for some of the between-study variance. Equivalently, fitting a mixed-effects meta-regression with subgroup as a categorical moderator produces a $Q_M$ test that recovers exactly this comparison and is the modern preferred implementation, because it can also share a common $\tau^2$ across subgroups for more stable inference.
+
+## Assumptions
+
+The moderator is pre-specified rather than chosen post hoc, within-subgroup studies are reasonably homogeneous (small within-group $\tau^2$), and each subgroup contains enough studies — typically at least four to five — to support a stable within-group pool. Subgroup analyses with only one or two studies per stratum are largely uninformative and should be reported only descriptively.
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+k <- 16
+subgroup <- factor(rep(c("low_dose", "high_dose"), each = k/2))
+yi <- c(rnorm(k/2, 0.2, 0.15),
+        rnorm(k/2, 0.5, 0.15))
+vi <- 1 / sample(50:200, k, replace = TRUE)
+
+df <- data.frame(yi, vi, subgroup)
+
+lapply(split(df, df$subgroup), function(d) {
+  rma(yi, vi, data = d, method = "REML")$b
+})
+
+res_mod <- rma(yi, vi, mods = ~ subgroup, data = df, method = "REML")
+summary(res_mod)
+```
+
+## Output & Results
+
+The script returns per-subgroup pooled estimates from independent random-effects pools and the joint mixed-effects meta-regression with subgroup as moderator. The latter reports the omnibus $Q_M$ test for between-subgroup heterogeneity, the per-level coefficients, and the residual heterogeneity remaining after the moderator is included — the canonical reporting set for subgroup analyses.
+
+## Interpretation
+
+A reporting sentence: "Pre-specified subgroup analysis showed significant between-subgroup heterogeneity ($Q_M = 18.4$, df $= 1$, $p < 0.001$): high-dose studies had a pooled standardised mean difference of 0.52 (95 % CI 0.39 to 0.65) compared with 0.18 (0.08 to 0.28) in low-dose studies, supporting the hypothesis that dose moderates the treatment effect. The moderator explained 47 % of the between-study heterogeneity ($R^2$); residual $I^2$ was 18 %." Always report both the within-subgroup pools and the between-subgroup test.
+
+## Practical Tips
+
+- Pre-specify all subgroup analyses in the PROSPERO protocol; post-hoc subgrouping is exploratory and should be flagged as such — never as primary inference.
+- Small per-subgroup study counts produce unstable pooled estimates; the Cochrane Handbook recommends at least 10 studies per subgroup before drawing conclusions, and warns explicitly against single-stratum subgroup pools.
+- Prefer meta-regression over subgroup analysis whenever the moderator is continuous (age, dose, year); dichotomising loses information and depends on an arbitrary cutpoint.
+- Report the between-subgroup $Q_M$ or $Q_B$ $p$-value as the primary inference; comparing within-subgroup $p$-values across strata ("significant in one, not the other") is a well-known statistical fallacy because tests in small subgroups are underpowered.
+- Use a shared $\tau^2$ across subgroups (the default in mixed-effects meta-regression) rather than separate estimates per subgroup unless heterogeneity is clearly different in each; the shared specification is more efficient and more conservative.
+- When subgroup analysis is exploratory, apply a multiplicity adjustment or interpret with explicit caution; the false-positive rate inflates rapidly with the number of subgroup tests.
+
+## R Packages Used
+
+`metafor::rma()` with `mods = ~ factor(subgroup)` for the canonical mixed-effects implementation; `meta::metabin()` and `meta::metacont()` with `subgroup = ` for built-in subgroup pooling and forest-plot grouping; `dmetar` for Knapp–Hartung-adjusted subgroup analyses; `robumeta` for robust-variance subgroup pooling under correlated effects.

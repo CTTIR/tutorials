@@ -1,0 +1,79 @@
+---
+title: Gene Ontology Enrichment
+date: "2026-04-17"
+description: Over-representation of GO terms in a differentially-expressed gene set
+categories:
+  - Bioinformatics
+  - GO
+  - enrichment
+  - ORA
+---
+
+## Introduction
+
+Gene Ontology (GO) enrichment asks whether a list of differentially-expressed genes is disproportionately annotated to specific GO terms — biological processes, molecular functions, or cellular components. It is the most common first-pass functional interpretation of an RNA-seq, proteomics, or single-cell DE list and is the entry point to pathway-level analysis. The dominant method is over-representation analysis (ORA) using Fisher's exact or hypergeometric tests; gene-set enrichment analysis (GSEA) extends to ranked gene lists without requiring a significance threshold.
+
+## Prerequisites
+
+A working understanding of differential-expression analysis, GO annotations and their three branches (biological process, molecular function, cellular component), and basic Fisher's exact test framework.
+
+## Theory
+
+ORA constructs a 2×2 contingency table for each GO term:
+
+| | DE | not DE |
+|---|---|---|
+| In term | $a$ | $b$ |
+| Not in term | $c$ | $d$ |
+
+Fisher's exact test (or the hypergeometric distribution) tests whether more DE genes fall in the term than expected under random sampling from the universe. The universe is the set of all genes that *could* have been tested — typically the genes that passed pre-filtering — not the entire genome.
+
+Multiple testing across thousands of GO terms is controlled via Benjamini-Hochberg FDR; nested GO term hierarchies introduce correlated tests, but BH adjustment remains conservative under dependence.
+
+## Assumptions
+
+Genes are sampled uniformly from the universe given non-DE status; GO annotations are correct (recently updated); the universe matches the tested set (testing all genes from the genome inflates apparent enrichment when most are not in the tested set).
+
+## R Implementation
+
+```r
+library(clusterProfiler); library(org.Hs.eg.db)
+
+# Example with a small simulated DE list
+set.seed(2026)
+all_genes <- keys(org.Hs.eg.db, keytype = "SYMBOL")
+de_genes  <- sample(all_genes, 200)
+
+ego <- enrichGO(gene = de_genes,
+                universe = all_genes,
+                OrgDb = org.Hs.eg.db,
+                keyType = "SYMBOL",
+                ont = "BP",
+                pAdjustMethod = "BH",
+                pvalueCutoff = 0.05,
+                qvalueCutoff = 0.2)
+
+head(as.data.frame(ego))[, c("ID", "Description", "p.adjust", "Count")]
+dotplot(ego, showCategory = 15)
+```
+
+## Output & Results
+
+`enrichGO()` returns a ranked table of GO terms with BH-adjusted $p$-values, gene counts, and the contributing gene symbols. `dotplot()` visualises the top hits as a horizontal dot plot with gene-count size and adjusted-$p$-value colour.
+
+## Interpretation
+
+A reporting sentence: "GO over-representation analysis (BH-FDR < 0.05) identified 28 biological-process terms among the 200 DE genes; the top terms — `response to stimulus` (45 genes), `immune response` (32), `cell cycle regulation` (28) — reflect the experimental manipulation. `simplify()` reduced the redundant hierarchy to 12 representative terms." Always state the universe, the multiple-testing correction, and any term-redundancy reduction.
+
+## Practical Tips
+
+- Define the universe correctly — always the set of genes that passed pre-filtering and were tested for DE, never the whole genome; using the latter inflates apparent enrichment.
+- Use `simplify()` on the `enrichResult` object to collapse redundant nested GO terms; the unsimplified output often contains many parent-child duplications.
+- Direction-agnostic ORA loses signal; for biology-aware interpretation, run up- and down-regulated lists separately.
+- For ranked gene lists with continuous statistics, prefer GSEA (`gseGO()`) over ORA; GSEA does not require an arbitrary significance threshold.
+- `goseq` adjusts for gene-length bias in RNA-seq (longer genes have more power for DE detection); use it when length bias is a concern.
+- Pair GO with KEGG (`enrichKEGG`) and Reactome (`enrichPathway`) for complementary functional coverage.
+
+## R Packages Used
+
+`clusterProfiler::enrichGO()`, `gseGO()`, `simplify()` for canonical GO enrichment; `org.Hs.eg.db` and species-specific packages for annotation; `topGO` and `goseq` for alternative implementations; `enrichplot` for `dotplot()`, `cnetplot()`, and `emapplot()` visualisations of enrichment results.

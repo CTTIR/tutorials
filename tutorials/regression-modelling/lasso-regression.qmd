@@ -1,0 +1,68 @@
+---
+title: Lasso Regression
+date: "2026-04-17"
+description: L1-penalised regression for simultaneous shrinkage and variable selection
+categories:
+  - "Regression & Modelling"
+  - lasso
+  - l1-penalty
+  - variable-selection
+---
+
+## Introduction
+
+The lasso (least absolute shrinkage and selection operator) adds an L1 penalty to ordinary least squares, simultaneously shrinking coefficients and driving some of them exactly to zero. The L1 geometry — the absolute-value penalty has corners on each axis — makes the lasso the canonical method for high-dimensional regression where simultaneous estimation and variable selection is required. It dominates ridge regression when the truth is sparse (a small number of predictors carry the signal) and competes with stepwise selection while having dramatically better statistical properties.
+
+## Prerequisites
+
+A working understanding of linear regression, ridge regression as the L2-penalised counterpart, cross-validation, and the bias-variance trade-off.
+
+## Theory
+
+The lasso minimises
+
+$$\|y - X\beta\|^2 + \lambda \sum_{j=1}^p |\beta_j|.$$
+
+Larger $\lambda$ produces more shrinkage and more zero coefficients. The L1 penalty's non-differentiability at zero is what produces sparse solutions: the optimisation finds corner points of the constraint region where some $\hat\beta_j = 0$ exactly. Tuning $\lambda$ via $k$-fold cross-validation is standard; the package `glmnet` returns both the prediction-optimal $\lambda_{\min}$ and the more conservative $\lambda_{1\mathrm{se}}$ within one standard error.
+
+## Assumptions
+
+Standard linear-model assumptions on the residual structure; predictors should be standardised (`glmnet` does this internally and back-transforms). For statistical inference on selected coefficients, naive $p$-values are invalid because of the post-selection bias; tools like `selectiveInference` provide adjusted intervals.
+
+## R Implementation
+
+```r
+library(glmnet)
+
+X <- as.matrix(mtcars[, -1])
+y <- mtcars$mpg
+
+set.seed(2026)
+cvfit <- cv.glmnet(X, y, alpha = 1)   # alpha = 1 -> lasso
+
+plot(cvfit)
+
+# Selected predictors at lambda.1se
+as.matrix(coef(cvfit, s = "lambda.1se"))
+```
+
+## Output & Results
+
+`cv.glmnet()` returns the cross-validation curve (mean squared error vs. log $\lambda$) plus the two recommended $\lambda$ values. `plot(cvfit)` displays the CV curve with confidence intervals and vertical lines marking $\lambda_{\min}$ and $\lambda_{1\mathrm{se}}$. The selected predictors are those with non-zero coefficients at the chosen $\lambda$.
+
+## Interpretation
+
+A reporting sentence: "Lasso regression with cross-validation-selected $\lambda_{1\mathrm{se}}$ retained three of ten predictors (weight, horsepower, year); the remaining seven coefficients were shrunk to zero exactly. Cross-validated mean squared error was 6.3 mpg² at the chosen $\lambda$." Always report which $\lambda$ rule was used; $\lambda_{\min}$ tends to over-fit, while $\lambda_{1\mathrm{se}}$ is more parsimonious.
+
+## Practical Tips
+
+- The lasso is unstable when predictors are strongly correlated — it tends to pick one and zero the others arbitrarily; elastic net combines L1 and L2 penalties to mitigate this.
+- Report the selected subset and the cross-validated fit, but never report naive $p$-values after lasso selection; they are invalid.
+- For inference on selected coefficients, use `selectiveInference::fixedLassoInf()` for properly adjusted confidence intervals; alternatively, debias the lasso with `hdi::lasso.proj()`.
+- For binary or count outcomes, switch the family: `cv.glmnet(X, y, family = "binomial")` for logistic lasso, `family = "poisson"` for Poisson lasso.
+- The relaxed lasso (re-fitting OLS on the selected variables) often improves predictive performance; available via `glmnet`'s `relax = TRUE`.
+- Always set the random seed before `cv.glmnet()`; the cross-validation folds affect the chosen $\lambda$ and reproducibility requires a fixed seed.
+
+## R Packages Used
+
+`glmnet` for the canonical lasso, ridge, and elastic-net implementations with cross-validated tuning; `selectiveInference` for post-selection confidence intervals; `hdi` for high-dimensional inference; `caret` and `tidymodels` for unified cross-validation against alternative penalised methods.

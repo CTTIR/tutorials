@@ -1,0 +1,75 @@
+---
+title: ROC Analysis
+date: "2026-04-17"
+description: Receiver Operating Characteristic curves and area under the curve
+categories:
+  - Clinical Biostatistics
+  - roc
+  - auc
+  - diagnostic
+---
+
+## Introduction
+
+The receiver-operating-characteristic (ROC) curve traces sensitivity against $1 - $ specificity across all possible decision thresholds of a continuous-valued diagnostic test or risk score. Where a single sensitivity-specificity pair characterises performance at one cut-off, the ROC curve summarises performance across every cut-off and therefore captures the discriminative ability of the underlying continuous measurement independently of any chosen threshold. The area under the curve (AUC) reduces this curve to a single number with a clean probabilistic interpretation: it equals the probability that a randomly chosen diseased case has a higher biomarker value than a randomly chosen non-diseased case. AUC values of 0.5 indicate chance-level discrimination and 1.0 indicates perfect separation; values between 0.7 and 0.9 are typical for clinically useful biomarkers.
+
+## Prerequisites
+
+A working understanding of sensitivity and specificity, the role of decision thresholds in diagnostic-test performance, and the trade-off between true and false positive rates that the ROC curve makes explicit.
+
+## Theory
+
+For a continuous biomarker $X$ and binary disease status $D$, the ROC curve is the parametric plot
+
+$$\mathrm{ROC}(c) = \bigl(\,1 - F_0(c),\, 1 - F_1(c)\,\bigr) \quad\text{for all } c,$$
+
+where $F_0$ and $F_1$ are the CDFs of $X$ in non-diseased and diseased populations, respectively. The AUC has the equivalent representation
+
+$$\mathrm{AUC} = P(X_1 > X_0),$$
+
+with $X_1$ a random observation from the diseased and $X_0$ from the non-diseased population — the probability of correct ranking. Confidence intervals on AUC are typically computed via the DeLong non-parametric method or by bootstrap; bootstrap is also the standard approach for inference on the curve itself.
+
+## Assumptions
+
+Test values are measured on a continuous scale (or at least an ordinal scale with many levels), disease status is correctly classified by a reliable gold-standard reference, and observations are independent. The interpretation as a discrimination measure is independent of disease prevalence — a feature of AUC that distinguishes it from predictive values.
+
+## R Implementation
+
+```r
+library(pROC)
+
+set.seed(2026)
+n <- 200
+disease <- factor(sample(c(0, 1), n, replace = TRUE, prob = c(0.6, 0.4)))
+biomarker <- rnorm(n, mean = ifelse(disease == 1, 1.0, 0), sd = 1)
+
+roc_obj <- roc(response = disease, predictor = biomarker,
+               levels = c("0", "1"), direction = "<")
+auc(roc_obj)
+ci.auc(roc_obj, method = "delong")
+
+plot(roc_obj, col = "#2A9D8F", lwd = 2, legacy.axes = TRUE,
+     main = "ROC curve for biomarker")
+abline(0, 1, lty = 2, col = "grey60")
+```
+
+## Output & Results
+
+`roc()` constructs the ROC object; `auc()` returns the area under the curve and `ci.auc()` provides the DeLong or bootstrap confidence interval. The standard plot shows sensitivity on the vertical axis and $1 - $ specificity on the horizontal axis, with the chance-diagonal as a reference line. Points along the curve correspond to sensitivity-specificity trade-offs at different cut-off values.
+
+## Interpretation
+
+A reporting sentence: "The biomarker showed good discrimination for the binary disease outcome with AUC 0.77 (95 % CI 0.70 to 0.84, DeLong method); this exceeds the conventional 'fair' threshold of 0.70 but falls short of 'excellent' ($\geq 0.90$). At the Youden-optimal cut-off (biomarker $\geq 0.42$), sensitivity was 73 % and specificity 70 %; alternative cut-offs prioritising specificity (e.g., $\geq 1.0$, sensitivity 51 %, specificity 87 %) may be preferred for screening applications." Always report both AUC and at least one operating point.
+
+## Practical Tips
+
+- Report AUC with a 95 % confidence interval — DeLong's non-parametric method is the standard for paired comparisons and bootstrap is preferable for very small or imbalanced samples; AUC without uncertainty bounds is uninterpretable.
+- Test AUC against 0.5 (chance) using `pROC::roc.test()`; compare two AUCs from the same cases using a paired DeLong test, which respects the correlation induced by shared subjects.
+- Partial AUC over a clinically relevant region — for example, AUC restricted to specificity above 0.9 in a screening context — is often more informative than full AUC, because clinical use rarely spans the full operating range.
+- AUC is threshold-independent; combine it with a calibration analysis (Hosmer-Lemeshow, calibration intercept and slope, calibration plot) or a decision-curve analysis when threshold-dependent decisions matter for the clinical context.
+- For heavily imbalanced data (rare disease, screening contexts), precision-recall AUC is often more informative than ROC AUC because the ROC can look deceptively good when most subjects are non-diseased; PRAUC focuses on the positive class.
+- When comparing biomarkers, include the increment in AUC ($\Delta$ AUC), the integrated discrimination index (IDI), and the net reclassification improvement (NRI); each captures a different facet of incremental performance.
+
+## R Packages Used
+
+`pROC` for canonical ROC analysis with DeLong and bootstrap CIs, partial AUC, and paired comparisons; `ROCR` for an alternative interface with comprehensive performance-measure support; `PRROC` for precision-recall AUC and area-under-the-PR-curve analyses; `cutpointr` for principled threshold selection; `rms::lrm()` for AUC reporting integrated with logistic-regression model evaluation.

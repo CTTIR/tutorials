@@ -1,0 +1,74 @@
+---
+title: Bayesian Hierarchical Models
+date: "2026-04-17"
+description: Partial pooling through prior structure for grouped / multilevel data
+categories:
+  - Bayesian Statistics
+  - hierarchical
+  - multilevel
+  - partial-pooling
+  - shrinkage
+---
+
+## Introduction
+
+A hierarchical Bayesian model embeds the group-level parameters of a multilevel design inside a higher-level prior, so that the group-level estimates inform each other rather than being computed in isolation. The pay-off is partial pooling: groups with abundant data are estimated almost from their own observations, groups with little data are pulled toward the overall mean, and every estimate carries a credible interval that reflects both the within-group sample size and the between-group heterogeneity. This single mechanism resolves a long list of practical problems — small-sample variance, unbalanced designs, sparse counts — that frequentist mixed-effects models can only address by reweighting or by appealing to asymptotic theory.
+
+## Prerequisites
+
+A working understanding of Bayesian inference, the random-effects mixed model, and the role of exchangeability in motivating shared priors.
+
+## Theory
+
+A two-level model has
+
+- Level 1: $y_{ij} \mid \theta_i \sim p(y \mid \theta_i)$ — the data given group-specific parameters.
+- Level 2: $\theta_i \mid \mu, \tau \sim p(\theta \mid \mu, \tau)$ — group-specific parameters drawn from a population distribution.
+- Level 3 (hyperprior): $\mu \sim p(\mu)$, $\tau \sim p(\tau)$ — priors on the population parameters.
+
+The posterior of $\theta_i$ is a precision-weighted average of the within-group estimate (driven by the data in group $i$) and the population mean $\mu$, with weight inversely proportional to the within-group variance and to the cross-group variance $\tau^2$. Smaller groups rely more on the population mean; larger groups stand on their own data. This is the formal expression of "shrinkage" or "borrowing strength."
+
+## Assumptions
+
+Exchangeability of groups (group labels carry no information beyond what is in the predictors) and a hyperprior whose support spans plausible values of $\mu$ and $\tau$. A poorly chosen hyperprior — particularly an overly tight prior on $\tau$ — can dominate the posterior in small samples and look like a strong empirical claim.
+
+## R Implementation
+
+```r
+library(brms)
+
+# 30 hospitals, events and trials per hospital
+set.seed(2026)
+n_hosp <- 30
+n_per  <- sample(5:50, n_hosp, replace = TRUE)
+true_rates <- rbeta(n_hosp, 3, 12)
+events <- rbinom(n_hosp, n_per, true_rates)
+
+d <- data.frame(hospital = factor(1:n_hosp),
+                events = events, trials = n_per)
+
+fit <- brm(events | trials(trials) ~ 1 + (1 | hospital),
+           data = d, family = binomial,
+           chains = 4, iter = 2000, refresh = 0)
+summary(fit)
+```
+
+## Output & Results
+
+`summary(fit)` returns the population-level intercept (overall log-odds), the between-hospital SD on the logit scale, and per-hospital posterior summaries via `ranef(fit)`. The shrinkage of small-hospital estimates toward the population mean is most visible when you plot raw event proportions against posterior means alongside hospital sample size.
+
+## Interpretation
+
+A reporting sentence: "A Bayesian binomial hierarchical model estimated the population baseline at $\mathrm{logit}^{-1}(-1.4) = 0.20$ (95 % credible interval 0.16 to 0.24); the between-hospital standard deviation on the logit scale was 0.51 (95 % CrI 0.34 to 0.74), and small-hospital posterior means were drawn substantially toward the population baseline." Always report cluster-specific and overall estimates; one without the other misses the central insight of the hierarchical fit.
+
+## Practical Tips
+
+- Partial pooling is the headline benefit: do not throw it away by switching to a fixed-effects fit just because cluster counts are large.
+- For divergent transitions, switch to non-centred parameterisation; `brms` does this automatically when you specify `prior(... , class = "sd", ...)`.
+- The prior on $\tau$ matters enormously when the number of clusters is small; report a sensitivity analysis with at least one wider and one tighter prior.
+- For more than two levels (e.g. patient $\subset$ hospital $\subset$ region), nest random effects: `(1 | region/hospital)`. The same shrinkage logic applies at each level.
+- Do not interpret cluster-specific posterior means as if they came from independent fits; they are *intentionally* shrunk and that shrinkage is the right answer to "how good is hospital $i$?"
+
+## R Packages Used
+
+`brms` for the hierarchical Bayesian fit, `rstanarm` for pre-compiled `stan_glmer` alternatives, `tidybayes` for tidy cluster-level draws when bespoke shrinkage plots are needed, and `bayesplot` for diagnostic visualisation.

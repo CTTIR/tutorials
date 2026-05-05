@@ -1,0 +1,87 @@
+---
+title: "Kendall's Tau"
+date: "2026-04-17"
+description: Rank correlation based on concordant vs discordant pairs; robust to ties and small samples
+categories:
+  - Inferential Statistics
+  - kendall
+  - tau
+  - concordance
+---
+
+## Introduction
+
+Kendall's $\tau$ quantifies association via the proportion of pairs of observations that are **concordant** (both variables increase or both decrease) minus the proportion that are **discordant**. It is more robust than Spearman in small samples and under ties.
+
+## Prerequisites
+
+Ranks, concordant / discordant pairs.
+
+## Theory
+
+For $n$ observations, there are $\binom{n}{2}$ pairs. A pair $(i, j)$ is concordant if $\mathrm{sign}(X_i - X_j) = \mathrm{sign}(Y_i - Y_j)$, discordant if the signs differ, and tied otherwise.
+
+$$\tau = \frac{\text{concordant} - \text{discordant}}{\binom{n}{2}}.$$
+
+Variants (for ties):
+
+- **tau-a**: simple difference divided by all pairs (including ties).
+- **tau-b**: corrects for tied pairs in both variables; most commonly used with tied data.
+- **tau-c** (Stuart's tau-c): for different-sized marginal distributions.
+
+$\tau \in [-1, 1]$; 0 indicates no association. The null distribution (no association) is asymptotically normal; exact distributions exist for small $n$.
+
+## Assumptions
+
+Same as Spearman: ordinal or continuous data, monotonic relationship, independent pairs.
+
+## R Implementation
+
+```r
+library(DescTools)
+set.seed(2026)
+
+n <- 40
+x <- rnorm(n)
+y <- 0.6 * x + rnorm(n, sd = sqrt(1 - 0.6^2))
+
+cor.test(x, y, method = "kendall")
+
+# Spearman for comparison
+cor.test(x, y, method = "spearman")
+
+# Tau-b (explicit)
+KendallTauB(x, y, conf.level = 0.95)
+
+# With ties
+x2 <- round(x, 1)
+y2 <- round(y, 1)
+cor.test(x2, y2, method = "kendall")
+```
+
+## Output & Results
+
+```
+        Kendall's rank correlation tau
+
+data:  x and y
+z = 3.68, p-value = 0.0002
+alternative hypothesis: true tau is not equal to 0
+tau: 0.394
+
+        Spearman's rho: 0.57
+```
+
+Both correlations are significantly positive; Kendall's $\tau$ is numerically smaller than Spearman (typical, as they measure different things).
+
+## Interpretation
+
+Report: "Kendall's $\tau = 0.39$ (z = 3.68, p < 0.001), indicating a moderate positive monotonic association between $x$ and $y$."
+
+## Practical Tips
+
+- Kendall and Spearman measure different quantities; do not treat them as interchangeable.
+- Kendall is more robust in small samples; Spearman is more common in reporting.
+- For heavily tied data (e.g., Likert scales), prefer Kendall tau-b over Spearman.
+- `DescTools::KendallTauB()` provides the tau-b with a CI, which base R's `cor.test` does not.
+- Kendall tau has a direct interpretation as (probability of concordance - probability of discordance), which Spearman does not.

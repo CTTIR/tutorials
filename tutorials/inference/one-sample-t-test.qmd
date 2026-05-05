@@ -1,0 +1,86 @@
+---
+title: One-Sample t-Test
+date: "2026-04-17"
+description: Testing whether a sample mean equals a pre-specified reference value
+categories:
+  - Inferential Statistics
+  - t-test
+  - one-sample
+  - mean-comparison
+---
+
+## Introduction
+
+The one-sample t-test compares the mean of a single continuous variable to a pre-specified reference value. It answers questions of the form "does the average differ from some benchmark?" -- average IQ differs from 100, mean biomarker level differs from a reference, average weight change differs from zero in a pre-post design (via paired differences).
+
+## Prerequisites
+
+t-distribution, the concept of a sampling distribution.
+
+## Theory
+
+Given iid observations $X_1, \ldots, X_n$ from $\mathcal{N}(\mu, \sigma^2)$, the test of
+
+$$H_0: \mu = \mu_0 \quad \text{vs.} \quad H_1: \mu \neq \mu_0$$
+
+uses the statistic
+
+$$T = \frac{\bar{X} - \mu_0}{s/\sqrt{n}} \sim t_{n-1} \quad \text{under } H_0.$$
+
+The sample SD $s$ replaces the population $\sigma$; the distribution adjusts from normal to t because this replacement adds variability. The degrees of freedom are $n - 1$.
+
+Confidence interval for $\mu$: $\bar{X} \pm t_{1 - \alpha/2, n - 1} \cdot s/\sqrt{n}$.
+
+Effect size: Cohen's $d = (\bar{X} - \mu_0) / s$.
+
+## Assumptions
+
+- Independent observations.
+- Normal distribution (or $n$ large enough for CLT to kick in).
+- No extreme outliers affecting the mean.
+
+## R Implementation
+
+```r
+library(effectsize); library(broom)
+set.seed(2026)
+
+# Simulated IQ-test scores; is the mean different from 100?
+iq <- rnorm(45, mean = 103.5, sd = 14)
+
+t.test(iq, mu = 100) |> tidy()
+
+# Effect size
+cohens_d(iq, mu = 100)
+
+# Check assumptions
+shapiro.test(iq)
+boxplot(iq, main = "Sample distribution", col = "#2A9D8F")
+```
+
+## Output & Results
+
+```
+# A tibble: 1 x 8
+  estimate statistic p.value parameter conf.low conf.high method  alternative
+     <dbl>     <dbl>   <dbl>     <dbl>    <dbl>     <dbl> <chr>   <chr>
+1    104.     1.82   0.076      44    98.9    109.      One ... two.sided
+
+Cohen's d |         95% CI
+-------------------------------
+0.27      | [-0.03, 0.57]
+```
+
+The sample mean is 104, not significantly different from 100 at $\alpha = 0.05$ ($t(44) = 1.82$, $p = 0.076$), with a small-to-medium effect ($d = 0.27$).
+
+## Interpretation
+
+In a manuscript: "The mean IQ was 104.0 (SD 14.0). The 95 % CI for the mean (98.9 to 109.3) includes the reference value of 100; a one-sample t-test did not reject the null of equal mean (t(44) = 1.82, p = 0.076, Cohen's d = 0.27)."
+
+## Practical Tips
+
+- For $n \geq 30$, the CLT makes the t-test fairly robust to non-normality.
+- For small $n$ with clear non-normality, use the Wilcoxon signed-rank test (one-sample version).
+- Power for the one-sample t-test depends on effect size and $n$; use `power.t.test(type = "one.sample")`.
+- The reference value $\mu_0$ must be pre-specified; post-hoc selection invalidates the p-value.
+- Pair with a 95 % CI for the mean -- it is more informative than the p-value alone.

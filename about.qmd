@@ -116,15 +116,3 @@ If you use this tutorial collection in teaching, research, or other written work
   note         = {CTTIR project}
 }
 ```
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 0015a195ffc14c80a3fcdf264e8c509f -->
-<img src="https://vg09.met.vgwort.de/na/0015a195ffc14c80a3fcdf264e8c509f"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

@@ -1,0 +1,84 @@
+---
+title: Scatter Plots
+date: "2026-04-17"
+description: "The bivariate continuous default: geom_point with overplotting strategies and trend lines"
+categories:
+  - Data Visualisation
+  - scatter
+  - geom_point
+  - bivariate
+  - overplotting
+---
+
+## Introduction
+
+A scatter plot is the default visualisation for the relationship between two continuous variables: each observation becomes a point, position encodes the value pair, and the eye reads correlation, clustering, and outliers directly. It is the first graphic to make whenever a regression or correlation is contemplated. The simplicity is also the trap: at modest sample sizes a scatter is informative, but at large $n$ overplotting hides density, and at small $n$ a few points are easy to misread as a strong relationship that disappears under any reasonable significance test.
+
+## Prerequisites
+
+A working knowledge of `ggplot2`'s aesthetic mappings and an idea of how the bivariate distribution differs from marginal univariate summaries.
+
+## Theory
+
+The core geom is `geom_point()`, with point size, shape, alpha, and colour as the controllable aesthetics. Overplotting — multiple observations stacking on the same pixel — is the universal challenge once $n$ exceeds a few hundred. Standard remedies:
+
+- **Alpha blending**: lower the per-point opacity so density translates into colour intensity.
+- **Jittering**: `position_jitter()` adds a small random offset; useful when one or both axes are discrete.
+- **Hexagonal binning**: `geom_hex()` divides the plane into hexagons coloured by count; appropriate for $n \ge 5{,}000$.
+- **Density colouring**: `ggpointdensity::geom_pointdensity()` keeps individual points but colours each by local density.
+- **2D density contours**: `geom_density_2d()` and `stat_density_2d_filled()` overlay smooth level sets on top of a sparse scatter.
+
+Trend layers come from `geom_smooth()`, with LOESS as the default for exploratory work and `method = "lm"` (or `"gam"`, `"glm"`) for parametric fits.
+
+## Assumptions
+
+Both x and y are continuous; one categorical variable should be encoded with colour or shape rather than placed on an axis. No statistical assumptions until a smoother or fitted line is added.
+
+## R Implementation
+
+```r
+library(ggplot2); library(ggpointdensity)
+
+# Simple scatter
+ggplot(mtcars, aes(wt, mpg)) +
+  geom_point(size = 3, colour = "#2A9D8F") +
+  theme_minimal()
+
+# Overplotted data with alpha
+ggplot(diamonds, aes(carat, price)) +
+  geom_point(alpha = 0.05) +
+  theme_minimal()
+
+# Point density colouring
+ggplot(diamonds[sample(nrow(diamonds), 2000), ], aes(carat, price)) +
+  geom_pointdensity() +
+  scale_colour_viridis_c() +
+  theme_minimal()
+
+# Scatter with trend line
+ggplot(mtcars, aes(wt, mpg)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", colour = "#F4A261") +
+  theme_minimal()
+```
+
+## Output & Results
+
+Four scatter plots showing the same idea at different scales: a small clean scatter for the 32-row `mtcars`, a density-revealing alpha-blended scatter for the 53,940-row `diamonds`, a density-coloured point-by-point view for an intermediate sample, and a small scatter with an OLS smoother and confidence band overlay.
+
+## Interpretation
+
+A reporting sentence: "Higher carat values are associated with higher price (Spearman $\rho = 0.93$, $n = 53{,}940$); the relationship is approximately linear on a log-log scale and the alpha-blended scatter reveals heteroscedasticity in the right tail." Always inspect a scatter before computing a correlation: non-linearity, subgroup structure, and outliers are visible here but hidden in a single summary number.
+
+## Practical Tips
+
+- For $n > 1{,}000$ use alpha (0.1–0.3 typical); for $n > 10{,}000$ switch to hexbin or density colouring outright.
+- Always label axes with units; "Weight" is ambiguous, "Weight (1000 lbs)" is informative.
+- Add a smoother only when a relationship is plausible; over-eager LOESS curves through random scatter create the illusion of structure.
+- For paired samples, connect points with `geom_line(aes(group = subject))` so within-subject change is visible alongside the cross-sectional spread.
+- Use `stat_ellipse()` to draw 95 % data ellipses for group boundaries when colour-coded clusters need an extra visual hint.
+- Avoid 3D scatter plots in print; rotation kills depth perception and the third dimension is better encoded as colour, size, or a faceting variable.
+
+## R Packages Used
+
+`ggplot2` for `geom_point()`, `geom_smooth()`, `stat_ellipse()`; `ggpointdensity` for density-coloured scatter; `hexbin` for `geom_hex()` with large $n$; `ggrepel` for labelling individual points without overlap.

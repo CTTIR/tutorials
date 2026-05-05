@@ -1,0 +1,272 @@
+---
+title: Time Series Analysis
+description: "Analysing data indexed by time: stationarity, autocorrelation, ARIMA, seasonal decomposition, forecasting, and changepoint detection"
+---
+
+When observations are ordered in time, the assumption of independence that underlies most classical statistics no longer holds. Time series analysis provides methods that explicitly model temporal dependence, seasonality, and long-term trends, and that produce forecasts with properly calibrated uncertainty.
+
+This area walks through the concepts, diagnostics, and models needed to analyse univariate and multivariate time series in R, with applications ranging from epidemiological surveillance to physiological signals to clinical trial monitoring.
+
+## Topics
+
+- Stationarity: strict vs. weak, unit root tests (ADF, KPSS, Phillips-Perron)
+- Autocorrelation and partial autocorrelation functions; interpreting ACF/PACF plots
+- Moving averages, exponential smoothing (simple, Holt, Holt-Winters), and their state-space formulation
+- AR, MA, ARMA, and ARIMA models; seasonal ARIMA (SARIMA)
+- Seasonal decomposition: classical, STL, X-13ARIMA-SEATS
+- Forecasting accuracy metrics: MAE, RMSE, MAPE, MASE, Diebold-Mariano test
+- Multivariate time series: VAR, VECM, Granger causality
+- GARCH and volatility modelling
+- Changepoint detection: PELT, binary segmentation, Bayesian online changepoint detection
+- State-space models and the Kalman filter
+- Spectral analysis: periodogram, spectral density estimation, wavelets
+
+Packages: `stats`, `forecast`, `fable`, `tsibble`, `feasts`, `bsts`, `changepoint`, `prophet`.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [ARIMA Models](arima-models.qmd)
+Autoregressive integrated moving average models for forecasting stationary and trending time series
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Augmented Dickey-Fuller Test](adf-test.qmd)
+Testing for unit roots / non-stationarity against a stationary alternative
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bayesian Changepoint Detection](bcp-bayesian-changepoint.qmd)
+Posterior probability of a changepoint at each time, with online and offline variants
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Changepoint Detection](changepoint-detection.qmd)
+Identifying abrupt shifts in mean, variance, or slope of a time series
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Diebold-Mariano Test](diebold-mariano.qmd)
+Testing equality of forecast accuracy between two competing models
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Differencing a Time Series](differencing.qmd)
+Removing trend via first differences; seasonal differencing for cyclic patterns
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [ETS Models](ets-models.qmd)
+State-space formulation of exponential smoothing: Error, Trend, Seasonal
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Exponential Smoothing](exponential-smoothing.qmd)
+Recursive weighted-average smoothers: simple, Holt (trend), Holt-Winters (seasonal)
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Forecast Accuracy Metrics](forecast-accuracy-metrics.qmd)
+MAE, RMSE, MAPE, MASE: scaled and scale-dependent measures of forecast error
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [GARCH Models](garch-volatility.qmd)
+Conditional heteroscedasticity models: volatility clustering in financial and other series
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Granger Causality](granger-causality.qmd)
+Testing whether one time series improves prediction of another beyond its own history
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Holt-Winters Method](holt-winters.qmd)
+Triple exponential smoothing with level, trend, and seasonal components
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Interpreting ACF and PACF](acf-pacf-interpretation.qmd)
+Identifying AR and MA orders from autocorrelation and partial autocorrelation functions
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [KPSS Test](kpss-test.qmd)
+Testing for stationarity (null) against a unit-root alternative
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Moving Averages](moving-averages.qmd)
+Smoothing a time series by averaging over a sliding window
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Phillips-Perron Test](phillips-perron.qmd)
+Non-parametric adjustment of the Dickey-Fuller test for autocorrelation and heteroscedasticity
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Rolling-Origin Cross-Validation](rolling-origin-cv.qmd)
+Time-series-aware cross-validation that respects temporal ordering
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Seasonal ARIMA (SARIMA)](seasonal-arima.qmd)
+ARIMA extended with seasonal autoregressive, moving-average, and differencing terms
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Seasonal Decomposition (STL)](seasonal-decomposition-stl.qmd)
+Loess-based seasonal-trend decomposition robust to outliers
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Spectral Analysis](spectral-analysis.qmd)
+Decomposing a time series into frequency components via periodogram and spectral density
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [State-Space Models](state-space-models.qmd)
+Latent-state time-series framework unifying ARIMA, exponential smoothing, and many others
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Stationarity Tests](stationarity-tests.qmd)
+Testing whether a time series has constant mean and variance over time
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Kalman Filter](kalman-filter.qmd)
+Recursive optimal estimation for linear-Gaussian state-space models
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Ljung-Box Test](ljung-box.qmd)
+Portmanteau test for remaining autocorrelation in residuals across multiple lags
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Time Series: Introduction](time-series-introduction.qmd)
+Trend, seasonality, cyclicality, and noise: the four components of a time series
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [VECM and Cointegration](vecm-cointegration.qmd)
+Vector error correction models for cointegrated series; Johansen trace and eigenvalue tests
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Vector Autoregression (VAR)](multivariate-var.qmd)
+Multivariate time series where each variable depends on lags of all variables
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Wavelet Analysis](wavelet-analysis.qmd)
+Time-frequency decomposition capturing localised periodicities that change over time
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [White Noise Tests](white-noise-tests.qmd)
+Testing a residual series for independence and constant variance
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [X-13ARIMA-SEATS Decomposition](x13-decomposition.qmd)
+The seasonal adjustment tool used by US Census Bureau and statistical agencies
+:::
+
+:::

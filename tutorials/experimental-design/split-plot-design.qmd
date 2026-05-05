@@ -1,0 +1,70 @@
+---
+title: Split-Plot Designs
+date: "2026-04-17"
+description: Designs with hard-to-change and easy-to-change factors
+categories:
+  - Experimental Design
+  - split-plot
+  - mixed-effects
+  - hard-to-change
+---
+
+## Introduction
+
+Split-plot designs arise whenever some experimental factors are hard to change between runs while others are easy to change within a run. Oven temperature, pasture treatment, baking time, batch-level chemical additive, or instrument calibration are typically hard to change — they can be set once per batch but not freely between samples. By contrast, additive level within a batch, fertiliser sub-plot within a paddock, or sample-level annotation can be randomised within the larger group. Restricted randomisation of the hard-to-change factor at the whole-plot level and unrestricted randomisation of the easy-to-change factor within whole plots produces a design with two error strata, each requiring its own appropriate $F$-test denominator. Recognising the split-plot structure rather than ignoring it is essential to valid inference.
+
+## Prerequisites
+
+A working understanding of factorial designs, mixed-effects models with crossed and nested random effects, and the concept of multiple error strata in restricted-randomisation experiments.
+
+## Theory
+
+The standard split-plot model is
+
+$$y_{ijk} = \mu + \alpha_i + \delta_{ij} + \beta_k + (\alpha\beta)_{ik} + \varepsilon_{ijk},$$
+
+with whole-plot effect $\alpha_i$, whole-plot error $\delta_{ij} \sim N(0, \sigma_W^2)$, sub-plot effect $\beta_k$, interaction $(\alpha\beta)_{ik}$, and sub-plot error $\varepsilon_{ijk} \sim N(0, \sigma_S^2)$. The whole-plot factor $\alpha$ is tested against the whole-plot error, while the sub-plot factor $\beta$ and the interaction $\alpha\beta$ are tested against the (typically smaller) sub-plot error. As a result, the sub-plot factor and the interaction usually have more power than the whole-plot factor — a structural asymmetry that should inform which factor is assigned to which stratum.
+
+## Assumptions
+
+Whole-plot errors are independent across whole plots; sub-plot errors are independent within and across whole plots; both error components are Normal with constant variance; the random-effects structure is correctly specified in the analysis.
+
+## R Implementation
+
+```r
+library(lme4); library(lmerTest)
+
+set.seed(2026)
+n_rep <- 2; n_wp <- 3; n_sp <- 4
+df <- expand.grid(rep = 1:n_rep, temp = factor(1:n_wp),
+                  form = factor(1:n_sp))
+df$batch <- interaction(df$rep, df$temp)
+batch_re <- rnorm(nlevels(df$batch), 0, 0.6)[df$batch]
+
+df$y <- 10 + 0.5 * as.numeric(df$temp) + 0.7 * as.numeric(df$form) +
+        batch_re + rnorm(nrow(df), 0, 0.5)
+
+fit <- lmer(y ~ temp * form + (1 | batch), data = df)
+anova(fit)
+```
+
+## Output & Results
+
+`lmer()` with a `(1 | batch)` random effect captures the whole-plot stratum (each batch corresponds to one whole-plot setting of temperature), and the residual captures the sub-plot stratum. `anova()` from `lmerTest` returns $F$-tests with Satterthwaite or Kenward-Roger denominator df, automatically routing each effect against its appropriate stratum.
+
+## Interpretation
+
+A reporting sentence: "The split-plot mixed model showed a significant whole-plot effect of oven temperature ($F_{2, 4} = 5.2$, $p = 0.04$, against batch-level error) and a highly significant sub-plot effect of formulation ($F_{3, 18} = 14.8$, $p < 0.001$, against residual error). The temperature × formulation interaction was non-significant ($F_{6, 18} = 1.1$, $p = 0.40$). Sub-plot effects were tested with substantially more power because the sub-plot error was much smaller than the whole-plot error ($\sigma_S^2 = 0.25$ vs $\sigma_W^2 = 0.36$)." Always identify which stratum each $F$-test uses.
+
+## Practical Tips
+
+- Always match the error term to the effect's level in the design; analysing a split-plot as if it were a CRD treats whole-plot and sub-plot effects with the wrong denominator and inflates or deflates significance for the wrong factor.
+- Mixed-effects models (`lmer` from `lme4`) give correct standard errors and $F$-tests when the random-effect structure is specified correctly; explicit attention to the random-effect formula is the single most common source of split-plot analysis errors.
+- Replicate whole plots whenever possible — whole-plot $F$-tests have very few df otherwise. With three whole-plot levels and a single replicate, the whole-plot test has essentially no power; a second replicate at minimum is recommended.
+- Split-plot structure arises naturally in agricultural field experiments (treatments applied to whole strips, sub-treatments within), manufacturing (batch-level process settings, within-batch additives), and instrumentation studies (calibration once per session, sample-level treatments within session).
+- Strip-plot designs extend the split-plot idea to two hard-to-change factors applied in perpendicular directions; they have three error strata and require correspondingly more careful random-effects specification.
+- Assigning a factor to the whole-plot stratum reduces its detection power; if a factor is scientifically critical, assign it to the sub-plot stratum if possible — even at the cost of some operational inconvenience.
+
+## R Packages Used
+
+`lme4::lmer()` and `lmerTest` for mixed-effects analysis with denominator-df adjustment; `agricolae::design.split()` for canonical split-plot layout construction; `daewr` for textbook companion datasets and analysis helpers; `emmeans` for marginal means and contrasts at each stratum; `nlme::lme()` for an alternative interface with explicit fixed/random specification.

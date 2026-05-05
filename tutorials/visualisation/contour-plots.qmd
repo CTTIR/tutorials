@@ -1,0 +1,77 @@
+---
+title: Contour Plots
+date: "2026-04-17"
+description: Isolines of a 2D scalar field or density
+categories:
+  - Data Visualisation
+  - contour
+  - 2d-density
+  - isolines
+---
+
+## Introduction
+
+A contour plot draws isolines — curves along which a scalar field is constant — over a 2D domain. The same geom serves two related purposes: visualising the joint density of paired observations, where the contours are level sets of a kernel-density estimate, and visualising a deterministic function $z = f(x, y)$, where the contours are mathematical isolines. Both uses share a common visual grammar — peaks, ridges, saddles — and contour plots remain one of the most compact ways to communicate where probability mass concentrates or where a function attains specific values.
+
+## Prerequisites
+
+A working knowledge of `ggplot2`, basic kernel-density estimation in two dimensions, and the convention that closer contour lines indicate steeper gradients.
+
+## Theory
+
+Two distinct workflows feed contour layers in `ggplot2`:
+
+- **Density contours** are computed from raw paired observations via `geom_density_2d()` or `stat_density_2d()`. Internally, a 2D kernel density estimate produces a smoothed surface and `MASS::kde2d()` or `ggplot2`'s built-in estimator returns the level sets.
+- **Functional contours** require a complete grid of $(x, y, z)$ values supplied by the user; `geom_contour()` then computes isolines of `z` exactly. The grid resolution determines smoothness; coarse grids produce jagged contours.
+
+Filled variants — `geom_density_2d_filled()` and `geom_contour_filled()` — render closed bands rather than lines and demand a sequential or diverging colour palette so that ordering is preserved.
+
+## Assumptions
+
+For density contours, the input is a sample large enough that a kernel density is meaningful (at least a few dozen points; ideally hundreds). For functional contours, the grid covers the domain of interest at adequate resolution.
+
+## R Implementation
+
+```r
+library(ggplot2); library(metR)
+
+# Contour of 2D density
+ggplot(faithful, aes(eruptions, waiting)) +
+  geom_point(alpha = 0.3) +
+  geom_density_2d(colour = "#F4A261") +
+  theme_minimal()
+
+# Filled contour
+ggplot(faithful, aes(eruptions, waiting)) +
+  geom_density_2d_filled(alpha = 0.7) +
+  geom_point(alpha = 0.3, size = 0.5, colour = "white") +
+  theme_minimal()
+
+# Function surface: z = sin(x) * cos(y)
+grid <- expand.grid(x = seq(-3, 3, 0.1), y = seq(-3, 3, 0.1))
+grid$z <- sin(grid$x) * cos(grid$y)
+ggplot(grid, aes(x, y, z = z)) +
+  geom_contour_filled() +
+  theme_minimal()
+```
+
+## Output & Results
+
+Three figures: density contours of the Old Faithful eruption / waiting joint distribution showing the two well-known modes, the same density rendered as filled bands with the underlying points overlaid, and a filled-contour view of $z = \sin(x) \cos(y)$ on a $61 \times 61$ grid showing alternating positive and negative regions.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Top: 2D kernel density of eruption duration vs waiting time for Old Faithful (n = 272), with raw observations as background points; the bimodality reflects two distinct eruption regimes. Bottom: deterministic surface $z = \sin(x)\cos(y)$ with filled contours at default levels." Mention the kernel and bandwidth choice when density contours are used, since they shape the visible structure.
+
+## Practical Tips
+
+- For sparse data, density contours can be misleading — the estimator extrapolates into low-mass regions and produces artefactual closed loops. Use `bins = 5` or `bins = 8` for sparse samples; let the default handle dense ones.
+- Always overlay raw points (with low alpha) on density contour plots; the points anchor the contours to actual observations and let readers spot extrapolation.
+- For functional surfaces, increase grid resolution until the contours are visibly smooth; under-resolved grids produce stair-stepped lines.
+- `metR::geom_contour_fill()` and `metR::geom_text_contour()` add labelled contours that read more clearly on filled backgrounds.
+- Use sequential palettes (`viridis`, `magma`) for ordered density and diverging palettes (`RdBu`, `BrBG`) for surfaces that cross zero; qualitative palettes destroy the level ordering and are wrong for filled contours.
+- For published figures with multiple contour layers, label a few key isolines with their level values so readers can read off heights without consulting a separate legend.
+
+## R Packages Used
+
+`ggplot2` for `geom_density_2d()`, `geom_density_2d_filled()`, `geom_contour()`, and `geom_contour_filled()`; `metR` for `geom_contour_fill()` and labelled contours; `MASS::kde2d()` as the underlying kernel density estimator when finer control is needed.

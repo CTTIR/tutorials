@@ -1,0 +1,90 @@
+---
+title: "Worked lme4::lmer Examples"
+date: "2026-04-17"
+description: Common formula patterns for lmer with interpretation of each output block
+categories:
+  - "Regression & Modelling"
+  - lme4
+  - lmer
+  - formula-syntax
+---
+
+## Introduction
+
+`lme4::lmer()` is the standard R implementation of linear mixed-effects models and the de facto reference for the formula syntax used across the broader mixed-models ecosystem (`lmerTest`, `glmmTMB`, `brms`, `nlme`). Mastering the random-effects syntax — what `(1 | group)`, `(x | group)`, `(x || group)`, and nested vs. crossed grouping notation actually mean — is a prerequisite for fluent mixed-models work. The output structure is equally important: each block (fixed effects, random effects, residual variance) carries different inferential weight and must be reported correctly.
+
+## Prerequisites
+
+A working understanding of mixed-effects models, the difference between fixed and random effects, and basic familiarity with `lme4` formula notation.
+
+## Theory
+
+Core random-effects syntax in `lmer()`:
+
+- `(1 | g)`: random intercept per level of $g$.
+- `(x | g)`: random intercept *and* correlated random slope for $x$ within $g$.
+- `(x || g)` or equivalently `(1 | g) + (0 + x | g)`: uncorrelated random intercept and random slope.
+- `(1 | g/h)`: $h$ nested within $g$ (each $h$ value belongs to one $g$).
+- `(1 | g) + (1 | h)`: $g$ and $h$ as crossed random factors.
+- `(0 + x | g)`: random slope without random intercept; rarely scientifically motivated.
+
+The fixed-effects part of the formula (`Reaction ~ Days`) is interpreted as in `lm()`; the random-effects part adds the variance components.
+
+## Assumptions
+
+Linearity in the linear predictor, conditional independence given random effects, multivariate Normal random effects, Normal residuals with constant variance, and independence of residuals from random effects.
+
+## R Implementation
+
+```r
+library(lme4); library(lmerTest)
+
+data(sleepstudy, package = "lme4")
+
+# Random intercept only
+m1 <- lmer(Reaction ~ Days + (1 | Subject), data = sleepstudy)
+
+# Random intercept + correlated slope
+m2 <- lmer(Reaction ~ Days + (Days | Subject), data = sleepstudy)
+
+# Random intercept + uncorrelated slope
+m3 <- lmer(Reaction ~ Days + (1 | Subject) + (0 + Days | Subject),
+           data = sleepstudy)
+
+# Nested example (sleepstudy doesn't have nesting; use simulated)
+set.seed(2026)
+dat <- data.frame(g = gl(5, 20), subj = factor(1:100),
+                  x = rnorm(100), y = rnorm(100))
+m_nest <- lmer(y ~ x + (1 | g/subj), data = dat)
+
+anova(m1, m2, m3)
+summary(m2)
+```
+
+## Output & Results
+
+`summary()` reports four blocks: fixed-effect coefficients with standard errors and (with `lmerTest`) Satterthwaite degrees of freedom and $p$-values; random-effect variance components and correlations between them; residual variance; and overall fit statistics including REML criterion. `anova()` between models compares them via likelihood-ratio tests when fitted with ML.
+
+## Interpretation
+
+Reading `summary(m2)`:
+
+- **Fixed effects**: population-level intercept and slope with standard errors and (with `lmerTest`) $p$-values.
+- **Random effects**: per-subject intercept and slope variances, plus their correlation; the SD entries quantify between-subject heterogeneity.
+- **Residual SD**: within-subject (after partialling out the random effects) error.
+- **Number of obs / groups**: confirms the model is fitting the structure you intended.
+
+A reporting sentence: "A random-intercept-and-slope model gave a population-level reaction-time slope of 10.5 ms per day of sleep deprivation (95 % CI 7.6 to 13.4) with substantial between-subject heterogeneity in slope ($\mathrm{SD} = 5.92$, correlation with random intercept $-0.04$) and residual SD of 25.6 ms." Report variance components alongside fixed effects.
+
+## Practical Tips
+
+- Use `lmerTest` for Satterthwaite or Kenward-Roger degrees of freedom; `lme4` alone returns no $p$-values for fixed effects.
+- For convergence warnings, rescale predictors (`scale()` continuous variables) and check with `allFit()` across multiple optimisers; a stable estimate across optimisers is reassuring.
+- Singular fits (correlation between random effects estimated as $\pm 1$) usually mean the random structure is over-specified for the data; simplify by removing slope-intercept correlations or random slopes.
+- For likelihood-ratio tests of variance components, the null is on the boundary; use the half-half $\chi^2$ mixture or the parametric bootstrap (`pbkrtest::PBmodcomp`) rather than the standard $\chi^2$.
+- For non-Gaussian outcomes, `glmer()` extends the same formula syntax with `family = binomial`, `poisson`, etc.
+- For Bayesian fits with identical formulas, `brms::brm()` is a near drop-in replacement and adds proper credible intervals.
+
+## R Packages Used
+
+`lme4` for `lmer()` and `glmer()`; `lmerTest` for Satterthwaite / Kenward-Roger $p$-values; `pbkrtest` for parametric-bootstrap likelihood-ratio tests; `glmmTMB` for an alternative implementation that handles overdispersed and zero-inflated families; `brms` for Bayesian mixed models with the same formula syntax.

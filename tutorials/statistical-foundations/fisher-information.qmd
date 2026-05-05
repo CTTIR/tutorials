@@ -1,0 +1,102 @@
+---
+title: Fisher Information
+date: "2026-04-17"
+description: "How much the data tell you about a parameter, measured by the curvature of the log-likelihood"
+categories:
+  - Statistical Foundations
+  - fisher-information
+  - score
+  - observed-information
+  - efficiency
+---
+
+## Introduction
+
+Fisher information is a numerical summary of how much information a data sample carries about an unknown parameter. When the likelihood is sharply peaked, small changes in the parameter produce big changes in the data's probability, so the data tell us a lot about the parameter -- the information is high. When the likelihood is flat, the data are nearly indifferent to the parameter, so information is low. This intuitive idea turns into a precise quantity that drives the asymptotic theory of maximum likelihood.
+
+## Prerequisites
+
+The reader should be comfortable with calculus, with the likelihood function, and with the notion of taking an expectation.
+
+## Theory
+
+For a parametric density $f(x \mid \theta)$, the **score function** is the gradient of the log-likelihood for a single observation:
+
+$$U(\theta; x) = \frac{\partial}{\partial \theta} \log f(x \mid \theta).$$
+
+Its expected value under the true parameter is zero; its variance is the **Fisher information**:
+
+$$I(\theta) = \mathrm{Var}[U(\theta; X)] = E\!\left[\left(\frac{\partial \log f}{\partial \theta}\right)^2\right].$$
+
+Under sufficient regularity, this equals the expected negative curvature of the log-likelihood:
+
+$$I(\theta) = -E\!\left[\frac{\partial^2 \log f}{\partial \theta^2}\right].$$
+
+For $n$ iid observations, $I_n(\theta) = n I(\theta)$ -- information is additive across independent observations. The **observed information** replaces the expectation with the empirical curvature at the MLE:
+
+$$\hat{\mathcal{I}}(\hat{\theta}) = -\frac{\partial^2 \ell(\theta)}{\partial \theta \partial \theta^\top}\bigg|_{\theta = \hat{\theta}}.$$
+
+Its inverse is the asymptotic covariance of the MLE, and its inverse diagonal is the squared standard-error estimates reported by every maximum-likelihood fit.
+
+Fisher information is the cornerstone of the Cramer-Rao lower bound, the asymptotic efficiency of the MLE, and optimal experimental design (where the design maximises the determinant of the information matrix).
+
+## Assumptions
+
+The classical definition and the curvature-based identity require smoothness of the log-density in $\theta$ and the ability to interchange differentiation and integration. Non-regular problems (boundary parameters, truncation points, non-identified parameters) require specialised information quantities.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+n <- 200
+x <- rnorm(n, mean = 5, sd = 2)
+
+nll <- function(par) {
+  mu <- par[1]; sigma <- par[2]
+  if (sigma <= 0) return(Inf)
+  -sum(dnorm(x, mean = mu, sd = sigma, log = TRUE))
+}
+
+fit <- optim(c(0, 1), nll, hessian = TRUE, method = "L-BFGS-B",
+             lower = c(-Inf, 1e-6))
+obs_info <- fit$hessian
+obs_info
+
+exp_info <- matrix(c(n / fit$par[2]^2, 0,
+                     0, 2 * n / fit$par[2]^2), 2, 2)
+exp_info
+
+se <- sqrt(diag(solve(obs_info)))
+se
+```
+
+We fit a normal model by ML, extract the observed information from the Hessian, compute the expected information from its closed form, and recover the standard errors by inverting.
+
+## Output & Results
+
+```
+          [,1]       [,2]
+[1,] 48.86      -0.07
+[2,] -0.07      97.74
+
+          [,1]       [,2]
+[1,] 48.93       0.00
+[2,]  0.00      97.87
+
+[1] 0.143 0.101
+```
+
+Observed and expected information agree to within simulation noise. The inverse-information standard errors match what R's `summary.lm()` or `summary.glm()` would report for these parameters.
+
+## Interpretation
+
+Information is what turns data into precision. Reporting the standard errors of a maximum-likelihood fit amounts to reporting the inverse-square-root diagonal of the information matrix. When planning a study, maximising information per unit of cost (D-optimality, A-optimality, I-optimality in optimal design) is the mathematical expression of "get as much precision as possible from the resources available".
+
+## Practical Tips
+
+- For standard errors, use observed information $\hat{\mathcal{I}}(\hat{\theta})$; it is better-behaved than expected information in small samples.
+- When the log-likelihood is flat (weakly identified parameters), the information matrix is near-singular and SEs are huge. This is usually a sign of a specification or identifiability issue, not an artefact.
+- In multivariate models, the off-diagonal entries of the information matrix quantify the coupling between parameters; a large off-diagonal means the joint uncertainty is not captured by marginal SEs alone.
+- Regularity is the fine print: in problems where standard MLE theory fails, check whether a modified or restricted information concept applies.
+- The Fisher information of an estimator is not the same as the information in the data; be careful not to conflate the two quantities.

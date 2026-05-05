@@ -1,0 +1,72 @@
+---
+title: ITT vs Per-Protocol Analysis
+date: "2026-04-17"
+description: Primary analyses under the intent-to-treat and per-protocol principles
+categories:
+  - Clinical Biostatistics
+  - itt
+  - per-protocol
+  - analysis
+---
+
+## Introduction
+
+The **intent-to-treat (ITT)** principle analyses participants according to their randomised assignment, irrespective of actual treatment received or adherence. It estimates the effect of *prescribing* the intervention under real-world conditions. **Per-protocol (PP)** restricts analysis to adherent participants and estimates the effect of *receiving* the intervention -- a different estimand.
+
+## Prerequisites
+
+Randomisation; estimands; missing data.
+
+## Theory
+
+ITT preserves randomisation and tends to be conservative in superiority trials (dilution by non-adherers). PP can exaggerate efficacy or introduce selection bias because adherence is post-randomisation.
+
+**Modified ITT (mITT)** excludes participants who never started or have no post-baseline data; common but can reintroduce bias if exclusion correlates with arm.
+
+**Non-inferiority trials**: PP and ITT are both reported; the more conservative result (less close to margin) drives inference.
+
+## Assumptions
+
+Randomisation is properly concealed; adherence classification is unaffected by knowledge of outcome; missingness mechanism is characterised.
+
+## R Implementation
+
+```r
+set.seed(2026)
+n_per <- 100
+arm <- rep(c("trt", "ctrl"), each = n_per)
+
+# 20 % non-adherence in trt arm; 5 % in ctrl
+adhered <- ifelse(arm == "trt", rbinom(n_per * 2, 1, 0.8),
+                  rbinom(n_per * 2, 1, 0.95))
+adhered[1:n_per] <- rbinom(n_per, 1, 0.8)
+adhered[(n_per+1):(2 * n_per)] <- rbinom(n_per, 1, 0.95)
+
+# True effect when actually received
+true_effect <- ifelse(adhered == 1 & arm == "trt", 0.7, 0)
+y <- rnorm(2 * n_per) + true_effect
+
+# ITT analysis (analyse as randomised)
+itt <- t.test(y ~ arm)
+# Per-protocol analysis (adherers only)
+pp  <- t.test(y[adhered == 1] ~ arm[adhered == 1])
+
+rbind(ITT = c(est = diff(itt$estimate), p = itt$p.value),
+      PP  = c(est = diff(pp $estimate), p = pp $p.value))
+```
+
+## Output & Results
+
+ITT effect is diluted by non-adherence; PP effect recovers the on-treatment effect but is subject to selection bias.
+
+## Interpretation
+
+"The primary ITT analysis estimated a 0.56 point advantage for the intervention (95 % CI 0.28-0.84, p < 0.001); PP analysis gave 0.71 (CI 0.38-1.04). ITT is the primary inference; PP is supportive."
+
+## Practical Tips
+
+- Pre-specify ITT as primary in the SAP; never switch post-hoc.
+- Report a flow diagram (CONSORT) showing how participants were classified.
+- Handle missing outcome data with multiple imputation, not naive exclusion.
+- **Complier-average causal effect (CACE)** via instrumental variables estimates the effect among adherers without PP's selection bias.
+- Non-inferiority trials commonly report both ITT and PP; both must meet the margin.

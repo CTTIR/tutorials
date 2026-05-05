@@ -1,0 +1,67 @@
+---
+title: Wilcoxon Signed-Rank Test
+date: "2026-04-17"
+description: Non-parametric paired-sample test based on signed ranks
+categories:
+  - Inferential Statistics
+  - wilcoxon
+  - signed-rank
+  - paired
+  - non-parametric
+---
+
+## Introduction
+
+The Wilcoxon signed-rank test compares two paired measurements without requiring Normality of their differences. It is the rank-based non-parametric analogue of the paired $t$-test and is the appropriate choice when the paired differences are ordinal, when the difference distribution is skewed or heavy-tailed, or when sample sizes are too small for the parametric test's distributional assumptions to be defensible. The Wilcoxon signed-rank test is widely used in pre-post studies, in within-subject A/B comparisons, in sensory evaluation panels, and in any setting where paired measurements are compared and Normality is in doubt.
+
+## Prerequisites
+
+A working understanding of paired-sample inference, the rank-based testing framework, and the assumption of symmetric distribution of paired differences (rather than Normal or any specific shape).
+
+## Theory
+
+For paired observations $(X_i, Y_i)$, compute differences $D_i = X_i - Y_i$, drop any zero differences, rank the absolute values $|D_i|$, and sum the ranks assigned to positive differences ($W_+$) and to negative differences ($W_-$). Under the null hypothesis that the median of $D$ is zero (assuming the distribution of $D$ is symmetric), $W_+$ and $W_-$ have a known discrete distribution; for large $n$, the standardised statistic is approximately Normal. The rank-biserial correlation $r_{rb} = (W_+ - W_-)/T$, with $T$ the sum of all ranks, provides an effect-size measure on $[-1, 1]$.
+
+If the symmetry assumption fails substantively, the sign test offers a more assumption-light alternative at the cost of reduced power.
+
+## Assumptions
+
+The observations are genuinely paired, the distribution of paired differences is approximately symmetric around the median, and the outcomes are at least ordinal. The test does not assume Normality of the differences — only symmetry — which is its principal advantage over the paired $t$-test.
+
+## R Implementation
+
+```r
+library(effectsize)
+set.seed(2026)
+
+n <- 25
+pre  <- sample(1:7, n, replace = TRUE)
+post <- pre + sample(-1:2, n, replace = TRUE, prob = c(0.1, 0.2, 0.4, 0.3))
+
+wilcox.test(pre, post, paired = TRUE)
+rank_biserial(pre, post, paired = TRUE)
+
+c(median_diff = median(post - pre),
+  IQR_diff    = IQR(post - pre))
+```
+
+## Output & Results
+
+The pre-post comparison on a 7-point ordinal scale gives the Wilcoxon signed-rank statistic $V = 35$ ($p = 0.003$), with a paired rank-biserial correlation of $-0.72$ (95 % CI $-0.90$ to $-0.40$) classed as a large effect. The median paired difference of $+1.0$ (IQR 0 to 1) characterises the central tendency of the change on the original scale, and reporting both the test statistic and the effect-size summary is the standard expected by modern guidelines.
+
+## Interpretation
+
+A reporting sentence: "Scores increased significantly from pre-treatment to post-treatment (Wilcoxon signed-rank $V = 35$, $p = 0.003$); median paired difference was $+1.0$ point on the 7-point scale (IQR 0 to 1, range $-1$ to $+3$), and the paired rank-biserial correlation was $-0.72$ (95 % CI $-0.90$ to $-0.40$), classed as a large effect. The non-parametric test was chosen because the differences were ordinal and a parametric paired $t$-test would not be appropriate." Always report median, IQR, and an effect-size measure.
+
+## Practical Tips
+
+- Report the median and IQR of the paired differences rather than the raw pre/post means; the median is the location parameter that the Wilcoxon signed-rank test inferentially targets, and the means are not directly relevant to the rank-based test.
+- Handle zero differences as R does by default (drop them from the analysis), or use the Pratt convention (include them in the ranking but assign sign zero); the choice can matter for small samples and should be documented.
+- For small $n$ and no ties in the absolute differences, use `exact = TRUE` to obtain exact $p$-values rather than the Normal approximation; the exact distribution is the more accurate inference at small samples.
+- The symmetry-of-differences assumption can be checked informally with a histogram of $D_i$ or a Q-Q plot of $D_i$ against the Normal; if the differences are markedly skewed, the sign test is a more assumption-light alternative.
+- For paired binary outcomes (yes/no observed twice on the same subject), McNemar's test — not the Wilcoxon signed-rank — is the appropriate paired-sample test; conflating the two is a recurring methodological error.
+- The Wilcoxon signed-rank test is sensitive to differences in median location under the symmetry assumption; for general distributional comparisons of paired data, the paired Cliff's delta or a one-sample Kolmogorov-Smirnov test on the differences are more general alternatives.
+
+## R Packages Used
+
+Base R `wilcox.test(paired = TRUE)` for the canonical signed-rank test; `effectsize::rank_biserial()` for the paired rank-biserial correlation effect size; `coin::wilcoxsign_test()` for permutation-based exact $p$-values; `rcompanion::wilcoxonPairedR()` for an alternative effect-size implementation; `BSDA::SIGN.test()` for the more assumption-light sign-test alternative.

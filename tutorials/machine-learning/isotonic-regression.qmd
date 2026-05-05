@@ -1,0 +1,75 @@
+---
+title: Isotonic Regression Calibration
+date: "2026-04-17"
+description: Non-parametric monotone calibration via pool-adjacent-violators
+categories:
+  - Machine Learning
+  - isotonic
+  - calibration
+  - monotone
+---
+
+## Introduction
+
+Isotonic regression fits a monotone non-decreasing step function from classifier scores to observed probabilities. It is the non-parametric counterpart to Platt scaling: more flexible (no sigmoid assumption required) but requiring more validation data and more prone to over-fitting. It is the standard post-hoc calibration method for tree-ensemble classifiers (random forest, gradient boosting), whose mis-calibration patterns are often non-sigmoidal.
+
+## Prerequisites
+
+A working understanding of calibration plots, the pool-adjacent-violators (PAV) algorithm, and Platt scaling as the parametric alternative.
+
+## Theory
+
+Given sorted score-label pairs $(f_i, y_i)$, isotonic regression finds the non-decreasing step function $\hat g$ minimising $\sum_i (y_i - \hat g(f_i))^2$. The pool-adjacent-violators algorithm solves this in $O(n)$ time: it walks through the sorted scores, pooling adjacent observations into single steps whenever monotonicity is violated, until the result is non-decreasing.
+
+The fitted step function maps any future score to the observed probability rate within the matching score range from the validation set. The non-parametric flexibility allows fitting any monotone calibration curve, but at the cost of statistical efficiency relative to Platt's two-parameter sigmoid.
+
+## Assumptions
+
+The mis-calibration is monotone (almost always the case for well-trained classifiers); enough validation data to estimate the step function without over-fitting (rule of thumb: at least 500 examples).
+
+## R Implementation
+
+```r
+set.seed(2026)
+n <- 1000
+y <- rbinom(n, 1, 0.3)
+f <- 2 * y + rnorm(n, 0, 1.2)
+
+val_idx <- 1:500
+te_idx  <- 501:1000
+
+# Isotonic regression on validation; apply to test
+iso <- isoreg(f[val_idx], y[val_idx])
+iso_fn <- stepfun(sort(f[val_idx]), c(0, iso$yf))
+iso_p  <- iso_fn(f[te_idx])
+iso_p  <- pmin(pmax(iso_p, 0), 1)
+
+naive_p <- plogis(f[te_idx])
+platt   <- glm(y[val_idx] ~ f[val_idx], family = "binomial")
+platt_p <- plogis(coef(platt)[1] + coef(platt)[2] * f[te_idx])
+
+c(naive = mean((naive_p - y[te_idx])^2),
+  platt = mean((platt_p - y[te_idx])^2),
+  isotonic = mean((iso_p  - y[te_idx])^2))
+```
+
+## Output & Results
+
+Brier scores for the three methods: naive sigmoid (no calibration), Platt scaling (parametric sigmoid), and isotonic regression (non-parametric step function). Isotonic typically wins when the underlying calibration curve is non-sigmoidal.
+
+## Interpretation
+
+A reporting sentence: "Isotonic regression on the held-out test set produced the lowest Brier score (0.168) compared with Platt scaling (0.181) and the naive sigmoid (0.213); isotonic captured a non-sigmoidal calibration curve that the parametric sigmoid could not. ROC AUC was unchanged across all three methods because the rescaling preserves rank." Always compare both calibration methods and report Brier score plus a reliability diagram.
+
+## Practical Tips
+
+- Isotonic regression needs more validation data than Platt scaling (rule of thumb: at least 500 examples; for very imbalanced data, more for the minority class).
+- Prone to over-fit when the validation set is small; the step function can track validation-specific noise, especially in the tails. Cross-validate the calibration step itself for small validation sets.
+- For tree-ensemble classifiers (random forest, GBM, XGBoost), isotonic regression is usually preferred over Platt; their mis-calibration is rarely sigmoidal.
+- For SVMs, Platt scaling is usually sufficient; the SVM decision-value distribution is closer to logistic.
+- Step-function output produces piecewise-constant probabilities, which can look strange in sensitive applications; spline-smoothed isotonic exists but is rarely implemented in production.
+- Always pair calibration with a reliability diagram (`probably::cal_plot`, `gbm::calibrate.plot`) showing pre- and post-calibration curves; verify visually that the calibration improved.
+
+## R Packages Used
+
+Base R `isoreg()` for the canonical PAV-based isotonic regression; `caret::calibrate()` and `probably::cal_estimate_isotonic()` for integrated tidymodels-style calibration; `betacal` for the parametric Beta calibration alternative; `mlr3calibration` for calibration extensions in mlr3.

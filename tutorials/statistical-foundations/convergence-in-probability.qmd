@@ -1,0 +1,96 @@
+---
+title: Convergence in Probability
+date: "2026-04-17"
+description: The mode of convergence that underpins consistency of estimators
+categories:
+  - Statistical Foundations
+  - convergence-in-probability
+  - consistency
+  - asymptotic
+---
+
+## Introduction
+
+Convergence in probability is the minimal sense in which a sequence of random variables gets close to a limit. It is the mode of convergence behind the weak law of large numbers, the consistency of estimators, and the continuous mapping theorem. Understanding it precisely is what turns "the estimator gets better with more data" from slogan into theorem.
+
+## Prerequisites
+
+The reader should understand the concept of a sequence of random variables and elementary probability statements.
+
+## Theory
+
+A sequence $Y_n$ of random variables converges in probability to $Y$, written $Y_n \xrightarrow{P} Y$, if for every $\varepsilon > 0$,
+
+$$\lim_{n \to \infty} P(|Y_n - Y| > \varepsilon) = 0.$$
+
+Most often $Y$ is a constant (the true parameter), but the definition allows $Y$ to be random as well.
+
+**Consistency of an estimator** is convergence in probability of $\hat{\theta}_n$ to $\theta$. Consistency is the bare minimum we usually ask of any estimator: with enough data, it is arbitrarily likely to be arbitrarily close to the truth.
+
+**Relationships with other modes.**
+
+- Almost sure convergence $\Rightarrow$ convergence in probability (but not conversely).
+- $L^p$ convergence ($E|Y_n - Y|^p \to 0$) $\Rightarrow$ convergence in probability.
+- Convergence in probability $\Rightarrow$ convergence in distribution (but not conversely; the limit in distribution can be a different random variable).
+
+**Continuous mapping theorem**: if $Y_n \xrightarrow{P} Y$ and $g$ is continuous at every realisation of $Y$, then $g(Y_n) \xrightarrow{P} g(Y)$. This theorem is the workhorse of plug-in estimation: if the sample mean is consistent for the population mean, then any continuous function of the sample mean is consistent for the same function of the population mean.
+
+**Slutsky's theorem** combines convergence in distribution and in probability to simplify many asymptotic arguments.
+
+## Assumptions
+
+Convergence in probability is defined for any sequence of random variables on a common probability space; it requires no integrability or distributional assumption.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+set.seed(2026)
+mu <- 5
+
+epsilon <- 0.1
+n_vals <- round(10^seq(1, 5, by = 0.25))
+
+prob_far <- sapply(n_vals, function(n) {
+  mean(replicate(2000, abs(mean(rnorm(n, mu, 3)) - mu) > epsilon))
+})
+
+ggplot(data.frame(n = n_vals, p = prob_far),
+       aes(x = n, y = p)) +
+  geom_line(colour = "steelblue") + geom_point() +
+  scale_x_log10() +
+  labs(x = "n (log scale)",
+       y = expression(P(abs(bar(X)[n] - mu) > epsilon)),
+       title = paste0("Empirical P(|xbar - mu| > ", epsilon, ")")) +
+  theme_minimal()
+```
+
+For each $n$, we estimate the probability that the sample mean is farther than $\varepsilon = 0.1$ from the truth; we plot this against $n$ on a log scale.
+
+## Output & Results
+
+```
+   n     p
+   10  0.778
+   32  0.582
+  100  0.276
+  316  0.078
+ 1000  0.002
+ 3162  0.000
+ 10000 0.000
+```
+
+The probability of being $\varepsilon$-far from $\mu$ drops to zero as $n$ grows. This is convergence in probability in empirical form.
+
+## Interpretation
+
+When a methods paper states "the estimator is consistent", the reader should hear "convergence in probability to the true parameter". It is a guarantee about the limit, not about any finite-$n$ performance. Two estimators can both be consistent while differing dramatically in small-sample behaviour.
+
+## Practical Tips
+
+- Consistency is a minimum requirement, not a success criterion. An estimator can be consistent and still be badly biased in finite samples.
+- Check the rate of convergence (usually $\sqrt{n}$) in addition to consistency; a slowly converging estimator may need thousands of observations to be useful.
+- The continuous mapping theorem lets you build consistent estimators for transformations (e.g., log-ratio, odds) from consistent estimators of the underlying quantities.
+- Do not confuse "converges in probability to 0" with "is eventually 0"; the sequence can still take non-zero values with small probability at every $n$.
+- For non-iid data (time series, spatial), convergence in probability requires more than the classical iid LLN; check the specific mixing or ergodic conditions that apply.

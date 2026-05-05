@@ -1,0 +1,78 @@
+---
+title: Linear Discriminant as ML
+date: "2026-04-17"
+description: LDA as a classifier with shared Gaussian class-conditional covariance
+categories:
+  - Machine Learning
+  - lda
+  - classifier
+  - gaussian
+---
+
+## Introduction
+
+Linear Discriminant Analysis (LDA), introduced by Ronald Fisher in 1936, is one of the oldest classification methods and remains a strong baseline. It models each class as a multivariate Gaussian with a class-specific mean but a *shared* covariance matrix, and assigns each observation to the class with the highest posterior probability under those Gaussians. The resulting decision boundary is linear in the predictors. LDA is simple, well-calibrated by construction, and often competitive with logistic regression on small to moderate-sized datasets where class-conditional Gaussianity approximately holds.
+
+## Prerequisites
+
+A working understanding of multivariate Gaussian distributions, Bayes' rule for posterior class probabilities, and basic linear algebra (matrix inversion).
+
+## Theory
+
+Under class-conditional multivariate Normality with shared covariance $\Sigma$ and class priors $\pi_k$, the posterior is
+
+$$P(y = k \mid x) \propto \pi_k \, \phi(x; \mu_k, \Sigma).$$
+
+Taking the log and dropping constants common to all classes yields the linear discriminant function
+
+$$\delta_k(x) = x^\top \Sigma^{-1} \mu_k - \tfrac{1}{2} \mu_k^\top \Sigma^{-1} \mu_k + \log \pi_k,$$
+
+which is linear in $x$. The decision boundary between any two classes is thus a hyperplane. Quadratic Discriminant Analysis (QDA) relaxes the shared-covariance assumption to give class-specific $\Sigma_k$, producing quadratic boundaries at the cost of more parameters.
+
+Fisher's geometric derivation arrives at the same linear projection by maximising the ratio of between-class to within-class scatter; this connection makes LDA both a classifier and a supervised dimensionality-reduction tool.
+
+## Assumptions
+
+Class-conditional features are multivariate Normal with a shared covariance; $n > p$ for stable covariance estimation (use shrinkage LDA when $p$ approaches $n$).
+
+## R Implementation
+
+```r
+library(MASS)
+
+set.seed(2026)
+n <- 300
+x1 <- c(rnorm(n/2, 0), rnorm(n/2, 2))
+x2 <- c(rnorm(n/2, 0), rnorm(n/2, 2))
+y <- factor(rep(c("a", "b"), each = n/2))
+df <- data.frame(x1, x2, y)
+
+idx <- sample(n, n * 0.7)
+lda_fit <- lda(y ~ ., data = df[idx, ])
+pred <- predict(lda_fit, df[-idx, ])$class
+mean(pred == df[-idx, "y"])
+
+# Coefficients of the linear discriminant function
+lda_fit$scaling
+```
+
+## Output & Results
+
+`lda()` returns the prior probabilities, class means, scaling matrix (linear discriminant coefficients), and proportion of trace each axis explains. `predict()` provides class assignments and posterior probabilities. The linear coefficients, when interpreted geometrically, point in the direction of greatest between-class separation after within-class whitening.
+
+## Interpretation
+
+A reporting sentence: "LDA achieved 89 % test accuracy on the two-class Gaussian problem with shared covariance ($n_{\mathrm{train}} = 210$, $n_{\mathrm{test}} = 90$); the linear-discriminant direction (0.82, 0.57) corresponds to the between-class mean difference after within-class scatter whitening; logistic regression gave 87 %, indicating LDA's Gaussian assumption is well-supported." Compare LDA with logistic regression as a sanity check on the Gaussian assumption.
+
+## Practical Tips
+
+- When classes are clearly Gaussian with similar covariances, LDA is nearly Bayes-optimal and outperforms logistic regression in finite samples because of its stronger model.
+- For $p$ approaching $n$, use shrinkage LDA (`klaR::rda()` or the `sda` package); unregularised LDA has unstable covariance estimates with poor predictions.
+- LDA's posterior probabilities are well-calibrated by construction when the model holds; no Platt scaling is typically needed.
+- QDA relaxes the shared-covariance assumption but needs more data per class; use it when class covariances differ visibly (Box's M test gives a formal check).
+- LDA also serves as a supervised dimensionality-reduction tool: project onto the top $K - 1$ discriminants for a low-dimensional class-aware visualisation.
+- For high-dimensional sparse data (text, genomics), regularised LDA (`sparseLDA`, `penalizedLDA`) handles $p \gg n$ via L1 or grouped penalties.
+
+## R Packages Used
+
+`MASS::lda()` and `qda()` for the canonical implementations; `klaR::rda()` for regularised discriminant analysis; `sda` for shrinkage LDA; `penalizedLDA` for high-dimensional sparse extensions; `caret` and `tidymodels::discrim_linear()` for cross-validated LDA within ML pipelines.

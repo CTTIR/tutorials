@@ -1,0 +1,74 @@
+---
+title: Power for Logistic Regression
+date: "2026-04-17"
+description: "Sample size for logistic regression: events per variable, odds-ratio detection, and simulation"
+categories:
+  - "Sample Size & Power"
+  - power
+  - logistic-regression
+  - odds-ratio
+  - epv
+---
+
+## Introduction
+
+Power analysis for logistic regression is less standardised than for linear models. Three approaches: (1) events-per-variable rule of thumb, (2) closed-form formulas for a single predictor, (3) simulation for complex models.
+
+## Prerequisites
+
+Logistic regression, odds ratio, events-per-variable (EPV).
+
+## Theory
+
+**EPV rule** (Peduzzi et al.): at least 10 events per predictor coefficient is a working minimum. Harrell's 20 EPV is safer.
+
+**Single-predictor formula** (Demidenko 2007) uses $\log(OR)$ and the baseline event rate:
+
+$$n = \frac{(z_{1-\alpha/2} + z_{1-\beta})^2}{p_0(1 - p_0) \log^2(OR) \cdot \sigma_X^2 / \pi(1 - \pi)},$$
+
+with simplifications for dichotomous $X$.
+
+**Simulation**: specify the full data-generating process, fit the intended model, compute power across many replicates. More reliable than formulas for multiple predictors.
+
+## Assumptions
+
+- Binary outcome.
+- Logit-linear predictors.
+- Sufficient separation of groups.
+
+## R Implementation
+
+```r
+library(WebPower)
+
+# Single dichotomous predictor: baseline event rate p0 = 0.2, OR = 1.5
+wp.logistic(n = NULL, p0 = 0.2, p1 = 0.2 * 1.5 / (1 + 0.2 * (1.5 - 1)),
+            alpha = 0.05, power = 0.80,
+            family = "Bernoulli", parameter = NULL, alternative = "two.sided")
+
+# Continuous predictor: detect OR = 1.5 per 1-SD increase
+wp.logistic(n = NULL, p0 = 0.2, p1 = 0.2,
+            alpha = 0.05, power = 0.80,
+            family = "normal",
+            alternative = "two.sided",
+            parameter = log(1.5))
+
+# EPV rule: 15 predictors, min events = 10*15 = 150
+# If baseline event rate is 0.20: n = 150 / 0.20 = 750
+```
+
+## Output & Results
+
+Detecting a modest OR of 1.5 typically requires hundreds of observations; continuous predictors need somewhat less $n$ than dichotomous, given comparable effect magnitude.
+
+## Interpretation
+
+"To detect an OR of 1.5 per unit of the standardised predictor at 80 % power and two-sided $\alpha = 0.05$, 250 participants are required (assuming 20 % baseline event rate)."
+
+## Practical Tips
+
+- Prefer simulation over formulas when predictors are correlated or the model is complex.
+- Rare-event outcomes dramatically inflate required $n$; power is approximately symmetric around $p_0 = 0.5$.
+- For ordinal or multinomial logistic, scale up by roughly $k - 1$ (number of contrasts).
+- Penalised logistic (ridge, Firth) handles small samples with separation.
+- Missing data and measurement error further increase required $n$.

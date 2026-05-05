@@ -1,0 +1,69 @@
+---
+title: Variant Annotation with VEP
+date: "2026-04-17"
+description: Predicting functional consequences of variants using Ensembl VEP
+categories:
+  - Bioinformatics
+  - VEP
+  - annotation
+  - consequence
+---
+
+## Introduction
+
+Ensembl's Variant Effect Predictor (VEP) assigns each variant a predicted consequence (missense, synonymous, splice-donor, intronic, etc.), gene and transcript IDs, and pathogenicity scores from predictors (SIFT, PolyPhen, CADD, REVEL). It is the standard annotator for variant interpretation in clinical genetics and population genomics.
+
+## Prerequisites
+
+VCF file; Ensembl or RefSeq transcript database.
+
+## Theory
+
+VEP traverses each variant, intersects it with transcript structures, and emits one record per overlapping transcript with the predicted functional consequence. Gene-level summaries pick the most severe consequence across transcripts (MANE-select or canonical transcript is standard for clinical use).
+
+## Assumptions
+
+Reference build matches the VCF (GRCh37 vs GRCh38); transcript database is current.
+
+## R Implementation
+
+VEP runs on the command line (Perl). For programmatic annotation in R, use `VariantAnnotation::locateVariants()` against a `TxDb` plus `predictCoding()` for protein consequences.
+
+```r
+library(VariantAnnotation)
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+library(BSgenome.Hsapiens.UCSC.hg19)
+
+vcf_file <- system.file("extdata", "chr22.vcf.gz", package = "VariantAnnotation")
+vcf <- readVcf(vcf_file, "hg19")
+seqlevelsStyle(vcf) <- "UCSC"
+
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+loc  <- locateVariants(rowRanges(vcf), txdb, CodingVariants())
+table(loc$LOCATION)
+
+pc <- predictCoding(vcf, txdb, Hsapiens)
+head(mcols(pc)[, c("CONSEQUENCE", "REFAA", "VARAA")])
+```
+
+A representative VEP command (not run here):
+
+```
+vep -i input.vcf -o output.vcf --cache --sift p --polyphen p --canonical
+```
+
+## Output & Results
+
+Per-variant, per-transcript annotation with consequence (missense_variant, synonymous_variant, etc.) and amino-acid substitution information.
+
+## Interpretation
+
+"VEP annotation identified 12 missense variants predicted deleterious by SIFT and PolyPhen; one nonsense variant in BRCA1 was classified as likely pathogenic."
+
+## Practical Tips
+
+- Always check assembly/transcript version match between caller and annotator.
+- For clinical work, use VEP's `--pick` or `--flag_pick_allele_gene` to obtain a single canonical annotation per variant.
+- Add pathogenicity plugins (CADD, REVEL, SpliceAI) for deleteriousness prediction.
+- `ANNOVAR` is a competing annotator with a different gene-model approach; results can differ at splice boundaries.
+- For batch annotation of millions of variants, VEP's offline cache mode is essential; REST/web queries do not scale.

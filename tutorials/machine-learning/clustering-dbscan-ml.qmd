@@ -1,0 +1,78 @@
+---
+title: DBSCAN as an ML Tool
+date: "2026-04-17"
+description: Density-based clustering and outlier detection in one step
+categories:
+  - Machine Learning
+  - dbscan
+  - clustering
+  - anomaly-detection
+---
+
+## Introduction
+
+DBSCAN (Density-Based Spatial Clustering of Applications with Noise) groups points that are densely packed together and flags isolated points as noise. Unlike $k$-means it does not require specifying the number of clusters, handles non-convex cluster shapes, and produces an outlier-detection signal as a side effect — every point flagged as noise is a candidate anomaly. For machine-learning workflows where natural cluster discovery and outlier flagging are both useful, DBSCAN is the right starting point.
+
+## Prerequisites
+
+A working understanding of distance metrics, density-based reasoning, and the limitations of partitioning algorithms ($k$-means) for non-convex cluster shapes.
+
+## Theory
+
+DBSCAN has two hyperparameters: `eps` (the neighbourhood radius) and `minPts` (the minimum number of points required for a dense region). Three categories of point emerge from the algorithm:
+
+- **Core point**: at least `minPts` neighbours within `eps`.
+- **Border point**: within `eps` of a core point but not itself a core point.
+- **Noise point**: neither core nor border.
+
+Clusters are formed as maximally connected sets of core points (with their associated border points). Choosing `eps` is the practical challenge; the standard heuristic is the $k$-distance plot, which shows the distance to the $k$-th nearest neighbour for each point sorted ascending — a knee in the curve marks a sensible `eps`.
+
+## Assumptions
+
+Cluster density is roughly uniform; the chosen `eps` matches the natural scale of the data; Euclidean distance is meaningful (or another distance has been substituted).
+
+## R Implementation
+
+```r
+library(dbscan)
+
+set.seed(2026)
+n <- 200
+x1 <- c(rnorm(n/2, -2, 0.3), rnorm(n/2, 2, 0.3))
+x2 <- c(rnorm(n/2, -2, 0.3), rnorm(n/2, 2, 0.3))
+outliers_x1 <- runif(10, -4, 4)
+outliers_x2 <- runif(10, -4, 4)
+df <- data.frame(x1 = c(x1, outliers_x1),
+                 x2 = c(x2, outliers_x2))
+
+# Choose eps via the k-distance plot knee
+kNNdistplot(df, k = 5); abline(h = 0.5, lty = 2, col = "red")
+
+db <- dbscan(df, eps = 0.5, minPts = 5)
+table(cluster = db$cluster)
+
+plot(df, col = db$cluster + 1, pch = 16, asp = 1,
+     main = "DBSCAN clustering (cluster 0 = noise)",
+     xlab = "x1", ylab = "x2")
+```
+
+## Output & Results
+
+`dbscan()` returns a vector of cluster labels with `0` indicating noise. The $k$-distance plot guides `eps` selection; the cluster scatter shows densely-packed groups separated by noise points.
+
+## Interpretation
+
+A reporting sentence: "DBSCAN with `eps = 0.5` and `minPts = 5` recovered the two natural clusters injected in the simulation (96 of 100 cluster-1 points and 98 of 100 cluster-2 points correctly assigned) and flagged 10 of the 10 injected outliers as noise (cluster 0); the remaining noise calls were 6 boundary points where the local density is genuinely lower." Always state `eps`, `minPts`, and the noise count.
+
+## Practical Tips
+
+- Set `eps` via the $k$-distance plot's knee; it is the most sensitive hyperparameter and a poor choice fails the algorithm completely.
+- `minPts = 2 \times d$ (dimensions) is a sensible starting heuristic; inspect cluster counts and adjust if they are unreasonably few or many.
+- For varying-density clusters, switch to HDBSCAN (`dbscan::hdbscan`); it adapts the density threshold per region and is more robust.
+- Use the noise label (`cluster == 0`) as a built-in outlier detector; for anomaly-detection tasks, this is often the simplest and most interpretable approach.
+- Scale features before clustering (`scale()` or `recipes::step_normalize()`); DBSCAN's Euclidean distance is sensitive to feature scales.
+- For high-dimensional data, distance concentration weakens DBSCAN; reduce dimensionality with PCA or UMAP first.
+
+## R Packages Used
+
+`dbscan` for `dbscan()`, `hdbscan()`, `optics()`, and the $k$-distance heuristic; `fpc::dbscan()` for an alternative implementation; `cluster` for related clustering algorithms; `factoextra::fviz_cluster()` for ggplot-style visualisation of DBSCAN output.

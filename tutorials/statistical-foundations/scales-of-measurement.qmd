@@ -1,0 +1,80 @@
+---
+title: Scales of Measurement
+date: "2026-04-17"
+description: "Nominal, ordinal, interval, and ratio scales, and which statistics each legitimately supports"
+categories:
+  - Statistical Foundations
+  - scales
+  - measurement
+  - nominal
+  - ordinal
+  - interval
+  - ratio
+---
+
+## Introduction
+
+Every variable in a dataset carries a scale of measurement, and the scale dictates which statistics are meaningful to compute. Stevens' 1946 taxonomy -- nominal, ordinal, interval, ratio -- remains the default vocabulary for this idea, and even when its strict version is criticised, the underlying distinctions are unavoidable in applied work. Computing a mean of jersey numbers is nonsense because jersey numbers are nominal; computing a median of exam grades is sensible because grades are at least ordinal.
+
+## Prerequisites
+
+A reader should know what a variable is and should be able to tell numeric data from categorical data in R (as `numeric` vs. `factor` or `character`).
+
+## Theory
+
+- **Nominal**: labels without order. Operations: equality. Examples: sex, blood type, country. Meaningful summaries: mode, frequency counts.
+- **Ordinal**: ordered labels without meaningful distances. Operations: $=$, $<$, $>$. Examples: Likert scale, disease stage (I--IV), pain rating. Meaningful summaries: median, quantiles, rank correlations.
+- **Interval**: ordered, with meaningful distances but no true zero. Operations: $+$, $-$. Examples: temperature in Celsius, calendar dates. Ratios are *not* meaningful: 40 °C is not "twice as hot" as 20 °C.
+- **Ratio**: interval with a true zero. Operations: $\times$, $/$. Examples: mass, concentration, time elapsed, counts. Ratios are meaningful: 40 kg is twice 20 kg.
+
+The scale determines permissible summary statistics and inferential procedures. A Pearson correlation requires interval or ratio data; a Spearman correlation extends to ordinal. A t-test operates on (at minimum) interval data, though in practice it is widely applied to Likert-like composites with reasonable robustness.
+
+## Assumptions
+
+The taxonomy itself is descriptive rather than inferential; its use rests on the assumption that the chosen scale accurately characterises the variable. In practice, many variables sit ambiguously -- is a 5-point Likert item ordinal or interval? Standard practice treats Likert *composite scales* (averages of many items) as interval and *single items* as ordinal.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+df <- data.frame(
+  id      = 1:8,
+  country = factor(c("DE", "US", "FR", "DE", "US", "FR", "DE", "US")),
+  stage   = factor(c("I", "II", "III", "II", "IV", "I", "III", "II"),
+                   levels = c("I", "II", "III", "IV"), ordered = TRUE),
+  temp_c  = c(36.5, 37.1, 38.2, 36.9, 37.4, 36.7, 38.0, 37.2),
+  mass_kg = c(72.1, 81.3, 65.8, 74.2, 88.7, 61.4, 79.0, 84.5)
+)
+
+table(df$country)
+median(as.numeric(df$stage))
+mean(df$temp_c)
+mean(df$mass_kg); df$mass_kg[1] / df$mass_kg[3]
+```
+
+Nominal `country` is summarised by frequencies; ordinal `stage` by the median (the raw factor must be coerced to numeric for the median call); interval `temp_c` by the mean; ratio `mass_kg` by the mean and by ratios.
+
+## Output & Results
+
+```
+DE FR US 
+ 3  2  3 
+
+[1] 2      # median stage (II)
+[1] 37.25  # mean temperature in C
+[1] 75.875 # mean mass in kg
+[1] 1.096  # mass ratio is meaningful for ratio data
+```
+
+## Interpretation
+
+A paper's methods section should list each variable and its scale, because the scale justifies the summary statistic shown in the descriptive-statistics table. "Disease stage (ordinal) is summarised by the median (IQR); body mass (ratio) by the mean (SD)." This prevents a reader from being surprised by, say, a mean of a four-level ordinal variable dressed up as a continuous measurement.
+
+## Practical Tips
+
+- Encode ordinal variables in R as `factor(..., ordered = TRUE)` so that methods that respect ordering (proportional-odds models, Spearman correlation) pick up the order automatically.
+- Resist the urge to compute means of ordinal variables for reporting; a mean of disease stages is uninterpretable even when it produces a number.
+- Do not confuse a *count* (ratio) with a *code* (nominal): "category = 3" is nominal even though stored as an integer.
+- Be careful with variables that look ratio but are not: pH is actually a logarithmic transformation of concentration, so differences on the pH scale correspond to ratios of hydrogen-ion concentration.
+- When a variable's scale is ambiguous (Likert items), pre-register your analytical choice -- ordinal or interval -- so reviewers cannot object after the fact.

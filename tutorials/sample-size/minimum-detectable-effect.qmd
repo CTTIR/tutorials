@@ -1,0 +1,66 @@
+---
+title: Minimum Detectable Effect
+date: "2026-04-17"
+description: Solving for the smallest effect that can be detected at a given sample size and power
+categories:
+  - "Sample Size & Power"
+  - mde
+  - detectable-effect
+  - power-analysis
+---
+
+## Introduction
+
+When the sample size for a study is constrained by budget, time, or availability of participants, the natural planning question is no longer "what $n$ achieves target power?" but instead "given my fixed $n$, what is the smallest effect I can reasonably hope to detect?" The minimum detectable effect (MDE) reverses the usual sample-size calculation, solving for the effect size at which power equals the target — typically 80 % — given the fixed $n$, $\alpha$, and analysis. Reporting an MDE is increasingly required for grant applications with constrained sample sizes, for pilot and exploratory studies, and for honest power-analysis reporting where a study cannot afford to enrol enough participants for the original target.
+
+## Prerequisites
+
+A working understanding of statistical power, the relationship between $\alpha$, effect size, sample size, and power, and the standard test-specific effect-size measures (Cohen's $d$, $r$, $f^2$, $w$).
+
+## Theory
+
+Power, effect size, significance level, and sample size are linked by the non-central distribution of the test statistic, and solving for any one of these quantities given the other three is the standard inversion in any power-analysis framework. The MDE is defined as the effect size at which the planned test achieves a specified power (usually 0.80) under the planned $\alpha$ and the available sample size. Plotted as a curve of MDE vs. $n$, this gives a clear picture of the design's sensitivity across resource scenarios.
+
+## Assumptions
+
+The same assumptions as the underlying test apply (Normality for $t$-tests, bivariate Normality for correlation, large expected counts for chi-squared, etc.); the MDE is a property of the planned analysis under the design, not a property of the observed data after the fact.
+
+## R Implementation
+
+```r
+library(pwr)
+
+pwr.t.test(n = 40, sig.level = 0.05, power = 0.80,
+           type = "two.sample", d = NULL)
+
+pwr.r.test(n = 100, sig.level = 0.05, power = 0.80)
+
+n_grid <- seq(10, 200, by = 5)
+d_grid <- sapply(n_grid, function(n)
+  pwr.t.test(n = n, sig.level = 0.05, power = 0.80, type = "two.sample")$d)
+
+plot(n_grid, d_grid, type = "l", lwd = 2, col = "#2A9D8F",
+     xlab = "n per group", ylab = "MDE (Cohen's d)",
+     main = "Minimum detectable effect at power = 0.80")
+```
+
+## Output & Results
+
+For a two-sample $t$-test with $n = 40$ per group, the MDE at 80 % power is $d = 0.64$ (medium-to-large); doubling to $n = 200$ per group reduces the MDE to $d = 0.28$ (small-to-medium). For a correlation test with $n = 100$, the MDE is $r = 0.28$. Plotting the MDE-vs-$n$ curve shows the diminishing-returns relationship that planners should understand when negotiating sample-size constraints.
+
+## Interpretation
+
+A reporting sentence: "With the available sample of 40 participants per arm, the minimum detectable standardised effect (Cohen's $d$) at 80 % power and two-sided $\alpha = 0.05$ is 0.64 — a medium-to-large effect by Cohen's conventions. Effects smaller than this magnitude would likely remain undetected. The smallest clinically meaningful effect for the primary outcome is $d = 0.40$, so the planned study is underpowered for the clinical target; we report the MDE explicitly to clarify the inferential limits and propose a larger follow-up trial." Always discuss MDE relative to the clinically meaningful effect.
+
+## Practical Tips
+
+- Report the minimum detectable effect explicitly when sample size is constrained; this prevents inflated claims of null effects ("no significant difference") when the study was simply too small to detect a clinically meaningful effect, a recurring problem in the literature.
+- Couple MDE reporting with explicit discussion of whether the MDE is clinically or scientifically meaningful; an MDE that exceeds the smallest meaningful effect tells readers the study could not have detected the truth even if it were present.
+- For exploratory pilot studies, report MDE in place of formal hypothesis testing; pilot studies are not powered for inference and the MDE conveys the design's sensitivity honestly.
+- MDE inflates rapidly for sub-group analyses (smaller $n$ per cell), cluster-adjusted analyses (larger effective standard errors), repeated-measures designs with low correlation, and any setting where the effective sample size is reduced from the nominal $n$. Account for these factors in the MDE calculation, not just the headline figure.
+- Simulation-based MDE estimation is recommended for complex designs (mixed-effects models, longitudinal data with informative dropout, generalised linear models with heavy-tailed outcomes) where the standard non-central-distribution formulas do not apply directly.
+- Pre-register the MDE in the protocol or analysis plan; reporting MDE only after the fact when results turn out non-significant is methodologically suspect, while a pre-registered MDE protects against that interpretation.
+
+## R Packages Used
+
+`pwr` family of functions with the effect-size argument set to `NULL` to solve for MDE; `pwrss` for extended MDE calculations across many test types; `WebPower` for an alternative interface; `simr::powerSim()` for simulation-based MDE in mixed-effects designs; `Superpower` for ANOVA-based MDE simulations.

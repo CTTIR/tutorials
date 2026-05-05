@@ -85,15 +85,3 @@ Epsilon-squared $\varepsilon^2 = H / ((n^2 - 1) / (n + 1))$. Thresholds (adapted
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 0072383ebcca4dc29bd9ac0cda1af94c -->
-<img src="https://vg09.met.vgwort.de/na/0072383ebcca4dc29bd9ac0cda1af94c"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

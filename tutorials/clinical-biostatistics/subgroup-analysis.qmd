@@ -1,0 +1,69 @@
+---
+title: Subgroup Analyses
+date: "2026-04-17"
+description: Pre-specified subgroup effects and treatment-by-subgroup interaction tests
+categories:
+  - Clinical Biostatistics
+  - subgroup
+  - interaction
+  - heterogeneity
+---
+
+## Introduction
+
+Subgroup analyses in clinical trials assess whether the overall treatment effect varies across pre-specified baseline characteristics — age, sex, disease severity, comorbidity, biomarker status. They provide important insight into treatment heterogeneity, support guideline development, and inform precision-medicine decisions. They are also notoriously prone to over-interpretation: with enough subgroups and enough cut-points, false-positive heterogeneity findings appear by chance alone, and the literature is replete with cautionary tales of subgroup claims that failed to replicate. Modern guidance (CONSORT, ICH-E9, regulatory subgroup analysis frameworks) emphasises pre-specification, formal interaction tests, and graphical communication via forest plots, while warning against per-subgroup hypothesis testing as a substitute for the interaction test.
+
+## Prerequisites
+
+A working understanding of treatment effect estimation in randomised trials, interaction terms in regression, the multiple-testing problem, and the regulatory framework around pre-specified versus post-hoc analyses.
+
+## Theory
+
+The statistically appropriate test for effect heterogeneity is the **treatment-by-subgroup interaction** in a regression of the outcome on treatment, subgroup, and their product. The standard reporting set includes the overall treatment effect with its 95 % CI, the subgroup-specific effects with CIs, and the interaction $p$-value. Comparing within-subgroup $p$-values across strata (the "significant in one, not the other" fallacy) is statistically incorrect because each within-subgroup test is under-powered and the comparison ignores the multiplicity.
+
+Pre-specification is the key safeguard: a small number of biologically-motivated subgroups documented in the SAP carry interpretable evidentiary weight, while post-hoc subgroup discovery is at best hypothesis-generating and at worst misleading.
+
+## Assumptions
+
+The subgroups are pre-specified in the protocol or SAP, the subgrouping covariates are measured at baseline rather than on-treatment (avoiding immortal-time bias and other post-randomisation issues), and the trial is large enough that the interaction test has at least minimal power — usually not the case in practice, which is why subgroup tests rarely reach significance.
+
+## R Implementation
+
+```r
+set.seed(2026)
+n <- 400
+arm <- factor(rep(c("ctrl", "trt"), each = n/2))
+sex <- factor(sample(c("M", "F"), n, replace = TRUE))
+
+y <- ifelse(arm == "trt",
+            ifelse(sex == "F", 1.0, 0.3), 0) +
+     rnorm(n)
+
+fit <- lm(y ~ arm * sex)
+summary(fit)$coefficients
+
+by(data.frame(y, arm), sex, function(df) {
+  t.test(y ~ arm, data = df)$estimate
+})
+```
+
+## Output & Results
+
+The interaction term in the regression model is the formal test of effect modification by subgroup; the per-subgroup $t$-tests give the subgroup-specific point estimates that populate the forest plot. Reporting both — interaction $p$-value plus subgroup-specific estimates with CIs — is the standard expected by trial reporting guidelines.
+
+## Interpretation
+
+A reporting sentence: "The overall treatment effect was 0.65 (95 % CI 0.45 to 0.85, $p < 0.001$); the pre-specified treatment-by-sex interaction was significant ($p = 0.02$), with the effect in women (0.98, 95 % CI 0.69 to 1.27) approximately three-fold larger than in men (0.32, 95 % CI 0.04 to 0.61). This sex-by-treatment heterogeneity was hypothesised in the protocol on the basis of pharmacokinetic differences and is reported here as a confirmatory rather than exploratory finding; replication in an independent trial is desirable." Always state pre-specification status.
+
+## Practical Tips
+
+- Pre-specify all subgroup analyses in the protocol and SAP; post-hoc subgroups are exploratory at best and should be flagged as such in any reporting, ideally in a separate section labelled "exploratory."
+- Always interpret the interaction $p$-value as the test of heterogeneity, not the per-subgroup $p$-values; the per-subgroup tests are nearly always under-powered, and comparing their significance across subgroups is a well-known statistical fallacy.
+- Forest plots are the standard way to communicate subgroup effects visually; they make magnitudes and uncertainties immediately legible and are now expected by most clinical-trial reporting guidelines.
+- Limit pre-specified subgroups to four to six biologically motivated factors; a list of 20+ subgroups is a fishing expedition that nearly guarantees at least one false-positive interaction by chance, and reviewers will flag it.
+- Heterogeneity-of-treatment-effect (HTE) methods — causal forests, BART, model-based recursive partitioning, the SIDES algorithm — are emerging for principled data-driven subgroup discovery, with appropriate multiplicity control built in. They are increasingly accepted as exploratory complements to traditional pre-specified subgroup analyses.
+- For survival or time-to-event subgroup analyses, fit a Cox model with treatment, subgroup, and treatment × subgroup terms; the per-subgroup hazard ratios should be reported with 95 % CIs alongside the joint interaction test.
+
+## R Packages Used
+
+Base R `lm()`, `glm()`, and `t.test()` for canonical subgroup analysis; `survival::coxph()` with interaction terms for survival subgroup analyses; `forestplot` and `forester` for publication-quality subgroup forest plots; `grf` for generalised random forests with treatment-effect estimation; `SIDES` and `model4you` for principled exploratory subgroup discovery.

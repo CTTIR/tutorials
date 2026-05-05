@@ -1,0 +1,73 @@
+---
+title: "Stepwise Regression: Pitfalls"
+date: "2026-04-17"
+description: Why automated predictor selection by p-value or AIC has serious statistical problems
+categories:
+  - "Regression & Modelling"
+  - stepwise
+  - selection
+  - p-hacking
+---
+
+## Introduction
+
+Stepwise regression — forward, backward, or bidirectional automated selection of predictors based on $p$-values, AIC, or BIC — was the workhorse of model selection for decades and remains widely used despite extensive criticism. Frank Harrell's *Regression Modeling Strategies*, the TRIPOD guideline for clinical prediction models, and a long methodological literature have documented serious statistical pathologies that make stepwise reporting at best misleading and at worst actively wrong. Modern practice increasingly substitutes penalised regression (lasso, elastic net) and pre-specified predictor sets.
+
+## Prerequisites
+
+A working understanding of multiple regression, model selection, and the bias-variance trade-off.
+
+## Theory
+
+The well-documented problems with stepwise selection:
+
+- **Selection bias**: $R^2$ is inflated and coefficients are biased away from zero because selection and testing are done on the same data.
+- **Invalid $p$-values**: the final model's "significant" predictors include false positives at a rate far above the nominal $\alpha$; the more candidate predictors, the worse this gets.
+- **Instability**: small data perturbations (a single observation, a different random sample) change the selected predictor set substantially.
+- **Reduced out-of-sample performance**: stepwise-selected models often predict *worse* than pre-specified or penalised alternatives.
+- **Forward / backward / bidirectional give different answers**: the procedure is path-dependent.
+
+Better alternatives include pre-specified predictor sets based on substantive theory, penalised regression with cross-validated tuning (lasso, elastic net), and cross-validated model comparison rather than naive selection-on-fit-statistics.
+
+## Assumptions
+
+Standard regression framework; the issues are with the selection procedure, not the underlying model.
+
+## R Implementation
+
+```r
+library(MASS)
+
+# Stepwise (for illustration; not recommended in practice)
+full <- lm(mpg ~ ., data = mtcars)
+step_model <- stepAIC(full, direction = "both", trace = FALSE)
+summary(step_model)
+
+# Better: penalised regression
+library(glmnet)
+X <- as.matrix(mtcars[, -1])
+y <- mtcars$mpg
+cvfit <- cv.glmnet(X, y, alpha = 1)
+coef(cvfit, s = "lambda.min")
+```
+
+## Output & Results
+
+`stepAIC()` selects a subset based on AIC; reporting the resulting coefficients with naive standard errors and $p$-values produces invalid inference. Lasso with cross-validated $\lambda$ provides a principled alternative with shrunken coefficients and a defensible variable-selection mechanism.
+
+## Interpretation
+
+A reporting sentence: "We pre-specified the predictor set based on prior literature; stepwise selection was not used because of its known instability and inflated Type I error. For exploratory secondary analyses, we report cross-validated lasso results with the selected variables and CV mean squared error, not naive $p$-values." This phrasing places the responsible alternative in the methods section explicitly.
+
+## Practical Tips
+
+- Avoid reporting naive $t$-statistics and $p$-values from stepwise-selected models; they are biased and miscalibrated.
+- Use stepwise procedures only for exploratory purposes, never for confirmatory inference.
+- Pre-specify the predictor set based on substantive theory; this is the strongest defence against selection-on-significance.
+- For high-dimensional or correlated predictors, ridge, lasso, and elastic net handle the variable-selection problem with proper regularisation; cross-validate to choose the penalty.
+- The TRIPOD reporting guideline for clinical prediction models specifically discourages stepwise selection; reviewers in clinical journals increasingly enforce this.
+- If you must report stepwise results, do so honestly with caveats: report the selection procedure, the candidate predictor set, and a cross-validated estimate of out-of-sample performance.
+
+## R Packages Used
+
+`MASS::stepAIC()` and base R `step()` for stepwise (with caveats); `glmnet` for canonical lasso and elastic-net alternatives; `caret` and `tidymodels` for cross-validated model comparison; `selectiveInference` for properly adjusted post-selection inference when selection is unavoidable.

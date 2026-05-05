@@ -1,0 +1,71 @@
+---
+title: "Mixed-Effects Models: Introduction"
+date: "2026-04-17"
+description: "Hierarchical / multilevel regression: fixed effects for population-level structure, random effects for cluster-level variability"
+categories:
+  - "Regression & Modelling"
+  - mixed-effects
+  - multilevel
+  - random-effects
+  - lmer
+---
+
+## Introduction
+
+Mixed-effects models (also called multilevel or hierarchical models) handle data with a clustered or nested structure: patients within hospitals, repeated measures within subjects, plants within plots. The model has **fixed effects** for population-level structure and **random effects** capturing cluster-specific deviations.
+
+## Prerequisites
+
+Linear regression.
+
+## Theory
+
+Simplest form: random intercept model
+
+$$Y_{ij} = \beta_0 + \beta_1 X_{ij} + u_i + \varepsilon_{ij}, \quad u_i \sim \mathcal{N}(0, \sigma_u^2), \; \varepsilon \sim \mathcal{N}(0, \sigma^2).$$
+
+$u_i$ are subject-specific deviations; $\varepsilon_{ij}$ are residuals. Intraclass correlation: $\rho = \sigma_u^2 / (\sigma_u^2 + \sigma^2)$.
+
+Extensions: random slopes ($u_{1i}$), nested or crossed groupings, non-normal responses (GLMM).
+
+## Assumptions
+
+- Clusters are a random sample from a population of clusters.
+- Random effects normal; residuals normal.
+- Linearity, independence across clusters.
+
+## R Implementation
+
+```r
+library(lme4); library(lmerTest)
+
+data(sleepstudy, package = "lme4")
+head(sleepstudy)
+
+# Random intercept
+fit_ri <- lmer(Reaction ~ Days + (1 | Subject), data = sleepstudy)
+summary(fit_ri)
+
+# Random intercept + slope
+fit_rs <- lmer(Reaction ~ Days + (Days | Subject), data = sleepstudy)
+summary(fit_rs)
+
+# Test random slope vs. intercept only
+anova(fit_ri, fit_rs)
+```
+
+## Output & Results
+
+Fixed-effect table with estimates, SEs, df (approximated), p-values; random-effect variance / SD summary; likelihood-ratio test between nested random-effects structures.
+
+## Interpretation
+
+"Each day of sleep deprivation increased reaction time by 10.5 ms (SE = 1.5, p < 0.001). Between-subject variation in intercept was substantial (SD = 37 ms), and random-slope comparison showed better fit for a model allowing slope variation (chi-squared = 42, p < 0.001)."
+
+## Practical Tips
+
+- Specify random effects by the grouping factor.
+- Use REML by default; switch to ML for likelihood-ratio tests between fixed-effect specifications.
+- Singular fits often arise from over-parameterised random-effects structures; simplify.
+- For p-values, use `lmerTest` (Kenward-Roger or Satterthwaite approximations) -- standard `lme4` does not provide them.
+- For hierarchical binary or count outcomes, use `glmer` or `glmmTMB`.

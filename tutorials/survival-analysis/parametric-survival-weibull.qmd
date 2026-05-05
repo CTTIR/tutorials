@@ -1,0 +1,75 @@
+---
+title: "Parametric Survival: Weibull"
+date: "2026-04-17"
+description: Fitting Weibull regression in both PH and AFT parameterisations
+categories:
+  - Survival Analysis
+  - weibull
+  - parametric-survival
+  - aft
+---
+
+## Introduction
+
+The Weibull distribution is the most flexible parametric survival family that has a monotone hazard. Hazard is increasing when the shape parameter $k > 1$, constant (exponential) when $k = 1$, and decreasing when $k < 1$. Among the common parametric families it is unique in admitting both proportional-hazards and accelerated-failure-time interpretations, which makes it the natural starting point for parametric survival analysis whenever PH is plausible. Cleaner extrapolation, smaller standard errors, and explicit hazard shape are the practical pay-offs over the semi-parametric Cox model when its assumptions hold.
+
+## Prerequisites
+
+A working understanding of the Weibull distribution, survival analysis, and the distinction between proportional-hazards and accelerated-failure-time parameterisations.
+
+## Theory
+
+The Weibull survival function is
+
+$$S(t) = \exp\!\left(-(t/\lambda)^k\right),$$
+
+with hazard $h(t) = (k/\lambda)(t/\lambda)^{k-1}$. The hazard is monotone: increasing for $k > 1$ (positive ageing), decreasing for $k < 1$ (early-failure regimes), and constant for $k = 1$ (exponential).
+
+Two parameterisations coexist:
+
+- **Accelerated-failure-time (AFT)** in `survreg(dist = "weibull")`: $\log T = X\beta + \sigma W$ with $W$ a standard extreme-value variate; the scale is $\sigma = 1/k$.
+- **Shape-scale** in `flexsurv::flexsurvreg(dist = "weibull")`: explicit shape $k$ and scale $\lambda$, with PH-style covariate effects via interactions on $\lambda$.
+
+The conversion between PH and AFT forms is $\beta_{\mathrm{PH}} = -k \cdot \beta_{\mathrm{AFT}}$.
+
+## Assumptions
+
+A monotone hazard. The standard diagnostic is the log–log survival plot: $\log[-\log \hat S(t)]$ against $\log t$ should be approximately linear with slope $k$ if the Weibull holds.
+
+## R Implementation
+
+```r
+library(survival); library(flexsurv)
+
+data(lung)
+
+fit_survreg <- survreg(Surv(time, status) ~ age + sex, data = lung,
+                       dist = "weibull")
+summary(fit_survreg)
+
+# flexsurvreg gives shape and scale directly
+fit_flex <- flexsurvreg(Surv(time, status) ~ age + sex, data = lung,
+                        dist = "weibull")
+fit_flex
+```
+
+## Output & Results
+
+`survreg()` returns AFT coefficients (interpret as multiplicative effects on event time, $\exp(-\beta)$) plus the scale parameter. `flexsurvreg()` returns shape, scale, and PH-style hazard ratios directly — easier to communicate to a Cox-fluent audience. Both yield the same likelihood and the same fitted survival.
+
+## Interpretation
+
+A reporting sentence: "A Weibull AFT model estimated shape parameter $\hat k = 1.31$ (95 % CI 1.10 to 1.55), indicating an increasing hazard over follow-up; each additional year of age accelerated the event by approximately 2 %, equivalent to a hazard ratio of 1.025 per year on the PH scale." When reporting, choose AFT or PH consistently with your audience: clinical readers expect HRs, while time-to-event-cost analyses prefer time-acceleration ratios.
+
+## Practical Tips
+
+- Use the log–log survival plot (`plot(survfit(...), fun = "cloglog")`) as the main diagnostic for Weibull suitability; clear non-linearity rules it out.
+- For more flexible monotone hazards, compare AIC against generalised gamma and Gompertz; for non-monotone, switch to log-normal or Royston-Parmar splines.
+- Convert between PH and AFT carefully: $\beta_{\mathrm{PH}} = -k \cdot \beta_{\mathrm{AFT}}$, and remember that AFT confidence intervals are on the log-time scale.
+- For small samples, Weibull yields smoother survival estimates than Kaplan-Meier and lower-variance covariate effects than Cox; this is its main practical advantage over Cox.
+- `flexsurv` simplifies prediction (`summary(fit, type = "survival", t = ...)`) and supports time-dependent shape parameters via spline extensions.
+- Check Weibull plus Cox HR estimates; they should be close under PH. Material disagreement points to an assumption failure that should be investigated.
+
+## R Packages Used
+
+`survival` for `survreg()` with `dist = "weibull"`; `flexsurv` for `flexsurvreg()` with shape/scale output and richer prediction; `eha` for additional parametric extensions; `rstpm2` for Royston-Parmar spline alternatives when monotone hazards are too restrictive.

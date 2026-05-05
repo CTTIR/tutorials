@@ -1,0 +1,76 @@
+---
+title: Likelihood Ratios
+date: "2026-04-17"
+description: LR+ and LR- as prevalence-independent summaries of diagnostic performance
+categories:
+  - Clinical Biostatistics
+  - likelihood-ratio
+  - diagnostic
+  - fagan
+---
+
+## Introduction
+
+Likelihood ratios (LR+ and LR-) summarise the information content of a diagnostic test in a way that is independent of disease prevalence. Sensitivity and specificity describe how the test performs in known-disease and known-no-disease populations, but they do not directly tell a clinician what to believe after observing a positive or negative test result; predictive values do, but they depend on prevalence and are therefore not portable across populations. Likelihood ratios bridge this gap: they combine multiplicatively with the pre-test odds to yield the post-test odds via Bayes' theorem, making them the natural building blocks of clinical Bayesian reasoning. Modern evidence-based-medicine guidance and core teaching texts present LRs as the preferred diagnostic-performance summary precisely because of this prevalence-independence.
+
+## Prerequisites
+
+A working understanding of sensitivity and specificity, the relationship between probability and odds, and Bayes' theorem in odds form.
+
+## Theory
+
+The two basic likelihood ratios are
+
+$$\mathrm{LR}^+ = \frac{\mathrm{Sens}}{1 - \mathrm{Spec}}, \qquad \mathrm{LR}^- = \frac{1 - \mathrm{Sens}}{\mathrm{Spec}}.$$
+
+The Bayes-theorem update is
+
+$$\mathrm{Odds}_{\text{post}} = \mathrm{Odds}_{\text{pre}} \times \mathrm{LR}.$$
+
+Conventional clinical interpretation: $\mathrm{LR}^+ > 10$ or $\mathrm{LR}^- < 0.1$ is often decisive; 5–10 or 0.1–0.2 is moderate evidence; 2–5 or 0.2–0.5 is weak; near 1 is uninformative. Fagan's nomogram graphically converts pre-test probability and LR directly to post-test probability and is a useful bedside tool.
+
+## Assumptions
+
+The same assumptions as for sensitivity and specificity: a reliable gold-standard reference for disease status, accurate test classification, and that the test characteristics estimated in one population generalise to the patients to whom the LR is being applied. Verification bias and spectrum bias both threaten this generalisation.
+
+## R Implementation
+
+```r
+library(epiR)
+
+tab <- as.table(matrix(c(80, 20,
+                         20, 880),
+                        nrow = 2, byrow = FALSE,
+                        dimnames = list(Test = c("+", "-"),
+                                        Disease = c("yes", "no"))))
+epi.tests(tab)$detail[c("lrpos", "lrneg"), ]
+
+sens <- 0.8; spec <- 0.978
+lr_pos <- sens / (1 - spec); lr_neg <- (1 - sens) / spec
+
+prior_odds <- 0.1 / 0.9
+post_odds  <- prior_odds * lr_pos
+post_prob  <- post_odds / (1 + post_odds)
+c(lr_pos = lr_pos, lr_neg = lr_neg, post_prob_after_pos = post_prob)
+```
+
+## Output & Results
+
+`epi.tests()` reports LR+ and LR- with their confidence intervals from the input contingency table. The Bayesian update example shows how a 10 % pre-test probability rises to roughly 80 % post-test after a positive result with LR+ = 36, illustrating the multiplicative-on-odds nature of the update.
+
+## Interpretation
+
+A reporting sentence: "The diagnostic test had sensitivity 80 % (95 % CI 71 to 87 %) and specificity 97.8 % (96.4 to 98.7), corresponding to LR+ = 36 (95 % CI 16 to 81) and LR- = 0.20 (95 % CI 0.13 to 0.31). A positive test raised the pre-test probability of 10 % to a post-test probability of 80 %, while a negative test reduced it to roughly 2 %. The test is therefore strongly informative in both directions for the typical pre-test probability range of this clinical setting." Always report LRs with CIs.
+
+## Practical Tips
+
+- Report likelihood ratios with their 95 % confidence intervals; wide CIs indicate fragile diagnostic estimates and should temper interpretation, especially when small sample sizes or rare disease drive uncertainty in sensitivity or specificity.
+- For multi-category or ordinal tests (rating scales, semi-quantitative biomarker results), compute stratum-specific LRs for each score level rather than collapsing to a single binary LR; this preserves the information content of the gradation.
+- Likelihood ratios generalise across populations as long as the test characteristics (sensitivity, specificity) hold in the new population; this is their primary advantage over predictive values, which depend on local prevalence and do not transfer.
+- Clinical decision thresholds are often pre-specified in terms of required LR (e.g., LR+ ≥ 10 to justify initiating treatment, LR- ≤ 0.1 to confidently rule out disease); building these thresholds into the diagnostic pathway is the operational analogue of Bayesian reasoning at the bedside.
+- Chain multiple test results by multiplying their LRs only if the tests are conditionally independent given disease status; in practice this assumption is often violated (a second test of the same type is correlated with the first), and joint LRs from a multivariable predictor are often more honest.
+- For complex multi-variable diagnostic tools (clinical prediction rules), the LR concept generalises naturally — the rule's score corresponds to a stratum-specific LR — and is a useful way to communicate the rule's discrimination at decision-relevant cut-points.
+
+## R Packages Used
+
+`epiR::epi.tests()` for canonical sensitivity, specificity, predictive values, and likelihood ratios with confidence intervals from a 2 × 2 table; `epibasix` for an alternative interface; `caret::confusionMatrix()` for ML-style classification metrics including LRs; `pROC` for LRs across the full ROC operating range; `bayesmeta` and related packages for Bayesian meta-analytic pooling of likelihood ratios across diagnostic-accuracy studies.

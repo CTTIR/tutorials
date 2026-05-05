@@ -1,0 +1,89 @@
+---
+title: One-Sample z-Test
+date: "2026-04-17"
+description: Comparing a sample mean to a reference when the population variance is known -- rare in practice but pedagogically useful
+categories:
+  - Inferential Statistics
+  - z-test
+  - known-variance
+  - normal-distribution
+---
+
+## Introduction
+
+The one-sample z-test is the idealised version of the one-sample t-test: it assumes the population variance $\sigma^2$ is known exactly. This is rarely the case in applied research -- if $\sigma$ is unknown, we estimate it from the sample and use the t-test instead. The z-test remains pedagogically important because it is the simplest exact hypothesis test and the reference for the t-test's more elaborate machinery.
+
+## Prerequisites
+
+Normal distribution, sampling distribution of the mean.
+
+## Theory
+
+For $X_1, \ldots, X_n$ iid from $\mathcal{N}(\mu, \sigma^2)$ with **known** $\sigma$, the test of
+
+$$H_0: \mu = \mu_0 \quad \text{vs.} \quad H_1: \mu \neq \mu_0$$
+
+uses
+
+$$Z = \frac{\bar{X} - \mu_0}{\sigma / \sqrt{n}} \sim \mathcal{N}(0, 1) \quad \text{under } H_0.$$
+
+The two-sided $p$-value is $2 (1 - \Phi(|z_{\text{obs}}|))$; 95 % CI for $\mu$ is $\bar{X} \pm 1.96 \sigma/\sqrt{n}$.
+
+The z-test is also used when $\sigma$ is *well-estimated* -- historically meaning $n > 30$ where the t and z distributions are nearly indistinguishable. Modern practice uses the t-test even then.
+
+## Assumptions
+
+- Independent observations.
+- Normal population (or $n$ large enough for CLT).
+- Population variance $\sigma^2$ known.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+# Assume the assay has a known SD from reference literature
+sigma_known <- 8
+x <- rnorm(50, mean = 103, sd = sigma_known)
+
+# Manual z-test
+z_stat <- (mean(x) - 100) / (sigma_known / sqrt(length(x)))
+p_two_sided <- 2 * (1 - pnorm(abs(z_stat)))
+c(z = z_stat, p = p_two_sided)
+
+# 95% CI
+mean(x) + c(-1, 1) * qnorm(0.975) * sigma_known / sqrt(length(x))
+
+# Via BSDA::z.test
+library(BSDA)
+z.test(x, mu = 100, sigma.x = sigma_known)
+```
+
+## Output & Results
+
+```
+       z         p
+2.1856   0.02884
+
+[1] 100.53 105.47
+
+        One-sample z-Test
+
+data:  x
+z = 2.1856, p-value = 0.02884
+alternative hypothesis: true mean is not equal to 100
+```
+
+The sample mean is 103 with SE 1.13 (known SD / sqrt(n)); z = 2.19, p = 0.029, rejecting $H_0$ at $\alpha = 0.05$.
+
+## Interpretation
+
+Reporting a z-test is rarely appropriate in modern applied work unless the variance is genuinely known (e.g., from decades of reference data). Reporting the t-test instead gives an honest representation of the variance uncertainty.
+
+## Practical Tips
+
+- Default to the t-test; use z only when $\sigma$ is genuinely known.
+- For two-proportion comparisons, the "z-test for proportions" is a close cousin that uses an estimated variance.
+- When $n > 30$ and $\sigma$ is unknown, the t and z tests give essentially identical p-values.
+- The z-test is the foundation for more elaborate procedures: power calculations, sample-size formulas, and the large-sample limit of many Wald-style tests.
+- In process-control charts (SPC), the "3-sigma" rule is a z-test at $\alpha \approx 0.0027$.

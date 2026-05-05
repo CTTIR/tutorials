@@ -86,15 +86,3 @@ Kendall's W ranges from 0 (no agreement) to 1 (perfect agreement on ranks). Cohe
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 006185191de04d77865628ef1892577c -->
-<img src="https://vg09.met.vgwort.de/na/006185191de04d77865628ef1892577c"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

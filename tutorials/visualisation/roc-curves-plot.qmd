@@ -1,0 +1,75 @@
+---
+title: ROC Curves
+date: "2026-04-17"
+description: Sensitivity vs 1-specificity plots for diagnostic tests and binary classifiers
+categories:
+  - Data Visualisation
+  - roc
+  - auc
+  - diagnostic
+  - classifier
+---
+
+## Introduction
+
+A receiver operating characteristic (ROC) curve traces a binary classifier's sensitivity against $1 -$ specificity as the decision threshold sweeps from one end of the score range to the other. It is the canonical diagnostic-performance figure in medicine and machine learning, summarising the trade-off between true-positive and false-positive rates without committing to a single threshold. The area under the curve (AUC) condenses the curve into one number, equal to the probability that the classifier ranks a randomly chosen positive case higher than a randomly chosen negative one.
+
+## Prerequisites
+
+A working understanding of sensitivity, specificity, decision thresholds, and the difference between calibration and discrimination in classifier evaluation.
+
+## Theory
+
+For a continuous score $s$ and a binary outcome $y$, the ROC curve plots
+
+$$\bigl(\mathrm{FPR}(t), \mathrm{TPR}(t)\bigr) = \bigl(P(s > t \mid y = 0), P(s > t \mid y = 1)\bigr)$$
+
+for thresholds $t$. A perfect classifier passes through $(0, 1)$; a random one follows the diagonal. The AUC equals the Mann-Whitney U statistic divided by the sample sizes; it lies in $[0, 1]$ with $0.5$ representing chance and $1$ a perfect rank-ordering. Conventional benchmarks: AUC $> 0.7$ acceptable, $> 0.8$ good, $> 0.9$ excellent. DeLong's test compares two AUCs with correlated samples.
+
+## Assumptions
+
+A binary outcome and a continuous (or ordinal) score. The ROC curve is invariant to monotone transformations of the score, so calibration is irrelevant to the curve itself; thresholding decisions, however, do depend on calibration.
+
+## R Implementation
+
+```r
+library(pROC); library(plotROC); library(ggplot2)
+
+set.seed(2026)
+n <- 200
+disease <- rbinom(n, 1, 0.5)
+score   <- rnorm(n, mean = disease, sd = 1)
+
+# pROC
+roc_obj <- roc(disease, score, quiet = TRUE)
+auc(roc_obj); ci.auc(roc_obj)
+plot(roc_obj, legacy.axes = TRUE, col = "#2A9D8F", lwd = 2)
+
+# ggplot via plotROC
+df <- data.frame(D = disease, score = score)
+ggplot(df, aes(d = D, m = score)) +
+  geom_roc(labelsize = 3, labelround = 2, colour = "#2A9D8F", size = 1) +
+  style_roc() +
+  labs(title = paste0("AUC = ", round(auc(roc_obj), 3)))
+```
+
+## Output & Results
+
+A monotone curve rising from $(0, 0)$ toward $(1, 1)$, with optional threshold labels at selected points and the AUC reported either in the title or via `ci.auc()` for its 95 % confidence interval. The `plotROC` package adds `ggplot2`-native styling; `pROC::plot()` produces a fast base-R version.
+
+## Interpretation
+
+A reporting sentence: "The classifier achieved an AUC of 0.85 (95 % CI 0.79 to 0.91), indicating good discrimination; at the Youden-optimal threshold of 0.42, sensitivity was 0.78 and specificity was 0.81." Always pair the AUC with its confidence interval and at least one operating point so readers can judge clinical utility.
+
+## Practical Tips
+
+- Report the AUC with its 95 % CI, not just a point estimate; the bootstrap interval (`ci.auc(roc_obj)`) handles the typical correlated-sample structure.
+- Compare two ROC curves with DeLong's test (`pROC::roc.test`); pairwise AUC differences with $p$-values are the standard way to claim one classifier outperforms another.
+- Avoid smoothed ROC curves (`smooth = TRUE`) for primary reporting; smoothing hides finite-sample irregularities. Show smoothed and raw side by side when smoothing aids interpretation.
+- Under severe class imbalance, precision-recall curves often communicate operating-point trade-offs better than ROC; report both when positives are rare.
+- Always draw the diagonal reference line ($y = x$); without it, readers cannot judge how far above chance the classifier is.
+- For threshold selection, mark the Youden index, the equal-error-rate point, or a clinically motivated sensitivity / specificity target on the curve and quote its threshold.
+
+## R Packages Used
+
+`pROC` for ROC objects, AUC, confidence intervals, and DeLong's test; `plotROC` for `ggplot2`-native ROC layers (`geom_roc()`, `style_roc()`); `ROCit` for an alternative API with bootstrap CIs; `yardstick` for tidy classifier metrics within the `tidymodels` ecosystem.

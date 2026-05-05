@@ -1,0 +1,64 @@
+---
+title: Added-Variable Plots
+date: "2026-04-17"
+description: "Partial regression plots showing each predictor's unique contribution"
+categories:
+  - "Regression & Modelling"
+  - added-variable-plot
+  - partial-regression
+---
+
+## Introduction
+
+An added-variable plot (AVP), also called a partial regression plot, displays the relationship between a single predictor and the outcome after adjusting both for all other predictors in the model. It is the geometric expression of a regression coefficient: the slope of the OLS line in the AVP equals the coefficient in the full multiple regression. AVPs are the standard tool for diagnosing whether a partial linear effect is well-supported, whether non-linearity has been missed, and whether one or two observations are driving a particular coefficient.
+
+## Prerequisites
+
+A working understanding of multiple regression, partial correlation, and the residualisation interpretation of partial effects.
+
+## Theory
+
+For predictor $X_j$ in a model with other predictors $X_{-j}$:
+
+1. Regress $Y$ on $X_{-j}$ and save residuals $e_{Y \mid X_{-j}}$.
+2. Regress $X_j$ on $X_{-j}$ and save residuals $e_{X_j \mid X_{-j}}$.
+3. Plot $e_{Y \mid X_{-j}}$ against $e_{X_j \mid X_{-j}}$.
+
+The OLS slope of this plot equals the coefficient on $X_j$ in the full multiple regression — the famous Frisch-Waugh-Lovell theorem. Patterns in the AVP reveal partial-effect non-linearity, leverage, and outliers specific to $X_j$ that bivariate scatter plots cannot show.
+
+## Assumptions
+
+Standard multiple regression assumptions; the residualisation interpretation requires that the other predictors are themselves correctly specified.
+
+## R Implementation
+
+```r
+library(car)
+
+fit <- lm(mpg ~ wt + hp + disp + drat, data = mtcars)
+avPlots(fit)
+
+# Single AVP
+avPlot(fit, variable = "hp")
+```
+
+## Output & Results
+
+`avPlots()` draws one scatter plot per predictor, each with the fitted partial regression line. The slope of each line equals the corresponding multiple-regression coefficient. Outlier and leverage diagnostics specific to each predictor become visible.
+
+## Interpretation
+
+A reporting sentence: "The added-variable plot for horsepower showed a clear negative slope after adjusting for weight, displacement, and rear-axle ratio, with no evidence of non-linearity or individual influential observations; the AVP slope of $-0.030$ matches the multiple-regression coefficient ($p = 0.005$). Diagnostic plots support reporting the linear partial effect of horsepower." Use AVPs to check both the shape of a partial relationship and to flag observations driving specific coefficients.
+
+## Practical Tips
+
+- AVPs are more informative than raw bivariate scatter plots for checking partial effects; bivariate plots ignore the other predictors and can mislead.
+- Non-linear patterns in an AVP suggest a transformation, polynomial term, or spline for that specific predictor.
+- Outliers in an AVP indicate observations influencing that particular coefficient; cross-check with DFBETAs.
+- `car::avPlots(fit)` draws all AVPs in a single grid for compact diagnostic display.
+- Distinguish from component-plus-residual plots (`crPlots`), which add the predictor's full effect rather than partialling out other predictors; the two answer related but different diagnostic questions.
+- For GLMs and mixed models, AVP analogues exist; see `car::avPlots()` and `effects::predictorEffects()`.
+
+## R Packages Used
+
+`car::avPlots()` for the canonical implementation; `car::crPlots()` for component-plus-residual plots; `effects::predictorEffects()` for marginal-effect plots; `ggeffects::ggpredict()` for ggplot-style predicted-effect plots that complement AVP diagnostics.

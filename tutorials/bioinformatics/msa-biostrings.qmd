@@ -1,0 +1,67 @@
+---
+title: Multiple Sequence Alignment
+date: "2026-04-17"
+description: "Aligning multiple sequences via ClustalW, Muscle, or T-Coffee from R"
+categories:
+  - Bioinformatics
+  - msa
+  - alignment
+  - clustalw
+---
+
+## Introduction
+
+Multiple sequence alignment (MSA) is the precursor to phylogeny, motif discovery, and structural modelling: it arranges residues so homologous positions align in columns. The `msa` Bioconductor package offers ClustalW, ClustalOmega, and Muscle under a unified R interface.
+
+## Prerequisites
+
+FASTA sequences; substitution scoring (PAM, BLOSUM for proteins; match/mismatch for DNA).
+
+## Theory
+
+**Progressive alignment** (ClustalW): build a guide tree from pairwise distances, then align sequences following the tree from leaves to root. **Iterative refinement** (Muscle, MAFFT) revisits partial alignments to improve scores. **Consistency-based** methods (T-Coffee) combine information from multiple library alignments.
+
+Accuracy depends on sequence divergence: for highly divergent sequences, structural alignment (DALI for proteins) outperforms sequence-only methods.
+
+## Assumptions
+
+Sequences are homologous; a single substitution model approximates the evolutionary process; insertions/deletions are rare enough for gap parameters to be meaningful.
+
+## R Implementation
+
+```r
+library(Biostrings); library(msa)
+
+# Example amino-acid sequences (hemoglobin across species)
+aas <- readAAStringSet(
+  system.file("examples", "exampleAA.fasta", package = "msa"))
+aas
+aln <- msa(aas, method = "ClustalW", verbose = FALSE)
+aln
+
+# Summary of alignment
+print(aln, show = "complete")
+
+# Convert to phangorn for phylogeny
+library(phangorn)
+aln_phy <- as.phyDat(as(aln, "AAStringSet"), type = "AA")
+dm <- dist.ml(aln_phy)
+tree <- NJ(dm)
+plot(tree, main = "NJ tree from MSA", cex = 0.8)
+```
+
+## Output & Results
+
+An MSA object with aligned sequences and gap characters; a consensus is derivable via `consensusString`.
+
+## Interpretation
+
+"ClustalW alignment of the hemoglobin orthologs reveals conserved haem-binding residues and lineage-specific substitutions on the surface helices."
+
+## Practical Tips
+
+- For > 1000 sequences, MAFFT (outside R) is substantially faster than Biostrings/msa.
+- Alignment quality matters more than tree-building algorithm; a bad MSA produces a bad phylogeny.
+- Trim alignment columns with many gaps (e.g., `trimAl`) before tree inference.
+- Visualise alignments with `ggmsa` to identify problematic columns.
+- Amino-acid alignments are often more reliable than codon alignments for distantly related sequences; use back-translation when codon-level analysis is needed.

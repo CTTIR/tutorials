@@ -1,0 +1,69 @@
+---
+title: Multi-State Models
+date: "2026-04-17"
+description: Modelling transitions between discrete states over time
+categories:
+  - Survival Analysis
+  - multi-state
+  - transition
+  - mstate
+---
+
+## Introduction
+
+A multi-state model describes a subject's movement through a discrete set of states over time — healthy to diseased to dead, pre-transplant to post-transplant to rejected, or any clinical pathway with intermediate landmarks. It generalises ordinary survival (two states: alive, dead), competing risks (one origin, several absorbing states), and the illness-death model (one intermediate, one absorbing state). The framework gives a complete probabilistic picture of the disease course rather than collapsing it into a single time-to-first-event summary.
+
+## Prerequisites
+
+A working understanding of Cox regression, competing-risks analysis, and the concept of transition intensities (state-specific hazards) as the multi-state generalisation of a single survival hazard.
+
+## Theory
+
+A multi-state model represents states as nodes and possible transitions as directed edges. Each transition $j \to k$ has an associated transition intensity (hazard) $\alpha_{jk}(t)$. Transition-specific Cox models estimate covariate effects on each $\alpha_{jk}$ separately, with stratification by transition number ensuring each baseline can differ. Predicted transition probabilities $P_{jk}(s, t)$ — the probability of being in state $k$ at time $t$ given state $j$ at time $s$ — are obtained from the cumulative-hazard matrix via the product-integral, implemented in `mstate::probtrans()`.
+
+The Markov property assumes the future depends only on the current state and time, not on the path taken to reach it; semi-Markov extensions condition on time-since-entry-to-current-state instead.
+
+## Assumptions
+
+Markov property (often, with semi-Markov extensions available), proportional hazards within each transition (or relaxed via spline-based or stratified models), and accurate state classification at each time point.
+
+## R Implementation
+
+```r
+library(mstate)
+
+# Example: illness-death model (3 states)
+# Load example data
+data(ebmt3)
+
+tmat <- trans.illdeath()     # transition matrix
+d_ms <- msprep(data = ebmt3, trans = tmat,
+               time = c(NA, "prtime", "rfstime"),
+               status = c(NA, "prstat", "rfsstat"))
+
+# Fit Cox models per transition
+fit <- coxph(Surv(Tstart, Tstop, status) ~ dissub + age + strata(trans),
+             data = d_ms)
+summary(fit)
+```
+
+## Output & Results
+
+`msprep()` reshapes wide-format clinical data into the transition-stratified long format that multi-state Cox models expect. The Cox fit produces transition-specific coefficients (when interactions with `strata(trans)` are included). `mstate::msfit()` and `mstate::probtrans()` deliver predicted cumulative hazards per transition and transition probabilities $P_{jk}(s, t)$ at any horizon.
+
+## Interpretation
+
+A reporting sentence: "Increasing age was associated with elevated transition hazards from healthy to relapsed (HR 1.02 per year, 95 % CI 1.01 to 1.04) and from healthy to death (HR 1.04, 95 % CI 1.02 to 1.06); the predicted probability of being in the relapsed state at five years was 28 % for a 30-year-old patient and 41 % for a 60-year-old." Predictions in absolute probabilities communicate multi-state results far better than the underlying transition-specific hazard ratios alone.
+
+## Practical Tips
+
+- Draw the state diagram before any analysis; a clear picture of allowed transitions prevents misspecified transition matrices.
+- `msprep()` converts wide patient-level data into the long format with one row per allowed transition per subject; this is the most common entry barrier for new users.
+- Use `probtrans()` predictions to communicate results in absolute terms — readers absorb "20 % probability of death by year 5" much better than three transition hazard ratios.
+- The Markov vs semi-Markov choice matters for sojourn-time-dependent hazards; `mstate` supports both via the `Tstart` argument and time-origin handling.
+- For high-dimensional state spaces, sparse-state extensions in `msm` (continuous-time Markov chains for panel data) are often more tractable than full-likelihood multi-state models.
+- Validate predictions on held-out data; multi-state Cox models can overfit transition-specific hazards when individual transitions have few events.
+
+## R Packages Used
+
+`mstate` for the `msprep`/`msfit`/`probtrans` workflow with multi-state Cox models; `msm` for continuous-time Markov chain models on panel-observed states; `flexsurv::msfit.flexsurvreg` for parametric multi-state extensions; `etm` for non-parametric Aalen-Johansen-style transition probability estimation.

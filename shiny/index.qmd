@@ -146,15 +146,3 @@ Construct factorial, fractional-factorial, and response-surface designs with liv
 :::
 
 :::
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 00fd8094b1cb4386a878784348971a00 -->
-<img src="https://vg09.met.vgwort.de/na/00fd8094b1cb4386a878784348971a00"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

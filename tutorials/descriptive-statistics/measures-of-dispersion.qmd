@@ -1,0 +1,105 @@
+---
+title: Measures of Dispersion
+date: "2026-04-17"
+description: "Quantifying how spread out the data are: variance, SD, MAD, IQR, and range"
+categories:
+  - Descriptive Statistics
+  - dispersion
+  - variance
+  - sd
+  - iqr
+  - mad
+---
+
+## Introduction
+
+A measure of central tendency tells you where the data are centred; a measure of dispersion tells you how far they spread around that centre. Two samples can share the same mean yet behave differently in every downstream calculation because their variability is different. This tutorial covers the five dispersion measures used routinely in applied work, explains when each is appropriate, and shows how to compute them in R.
+
+## Prerequisites
+
+The reader should know what the mean and median are, and should be comfortable computing them on an R vector.
+
+## Theory
+
+For a sample $x_1, \ldots, x_n$:
+
+- **Range** $= \max x_i - \min x_i$. Simplest, most fragile: uses only two values, is dominated by outliers, has no information about the bulk of the distribution.
+- **Variance** $s^2 = \frac{1}{n-1} \sum (x_i - \bar{x})^2$. The average squared deviation from the mean. Additive over independent sums. Divisor $n - 1$ gives an unbiased estimator of the population variance; divisor $n$ gives the MLE under normality (biased).
+- **Standard deviation** $s = \sqrt{s^2}$. Same units as the data. The SD of a normally distributed variable corresponds to the 68-95-99.7 rule.
+- **Median absolute deviation (MAD)** $= \text{median}|x_i - \text{median}(x)|$. Robust to outliers; breakdown point of 50%. Multiplied by 1.4826 to estimate the SD of a normal distribution.
+- **Interquartile range (IQR)** $= Q_3 - Q_1$. The width of the central 50% of the data. Used in the Tukey boxplot fence for outlier identification ($\pm 1.5 \cdot \mathrm{IQR}$).
+
+The SD is the default for approximately normal data. For skewed or contaminated data, the MAD and IQR are far more stable. Reporting the range is informative only for small, clean samples or for summarising audit ranges.
+
+## Assumptions
+
+All dispersion measures are purely descriptive; they do not require any distributional assumption. Their *interpretation*, however, depends on the distribution: an SD of 10 on a normal distribution implies 68% of values within $\pm 10$ of the mean, while an SD of 10 on a heavy-tailed distribution does not.
+
+## R Implementation
+
+```r
+library(dplyr)
+library(robustbase)
+
+set.seed(2026)
+
+df <- tibble::tibble(
+  symmetric    = rnorm(200, mean = 50, sd = 10),
+  right_skewed = rlnorm(200, meanlog = log(50), sdlog = 0.6)
+)
+
+summarise_dispersion <- function(x) {
+  tibble::tibble(
+    n        = length(x),
+    range    = max(x) - min(x),
+    variance = var(x),
+    sd       = sd(x),
+    iqr      = IQR(x),
+    mad      = mad(x, constant = 1.4826),
+    mad_raw  = mad(x, constant = 1)
+  )
+}
+
+dispersion_tbl <- df |>
+  tidyr::pivot_longer(everything(), names_to = "variable", values_to = "value") |>
+  group_by(variable) |>
+  summarise(
+    summarise_dispersion(value),
+    .groups = "drop"
+  )
+
+dispersion_tbl
+
+Qn_scale <- robustbase::Qn(df$right_skewed)
+Sn_scale <- robustbase::Sn(df$right_skewed)
+c(Qn = Qn_scale, Sn = Sn_scale)
+```
+
+The `mad()` function defaults to a scaling constant of 1.4826, which makes it consistent with the SD for normal data. `robustbase::Qn()` and `Sn()` are alternative robust scale estimators with higher efficiency than MAD.
+
+## Output & Results
+
+Typical output:
+
+| variable | n | range | variance | sd | iqr | mad |
+|---|---|---|---|---|---|---|
+| symmetric | 200 | 57.3 | 98.5 | 9.93 | 13.2 | 10.1 |
+| right_skewed | 200 | 260.2 | 1143.2 | 33.8 | 34.5 | 23.7 |
+
+For the symmetric normal sample, SD and MAD are nearly identical as expected under normality. For the right-skewed log-normal sample, the SD (33.8) is larger than the MAD (23.7), because the SD is pulled up by the right tail.
+
+## Interpretation
+
+Report dispersion appropriate to the distribution shape:
+
+- **Approximately normal data**: mean (SD).
+- **Skewed or contaminated data**: median (IQR) or median (MAD).
+- Never report mean (SD) for a distribution whose histogram is obviously asymmetric; the summary gives a misleading impression of typicality.
+
+## Practical Tips
+
+- Plot the histogram before choosing the summary; numerical dispersion alone can disguise bimodality or heavy tails.
+- For small samples, IQR is preferred over range: a single extreme value dominates the range.
+- The SD and variance are measured in the original units squared (variance) or original units (SD); do not mix them in a single summary.
+- When reporting a coefficient of variation (CV = SD/mean), ensure the mean is far from zero; CV is meaningless for variables centred near zero.
+- In R, `sd()` uses the $n - 1$ divisor; the MLE version is `sqrt(mean((x - mean(x))^2))`.

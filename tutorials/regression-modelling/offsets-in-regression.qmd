@@ -1,0 +1,75 @@
+---
+title: Offsets in Regression
+date: "2026-04-17"
+description: Treating exposure time or person-years as a known component of the linear predictor
+categories:
+  - "Regression & Modelling"
+  - offset
+  - rate
+  - exposure
+  - person-years
+---
+
+## Introduction
+
+In count regression, an offset is a predictor whose coefficient is fixed at 1. It is the standard mechanism for modelling rates per unit exposure: events per person-year of follow-up, infections per 1000 hospital admissions, mutations per kilobase of DNA. Without an offset, the model fits expected counts and treats exposure as a confounder; with an offset, the model fits expected rates and exposure is correctly accounted for. Forgetting the offset is a leading cause of biased coefficient estimates in epidemiological count-data work.
+
+## Prerequisites
+
+A working understanding of Poisson and negative-binomial regression, the log link, and the distinction between counts and rates as inferential targets.
+
+## Theory
+
+For events $Y_i$ observed over exposure $E_i$, modelling the rate $Y_i / E_i$ via Poisson regression is equivalent to modelling the count $Y_i$ with $\log E_i$ as a known offset:
+
+$$\log \mathbb E[Y_i] = \log E_i + X_i^\top \beta \quad\Leftrightarrow\quad \log \mathbb E[Y_i / E_i] = X_i^\top \beta.$$
+
+The offset $\log E_i$ enters the linear predictor with a fixed coefficient of 1, so its contribution is treated as known rather than estimated. The remaining coefficients $\beta$ are interpretable as log-rate ratios; exponentiating gives rate ratios per unit covariate change.
+
+The same construction extends to negative-binomial regression (with overdispersion), to logistic regression with `offset = log(odds_baseline)` for known baseline rates, and to Cox regression where person-time at risk plays an analogous role.
+
+## Assumptions
+
+Exposure $E_i > 0$ for every observation; the rate is proportional to exposure (a doubling of exposure doubles the expected count, all else equal); the count distribution (Poisson, NB) is appropriate for the data.
+
+## R Implementation
+
+```r
+set.seed(2026)
+d <- data.frame(
+  x = rnorm(200),
+  person_years = runif(200, 0.5, 5)
+)
+d$events <- rpois(200, lambda = d$person_years * exp(-2 + 0.5 * d$x))
+
+# With offset
+fit <- glm(events ~ x, data = d, family = poisson,
+           offset = log(person_years))
+summary(fit)
+exp(coef(fit))      # rate ratios per unit x
+
+# WITHOUT offset (wrong!): models expected count ignoring exposure
+fit_no_off <- glm(events ~ x, data = d, family = poisson)
+summary(fit_no_off)
+```
+
+## Output & Results
+
+With the offset, the slope coefficient is the log-rate ratio per unit increase in $x$; exponentiating gives the rate ratio (close to the data-generating value of $\exp(0.5) = 1.65$). Without the offset, coefficients absorb the variation in exposure and are biased; the comparison illustrates the importance of correctly specifying the rate model.
+
+## Interpretation
+
+A reporting sentence: "After accounting for variable follow-up via an offset of $\log(\text{person-years})$, each unit increase in $x$ was associated with a 65 % higher event rate per person-year (rate ratio 1.65, 95 % CI 1.32 to 2.05, $p < 0.001$); omitting the offset gives a misleading 'count ratio' of 1.43 that conflates the rate effect with average follow-up." Always state the exposure unit (person-years, 1000 admissions, kilobases) when reporting rate ratios.
+
+## Practical Tips
+
+- The offset is $\log(\text{exposure})$, not exposure itself; using exposure directly is a common bug.
+- The `offset = log(exposure)` argument in `glm()` keeps the coefficient fixed at 1; including `log(exposure)` as a regular predictor estimates the coefficient and produces a different model.
+- Offsets generalise to negative-binomial, zero-inflated, and survival models; check the family-specific syntax (`glmmTMB`, `MASS::glm.nb`, `survival::coxph`).
+- For binomial regression, the analogous construction uses `offset = log(p_baseline / (1 - p_baseline))` when a known baseline is to be respected.
+- Always inspect whether exposure varies meaningfully across observations before deciding to include or omit an offset; ignoring a varying exposure biases all coefficient estimates.
+- Report rate ratios after exponentiating; coefficient on the log scale is rarely the most communicative summary for clinical readers.
+
+## R Packages Used
+
+Base R `glm()` with `offset =` and `family = poisson`; `MASS::glm.nb()` for negative-binomial regression with offsets; `glmmTMB` for mixed-effects count models with offsets and overdispersion; `survival::coxph()` for survival analyses where exposure enters as time at risk.

@@ -115,15 +115,3 @@ Power calculations for rank-based tests (Mann-Whitney, Wilcoxon) are typically 5
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 00c3fa25758240cab7f589426922329e -->
-<img src="https://vg09.met.vgwort.de/na/00c3fa25758240cab7f589426922329e"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

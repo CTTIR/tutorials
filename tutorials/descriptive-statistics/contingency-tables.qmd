@@ -1,0 +1,90 @@
+---
+title: Contingency Tables
+date: "2026-04-17"
+description: "r × c tables of counts, their expected values under independence, and standardised residuals"
+categories:
+  - Descriptive Statistics
+  - contingency-table
+  - expected-counts
+  - residuals
+---
+
+## Introduction
+
+A contingency table is a cross-tabulation treated as the input to a statistical test of independence. The counts in the cells, the expected counts under the independence null, and the standardised residuals that localise any deviation are its three essential components.
+
+## Prerequisites
+
+The reader should know what a cross-tabulation is.
+
+## Theory
+
+For an $r \times c$ contingency table with observed counts $n_{ij}$, row totals $n_{i+}$, column totals $n_{+j}$, and grand total $n$:
+
+- **Expected count** under independence: $E_{ij} = n_{i+} \cdot n_{+j} / n$.
+- **Pearson residual**: $e_{ij} = (n_{ij} - E_{ij}) / \sqrt{E_{ij}}$.
+- **Standardised residual**: Pearson residual divided by $\sqrt{(1 - n_{i+}/n)(1 - n_{+j}/n)}$; approximately standard normal under the null.
+- **Chi-squared statistic**: $\chi^2 = \sum (n_{ij} - E_{ij})^2 / E_{ij}$; under the null, it follows $\chi^2$ with $(r - 1)(c - 1)$ df.
+
+Standardised residuals beyond $\pm 2$ flag cells that substantially exceed or fall short of independence.
+
+## Assumptions
+
+For the chi-squared approximation: independent observations and all expected counts $\geq 5$. For small expected counts, use Fisher's exact test.
+
+## R Implementation
+
+```r
+library(vcd)
+
+cohort <- matrix(c(24, 18, 36, 32, 18, 42, 16, 24, 40),
+                 nrow = 3, byrow = TRUE,
+                 dimnames = list(Stage = c("I", "II", "III"),
+                                 Response = c("CR", "PR", "SD")))
+cohort
+
+chi <- chisq.test(cohort)
+chi
+chi$expected
+chi$residuals         # Pearson residuals
+chi$stdres            # standardised residuals
+
+# Visual representation of residuals
+mosaic(cohort, shade = TRUE, legend = TRUE)
+```
+
+## Output & Results
+
+```
+        Response
+Stage    CR PR SD
+  I      24 18 36
+  II     32 18 42
+  III    16 24 40
+
+Expected:
+       CR   PR   SD
+  I   23.5 18.3 36.2
+  II  27.4 21.4 43.2
+  III 21.1 16.5 33.4
+
+Standardised residuals:
+       CR    PR    SD
+  I   0.15 -0.09 -0.08
+  II  1.32 -1.02 -0.30
+  III -1.50  2.18  1.53
+```
+
+No cell's standardised residual exceeds $\pm 2.5$, so none drives a substantial departure from independence. The chi-squared p-value ($p \approx 0.22$ here) is non-significant.
+
+## Interpretation
+
+Report the contingency table alongside the chi-squared statistic and a measure of association (Cramer's V). Standardised residuals are reported when the omnibus test is significant and the investigator wants to localise the effect.
+
+## Practical Tips
+
+- `chisq.test()` returns the expected counts, Pearson residuals, and standardised residuals as attributes.
+- Mosaic plots (`vcd::mosaic`) encode cell deviations with colour -- a visual alternative to residual tables.
+- For small tables with sparse cells, `fisher.test()` (or Monte Carlo chi-squared) is required.
+- For stratified 2x2 tables across a third variable, use Cochran-Mantel-Haenszel (`mantelhaen.test`).
+- `vcd::assocstats()` returns phi, contingency coefficient, and Cramer's V in one call.

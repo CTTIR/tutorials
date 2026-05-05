@@ -1,0 +1,109 @@
+---
+title: Expectation of a Random Variable
+date: "2026-04-17"
+description: "The probability-weighted average of a random variable's values, with its algebraic properties"
+categories:
+  - Probability Theory
+  - expectation
+  - mean
+  - lotus
+  - linearity
+---
+
+## Introduction
+
+The **expectation** $E[X]$ is the probability-weighted average of the values a random variable can take. It is the centre of gravity of the distribution, the long-run average of repeated independent draws, and the first moment in the moment hierarchy. Along with variance, it is the single most commonly reported summary of a distribution.
+
+## Prerequisites
+
+Random variables, PMF or PDF, basic summation and integration.
+
+## Theory
+
+For a discrete random variable with PMF $p_X$:
+
+$$E[X] = \sum_x x \, p_X(x).$$
+
+For a continuous random variable with PDF $f_X$:
+
+$$E[X] = \int x \, f_X(x) \, dx.$$
+
+**Law of the Unconscious Statistician (LOTUS)**: for a measurable function $g$,
+
+$$E[g(X)] = \sum_x g(x) p_X(x) \quad \text{or} \quad \int g(x) f_X(x) \, dx,$$
+
+without needing to find the distribution of $g(X)$ first.
+
+**Linearity**. Expectation is linear regardless of dependence:
+
+$$E[aX + bY] = a E[X] + b E[Y], \qquad E\!\left[\sum_i X_i\right] = \sum_i E[X_i].$$
+
+**Product rule for independent variables**: $E[XY] = E[X] E[Y]$ when $X \perp Y$.
+
+**Monotonicity**: $X \leq Y$ (pointwise) $\Rightarrow E[X] \leq E[Y]$.
+
+Expectation need not exist. The Cauchy distribution has no finite mean because the integral diverges. Existence requires $E[|X|] < \infty$.
+
+## Assumptions
+
+- $E[|X|] < \infty$ for the expectation to be well-defined.
+- Fubini/Tonelli conditions for interchanging integration and summation when needed (automatic for non-negative variables and for integrable ones).
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+# Exact expectation for discrete RV: binomial
+n <- 10; p <- 0.3
+k <- 0:n
+E_X <- sum(k * dbinom(k, n, p))
+c(formula = E_X, closed_form = n * p)
+
+# Exact expectation for continuous RV: gamma
+integrate(function(x) x * dgamma(x, shape = 3, rate = 0.5), 0, Inf)
+3 / 0.5   # closed form alpha/beta
+
+# LOTUS: E[g(X)] without the distribution of g(X)
+# For X ~ Gamma(3, 0.5), compute E[log(X)]
+integrate(function(x) log(x) * dgamma(x, shape = 3, rate = 0.5), 0, Inf)
+
+# Monte Carlo estimate (LLN justifies this)
+X <- rgamma(1e5, shape = 3, rate = 0.5)
+mean(log(X))
+
+# Linearity check: E[2X + 3Y] = 2E[X] + 3E[Y] regardless of dependence
+X <- rnorm(1e5, 5, 2)
+Y <- 0.7 * X + rnorm(1e5, 0, 1)        # dependent
+c(direct = mean(2 * X + 3 * Y),
+  sum_of_parts = 2 * mean(X) + 3 * mean(Y))
+```
+
+## Output & Results
+
+```
+   formula  closed_form
+       3.0          3.0
+
+6 with absolute error < 8.5e-05
+
+[1] 1.506         # E[log X] via integration
+[1] 1.505         # same via Monte Carlo
+
+     direct  sum_of_parts
+     27.43         27.43
+```
+
+Closed-form, numerical integration, and Monte Carlo all agree, and linearity of expectation holds despite dependence between X and Y.
+
+## Interpretation
+
+When a paper reports a mean, it is (implicitly) reporting an estimate of the expectation of a random variable. The sample mean converges to the expectation as $n$ grows (law of large numbers), so inferences about population-level expectations derive their validity from this convergence.
+
+## Practical Tips
+
+- Linearity is unconditional on dependence; this is the single most useful fact about expectation. It underlies the unbiasedness of the sample mean regardless of the correlation structure.
+- The product rule requires independence: $E[XY] = E[X] E[Y]$ fails when $X, Y$ are dependent.
+- Jensen's inequality: $E[g(X)] \geq g(E[X])$ for convex $g$ (reversed for concave). Taking a log of an expectation is not the expectation of the log.
+- For heavy-tailed distributions (Cauchy, stable with index $< 1$), the mean may not exist; rely on medians instead.
+- Monte Carlo estimation of expectations works for any integrable $X$; convergence rate is $O(n^{-1/2})$ (CLT).

@@ -1,0 +1,76 @@
+---
+title: Residual Diagnostics
+date: "2026-04-17"
+description: "Four standard residual plots, what they show, and how to read them"
+categories:
+  - "Regression & Modelling"
+  - residuals
+  - diagnostics
+  - qq-plot
+---
+
+## Introduction
+
+Residual diagnostics are the post-fit checklist that exposes most assumption violations in regression. Four standard plots do nearly all the heavy lifting: residuals against fitted values, the Normal quantile-quantile plot, scale-location, and residuals-against-leverage. Reading these plots fluently — recognising a funnel as heteroscedasticity, a U-shape as missed non-linearity, heavy tails in the Q-Q plot as non-Normal errors — is one of the core skills of applied regression analysis.
+
+## Prerequisites
+
+A working understanding of regression assumptions (linearity, homoscedasticity, Normal residuals, independence) and basic familiarity with quantile-quantile plots.
+
+## Theory
+
+1. **Residuals-vs-fitted**: checks linearity and equal variance simultaneously. Random scatter around zero indicates the linear-predictor structure is adequate; a systematic trend suggests missed non-linearity; a funnel shape indicates heteroscedasticity.
+
+2. **Normal Q-Q**: ordered standardised residuals plotted against theoretical Normal quantiles. Points on the reference line indicate Normality; heavy tails appear as S-shaped curves; skew shows as asymmetric departure.
+
+3. **Scale-location** ($\sqrt{|r_i|}$ against fitted values): isolates the variance check. A horizontal line indicates homoscedasticity; an upward or downward trend indicates the residual variance changes with the mean.
+
+4. **Residuals-vs-leverage**: identifies influential points. Cook's distance contours overlaid on the plot flag observations whose removal would substantially change the fit.
+
+Studentised residuals (`rstudent()`) divide by an estimate of the residual SD that excludes observation $i$ — preferable to ordinary standardised residuals when leverage is high.
+
+## Assumptions
+
+Classical OLS assumptions; analogous diagnostics exist for GLMs (deviance and Pearson residuals) and mixed models (within- and between-cluster residuals).
+
+## R Implementation
+
+```r
+library(car); library(performance)
+
+fit <- lm(mpg ~ wt + hp, data = mtcars)
+
+# Built-in 4-panel diagnostic
+par(mfrow = c(2, 2))
+plot(fit)
+par(mfrow = c(1, 1))
+
+# performance's modern alternative
+check_model(fit)
+
+# Individual residual types
+resid(fit)              # raw
+rstandard(fit)          # standardised
+rstudent(fit)           # studentised
+```
+
+## Output & Results
+
+Four standard diagnostic plots from `plot(fit)`. `performance::check_model()` produces a richer multi-panel diagnostic with posterior predictive checks (for Bayesian fits), influential observations flagged, and explicit pass/fail-style annotations.
+
+## Interpretation
+
+A reporting sentence: "Residual diagnostics for the linear model (mpg on weight and horsepower) showed: random scatter in residuals-vs-fitted (no missed non-linearity); approximately Normal residuals with mild heavy-tail behaviour at both extremes; constant variance across the fitted range; and three observations with moderate Cook's distance ($D_i$ between 0.15 and 0.30) but none exceeding the conventional cutoff." Always describe what each diagnostic showed; reporting "diagnostics were satisfactory" without specifics is uninformative.
+
+## Practical Tips
+
+- Always plot residuals; summary statistics do not catch the patterns that visual diagnostics reveal.
+- Use studentised residuals (`rstudent`) for outlier checks; they correct for leverage and have a standard $t$ reference distribution.
+- Funnel-shaped residuals-vs-fitted indicate heteroscedasticity; remedies include log-transforming the response, weighted least squares, or robust HC3 standard errors.
+- U-shape in residuals-vs-fitted indicates missed non-linearity; add polynomial terms, splines, or interactions.
+- Heavy-tailed Q-Q plots motivate robust regression (`MASS::rlm`) or a heavier-tailed family ($t$ regression, or robust ML in `lmrob`).
+- Diagnostic plots are interpretive, not pass/fail; reasonable judgement is required and a small departure from ideal can be acceptable in large samples.
+
+## R Packages Used
+
+Base R `plot.lm()` for the standard four-panel diagnostic; `car::residualPlots()` for component-plus-residual plots; `performance::check_model()` for an integrated tidy diagnostic; `DHARMa` for simulation-based residuals on GLMs and mixed models; `MASS::rlm()` for robust regression alternatives when residual diagnostics fail.

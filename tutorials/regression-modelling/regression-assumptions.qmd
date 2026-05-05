@@ -1,0 +1,80 @@
+---
+title: Linear Regression Assumptions
+date: "2026-04-17"
+description: The four classical assumptions of linear regression and how to check each
+categories:
+  - "Regression & Modelling"
+  - assumptions
+  - linearity
+  - homoscedasticity
+  - normality
+  - independence
+---
+
+## Introduction
+
+Linear regression rests on four classical assumptions — linearity, independence, homoscedasticity, and Normality of residuals — each with characteristic diagnostics and remedies when violated. Distinguishing the four is essential because their failures have very different consequences: non-linearity biases coefficients, dependence deflates standard errors, heteroscedasticity gives unbiased coefficients with wrong SEs, and Normality matters mainly for small-sample inference. A responsible analysis checks all four and reports the verdict explicitly.
+
+## Prerequisites
+
+A working understanding of linear regression, residuals, and the standard regression diagnostics.
+
+## Theory
+
+- **Linearity**: $\mathbb E[Y \mid X] = \beta_0 + \sum \beta_j X_j$. Failure produces biased coefficients regardless of sample size.
+- **Independence**: residuals uncorrelated with each other (and with predictors). Time-series, repeated-measures, or clustered data violate this; the consequence is downwardly biased standard errors and inflated Type I error.
+- **Homoscedasticity**: $\mathrm{Var}(\varepsilon \mid X) = \sigma^2$ constant across predictor space. Failure produces unbiased coefficients but wrong standard errors; the fix is robust (sandwich) SEs or weighted least squares.
+- **Normality of residuals**: needed for exact small-sample $t$-test and confidence-interval validity. The central limit theorem makes this assumption mild for large $n$, where coefficient sampling distributions are approximately Normal regardless of residual distribution.
+
+## Assumptions
+
+These four are themselves the assumptions. Diagnostics aim to detect violations, not to "prove" the assumptions hold.
+
+## R Implementation
+
+```r
+library(car); library(performance); library(lmtest)
+
+fit <- lm(mpg ~ wt + hp, data = mtcars)
+
+# Residuals-vs-fitted: linearity and homoscedasticity
+plot(fit, which = 1)
+
+# Q-Q plot of residuals: normality
+plot(fit, which = 2)
+
+# Scale-location: homoscedasticity
+plot(fit, which = 3)
+
+# Residuals vs leverage: influence
+plot(fit, which = 5)
+
+# Formal tests
+bptest(fit)     # Breusch-Pagan for heteroscedasticity
+shapiro.test(residuals(fit))
+dwtest(fit)     # Durbin-Watson for autocorrelation
+
+# performance::check_model combines all
+check_model(fit)
+```
+
+## Output & Results
+
+Four diagnostic plots from `plot.lm()` plus three formal tests: Breusch-Pagan for heteroscedasticity, Shapiro-Wilk for residual Normality, Durbin-Watson for first-order autocorrelation. `performance::check_model()` produces an integrated multi-panel diagnostic with annotations.
+
+## Interpretation
+
+A reporting sentence: "Diagnostic plots showed no systematic patterns: residuals-vs-fitted scattered randomly around zero, scale-location was approximately horizontal, and the Q-Q plot showed only mild tail deviation. Formal tests confirmed: Breusch-Pagan $p = 0.41$ (no evidence of heteroscedasticity), Shapiro-Wilk $p = 0.32$ (residuals consistent with Normality), Durbin-Watson 1.95 (no autocorrelation). All four classical assumptions are reasonably supported." Always report what was checked and the verdict.
+
+## Practical Tips
+
+- Graphical diagnostics are more informative than formal tests, especially at small samples; formal tests have low power below $n = 50$ and reject too easily above $n = 1{,}000$.
+- Heteroscedasticity is common; use robust (HC3) SEs from `sandwich::vcovHC` combined with `lmtest::coeftest` if detected. Alternatively, transform the response or use weighted least squares.
+- Clustering or repeated measures invalidate the independence assumption; fit a linear mixed model (`lme4::lmer`) rather than ordinary regression.
+- Non-linearity is often fixed by a transformation (log, square root), polynomial terms, or splines. The right fix depends on the substantive functional form.
+- Gross departures from Normality at large $n$ typically still allow valid CLT-based inference; the assumption matters most for $t$-tests and CIs at small $n$.
+- Reporting "all assumptions met" without specifying which were checked and how is uninformative; cite the specific diagnostics used.
+
+## R Packages Used
+
+Base R `plot.lm()` and `shapiro.test()`; `lmtest::bptest()` and `dwtest()` for heteroscedasticity and autocorrelation; `car::ncvTest()` and `durbinWatsonTest()` for alternatives; `performance::check_model()` for integrated diagnostics; `sandwich` and `lmtest::coeftest()` for robust SE inference.

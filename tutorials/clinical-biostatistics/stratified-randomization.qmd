@@ -1,0 +1,67 @@
+---
+title: Stratified Randomisation
+date: "2026-04-17"
+description: Separate randomisation lists within levels of baseline covariates
+categories:
+  - Clinical Biostatistics
+  - stratification
+  - randomisation
+  - balance
+---
+
+## Introduction
+
+Stratified randomisation runs a separate block-randomisation list within each stratum defined by one or more baseline covariates — typically centre, sex, age category, disease severity, or other strong prognostic factors. By randomising within strata, the design guarantees balance of the stratification variables across treatment arms, which stabilises subgroup inference, pre-empts the situation in which a strongly prognostic covariate drives apparent arm differences, and is increasingly required by regulators and journals for any multi-centre or prognostically heterogeneous trial. The trade-off is a slight increase in implementation complexity and the risk of empty strata in small trials, both manageable with care.
+
+## Prerequisites
+
+A working understanding of simple and block randomisation, the role of baseline covariates as potential confounders or effect modifiers, and the analytical principle that the design should be reflected in the analysis model.
+
+## Theory
+
+Strata are defined by a cross-tabulation of one or more pre-specified factors — typically 4 to 8 strata total in a real trial, formed by combining centre with one or two prognostic factors. Within each stratum, block randomisation proceeds independently with its own variable-sized blocks, ensuring that arm counts are balanced both globally and within every stratum at every block boundary. The method trades a small amount of design simplicity for guaranteed marginal balance on the stratification variables and substantial protection against centre-by-treatment confounding in multi-centre trials.
+
+## Assumptions
+
+Stratification variables are known and recorded before randomisation (post-hoc stratification is not stratified randomisation but rather post-hoc adjustment), the strata are clinically meaningful and prognostically important, and the trial is large enough that no stratum will end up with too few subjects to support stable within-stratum analysis.
+
+## R Implementation
+
+```r
+library(blockrand)
+
+set.seed(2026)
+
+strata <- c("A", "B", "C")
+schedule <- do.call(rbind, lapply(strata, function(s) {
+  b <- blockrand(n = 20, num.levels = 2,
+                 levels = c("ctrl", "trt"),
+                 block.sizes = c(2, 3))
+  b$centre <- s
+  b
+}))
+
+table(schedule$centre, schedule$treatment)
+head(schedule, 8)
+```
+
+## Output & Results
+
+The script generates three centre-specific allocation schedules and combines them into a master list. The cross-tabulation of centre by treatment shows equal arm counts within each centre — the design's signature property — and the master list is then exported to the trial's interactive web-response system for execution.
+
+## Interpretation
+
+A reporting sentence: "Treatment allocation was stratified by centre (three sites) and by baseline disease severity (mild, moderate, severe), with variable-sized permuted blocks of 2 and 3 within each of the six strata. This guaranteed equal arm allocation at every centre and within every severity stratum, preventing centre-by-treatment and severity-by-treatment confounding. Final arm counts were exactly balanced within every stratum (50 patients per arm per stratum)." Always describe the stratification scheme.
+
+## Practical Tips
+
+- Stratify on the one to three strongest prognostic variables, and not more; more strata mean smaller stratum sizes, more empty cells (especially in small trials), and progressively diminishing protection against the very imbalance the stratification was meant to prevent.
+- Centre is the standard stratification variable for multi-centre trials and is virtually always recommended; centre-specific outcome differences are common and centre-by-treatment confounding can substantially bias the overall estimate.
+- Always analyse with the stratification variables as covariates in the analysis model; stratified randomisation by itself does not produce the correct standard error if the analysis ignores the stratification — analysing as if the trial were simple-randomised understates the precision of the estimate.
+- Do not stratify on a variable you intend to adjust for analytically without that variable being prognostic — redundant stratification dilutes randomisation entropy without analytic benefit. Conversely, every variable used for stratification should also enter the analysis as a covariate.
+- For small trials (typically fewer than 100 subjects total) where stratification on multiple factors would create empty strata, minimisation (Pocock-Simon) is a compromise that balances multiple covariates without forcing strict block structure.
+- The trial's interactive web-response system (IWRS) handles the multi-stratum allocation in real time; running stratified randomisation by hand in a multi-centre trial is operationally fragile and a frequent source of allocation-concealment failures.
+
+## R Packages Used
+
+`blockrand` for canonical stratified block randomisation with built-in stratum looping; `randomizr` for tidyverse-friendly stratified randomisation with explicit unit-of-randomisation control; `Minirand::Pocock` for minimisation as an alternative when stratum cells would be too sparse; `bcrm` and related packages for biased-coin variants; `Mediana` for trial-design simulation including stratified-randomisation strategies.

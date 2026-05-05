@@ -1,0 +1,65 @@
+---
+title: The Gap Statistic
+date: "2026-04-17"
+description: Choosing the number of clusters via comparison with a null (uniform) distribution
+categories:
+  - Multivariate Statistics
+  - gap-statistic
+  - cluster-number
+  - bootstrap
+---
+
+## Introduction
+
+The gap statistic, introduced by Tibshirani, Walther, and Hastie in 2001, is a principled way to choose the number of clusters $k$ in any partitioning method. Where the elbow method relies on visual judgement and the silhouette method on per-observation neighbour comparisons, the gap statistic compares the within-cluster dispersion of the data to what would be expected under a null reference distribution with no cluster structure. The point at which the data deviate most from the null is the optimal $k$, with bootstrap-based standard errors that quantify the certainty of the choice.
+
+## Prerequisites
+
+A working understanding of clustering algorithms, within-cluster sum of squares, and bootstrap resampling for standard error estimation.
+
+## Theory
+
+For each candidate $k$, define $W_k$ as the log of the within-cluster dispersion (sum of squared distances to centroids) on the actual data after running $k$-means or another partitioning algorithm. Generate $B$ datasets from a null reference — uniformly distributed over the data's bounding box, or over its principal-components box — and compute the average within-cluster dispersion $\mathbb E[W_k^*]$ under the null. The gap statistic is
+
+$$\mathrm{Gap}(k) = \mathbb E[W_k^*] - W_k.$$
+
+The optimal $k$ is the smallest value satisfying $\mathrm{Gap}(k) \ge \mathrm{Gap}(k+1) - s_{k+1}$, where $s_{k+1}$ is the standard deviation of the null reference at $k+1$ (the so-called "first-SE-max" criterion). This rule rewards parsimonious choices: it picks the smallest $k$ that is not significantly worse than larger values.
+
+## Assumptions
+
+A meaningful distance metric on the data; the null reference distribution is sensible (uniform over the bounding box is reasonable for low-to-moderate dimensions; PC-aligned bounding boxes are better in high dimensions).
+
+## R Implementation
+
+```r
+library(cluster); library(factoextra)
+
+X <- scale(iris[, 1:4])
+
+set.seed(2026)
+gap <- clusGap(X, FUN = kmeans, nstart = 25, K.max = 10, B = 100)
+print(gap, method = "firstSEmax")
+
+fviz_gap_stat(gap)
+```
+
+## Output & Results
+
+`clusGap()` returns a matrix with $W_k$, $\mathbb E[W_k^*]$, the gap value, and its bootstrap standard error for each $k$. `print(..., method = "firstSEmax")` applies Tibshirani's selection rule to identify the optimal $k$. `fviz_gap_stat()` plots the gap curve with error bars.
+
+## Interpretation
+
+A reporting sentence: "The gap statistic, computed with $B = 100$ bootstrap replicates against a uniform reference, identified $k = 3$ as the optimal number of clusters using the firstSEmax criterion ($\mathrm{Gap}(3) = 0.59$, $\mathrm{Gap}(4) - s_4 = 0.55$); this matches the underlying species structure in the iris data." Report the criterion explicitly (firstSEmax, Tibs2001SEmax, globalmax); they sometimes disagree.
+
+## Practical Tips
+
+- Use $B = 100$ to $500$ bootstrap replicates; fewer can produce unstable optima, more is rarely worth the runtime cost.
+- The default uniform-bounding-box reference works well in low dimensions; in high dimensions, switch to a PC-aligned reference (`spaceH0 = "scaledPCA"`).
+- Combine the gap statistic with elbow and silhouette methods; concordance across all three is the strongest argument for a chosen $k$.
+- Gap performs best on well-separated clusters; for overlapping or hierarchical structures it can favour very large $k$ or fail to find a clear optimum.
+- For very large datasets, subsample before applying the gap statistic; the bootstrap step otherwise dominates runtime.
+- Selection criteria differ: `firstSEmax` (Tibshirani's parsimonious choice), `globalmax` (the absolute maximum, often larger), and `Tibs2001SEmax` (the original 2001 rule). Quote the criterion in any report.
+
+## R Packages Used
+
+`cluster` for `clusGap()` and the underlying clustering algorithms; `factoextra` for `fviz_gap_stat()` and `fviz_nbclust()` ggplot-style visualisation; `NbClust` for 30+ alternative cluster-validation indices in one call.

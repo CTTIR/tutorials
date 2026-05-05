@@ -1,0 +1,69 @@
+---
+title: Differential Expression with limma-voom
+date: "2026-04-17"
+description: Transforming counts for linear modelling with precision weights
+categories:
+  - Bioinformatics
+  - limma
+  - voom
+  - precision-weights
+---
+
+## Introduction
+
+limma-voom is one of the three dominant differential-expression methods for RNA-seq (alongside DESeq2 and edgeR). The voom step transforms raw counts onto the log-CPM scale and computes per-observation precision weights that account for the mean-variance trend characteristic of count data. The result is suitable input to limma's full linear-modelling framework, which adds the empirical-Bayes shrinkage of variance estimates that drives limma's power on small samples and complex designs.
+
+## Prerequisites
+
+A working understanding of linear models, RNA-seq normalisation (TMM via edgeR), the mean-variance relationship of count data, and the empirical-Bayes shrinkage approach.
+
+## Theory
+
+`voom()` transforms raw counts via $\log_2(\mathrm{CPM} + 0.5)$ and fits a smooth mean-variance trend across genes. The fitted trend produces a precision weight for each observation; downstream `lmFit()` regression uses these weights so that low-expression genes (with high relative variance) contribute less to the joint estimation. The empirical-Bayes step (`eBayes()`) shrinks per-gene variance estimates toward the global trend, yielding moderated $t$-statistics that have better small-sample properties than ordinary $t$-tests.
+
+The full limma-voom pipeline supports arbitrarily complex designs (interactions, blocking, batch adjustment) through standard `model.matrix` notation, and the contrast machinery handles multi-condition comparisons cleanly via `contrasts.fit()`.
+
+## Assumptions
+
+Counts have been TMM-normalised (via `calcNormFactors` from edgeR); the chosen design matrix correctly encodes the biological and technical factors; the mean-variance trend is approximately monotone (true for typical bulk RNA-seq).
+
+## R Implementation
+
+```r
+library(limma); library(edgeR)
+
+set.seed(2026)
+counts <- matrix(rpois(20000 * 12, lambda = 30), 20000, 12)
+group <- factor(rep(c("A", "B"), each = 6))
+
+dge <- DGEList(counts = counts); dge <- calcNormFactors(dge)
+design <- model.matrix(~ group)
+
+v <- voom(dge, design, plot = FALSE)
+fit <- lmFit(v, design)
+fit <- eBayes(fit)
+
+topTable(fit, coef = 2, n = 10)
+summary(decideTests(fit))
+```
+
+## Output & Results
+
+`topTable()` returns the top differentially-expressed genes with $\log_2$ fold change, average expression, moderated $t$-statistic, raw $p$-value, and Benjamini-Hochberg adjusted $p$-value. `decideTests()` summarises significance calls per contrast, useful for cross-method comparison.
+
+## Interpretation
+
+A reporting sentence: "limma-voom identified 380 genes at FDR < 0.05 between conditions A and B (n = 6 per group), with mean fold change among significant genes of 1.7 (range 0.4 to 3.8); the corresponding edgeR analysis on the same data identified 342 genes, with 320 genes (84 %) shared between methods, indicating substantial concordance." Always state the FDR threshold and the design matrix structure.
+
+## Practical Tips
+
+- limma-voom is competitive with edgeR's `glmQLFit` and DESeq2's negative-binomial Wald test; choose based on workflow conventions and personal preference rather than expected accuracy gains.
+- `voomWithQualityWeights()` additionally down-weights noisy samples, useful when one or two samples have visibly poor QC; combine the two weight types when sample-level variability is substantial.
+- For complex designs (interactions, multiple blocking factors), the standard `model.matrix` and `contrasts.fit()` machinery applies; limma's design language is among the most flexible.
+- Voom is well-suited to scRNA-seq pseudobulk: aggregate cells per cluster into pseudo-bulk counts, then run voom on the resulting matrix.
+- For very few samples per group (n < 3), variance estimates are unstable; consider DESeq2 with its variance-stabilising shrinkage, or rely heavily on the empirical Bayes step in limma.
+- Pair the analysis with `voomQCPlot` or `meanvariancetrend()` diagnostic plots to confirm the variance trend is well-fitted.
+
+## R Packages Used
+
+`limma` for `voom()`, `lmFit()`, `eBayes()`, `topTable()`, and the broader linear-modelling framework; `edgeR` for `DGEList`, `calcNormFactors` (TMM normalisation); `Glimma` for interactive MA and volcano plots; `EnhancedVolcano` for publication-ready volcano plots from limma output.

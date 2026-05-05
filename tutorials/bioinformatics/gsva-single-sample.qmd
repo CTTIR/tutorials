@@ -1,0 +1,71 @@
+---
+title: GSVA Single-Sample Enrichment
+date: "2026-04-17"
+description: Per-sample pathway scores for downstream sample-level analysis
+categories:
+  - Bioinformatics
+  - gsva
+  - ssgsea
+  - single-sample
+---
+
+## Introduction
+
+GSVA (Gene Set Variation Analysis) transforms a gene-by-sample expression matrix into a pathway-by-sample matrix by assigning each sample a per-pathway enrichment score. The transformation enables pathways to be treated as features in any downstream analysis — Cox regression for survival, clustering, classification, or differential analysis at the pathway level. Where over-representation analysis (GO, KEGG over-representation) tells you which pathways are enriched in a hit list, GSVA tells you how each individual sample stands relative to a panel of pathways.
+
+## Prerequisites
+
+A working understanding of gene-set enrichment, log-normalised expression matrices, and the difference between sample-level and contrast-level enrichment.
+
+## Theory
+
+For each sample, GSVA computes an empirical CDF of expression values across genes (rank-based) and derives a Kolmogorov-Smirnov-like statistic for each gene set. The result is a per-sample, per-pathway score, typically on a roughly $[-1, 1]$ scale. ssGSEA (single-sample GSEA) is a related method differing primarily in the weighting scheme; both are implemented in the `GSVA` package.
+
+The transformed pathway-by-sample matrix can be analysed with any standard tool: limma for differential pathway expression, Cox regression for survival, hierarchical clustering, supervised classification.
+
+## Assumptions
+
+Expression is consistently normalised across samples; gene sets are accurately curated and relevant to the biology; scores are interpretable as relative within a study but not on an absolute scale across studies.
+
+## R Implementation
+
+```r
+library(GSVA)
+
+set.seed(2026)
+n_genes <- 500; n_samples <- 20
+expr <- matrix(rnorm(n_genes * n_samples), n_genes, n_samples)
+rownames(expr) <- paste0("g", 1:n_genes)
+
+pathways <- list(
+  path_A = paste0("g", sample(1:n_genes, 30)),
+  path_B = paste0("g", sample(1:n_genes, 40)),
+  path_C = paste0("g", sample(1:n_genes, 25))
+)
+
+gsva_scores <- gsva(expr, pathways, method = "gsva", kcdf = "Gaussian",
+                    verbose = FALSE)
+dim(gsva_scores)        # pathways x samples
+round(gsva_scores[, 1:4], 2)
+```
+
+## Output & Results
+
+`gsva()` returns a pathway-by-sample matrix of enrichment scores. Each column is one sample's pathway profile; high scores indicate the pathway's genes are coordinately up-regulated in that sample relative to others, low scores indicate the opposite.
+
+## Interpretation
+
+A reporting sentence: "GSVA pathway scores (Hallmark v7.5 gene sets, log-CPM input, Gaussian kernel) served as features in a Cox regression of overall survival across 200 patients; the inflammatory-response pathway emerged as the strongest independent predictor (HR 1.7 per SD increase, 95 % CI 1.2 to 2.4, $p = 0.002$) after adjustment for age, stage, and treatment arm." Always state the gene-set source, the kernel, and the input data.
+
+## Practical Tips
+
+- Use `kcdf = "Gaussian"` for log-CPM, `kcdf = "Poisson"` for raw counts; the wrong setting biases scores systematically.
+- Downstream differential-pathway analysis works with a standard limma fit on the GSVA score matrix with the same design used for gene-level analysis.
+- For single-cell expression, per-cell GSVA is very noisy; aggregate cells into pseudobulk first, or use signed-rank alternatives (`AUCell`, `UCell`) designed for the single-cell context.
+- Always compute GSVA on a single, consistently normalised expression matrix; mixing normalisations across the input matrix produces invalid scores.
+- Scores are relative within a study; do not compare raw GSVA scores across independent datasets without re-running on the combined matrix.
+- For pathway exploration, the MSigDB Hallmark, KEGG, and Reactome gene sets (via `msigdbr::msigdbr()`) are the standard starting libraries.
+
+## R Packages Used
+
+`GSVA::gsva()` for the canonical GSVA and ssGSEA implementation; `msigdbr` for MSigDB gene-set retrieval; `AUCell` and `UCell` for single-cell-friendly enrichment alternatives; `singscore` for an alternative rank-based single-sample method; `escape` for a `Seurat`-integrated GSVA workflow.

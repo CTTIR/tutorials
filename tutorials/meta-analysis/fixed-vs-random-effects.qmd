@@ -1,0 +1,117 @@
+---
+title: Fixed-Effect vs. Random-Effects Meta-Analysis
+date: "2026-04-17"
+description: "Two ways to pool study-level effect sizes, and the consequences of each for inference and interpretation"
+categories:
+  - Meta-Analysis
+  - meta-analysis
+  - fixed-effect
+  - random-effects
+  - heterogeneity
+---
+
+## Introduction
+
+A meta-analysis pools effect-size estimates from multiple studies into a single summary. The two classical approaches -- the fixed-effect model and the random-effects model -- rest on different assumptions about what those studies represent. Choosing between them is not a technical afterthought; it is a substantive decision about the scope of inference, and it can change both the point estimate and its uncertainty.
+
+## Prerequisites
+
+The reader should know what an effect size is (mean difference, standardised mean difference, log-odds ratio, etc.), how its standard error is computed, and how a weighted average works. Familiarity with the `meta` or `metafor` packages is helpful.
+
+## Theory
+
+Let $\hat{\theta}_i$ be the effect-size estimate from study $i$ with variance $v_i$, for $i = 1, \ldots, k$.
+
+### Fixed-effect model
+
+Assumes all studies estimate the *same* true effect $\theta$:
+
+$$\hat{\theta}_i = \theta + \varepsilon_i, \qquad \varepsilon_i \sim \mathcal{N}(0, v_i).$$
+
+The optimal pooled estimate is the inverse-variance-weighted mean
+
+$$\hat{\theta}_{\text{FE}} = \frac{\sum w_i \hat{\theta}_i}{\sum w_i}, \qquad w_i = 1/v_i,$$
+
+with standard error $1 / \sqrt{\sum w_i}$. Scope of inference: *the set of studies included.*
+
+### Random-effects model
+
+Assumes each study estimates its own study-specific true effect, drawn from a distribution of true effects across a population of plausible studies:
+
+$$\hat{\theta}_i = \theta_i + \varepsilon_i, \qquad \theta_i \sim \mathcal{N}(\mu, \tau^2), \qquad \varepsilon_i \sim \mathcal{N}(0, v_i).$$
+
+The weights become $w_i^* = 1/(v_i + \tau^2)$, where $\tau^2$ is the between-study variance, estimated by DerSimonian-Laird, REML, Paule-Mandel, or Sidik-Jonkman. The pooled estimate is $\hat{\mu} = \sum w_i^* \hat{\theta}_i / \sum w_i^*$. Scope of inference: *the population of studies from which the included ones are a sample.*
+
+When $\tau^2 = 0$ (no heterogeneity), the random-effects model reduces to the fixed-effect model. When $\tau^2$ is large, random-effects weights are more balanced (small studies get relatively more weight), and the random-effects CI is wider than the fixed-effect CI -- properly so, since it reflects between-study variability.
+
+## Assumptions
+
+Both models assume:
+
+- Study-level effect estimates are approximately normal with known variance.
+- Studies are independent of each other.
+- No publication bias or other selection distorting the set of included studies.
+
+The fixed-effect model additionally assumes a single true effect. The random-effects model assumes a normal distribution of true effects; the Hartung-Knapp adjustment corrects CIs under small $k$ or imprecise $\tau^2$ estimates.
+
+## R Implementation
+
+```r
+library(meta)
+
+dat <- data.frame(
+  study = paste("Study", 1:8),
+  mean_t = c(11.2, 9.8, 12.5, 10.1, 13.0, 8.7, 11.6, 10.9),
+  sd_t   = c(2.1, 2.4, 2.0, 2.6, 1.9, 2.8, 2.2, 2.3),
+  n_t    = c(40, 35, 50, 30, 45, 25, 38, 42),
+  mean_c = c(9.8, 9.5, 10.1, 9.9, 10.5, 9.0, 10.0, 10.2),
+  sd_c   = c(2.0, 2.3, 2.1, 2.5, 2.0, 2.7, 2.1, 2.2),
+  n_c    = c(40, 35, 50, 30, 45, 25, 38, 42)
+)
+
+m <- metacont(n.e = n_t, mean.e = mean_t, sd.e = sd_t,
+              n.c = n_c, mean.c = mean_c, sd.c = sd_c,
+              studlab = study, data = dat,
+              sm = "MD",
+              method.tau = "REML",
+              method.random.ci = "HK")
+
+summary(m)
+
+forest(m, leftcols = c("studlab", "n.e", "mean.e", "sd.e",
+                        "n.c", "mean.c", "sd.c"))
+```
+
+`metacont()` handles continuous outcomes with mean differences. Setting `method.tau = "REML"` uses REML for $\tau^2$; `method.random.ci = "HK"` applies the Hartung-Knapp correction to the random-effects confidence interval.
+
+## Output & Results
+
+Typical output:
+
+```
+                       MD           95%-CI %W(fixed) %W(random)
+Fixed effect model  1.210 [ 0.802; 1.618]    100.0       --
+Random effects model 1.195 [ 0.567; 1.822]      --    100.0
+
+Quantifying heterogeneity:
+ tau^2 = 0.3521; tau = 0.5934;
+ I^2 = 52.8% [0.0%; 78.4%]; H = 1.46 [1.00; 2.15]
+
+Test of heterogeneity:
+     Q d.f.  p-value
+ 14.83    7   0.0381
+```
+
+The fixed-effect and random-effects point estimates are similar here (1.21 vs. 1.20), but the random-effects confidence interval is more than 50% wider, reflecting the moderate heterogeneity ($I^2 = 53\%$).
+
+## Interpretation
+
+Report both models when $I^2$ is non-negligible, and emphasise the random-effects result with its Hartung-Knapp CI as the primary inference when heterogeneity is plausible on substantive grounds. Include the $\tau^2$ estimate and the prediction interval -- the latter answers "what true effect should I expect in a future, similar study?" and is often the most informative summary for a clinician.
+
+## Practical Tips
+
+- Choose the model based on subject-matter plausibility, not on whether heterogeneity is statistically significant -- $Q$-tests are underpowered with few studies.
+- Report the prediction interval alongside the pooled estimate; it is the honest summary of what the pooled result implies for a new study.
+- Use REML or Paule-Mandel for $\tau^2$; DerSimonian-Laird is the historical default but understates $\tau^2$ with few studies.
+- Never pool fewer than 3 studies without explicit caveat; with 5 or fewer, consider narrative synthesis rather than meta-analysis.
+- When heterogeneity is high, investigate it with subgroup analysis and meta-regression before pooling.

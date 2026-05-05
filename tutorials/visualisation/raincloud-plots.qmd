@@ -1,0 +1,68 @@
+---
+title: Raincloud Plots
+date: "2026-04-17"
+description: "Half-violin + jittered raw points + boxplot: a comprehensive distribution display"
+categories:
+  - Data Visualisation
+  - raincloud
+  - ggdist
+  - distribution
+---
+
+## Introduction
+
+A raincloud plot is the modern alternative to the bar-with-error-bar chart for comparing continuous distributions across groups. Proposed by Allen and colleagues in 2019, it combines three pieces of information into one panel: a half-violin showing the kernel density (the "cloud"), jittered raw observations (the "rain"), and a small boxplot encoding the median and quartiles. The result preserves all the distributional information that bars throw away — modes, skew, outliers, sample sizes — while still presenting the central tendency that drives most reporting decisions.
+
+## Prerequisites
+
+A working knowledge of boxplots, violin plots, kernel density estimation, and `ggplot2` aesthetic mappings.
+
+## Theory
+
+A raincloud plot stacks three layers per group:
+
+1. **Half-violin** drawn to one side (`stat_halfeye()` from `ggdist` or `geom_violinh()` from `gghalves`); displays the density shape.
+2. **Jittered raw points** (`geom_point()` with `position_jitter()` or `ggbeeswarm::geom_beeswarm()`); shows individual observations.
+3. **Narrow boxplot** with hidden outliers (`geom_boxplot(width = 0.12, outlier.shape = NA)`); communicates the median, IQR, and whisker range.
+
+`coord_flip()` rotates the layout to horizontal, which makes long category names easier to read. The half-violin opens away from the data column so the cloud, the rain, and the boxplot sit side by side rather than stacked.
+
+## Assumptions
+
+A continuous outcome and a categorical (or ordered) grouping variable. Each group should have enough observations (at least 20–30) for the kernel density to be meaningful; below that, drop the half-violin and show the points alone.
+
+## R Implementation
+
+```r
+library(ggplot2); library(ggdist)
+
+ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
+  stat_halfeye(adjust = 0.5, justification = -0.2, .width = 0, point_colour = NA) +
+  geom_boxplot(width = 0.12, outlier.shape = NA, alpha = 0.5) +
+  geom_point(position = position_jitter(width = 0.05, seed = 1),
+             size = 1.3, alpha = 0.5) +
+  scale_fill_brewer(palette = "Set2") +
+  coord_flip() +
+  theme_minimal()
+```
+
+## Output & Results
+
+A horizontal raincloud plot for the iris dataset: each species occupies one row with its density rendered as a half-violin to the right, a small boxplot in the middle, and jittered raw points to the left. The full distribution, summary statistics, and individual observations are visible simultaneously.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Raincloud plots of sepal length by species (n = 50 per group): the half-violin shows kernel-density estimates (`adjust = 0.5`), the jittered points show individual observations, and the boxplot summarises the median and IQR. Setosa is well-separated from the other two species, which overlap considerably." Mention the bandwidth (or `adjust`) used; it shapes the visible structure of the cloud.
+
+## Practical Tips
+
+- Use `coord_flip()` for long group names; vertical raincloud plots crowd labels and waste space.
+- Drop the boxplot layer when group sizes are small (< 30); it adds visual clutter without summarising much.
+- For very large per-group $n$ (thousands), replace jittered points with a single hexbin column or an alpha-blended strip; thousands of dots stack into noise.
+- Set `outlier.shape = NA` in the boxplot so individual outliers do not appear twice (once in the rain, once flagged by the box whiskers).
+- Use `ggbeeswarm::geom_beeswarm()` instead of `position_jitter()` when collisions matter; it produces a tidy spread along the category axis.
+- `ggdist` is the modern implementation and integrates with Bayesian posterior summaries; `gghalves` is an older alternative still in active use.
+
+## R Packages Used
+
+`ggdist` for `stat_halfeye()`, `stat_dots()`, and other slabinterval geoms; `ggplot2` for the underlying grammar; `gghalves` as an older alternative for half-violins; `ggbeeswarm` for collision-free jittered rain layers.

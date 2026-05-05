@@ -1,0 +1,74 @@
+---
+title: Multinomial Logistic Regression
+date: "2026-04-17"
+description: Regression for unordered categorical outcomes with three or more levels
+categories:
+  - "Regression & Modelling"
+  - multinomial
+  - categorical-outcome
+  - softmax
+---
+
+## Introduction
+
+Multinomial logistic regression extends binary logistic regression to outcomes with three or more unordered categories. Where binary logistic models the log-odds of one category vs another, multinomial models the log-relative-risk-ratios of each non-reference category against a chosen reference, simultaneously across all $k - 1$ contrasts. It is the standard tool for predicting voting choice, transportation mode, disease subtype, or any categorical outcome whose categories have no inherent ordering.
+
+## Prerequisites
+
+A working understanding of binary logistic regression, the softmax function, and the relative-risk-ratio interpretation of exponentiated coefficients.
+
+## Theory
+
+For outcome $Y \in \{1, \dots, k\}$ with category 1 as reference:
+
+$$\log \frac{\mathrm P(Y = j)}{\mathrm P(Y = 1)} = \beta_0^{(j)} + \sum_l \beta_l^{(j)} X_l, \qquad j = 2, \dots, k.$$
+
+The model fits $k - 1$ linear equations simultaneously by maximum likelihood. Exponentiating $\beta_l^{(j)}$ gives the relative-risk ratio: the multiplicative change in $\mathrm P(Y = j) / \mathrm P(Y = 1)$ per unit increase in $X_l$, holding other predictors fixed.
+
+The independence-of-irrelevant-alternatives (IIA) assumption — that the ratio of probabilities between any two categories does not depend on which other categories are available — is the key restriction. When IIA fails, nested or mixed logit alternatives generalise the model.
+
+## Assumptions
+
+Unordered categorical outcome (use ordinal logistic for ordered outcomes), independent observations, IIA, and a sufficiently large sample to estimate $k - 1$ sets of coefficients (rule of thumb: $\ge 10$ events in the smallest category per coefficient).
+
+## R Implementation
+
+```r
+library(nnet); library(broom); library(gtsummary)
+
+data(iris)
+fit <- multinom(Species ~ Sepal.Length + Sepal.Width, data = iris, trace = FALSE)
+
+# Coefficients (log-RRR)
+summary(fit)
+
+# Exponentiated as relative-risk ratios
+tidy(fit, exponentiate = TRUE, conf.int = TRUE)
+
+# Predicted probabilities
+head(predict(fit, type = "probs"))
+
+# Publication-ready table
+tbl_regression(fit, exponentiate = TRUE)
+```
+
+## Output & Results
+
+`summary(fit)` returns coefficient tables per non-reference category; `tidy(fit, exponentiate = TRUE)` provides relative-risk ratios with confidence intervals. `predict(..., type = "probs")` returns predicted category probabilities for new observations.
+
+## Interpretation
+
+A reporting sentence: "Compared to setosa (reference), each 1-cm increase in sepal length multiplied the relative risk of versicolor over setosa by 10.8 (95 % CI 3.7 to 31.2, $p < 0.001$); the corresponding RRR for virginica was 9.0 (95 % CI 3.1 to 26.0, $p < 0.001$). The reference category (setosa) was chosen because it is one of the three iris species and serves as the baseline group." Always state the reference category and the assumed IIA.
+
+## Practical Tips
+
+- Test IIA with the Hausman-McFadden test (`mlogit::hmftest`); if violated, switch to nested or mixed logit (`mlogit`).
+- Choose the reference category for the most interpretable contrasts — typically the most common category or a substantively meaningful baseline.
+- `nnet::multinom()` uses BFGS optimisation; for very large problems with many categories or predictors, `mclogit` or `mlogit` scale better.
+- For ordered outcomes, ordinal logistic regression is more efficient than multinomial; check ordering of levels before defaulting to multinomial.
+- Communicate results via predicted probability plots (`ggeffects::ggpredict`); readers absorb absolute probabilities better than relative-risk ratios.
+- Variable selection in multinomial models is awkward because each predictor produces $k - 1$ coefficients; consider penalised multinomial logistic (`glmnet(family = "multinomial")`).
+
+## R Packages Used
+
+`nnet::multinom()` for the canonical implementation; `mlogit` for choice models with rich panel and nested-logit extensions; `glmnet(family = "multinomial")` for penalised multinomial logistic; `broom::tidy()` for tidy output; `gtsummary::tbl_regression()` for publication-ready tables; `ggeffects` for predicted probability plots.

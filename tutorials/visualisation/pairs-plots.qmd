@@ -1,0 +1,61 @@
+---
+title: Pairs Plots
+date: "2026-04-17"
+description: Scatterplot matrices for exploring pairwise relationships among several continuous variables
+categories:
+  - Data Visualisation
+  - pairs-plot
+  - ggpairs
+  - scatterplot-matrix
+---
+
+## Introduction
+
+A pairs plot — also called a scatterplot matrix — shows every pairwise scatter for a set of continuous variables in a single grid figure. Modern variants enrich the matrix with marginal histograms or densities along the diagonal and correlation coefficients (or other pairwise summaries) in the upper triangle. The result is the single most efficient exploratory diagnostic for a small-to-moderate set of variables: it surfaces non-linearity, outliers, subgroup separation, and multicollinearity in one pass.
+
+## Prerequisites
+
+A working knowledge of scatter plots, correlation, and group-coloured aesthetics; familiarity with the `GGally` package's extensions to `ggplot2`.
+
+## Theory
+
+For $p$ variables the matrix has $p^2$ cells. The diagonal shows the marginal distribution of each variable (histogram, density, or a labelled bar for factors). The lower triangle shows pairwise scatter plots; the upper triangle shows summary statistics — most commonly Pearson, Spearman, or Kendall correlations, optionally annotated by significance. `GGally::ggpairs()` is the canonical implementation, with arguments `lower`, `upper`, and `diag` each accepting a list of cell-type specifications. Group structure is added via `aes(colour = group)` which propagates through every panel and provides immediate insight into between-group differences.
+
+## Assumptions
+
+Each pairwise cell inherits the assumptions of the relevant geom: scatter plots assume continuous data; correlation cells assume meaningful linear (or rank) association. Categorical variables are displayed with bar charts and contingency tables in the off-diagonal cells.
+
+## R Implementation
+
+```r
+library(GGally)
+
+# Basic pairs plot
+ggpairs(iris, columns = 1:4, aes(colour = Species, alpha = 0.5)) +
+  theme_minimal()
+
+# Custom lower-triangle geoms
+ggpairs(mtcars, columns = c("mpg", "wt", "hp", "qsec"),
+        lower = list(continuous = "smooth"))
+```
+
+## Output & Results
+
+Two pairs plots: a four-variable matrix of the iris dataset coloured by species, and a four-variable matrix of `mtcars` numerical columns with LOESS smoothers in the lower triangle. The first reveals the species-driven separation across nearly every pairwise plot; the second emphasises the curvilinear weight–mpg and horsepower–quarter-mile relationships that a single scatter would obscure.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Pairs plot of four iris measurements (n = 150), coloured by species; diagonal shows kernel densities, lower triangle shows pairwise scatter, upper triangle shows Pearson correlations within each species (`GGally::ggpairs`)." Always state the correlation type used in the upper triangle and the geom chosen for the lower; defaults differ between versions.
+
+## Practical Tips
+
+- Keep the matrix to 3–6 variables; cells shrink quadratically and become unreadable beyond that. For more variables, switch to a correlation heatmap or a focused PCA.
+- Add `aes(colour = group)` to surface between-group structure; the same colour propagates through diagonal densities and lower-triangle scatters automatically.
+- For large $n$, replace scatter cells with hexbin via `lower = list(continuous = "hex")`; a 50-by-50 grid scales to millions of points where individual scatters fail.
+- `diag = list(continuous = "barDiag")` shows histograms instead of densities; useful for discrete-looking continuous variables (e.g. integer scores).
+- Save pairs plots at large dimensions (`ggsave(..., width = 10, height = 10, dpi = 300)`); shrinking them to a single column makes the cells unreadable.
+- For posterior or simulation diagnostics, `bayesplot::mcmc_pairs()` is the Bayesian-flavoured analogue and overlays divergent transitions on the off-diagonal cells.
+
+## R Packages Used
+
+`GGally` for `ggpairs()`, `ggcorr()`, and the `wrap()` helper that lets you customise individual cell types; `ggplot2` for the underlying grammar; `bayesplot::mcmc_pairs()` for posterior-draw matrices in MCMC diagnostics.

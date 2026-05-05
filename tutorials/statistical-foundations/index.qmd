@@ -1,0 +1,278 @@
+---
+title: Statistical Foundations
+description: "The conceptual bedrock of applied statistics: measurement, populations, sampling, estimation theory, and likelihood"
+---
+
+Before any specific test or model, an analyst needs a firm grasp of the vocabulary and logic that underlies every statistical procedure. This area walks through what it means to measure a phenomenon, how a sample relates to the population it is drawn from, why the central limit theorem is the workhorse of inference, and how likelihood turns data into a scoring rule for competing hypotheses.
+
+Each tutorial is self-contained and written so that a reader can land on any one page and understand the topic without prior context. Code examples use R throughout, with simulated data whenever real datasets would obscure the concept under discussion.
+
+## What you will learn
+
+- Scales of measurement (nominal, ordinal, interval, ratio) and how they constrain the statistics you can compute
+- The distinction between a population parameter and a sample estimate, and why this matters for interpretation
+- How sampling distributions arise and why they are more fundamental than the distribution of the raw data
+- The central limit theorem and its practical implications for inference on means
+- Point estimation, unbiasedness, consistency, efficiency, and the standard error
+- Maximum likelihood estimation as a general principle for fitting models
+- Sufficient statistics and information in a sample (Fisher information)
+
+## Suggested order
+
+Readers new to statistics may want to proceed in the order given in the sidebar; readers reviewing for a specific concept can jump directly to the relevant tutorial.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bias and Variance of Estimators](bias-and-variance.qmd)
+Decomposing an estimator's mean squared error into systematic bias and sampling variance
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Big-Op and Little-op Notation](big-op-little-op.qmd)
+Stochastic order symbols for describing rates of convergence and stochastic magnitudes
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Characteristic Functions](characteristic-functions.qmd)
+Fourier transforms of distributions: always exist, uniquely identify the distribution, and drive convergence theorems
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Confidence Intervals: Introduction](confidence-intervals-introduction.qmd)
+Interval estimates with a coverage guarantee, and how they differ from credible intervals
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Convergence in Distribution](convergence-in-distribution.qmd)
+The weakest standard mode of convergence, underlying the central limit theorem
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Convergence in Probability](convergence-in-probability.qmd)
+The mode of convergence that underpins consistency of estimators
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Estimators and Estimation](estimators-and-estimation.qmd)
+Point estimation and the plug-in principle: turning a sample into a guess about a population parameter
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Fisher Information](fisher-information.qmd)
+How much the data tell you about a parameter, measured by the curvature of the log-likelihood
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Jensen's Inequality](jensens-inequality.qmd)
+The expectation of a convex function is at least the convex function of the expectation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Likelihood Ratio Tests](likelihood-ratio-tests.qmd)
+Comparing nested models by the ratio of maximised likelihoods, with Wilks' asymptotic chi-squared
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Markov and Chebyshev Inequalities](chebyshev-markov.qmd)
+Tail bounds derived from moments, with the LLN as a simple consequence
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Maximum Likelihood Estimation](maximum-likelihood-estimation.qmd)
+The likelihood function, score equations, and asymptotic properties of the MLE
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Moments and Moment Generating Functions](moments-and-mgfs.qmd)
+Moments summarise distributions; the MGF is a generating function that often characterises them uniquely
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Order Statistics](order-statistics.qmd)
+Distributions of the sorted sample and their role in quantile theory and robust estimation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Pivotal Quantities](pivotal-quantities.qmd)
+Functions of data and parameter whose distribution does not depend on the parameter, and the CIs they produce
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Population vs. Sample](population-vs-sample.qmd)
+Target population, sampling frame, and the distinction between parameters and statistics
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Sampling Distributions](sampling-distributions.qmd)
+The distribution of a statistic across repeated samples: the key object that makes inference possible
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Sampling Methods](sampling-methods.qmd)
+Simple random, stratified, cluster, systematic, and convenience sampling -- and when each is appropriate
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Scales of Measurement](scales-of-measurement.qmd)
+Nominal, ordinal, interval, and ratio scales, and which statistics each legitimately supports
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Slutsky's Theorem](slutsky-theorem.qmd)
+Combining convergence in distribution and in probability for asymptotic arguments
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Sufficient Statistics](sufficient-statistics.qmd)
+Summaries that capture every bit of information about a parameter, with the factorisation theorem and exponential family
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Cauchy-Schwarz Inequality](cauchy-schwarz.qmd)
+The inner-product inequality that bounds correlations and drives many variance inequalities
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Central Limit Theorem](central-limit-theorem.qmd)
+Why the sampling distribution of the mean is approximately normal, and what that means for everyday inference
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Cramer-Rao Lower Bound](cramer-rao-lower-bound.qmd)
+The smallest variance an unbiased estimator can achieve, derived from Fisher information
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Delta Method](delta-method.qmd)
+Asymptotic distributions of smooth functions of estimators, via a first-order Taylor expansion
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Empirical Distribution Function](empirical-distribution-function.qmd)
+The sample-based step-function estimator of the CDF, with the DKW inequality for its uniform error
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Glivenko-Cantelli Theorem](glivenko-cantelli.qmd)
+The uniform LLN for CDFs: the ECDF converges almost surely to the true CDF at every point simultaneously
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Law of Large Numbers](law-of-large-numbers.qmd)
+Why the sample mean converges to the population mean as the sample grows, in weak and strong forms
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Method of Moments](method-of-moments.qmd)
+Estimate parameters by equating theoretical moments to their sample counterparts
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Standard Error](standard-error.qmd)
+The standard deviation of a statistic's sampling distribution, and how to compute it in R
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Unbiasedness, Consistency, Efficiency](unbiasedness-consistency-efficiency.qmd)
+Three core finite- and large-sample properties that let us compare estimators
+:::
+
+:::

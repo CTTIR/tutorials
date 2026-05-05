@@ -1,0 +1,73 @@
+---
+title: Multicollinearity and VIF
+date: "2026-04-17"
+description: "Variance inflation factors, condition numbers, and remedies for collinear predictors"
+categories:
+  - "Regression & Modelling"
+  - multicollinearity
+  - vif
+  - condition-number
+  - ridge
+---
+
+## Introduction
+
+Multicollinearity describes the situation in which predictors in a regression are strongly linearly related to each other. Coefficient estimates remain unbiased under multicollinearity, but their standard errors inflate, making individual effects hard to attribute reliably and producing the classic "the model is significant overall but no individual coefficient is" pattern. Diagnosing collinearity, deciding whether it matters for the inferential question, and choosing an appropriate remedy are routine parts of every multivariable regression workflow.
+
+## Prerequisites
+
+A working understanding of multiple linear regression, the geometric interpretation of regression coefficients, and the bias-variance trade-off.
+
+## Theory
+
+The variance inflation factor for predictor $j$ is
+
+$$\mathrm{VIF}_j = \frac{1}{1 - R^2_j},$$
+
+where $R^2_j$ comes from regressing $X_j$ on all other predictors. $\mathrm{VIF}_j \ge 5$ conventionally flags concern; $\ge 10$ indicates severe collinearity. The square root of VIF is the multiplier on the coefficient's standard error: a VIF of 16 inflates the SE by a factor of 4 relative to an uncorrelated predictor.
+
+The condition number $\kappa$ of the (scaled) design matrix is the ratio of the largest to smallest singular value; $\kappa > 30$ signals strong collinearity. Pairwise correlations expose specific offending pairs but miss multivariate collinearity that VIF and the condition number catch.
+
+Remedies include dropping one of the collinear predictors, combining them (sum, average, principal component), and shifting to ridge or elastic-net regression that penalises the coefficient norm and stabilises estimates under collinearity.
+
+## Assumptions
+
+Standard multiple-regression setup; VIF is defined for the same predictor set used in the focal regression.
+
+## R Implementation
+
+```r
+library(car)
+
+fit <- lm(mpg ~ wt + hp + cyl + disp + drat, data = mtcars)
+
+vif(fit)
+
+# Condition number
+X <- model.matrix(fit)[, -1]
+kappa(X)
+
+# Correlation matrix of predictors
+cor(mtcars[, c("wt", "hp", "cyl", "disp", "drat")])
+```
+
+## Output & Results
+
+`vif()` returns one VIF per predictor; values above 10 signal severe collinearity. `kappa()` returns the condition number on the scaled design matrix; pairwise correlations identify which specific predictors are colinear with each other.
+
+## Interpretation
+
+A reporting sentence: "Cylinder count and displacement had VIFs of 12.4 and 14.8 respectively, with a Pearson correlation of $r = 0.90$; we retained cylinders for biological interpretability and dropped displacement, reducing the maximum VIF to 4.5 and tightening the SE on the retained predictors by approximately 30 %." Always report the action taken in response to high VIF.
+
+## Practical Tips
+
+- High VIF is not always a problem: if prediction is the goal and individual coefficient interpretation is not, leaving collinear predictors in is acceptable and can even improve prediction.
+- Centring predictors before adding interactions reduces the mechanical collinearity between main and interaction terms; do this routinely.
+- Ridge and elastic-net regression handle collinearity gracefully through the L2 penalty; they shrink coefficients on collinear predictors proportionally rather than picking one and inflating its SE.
+- Check VIF after each model change; adding or removing predictors can change the collinearity structure dramatically.
+- For polynomial or spline terms, use orthogonal polynomials (`poly(x, degree)`) which avoid the inherent collinearity between $x, x^2, x^3, \dots$.
+- Report VIF in the model diagnostics whenever multicollinearity is plausible; reviewers often request it.
+
+## R Packages Used
+
+`car::vif()` for variance-inflation factors; base R `kappa()` for the condition number; `performance::check_collinearity()` for tidy collinearity diagnostics; `glmnet` for ridge and elastic-net alternatives that handle collinearity through regularisation.

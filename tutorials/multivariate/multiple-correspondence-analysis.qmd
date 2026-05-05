@@ -1,0 +1,65 @@
+---
+title: Multiple Correspondence Analysis
+date: "2026-04-17"
+description: Extension of correspondence analysis to more than two categorical variables
+categories:
+  - Multivariate Statistics
+  - mca
+  - multiple-correspondence
+  - categorical
+---
+
+## Introduction
+
+Multiple correspondence analysis (MCA) is the categorical analogue of principal components analysis. Where PCA reduces a matrix of continuous variables to a small number of orthogonal axes capturing maximal variance, MCA reduces a set of categorical variables to axes capturing maximal chi-squared inertia. It is the natural exploratory tool for survey data, lifestyle patterns, ICD code panels, and any context in which several categorical variables jointly characterise units of observation.
+
+## Prerequisites
+
+A working understanding of correspondence analysis on a two-way contingency table, indicator (disjunctive) coding of categorical variables, and the chi-squared distance interpretation.
+
+## Theory
+
+MCA operates on the disjunctive-coded indicator matrix that represents each categorical variable by one binary column per category. Two equivalent computations exist:
+
+- **Indicator-matrix CA**: apply standard correspondence analysis to the $n \times \sum K_q$ indicator matrix.
+- **Burt-matrix CA**: apply CA to the Burt table, the cross-tabulation of all pairs of variables; this gives identical row and column structure with sometimes more intuitive geometry.
+
+Each category becomes a point in the resulting low-dimensional space; each individual is also placed in the space (the "cloud of individuals"). Inertia per axis is typically low — much lower than typical PCA explained variance — because each indicator column contributes only one dimension of variation. Benzécri's or Greenacre's adjusted inertia formulas correct for this and give more meaningful variance-explained percentages.
+
+## Assumptions
+
+Categorical variables (no strong zero cells), sufficient sample size relative to the number of categories, and a meaningful joint structure to extract.
+
+## R Implementation
+
+```r
+library(FactoMineR); library(factoextra)
+
+data(hobbies)
+mca <- MCA(hobbies[, 1:8], graph = FALSE)
+fviz_mca_biplot(mca)
+fviz_mca_var(mca)
+
+summary(mca)
+```
+
+## Output & Results
+
+`MCA()` returns coordinates for individuals and category points, inertia per axis, contributions, and squared cosines (quality of representation). `fviz_mca_biplot()` displays both individuals and categories in the first two dimensions; `fviz_mca_var()` zooms in on the category cloud.
+
+## Interpretation
+
+A reporting sentence: "MCA of 8 hobby variables (n = 8,403 respondents) extracted two interpretable dimensions: the first contrasts active vs sedentary hobbies (Benzécri-adjusted inertia 28 %), the second social vs solitary hobbies (adjusted inertia 19 %); supplementary projection of age and gender showed a clear age gradient on the first dimension and a weak gender effect on the second." Always report adjusted inertia rather than raw inertia; raw values systematically understate explained variation.
+
+## Practical Tips
+
+- Use Benzécri's or Greenacre's adjusted inertia (`FactoMineR::MCA()` reports both) for variance-explained percentages; raw inertias are pessimistic and misleading.
+- Supplementary categorical variables (`quali.sup`) project onto the axes without affecting their estimation; useful for adding demographic markers post-hoc.
+- For mixed continuous-categorical data, switch to factor analysis of mixed data (FAMD); it generalises PCA and MCA jointly.
+- Visualise the category cloud separately from the individual cloud when the latter is dense; `fviz_mca_var()` gives a cleaner view of category geometry.
+- For ordinal categorical data, MCA loses the ordering — consider polychoric PCA or graded-response IRT models instead.
+- Pair MCA with hierarchical clustering on the principal component scores (`HCPC()`) for a single workflow that combines exploration and partitioning.
+
+## R Packages Used
+
+`FactoMineR` for `MCA()`, `FAMD()`, and `HCPC()`; `factoextra` for `fviz_mca_*` ggplot-style visualisation; `ca::mjca()` for an alternative Burt-table implementation; `ade4::dudi.acm()` for ecology-flavoured MCA.

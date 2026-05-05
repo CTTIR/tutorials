@@ -1,0 +1,82 @@
+---
+title: ChIP-Seq Analysis
+date: "2026-04-17"
+description: TF binding and histone modification profiling from ChIP-seq data
+categories:
+  - Bioinformatics
+  - chip-seq
+  - peaks
+  - motifs
+---
+
+## Introduction
+
+ChIP-seq (chromatin immunoprecipitation followed by sequencing) localises protein-DNA binding events genome-wide — transcription factor binding sites, histone modifications, chromatin remodellers. The resulting alignment density forms peaks at the binding loci; sharp peaks correspond to point-source binders (TFs), and broad domains correspond to histone-mark territories (H3K27me3, H3K9me3 spanning kilobases). The standard pipeline is alignment, peak calling with MACS2, annotation with ChIPseeker, motif enrichment with HOMER or `motifmatchr`, and differential binding with DiffBind.
+
+## Prerequisites
+
+A working understanding of read alignment (BWA, Bowtie2), peak calling, and regulatory genomics including transcription factor binding sites and histone modifications.
+
+## Theory
+
+Two peak-calling modes:
+
+- **Narrow peaks** (TF ChIP, transcription start sites): MACS2 defaults are tuned for sharp, point-source binding events.
+- **Broad peaks** (H3K27me3, H3K9me3, H3K36me3): use `--broad` to call diffuse domains spanning kilobases.
+
+A matched input control (IgG or total chromatin) is essential for background normalisation; ChIP enrichment is measured as ChIP-vs-input fold enrichment per peak region. Standard QC includes:
+
+- **FRiP** (fraction of reads in peaks): > 1 % indicates successful IP; lower values suggest weak antibody or insufficient enrichment.
+- **TSS enrichment**: read coverage at transcription start sites; high values confirm chromatin accessibility was preserved.
+- **Cross-correlation**: relative strand cross-correlation should peak at the fragment length, indicating successful IP.
+
+## Assumptions
+
+Cross-linking and immunoprecipitation are efficient and specific; the control input matches ChIP depth; duplicates have been removed (essential for ChIP-seq peak calling).
+
+## R Implementation
+
+```r
+library(ChIPseeker)
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+
+# Example: annotate a toy peak set
+set.seed(2026)
+peaks <- GRanges(
+  seqnames = rep("chr1", 100),
+  ranges = IRanges(start = sort(sample(1e7:5e7, 100)), width = 400)
+)
+
+anno <- annotatePeak(peaks,
+                     TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene,
+                     level = "gene",
+                     verbose = FALSE)
+as.data.frame(anno)[1:5, c("seqnames", "annotation", "distanceToTSS")]
+
+# Feature-type distribution
+plotAnnoBar(anno)
+
+# (Motif-enrichment example would require sequence extraction with
+#  BSgenome and motifmatchr::matchMotifs against a JASPAR PWM set.)
+```
+
+## Output & Results
+
+`annotatePeak()` assigns each peak to its nearest gene and categorises as promoter, intron, intergenic, etc. `plotAnnoBar()` summarises the feature-type distribution; typical TF ChIP-seq shows ~30 % promoter, ~40 % intron, ~25 % distal-intergenic.
+
+## Interpretation
+
+A reporting sentence: "MACS2 (with input control, $q < 0.01$) called 18{,}230 high-confidence STAT1 ChIP peaks in IFN-γ-stimulated cells; 42 % were promoter-proximal, 35 % intronic, 18 % distal-intergenic. De novo motif analysis (HOMER) recovered the canonical STAT1 GAS motif (TTCN3GAA) at $p < 10^{-100}$, confirming antibody specificity. FRiP was 12 %, TSS enrichment 16, both well within QC standards." Always report FRiP, TSS enrichment, and motif validation.
+
+## Practical Tips
+
+- Always use a matched input control (IgG, sonicated input, or no-antibody mock); without it, MACS2 falls back to generic background assumptions and inflates false positives.
+- Check FRiP per sample; values below 1 % indicate weak IP, incorrect peak-calling mode, or sample failure.
+- For histone marks (especially H3K27me3, H3K36me3, H3K9me3), use `--broad`; sharp peak callers miss diffuse domains entirely.
+- Validate antibody specificity with de novo motif enrichment (HOMER's `findMotifsGenome.pl` or MEME-ChIP); recovering the expected motif is the gold standard for ChIP success.
+- For differential binding across conditions, use DiffBind which builds consensus peak sets and runs DESeq2 or edgeR on peak-level read counts.
+- For CUT&RUN or CUT&Tag (the modern higher-resolution alternatives), the same downstream tools apply; specialised peak callers (SEACR) handle the lower-background data more accurately.
+
+## R Packages Used
+
+`ChIPseeker` for peak annotation and visualisation; `DiffBind` for differential-binding analysis; `motifmatchr` for motif enrichment with PWM databases; `chromVAR` for chromatin-accessibility-style motif activity scores; `ChIPQC` for quality control on ChIP-seq experiments.

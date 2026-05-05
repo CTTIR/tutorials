@@ -1,0 +1,70 @@
+---
+title: Shapiro-Wilk Normality Test
+date: "2026-04-17"
+description: The most powerful commonly used test for normality in small to moderate samples
+categories:
+  - Inferential Statistics
+  - shapiro-wilk
+  - normality
+  - small-sample
+---
+
+## Introduction
+
+The Shapiro-Wilk test, introduced by Shapiro and Wilk in 1965, is the most widely used and generally most powerful test of Normality for small-to-moderate sample sizes. It compares the observed sample order statistics with their expected values under Normality, producing a statistic $W$ that is close to 1 when the sample is well approximated by a Normal distribution and substantially lower otherwise. Shapiro-Wilk is the default Normality test in R for samples between 3 and 5000 observations and is routinely used as a preliminary diagnostic before applying parametric inference (one- and two-sample $t$-tests, ANOVA, regression on the residuals) that nominally requires Normal data.
+
+## Prerequisites
+
+A working understanding of order statistics, the Normal distribution, and the role of Normality assumptions in parametric inferential statistics.
+
+## Theory
+
+For a sorted sample $x_{(1)} \leq \cdots \leq x_{(n)}$, the Shapiro-Wilk statistic is
+
+$$W = \frac{\left(\sum_{i=1}^n a_i x_{(i)}\right)^2}{\sum_{i=1}^n (x_i - \bar x)^2},$$
+
+where $a_i$ are tabulated constants derived from the expected values and covariance matrix of the order statistics of a standard Normal sample. The numerator is essentially the squared correlation between the sample order statistics and their expected values, scaled to produce $W \in (0, 1]$. Values near 1 indicate a Normal sample, lower values indicate departure; small $W$ with correspondingly small $p$-value rejects the null of Normality.
+
+## Assumptions
+
+Observations are independent and identically distributed; sample size lies within R's implementation range $n \in [3, 5000]$. The test does not assume the sample is Normal under the null — the null is precisely that hypothesis — but it does assume the observations are otherwise exchangeable.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+x_norm <- rnorm(60)
+shapiro.test(x_norm)
+
+x_skew <- rexp(60, rate = 1)
+shapiro.test(x_skew)
+
+x_t3 <- rt(60, df = 3)
+shapiro.test(x_t3)
+
+set.seed(2026)
+pvals <- replicate(1000, shapiro.test(rt(20, df = 5))$p.value)
+mean(pvals < 0.05)
+```
+
+## Output & Results
+
+The three samples illustrate the test's behaviour: a truly Normal sample of 60 observations gives $W = 0.98$, $p = 0.52$ (no rejection); an exponentially-distributed (right-skewed) sample of 60 gives $W = 0.83$, $p = 0.00002$ (strong rejection); a $t_3$-distributed (heavy-tailed) sample gives $W = 0.93$, $p = 0.002$ (rejection). The Monte Carlo block estimates empirical power at $n = 20$ for detecting $t_5$-distributed data — about 21 % — illustrating the test's modest power at small samples for mild departures.
+
+## Interpretation
+
+A reporting sentence: "Shapiro-Wilk did not reject the Normality of the regression residuals ($W = 0.98$, $p = 0.52$), supporting the assumption underlying parametric inference. The complementary Q-Q plot showed close adherence to the diagonal, with no evidence of systematic deviation in the tails or at the centre. Parametric $t$-tests and ANOVA were therefore applied to these data without transformation. For comparison, residuals from a related model with skewed errors were rejected by the same test ($W = 0.83$, $p < 0.001$) and motivated a log transformation." Always pair test with a Q-Q plot.
+
+## Practical Tips
+
+- At very small samples ($n < 15$), Shapiro-Wilk has low power against most realistic departures and cannot reliably confirm Normality; absence of rejection at small samples is uninformative and should not be treated as evidence of Normality.
+- At very large samples ($n > 1000$), the test rejects at trivial departures from Normality that are inconsequential for the validity of parametric inference; use Q-Q plots and effect-size summaries (skewness, kurtosis with their CIs) rather than the $p$-value alone in large samples.
+- Graphical diagnosis via a Q-Q plot complements the numerical test and is often more informative; always plot the Q-Q before deciding whether departures are practically important. The combination of formal test and visual inspection is the modern recommendation.
+- Normality assumptions in regression and ANOVA apply to the residuals, not to the raw outcome variable; testing Normality of the raw outcome is a recurring methodological error and provides no information about whether parametric inference is valid.
+- When Normality fails substantively, consider transformations (log, Box-Cox, Yeo-Johnson), non-parametric alternatives (Wilcoxon, Mann-Whitney, Kruskal-Wallis), or robust methods (trimmed-mean inference, robust regression); the choice depends on the substantive question and the nature of the departure.
+- For very heavy-tailed data, robust inference is often preferable to transformation; transformations can shift the substantive interpretation away from the original scale.
+
+## R Packages Used
+
+Base R `shapiro.test()` for the canonical Shapiro-Wilk implementation up to $n = 5000$; `nortest::shapiro.test()` for an alternative interface; `nortest` for related Normality tests including Anderson-Darling, Cramér-von Mises, and Lilliefors; `moments::skewness()` and `moments::kurtosis()` for descriptive moment-based summaries; `car::qqPlot()` for enhanced Q-Q plot diagnostics complementing the formal test.

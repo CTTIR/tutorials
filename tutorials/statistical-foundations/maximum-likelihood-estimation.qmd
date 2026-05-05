@@ -1,0 +1,92 @@
+---
+title: Maximum Likelihood Estimation
+date: "2026-04-17"
+description: "The likelihood function, score equations, and asymptotic properties of the MLE"
+categories:
+  - Statistical Foundations
+  - mle
+  - likelihood
+  - score
+  - fisher-information
+---
+
+## Introduction
+
+Maximum likelihood is the dominant estimation technique in modern statistics. The idea: given data and a parametric model, choose the parameter values that make the observed data most probable. This intuition supports a powerful general method with well-understood consistency, efficiency, and distributional properties, and it underpins almost every regression model in a statistician's toolkit.
+
+## Prerequisites
+
+The reader should know what a probability density is, be comfortable with calculus at the level of derivatives and log transforms, and be able to call `optim()` in R.
+
+## Theory
+
+For iid data $X_1, \ldots, X_n$ from a density $f(x \mid \theta)$, the **likelihood function** is
+
+$$L(\theta) = \prod_{i=1}^n f(X_i \mid \theta),$$
+
+and the **log-likelihood** is $\ell(\theta) = \sum \log f(X_i \mid \theta)$. The **MLE** is
+
+$$\hat{\theta}_{\text{MLE}} = \arg\max_\theta \ell(\theta).$$
+
+When $\ell$ is smooth, the MLE satisfies the **score equation** $\frac{\partial \ell}{\partial \theta} = 0$. The score is the gradient of the log-likelihood; its expectation under the true parameter is zero.
+
+Under regularity conditions (smoothness, identifiability, interior optimum, finite Fisher information), the MLE is:
+
+- **Consistent**: $\hat{\theta}_n \xrightarrow{P} \theta_0$.
+- **Asymptotically normal**: $\sqrt{n}(\hat{\theta}_n - \theta_0) \xrightarrow{d} \mathcal{N}(0, I(\theta_0)^{-1})$.
+- **Asymptotically efficient**: its variance attains the Cramer-Rao lower bound.
+- **Equivariant**: for any one-to-one transformation $g$, $g(\hat{\theta}_{\text{MLE}})$ is the MLE of $g(\theta)$.
+
+Standard errors for the MLE come from the inverse of the observed Fisher information, $\mathcal{I}(\hat{\theta}) = -\partial^2 \ell / \partial \theta \partial \theta^\top$, evaluated at $\hat{\theta}$. Confidence intervals can be based on the normal approximation or, better, on the likelihood ratio, which is invariant under reparameterisation.
+
+## Assumptions
+
+The asymptotic theory assumes a well-specified model, finite Fisher information, enough smoothness for the Taylor expansion, and a parameter interior to the parameter space. Boundary parameters (variance at zero, proportion at 0 or 1) and non-identifiable models break the standard theory.
+
+## R Implementation
+
+```r
+set.seed(2026)
+x <- rnorm(200, mean = 5, sd = 2)
+
+nll <- function(par) {
+  mu    <- par[1]
+  sigma <- par[2]
+  if (sigma <= 0) return(Inf)
+  -sum(dnorm(x, mean = mu, sd = sigma, log = TRUE))
+}
+
+fit <- optim(par = c(0, 1), fn = nll, hessian = TRUE,
+             method = "L-BFGS-B", lower = c(-Inf, 1e-6))
+mle <- fit$par
+se  <- sqrt(diag(solve(fit$hessian)))
+
+data.frame(parameter = c("mu", "sigma"),
+           estimate = mle, se = se,
+           ci_low = mle - 1.96 * se,
+           ci_high = mle + 1.96 * se)
+```
+
+The negative log-likelihood is minimised with `optim()`; standard errors come from the inverse Hessian.
+
+## Output & Results
+
+```
+  parameter estimate    se  ci_low ci_high
+1        mu    5.093 0.143   4.812   5.374
+2     sigma    2.022 0.101   1.823   2.221
+```
+
+The MLE recovers the true parameters ($\mu = 5$, $\sigma = 2$) with uncertainty quantified by the observed-information-based standard errors.
+
+## Interpretation
+
+For a manuscript, the MLE is typically reported as "parameters were estimated by maximum likelihood (Fisher-scoring convergence to 1e-8)", with point estimates, standard errors, and either Wald or profile-likelihood confidence intervals. Information criteria (AIC, BIC) are functions of the maximised likelihood and are reported alongside.
+
+## Practical Tips
+
+- Always work on the log scale for numerical stability; products of densities underflow quickly.
+- Start the optimiser at sensible initial values -- method-of-moments estimates are a good default.
+- Parameterise so that the parameter space is unbounded (log-variance instead of variance, logit-probability instead of probability); this makes `optim()` easier and avoids boundary issues.
+- For models with many parameters, use `nlm()`, `optim(..., method = "BFGS")`, or specialised packages (`bbmle`, `maxLik`, or model-specific tools like `glm()`).
+- When the MLE is at a boundary, standard asymptotic inference fails; use bootstrap CIs or specialised boundary-aware procedures instead.

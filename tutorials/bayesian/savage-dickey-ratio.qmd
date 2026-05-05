@@ -1,0 +1,68 @@
+---
+title: The Savage-Dickey Density Ratio
+date: "2026-04-17"
+description: Bayes factor for a point null via posterior/prior density ratio
+categories:
+  - Bayesian Statistics
+  - savage-dickey
+  - bayes-factor
+  - nested-null
+---
+
+## Introduction
+
+The Savage-Dickey density ratio is a small but powerful identity: when a point-null hypothesis is nested inside a continuous alternative, the Bayes factor in favour of the null can be read off as the ratio of the marginal posterior to the marginal prior, both evaluated at the null value. This sidesteps the notoriously hard computation of the marginal likelihood under each model and turns Bayes-factor calculation into something you can do from MCMC draws and a one-line evaluation of the prior density. It is the Bayesian counterpart of asking "did the data move probability mass away from the null?" and quantifying the answer.
+
+## Prerequisites
+
+A working understanding of Bayes factors, posterior densities, and the difference between point-null and interval-null hypotheses. Familiarity with density estimation from MCMC samples is also useful.
+
+## Theory
+
+For a point null $H_0 : \theta = \theta_0$ nested in a continuous alternative $H_1 : \theta \in \Theta$, with the prior under $H_1$ taken as the marginal prior $p(\theta)$ on the parameter of interest, the Bayes factor in favour of the null is
+
+$$\mathrm{BF}_{01} = \frac{p(\theta_0 \mid y)}{p(\theta_0)}.$$
+
+If the posterior puts more density at the null than the prior did, the data support $H_0$; if it puts less, they support $H_1$. The quantity is interpretable on Jeffreys' evidence scale and is invariant under monotone reparameterisations of nuisance parameters because the alternative's prior must be set up consistently. The identity assumes the prior under $H_1$ reduces to the prior under $H_0$ when $\theta = \theta_0$; this is automatic for nested-null setups but can fail under improper or hierarchical priors.
+
+## Assumptions
+
+A continuous parameter, the null nested inside the alternative, and a proper prior whose density at $\theta_0$ is finite and known. Improper priors invalidate the construction because the Bayes factor depends on a normalisation constant that has been thrown away.
+
+## R Implementation
+
+```r
+library(polspline)
+
+set.seed(2026)
+# Posterior samples (e.g., from MCMC)
+theta_post <- rnorm(5000, mean = 0.2, sd = 0.3)
+theta_prior_density <- dnorm(0, mean = 0, sd = 1)   # N(0, 1) prior at 0
+
+# Posterior density at 0 via logspline fit
+logspl <- logspline(theta_post)
+post_density_at_0 <- dlogspline(0, logspl)
+
+BF01 <- post_density_at_0 / theta_prior_density
+BF01; 1/BF01
+```
+
+## Output & Results
+
+The ratio of two scalars, ideally accompanied by its inverse so both directions are visible. A logspline density fit to the posterior draws is a robust choice: it captures skew and tail behaviour better than a normal approximation and is less noisy than a kernel density estimate at the boundary.
+
+## Interpretation
+
+A reporting sentence: "The Savage-Dickey Bayes factor was $\mathrm{BF}_{10} = 3.1$ under a $\mathcal N(0, 1)$ prior on the alternative — moderate evidence for a non-zero effect — versus $\mathrm{BF}_{01} = 0.32$." On Jeffreys' scale, $1 < \mathrm{BF} < 3$ is anecdotal, $3$–$10$ is moderate, $10$–$30$ strong, and beyond $30$ very strong; the symmetric thresholds apply to $\mathrm{BF}_{01}$ for evidence in favour of the null.
+
+## Practical Tips
+
+- Always disclose the prior under the alternative; the Bayes factor is sensitive to its scale, particularly via the Lindley-Bartlett paradox where a very wide prior favours the null mechanically.
+- Use a logspline or kernel density estimate that is robust at the boundary — naive Gaussian approximations break down when the posterior is skewed.
+- Confirm enough posterior draws fall near $\theta_0$ for the density estimate to be stable; if the data strongly support $H_1$, the posterior density at the null is small and noisy. Increase chain length when reporting strong evidence against $H_0$.
+- For interval nulls or composite hypotheses, the Savage-Dickey identity does not apply; use bridge sampling (`bridgesampling::bridge_sampler()`) instead.
+- Prefer a sensitivity analysis: report the Bayes factor under at least two prior scales, so readers can judge how prior-driven the conclusion is.
+
+## R Packages Used
+
+`polspline` for the logspline posterior density estimate at the null, `bayestestR` for an integrated Savage-Dickey wrapper that works directly with `brms` and `rstanarm` fits, and `bridgesampling` for the more general marginal-likelihood approach when the Savage-Dickey shortcut does not apply.

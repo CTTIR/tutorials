@@ -1,0 +1,65 @@
+---
+title: Frailty Models
+date: "2026-04-17"
+description: "Random effects in survival: unobserved heterogeneity and clustered survival data"
+categories:
+  - Survival Analysis
+  - frailty
+  - random-effects
+  - clustered-survival
+---
+
+## Introduction
+
+A frailty model adds an unobserved multiplicative effect — the frailty — to the hazard, allowing the survival analogue of a random effect. Frailty captures two things: unmeasured heterogeneity at the individual level (the population mixture of "robust" and "fragile" subjects with different baseline hazards), and clustered survival data where observations within a unit (family, hospital, patient with recurrent events) share an unobserved common factor. Without it, standard errors are wrong for clustered data, and population-level hazard ratios are biased toward the null because of the selection-of-survivors effect.
+
+## Prerequisites
+
+A working understanding of Cox regression, random-effects models in linear and generalised linear settings, and the concept of unobserved heterogeneity.
+
+## Theory
+
+The shared-frailty Cox model is
+
+$$h_{ij}(t) = h_0(t) u_i \exp(x_{ij}^\top \beta),$$
+
+where $u_i$ is a positive random variable (frailty) shared across observations $j$ within cluster $i$ and conventionally constrained to have mean 1. The Gamma distribution is the textbook default — its conjugate structure with the partial likelihood makes estimation tractable — though log-Normal frailties are increasingly used when the Laplace-approximation likelihood is implemented.
+
+The frailty variance $\theta = \mathrm{Var}(u_i)$ measures the strength of within-cluster correlation; $\theta = 0$ corresponds to no clustering and reduces to the standard Cox model. The likelihood-ratio test for $\theta = 0$ is on the boundary of the parameter space, so the conventional $\chi^2_1$ reference is replaced by a 50-50 mixture of $\chi^2_0$ and $\chi^2_1$.
+
+## Assumptions
+
+The frailty distribution (Gamma or log-Normal) is correctly specified, frailties are independent across clusters, and the standard Cox assumptions (PH within cluster) hold.
+
+## R Implementation
+
+```r
+library(survival)
+
+data(kidney)   # two events per patient (recurrent catheter infections)
+
+# Shared frailty
+fit <- coxph(Surv(time, status) ~ age + sex + frailty(id), data = kidney)
+summary(fit)
+```
+
+## Output & Results
+
+`summary(fit)` returns the fixed-effect Cox coefficients (interpreted as conditional-on-frailty hazard ratios), the frailty variance estimate, and a likelihood-ratio test for the frailty term against the no-frailty null. The variance estimate is the headline measure of unobserved heterogeneity.
+
+## Interpretation
+
+A reporting sentence: "A shared-Gamma frailty Cox model on 38 patients with two recurrent catheter-infection times each estimated a frailty variance of 0.41 (LRT $\chi^2_{0.5} = 6.8$, $p = 0.005$); after accounting for within-patient correlation, female sex was strongly protective (HR 0.36, 95 % CI 0.21 to 0.62)." Always report frailty variance with its significance test; a small variance suggests the frailty term is unnecessary.
+
+## Practical Tips
+
+- For frailty variance close to zero, drop the frailty term and refit with the standard Cox model; the simpler fit is more efficient when no clustering is present.
+- Use shared-frailty models for naturally clustered data (families, hospitals, repeated measures); individual frailties require recurrent events or external longitudinal information.
+- Gamma frailty is the default choice for partial-likelihood implementations; log-Normal requires Laplace approximation and is implemented in `frailtypack` and `coxme`.
+- Reported hazard ratios are *conditional* on the frailty (within-cluster); for marginal effects, integrate over the frailty distribution or use generalised estimating equations as an alternative.
+- The LRT for $\theta = 0$ is on the parameter-space boundary; use the half-half mixture reference (or simulation-based $p$-values) to avoid conservative tests.
+- For high-dimensional clustering or complex frailty structures, `coxme` provides a mixed-model interface compatible with `lme4`-style formulas.
+
+## R Packages Used
+
+`survival` for `coxph()` with `frailty()`; `coxme` for mixed-effects Cox models with multiple frailties and complex random-effect structures; `frailtypack` for Gamma, log-Normal, and joint frailty models including recurrent events; `frailtyEM` for EM-based frailty estimation with cleaner SE handling.

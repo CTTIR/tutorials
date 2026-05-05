@@ -1,0 +1,69 @@
+---
+title: Surrogate Variable Analysis (SVA)
+date: "2026-04-17"
+description: Detecting and adjusting for unknown sources of heterogeneity in expression data
+categories:
+  - Bioinformatics
+  - sva
+  - hidden-confounders
+  - batch
+---
+
+## Introduction
+
+Surrogate variable analysis (SVA) estimates latent factors that capture unmodelled heterogeneity in high-dimensional expression data -- unknown batch effects, sample-processing artefacts, or unmeasured biology correlated with technical variables. Including surrogate variables as covariates in downstream regression restores power and controls false positives where ComBat cannot apply (because the batch variable is itself unknown).
+
+## Prerequisites
+
+Linear models on expression data, batch effects, ComBat.
+
+## Theory
+
+SVA decomposes the residual expression matrix (after regressing out the primary model) into latent factors using a bootstrap-based singular value decomposition. The number of surrogate variables $k$ is chosen by a permutation test (`num.sv`). Each surrogate is then added as a covariate in the downstream limma/edgeR model.
+
+For RNA-seq count data, use `svaseq`, which applies SVA on a log-transformed scale suitable for negative-binomial outcomes.
+
+## Assumptions
+
+The primary variable of interest is modelled correctly; surrogate variables are orthogonal to it; residual variation reflects technical or unmodelled factors.
+
+## R Implementation
+
+```r
+library(sva); library(limma)
+
+set.seed(2026)
+n_genes <- 3000; n_samples <- 20
+group   <- factor(rep(c("ctrl", "trt"), each = 10))
+batch   <- factor(rep(c("A", "B"), times = 10))           # hidden
+
+y <- matrix(rnorm(n_genes * n_samples), n_genes, n_samples)
+y <- y + matrix(rep(as.numeric(batch) * 0.6, each = n_genes),
+                n_genes, n_samples)
+
+mod  <- model.matrix(~ group)
+mod0 <- model.matrix(~ 1, data = data.frame(group))
+
+n_sv <- num.sv(y, mod, method = "be")
+svobj <- sva(y, mod, mod0, n.sv = n_sv)
+
+mod_sv <- cbind(mod, svobj$sv)
+fit <- lmFit(y, mod_sv); fit <- eBayes(fit)
+topTable(fit, coef = 2, n = 5)
+```
+
+## Output & Results
+
+`svobj$sv` contains $n_sv$ surrogate variables per sample. Including them typically recovers differential expression that batch confounding otherwise hides.
+
+## Interpretation
+
+"We estimated $k$ surrogate variables using SVA and included them in the limma model, adjusting for unmodelled heterogeneity without needing to specify a batch variable."
+
+## Practical Tips
+
+- Use `svaseq` for RNA-seq count data.
+- The `num.sv(..., method = "be")` Buja-Eyuboglu estimator is conservative; `"leek"` is more aggressive.
+- Surrogates should not correlate with the variable of interest; `sva` orthogonalises them by construction.
+- Always inspect what surrogates correlate with (library size, processing date) for interpretation.
+- If the batch is known, prefer ComBat-seq or direct covariate inclusion; SVA is for hidden factors.

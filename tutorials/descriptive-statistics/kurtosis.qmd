@@ -1,0 +1,77 @@
+---
+title: Kurtosis
+date: "2026-04-17"
+description: "Quantifying tail heaviness of a distribution, and interpreting excess kurtosis"
+categories:
+  - Descriptive Statistics
+  - kurtosis
+  - tail-heaviness
+  - excess-kurtosis
+---
+
+## Introduction
+
+Kurtosis is the fourth standardised moment of a distribution and quantifies tail heaviness relative to the normal. High kurtosis means a few observations contribute disproportionately to the variance (the "fat tails" of finance). Low kurtosis means the distribution has fewer extreme values than the normal. Kurtosis matters because many estimators and tests assume normal-like tails; heavy tails break asymptotic approximations and inflate Type I error.
+
+## Prerequisites
+
+The reader should know what mean, SD, and skewness are, and should be comfortable computing summary statistics in R.
+
+## Theory
+
+The population kurtosis is
+
+$$\gamma_2 = E\!\left[\left(\frac{X - \mu}{\sigma}\right)^4\right].$$
+
+For a standard normal distribution, $\gamma_2 = 3$. The convention is to report **excess kurtosis** $\gamma_2 - 3$, where 0 indicates normal-like tails, positive indicates heavier tails (leptokurtic), and negative indicates lighter tails (platykurtic).
+
+Classical values:
+
+- Normal: excess kurtosis = 0.
+- Uniform: excess kurtosis = -1.2 (light tails).
+- Logistic: excess kurtosis = 1.2.
+- t-distribution with $\nu$ df: excess kurtosis = $6/(\nu - 4)$ for $\nu > 4$. At $\nu = 5$ the excess kurtosis is 6; at $\nu = 10$ it is 1.
+- Exponential: excess kurtosis = 6.
+- Laplace: excess kurtosis = 3.
+
+## Assumptions
+
+Kurtosis as a descriptive statistic has no assumption. As an estimator of a population parameter, it requires finite fourth moments.
+
+## R Implementation
+
+```r
+library(moments)
+
+set.seed(2026)
+norm_sample <- rnorm(5000)
+t4_sample   <- rt(5000, df = 4)
+unif_sample <- runif(5000)
+
+c(normal  = kurtosis(norm_sample) - 3,
+  t_df4   = kurtosis(t4_sample) - 3,
+  uniform = kurtosis(unif_sample) - 3)
+
+moments::anscombe.test(t4_sample)
+```
+
+## Output & Results
+
+```
+  normal    t_df4  uniform
+   -0.04     6.12    -1.21
+```
+
+The t-distribution with 4 df has massively heavier tails than normal, as predicted. The uniform distribution has lighter tails. Anscombe's test on the t-sample gives $p < .001$, formally rejecting normal kurtosis.
+
+## Interpretation
+
+Report excess kurtosis alongside skewness whenever distribution shape matters. A value near zero is "normal-like"; a value above 1 is a heavy-tailed distribution for which outlier-sensitive methods (mean, SD, OLS) may perform poorly.
+
+## Practical Tips
+
+- Kurtosis is sensitive to outliers; a single extreme value can inflate it dramatically.
+- Formal normality tests (Shapiro-Wilk, Jarque-Bera) implicitly test kurtosis and skewness jointly.
+- Heavy tails call for robust methods: median, MAD, robust regression, rank-based tests.
+- Leptokurtic distributions sometimes motivate using a Student-t rather than normal likelihood in regression (see `brms::student`).
+- Different software sometimes report kurtosis with/without the "-3" correction; always check whether excess or raw kurtosis is being reported.

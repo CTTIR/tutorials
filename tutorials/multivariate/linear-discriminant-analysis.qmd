@@ -1,0 +1,70 @@
+---
+title: Linear Discriminant Analysis
+date: "2026-04-17"
+description: Classifier assuming multivariate normal within-class distributions with equal covariance
+categories:
+  - Multivariate Statistics
+  - lda
+  - classification
+  - fisher
+---
+
+## Introduction
+
+Linear discriminant analysis (LDA) is the canonical Gaussian classifier for two or more classes. Under the assumption that within-class distributions are multivariate Normal with a common covariance matrix, the optimal Bayes classifier is linear in the predictors, and the corresponding posterior probabilities are simple closed-form functions of class means and the pooled covariance. Fisher's complementary derivation gives a projection onto $K - 1$ axes that maximally separates the $K$ class centroids; this is the most useful low-dimensional visualisation for class structure.
+
+## Prerequisites
+
+A working understanding of multivariate Normal distributions, classification metrics, and the Bayes-optimal classifier under known generative assumptions.
+
+## Theory
+
+Assume class $k$ has prior $\pi_k$, mean $\mu_k$, and common covariance $\Sigma$. The Bayes-optimal log-discriminant is
+
+$$\delta_k(x) = x^\top \Sigma^{-1} \mu_k - \tfrac{1}{2} \mu_k^\top \Sigma^{-1} \mu_k + \log \pi_k.$$
+
+Assigning $x$ to the class with the largest $\delta_k$ gives the LDA classifier. The decision boundary between any two classes is linear in $x$, which is what makes the model interpretable: classification depends on a small number of linear combinations of the predictors.
+
+Fisher's LDA, conceptually identical, finds the directions in which the between-class variance is large relative to the within-class variance; projecting onto the top $K - 1$ directions gives the canonical low-dimensional visualisation of class structure.
+
+## Assumptions
+
+Multivariate Normal within each class, equal class covariance matrices (otherwise QDA is preferred), and independent observations. Outliers can pull class means and inflate the pooled covariance, distorting the linear boundary.
+
+## R Implementation
+
+```r
+library(MASS)
+
+set.seed(2026)
+train_idx <- sample(nrow(iris), 100)
+train <- iris[train_idx, ]; test  <- iris[-train_idx, ]
+
+fit_lda <- lda(Species ~ ., data = train)
+pred <- predict(fit_lda, test)
+table(pred$class, test$Species)
+
+# Project onto LDA axes
+plot(fit_lda, col = as.integer(train$Species))
+```
+
+## Output & Results
+
+`lda()` returns class priors, class means, scaling matrix (coefficients of linear discriminants), and the proportion of trace each axis explains. `predict()` provides class labels and posterior probabilities. The classifier projects test observations onto the LDA axes and assigns each to the nearest class centroid in the projected space.
+
+## Interpretation
+
+A reporting sentence: "Linear discriminant analysis on the iris training set classified the held-out observations with 98 % accuracy (49/50 correct); the first discriminant axis accounted for 99 % of between-group variance, indicating that a single linear combination of the four measurements largely separates the three species." Compare LDA to QDA when class covariances differ; otherwise LDA is the more efficient choice.
+
+## Practical Tips
+
+- For class-specific covariance differences, switch to quadratic discriminant analysis (QDA); Box's M test (`biotools::boxM`) provides a formal check, but it is sensitive to non-Normality.
+- LDA is sensitive to outliers; screen for them or use robust variants such as `MASS::lda(... , method = "mve")` or `rrcov::Linda()`.
+- Prior class probabilities affect the decision boundary; specify them via `prior = c(...)` when training-set proportions differ from population proportions.
+- For high-dimensional data with $p$ approaching or exceeding $n$, regularise via `klaR::rda()` (regularised discriminant analysis) or sparse LDA (`MASS::lda` with PCA pre-step, or `sparseLDA`).
+- Multiclass alternatives include multinomial logistic regression (`nnet::multinom`) and random forests; LDA remains competitive in low-dimensional problems with Gaussian-like classes.
+- Visualise the LDA projection with the first two discriminants; a 2D plot with class colours quickly shows whether classes are linearly separable.
+
+## R Packages Used
+
+`MASS` for `lda()` and `qda()`; `klaR` for `rda()` (regularised) and `partimat()` for partition diagnostics; `caret` for cross-validated comparison across discriminant variants; `rrcov` for robust LDA; `sparseLDA` for high-dimensional sparse extensions.

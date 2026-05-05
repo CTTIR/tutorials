@@ -1,0 +1,70 @@
+---
+title: Partial Correlation
+date: "2026-04-17"
+description: Correlation between two variables after removing the linear influence of others
+categories:
+  - "Regression & Modelling"
+  - partial-correlation
+  - confounding
+  - adjustment
+---
+
+## Introduction
+
+Partial correlation measures the linear association between two variables after removing the linear influence of one or more covariates from each. Where ordinary correlation captures bivariate association including any indirect effect through confounders, partial correlation isolates the direct linear relationship. It is the bivariate analogue of an adjusted regression coefficient and one of the simplest tools for thinking about confounding in observational data.
+
+## Prerequisites
+
+A working understanding of Pearson correlation, multiple linear regression, and the concept of confounding.
+
+## Theory
+
+For three variables $X, Y, Z$, the partial correlation of $X$ and $Y$ adjusted for $Z$ is
+
+$$r_{XY \cdot Z} = \frac{r_{XY} - r_{XZ} r_{YZ}}{\sqrt{(1 - r_{XZ}^2)(1 - r_{YZ}^2)}}.$$
+
+It equals the Pearson correlation of the residuals from regressing $X$ on $Z$ and $Y$ on $Z$. The construction generalises to controlling for multiple covariates: regress out a vector of covariates from each, correlate the residuals.
+
+The semi-partial (or part) correlation removes the influence of $Z$ from $X$ only, retaining $Y$'s association with $Z$. In multiple regression, the partial $r$ of predictor $j$ equals $\mathrm{sign}(\hat\beta_j) \sqrt{t_j^2 / (t_j^2 + \mathrm{df}_{\mathrm{res}})}$.
+
+## Assumptions
+
+Linearity in each pairwise relationship; multivariate Normality (for the standard inference test); accurately measured covariates; the partial-correlation interpretation is causal only under additional assumptions about the covariate set.
+
+## R Implementation
+
+```r
+library(ppcor)
+
+# Partial correlation of wt and mpg given hp
+pcor.test(mtcars$wt, mtcars$mpg, mtcars$hp)
+
+# All partial correlations in a dataset
+pcor(mtcars[, c("mpg", "wt", "hp", "disp")])$estimate
+
+# Manual via residuals
+res_wt  <- resid(lm(wt ~ hp, data = mtcars))
+res_mpg <- resid(lm(mpg ~ hp, data = mtcars))
+cor(res_wt, res_mpg)
+```
+
+## Output & Results
+
+`pcor.test()` returns the partial correlation estimate, its $t$-statistic, and a $p$-value. `pcor()` returns the full partial-correlation matrix, useful when many adjustments are simultaneously of interest. The manual residual-based computation confirms the algebraic identity.
+
+## Interpretation
+
+A reporting sentence: "After adjusting for horsepower, weight and miles-per-gallon had a partial correlation of $-0.66$ ($p < 0.001$, $n = 32$); the negative association persists strongly even after controlling for the engine's power output, suggesting an independent role for vehicle weight beyond its correlation with engine size." Distinguish partial from semi-partial correlation in reports; readers often confuse them.
+
+## Practical Tips
+
+- Partial correlation is the bivariate analogue of an adjusted regression coefficient; if you have already fitted a multiple regression, the corresponding partial $r$ comes for free from the $t$-statistic.
+- Semi-partial correlations describe "unique variance contribution" in multiple regression; often what is reported as $\Delta R^2$ when adding one predictor to an existing model.
+- For non-Normal or ordinal data, use partial Spearman correlation (`ppcor::pcor(method = "spearman")`); the rank-based version is more robust to outliers.
+- For graphical / network analyses, partial correlations are the natural input to Gaussian graphical models (`qgraph`, `huge`); they encode conditional dependencies in a multivariate Normal.
+- Causal interpretation of partial correlations requires that the conditioning set blocks all confounding paths; statistical independence after conditioning does not by itself imply causation.
+- For high-dimensional data ($p$ near $n$), partial correlations from the inverse covariance matrix are unstable; use regularised graphical-lasso estimators (`glasso`).
+
+## R Packages Used
+
+`ppcor` for `pcor()` and `pcor.test()`; `psych::partial.r()` for an alternative interface; `qgraph` and `huge` for partial-correlation networks; `glasso` for regularised inverse-covariance estimation in high dimensions.

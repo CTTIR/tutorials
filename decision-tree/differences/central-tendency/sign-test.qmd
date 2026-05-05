@@ -87,15 +87,3 @@ The most interpretable effect size is the proportion of positive differences (ex
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 0095b57034994d5d85135ce725f2df49 -->
-<img src="https://vg09.met.vgwort.de/na/0095b57034994d5d85135ce725f2df49"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

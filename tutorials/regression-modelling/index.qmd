@@ -1,0 +1,441 @@
+---
+title: "Regression & Modelling"
+description: "Linear, generalised linear, mixed, and additive models, with full attention to diagnostics, interpretation, and reporting"
+---
+
+Regression is the general-purpose framework of applied statistics: a way to relate an outcome to one or more predictors while accounting for the structure of the data. This area covers the full regression family, from ordinary least squares through generalised linear models, additive models, mixed-effects models for clustered data, and regularised regression for high-dimensional problems.
+
+Each tutorial is organised around a concrete research question. The reader sees not only how to fit the model in R but how to check its assumptions, interpret its coefficients, summarise its predictions with uncertainty, and present the results in a manuscript table.
+
+## Coverage
+
+- Simple and multiple linear regression; interpretation of coefficients, R-squared, and residual standard error
+- Assumption checks: linearity, homoscedasticity, normality of residuals, independence, multicollinearity
+- Diagnostics: residual plots, leverage, Cook's distance, VIF, added-variable plots
+- Transformations, interactions, polynomial terms, and splines
+- Logistic regression for binary outcomes; odds ratios, marginal effects, ROC/AUC, calibration
+- Poisson, quasi-Poisson, and negative binomial regression for counts; offsets and rate models
+- Ordinal and multinomial logistic regression
+- Generalised additive models (GAMs) with `mgcv`; smooth terms and tensor product interactions
+- Linear and generalised linear mixed-effects models with `lme4`, `glmmTMB`, and `nlme`
+- Regularisation: ridge, lasso, elastic net with `glmnet`
+- Model selection: information criteria, cross-validation, and the dangers of stepwise procedures
+- Robust regression, quantile regression, and generalised estimating equations
+
+Tables and figures in every tutorial are publication-ready, built with `broom`, `gtsummary`, `modelsummary`, and `ggeffects`.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Added-Variable Plots](added-variable-plots.qmd)
+Partial regression plots showing each predictor's unique contribution
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Best Subset Selection](best-subset-selection.qmd)
+Enumerate all candidate predictor subsets to find the best by a chosen criterion
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Beta Regression](beta-regression.qmd)
+Regression for continuous outcomes in (0, 1): proportions, percentages, fractions
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Centring and Scaling Predictors](centered-scaled-predictors.qmd)
+Why and how to centre and scale continuous predictors before regression
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Contrasts in R](contrasts-in-r.qmd)
+Built-in and custom contrast matrices for factor variables in regression and ANOVA
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Cook's Distance](cooks-distance.qmd)
+Single-number influence measure combining leverage and residual
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Cox Regression as Regression](survival-regression-cox.qmd)
+The Cox proportional-hazards model in the GLM-family perspective; pointer to the Survival section
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Dirichlet Regression](dirichlet-regression.qmd)
+Regression for compositional outcomes: vectors of proportions summing to 1
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Dummy Coding](dummy-coding.qmd)
+Treatment-contrast coding for categorical predictors: reference category and indicator variables
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Effect (Deviation) Coding](effect-coding.qmd)
+Sum-to-zero contrasts: coefficients as deviations from the grand mean
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Elastic Net](elastic-net.qmd)
+Combined L1 and L2 penalty: variable selection plus grouping behaviour
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [GAMMs: Additive Mixed Models](gamm-additive-mixed.qmd)
+Combining smooth effects (GAM) with random effects (LMM) via mgcv::gam
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [GAMs: Introduction](gam-introduction.qmd)
+Generalised additive models with smoothing splines for non-linear predictor effects
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Generalised Estimating Equations](generalized-estimating-equations.qmd)
+Marginal regression models for clustered data with working correlation structures
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Hurdle Models](hurdle-models.qmd)
+Two-part count models: binary decision for zero vs. non-zero, plus truncated count for positives
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Interactions in Regression](interactions-in-regression.qmd)
+Product terms in regression, centring, and the interpretation of conditional effects
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Lasso Regression](lasso-regression.qmd)
+L1-penalised regression for simultaneous shrinkage and variable selection
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Leverage and Influence](leverage-influence.qmd)
+Hat values, DFBETAs, and Cook's distance for identifying influential observations
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Linear Regression Assumptions](regression-assumptions.qmd)
+The four classical assumptions of linear regression and how to check each
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Logistic Regression](logistic-regression.qmd)
+Regression for binary outcomes: odds ratios, logit link, and MLE fitting
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Logistic Regression Diagnostics](logistic-regression-diagnostics.qmd)
+Calibration plots, Hosmer-Lemeshow, deviance residuals, and influence for GLM
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Mixed-Effects Models: Introduction](mixed-models-intro.qmd)
+Hierarchical / multilevel regression: fixed effects for population-level structure, random effects for cluster-level variability
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Model Selection with AIC and BIC](model-selection-aic-bic.qmd)
+Information criteria for comparing models: Akaike's and Bayesian
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Multicollinearity and VIF](multicollinearity-vif.qmd)
+Variance inflation factors, condition numbers, and remedies for collinear predictors
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Multinomial Logistic Regression](multinomial-logistic.qmd)
+Regression for unordered categorical outcomes with three or more levels
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Multiple Linear Regression](multiple-linear-regression.qmd)
+Linear regression with two or more predictors: coefficient interpretation, partial effects, and collinearity
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Negative Binomial Regression](negative-binomial-regression.qmd)
+Count regression with explicit variance-dispersion parameter for overdispersed data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Nested vs Crossed Random Effects](nested-crossed-random-effects.qmd)
+Distinguishing hierarchical from partially-overlapping grouping structures in mixed models
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Offsets in Regression](offsets-in-regression.qmd)
+Treating exposure time or person-years as a known component of the linear predictor
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Ordinal Logistic Regression](ordinal-logistic.qmd)
+Regression for ordered categorical outcomes using the proportional-odds model
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Partial Correlation](partial-correlation.qmd)
+Correlation between two variables after removing the linear influence of others
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Poisson Regression](poisson-regression.qmd)
+Log-linear count regression with rates and offsets
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Polynomial Regression](polynomial-regression.qmd)
+Extending linear regression with powers of predictors: orthogonal polynomials and overfitting risk
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Probit Regression](probit-regression.qmd)
+Binary regression using the cumulative normal link
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Quantile Regression](quantile-regression.qmd)
+Modelling conditional quantiles (median, upper/lower percentiles) rather than the mean
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Quasi-Poisson Regression](quasi-poisson.qmd)
+Poisson regression with a dispersion parameter for moderate overdispersion
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [R-Squared and Adjusted R-Squared](r-squared-adjusted.qmd)
+Proportion of variance explained, and the penalty for model complexity
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [ROC and AUC for Logistic Models](roc-auc-for-logistic.qmd)
+Discrimination quality of logistic regression via receiver operating characteristic curves
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Random-Intercept Models](random-intercepts.qmd)
+Mixed model with cluster-specific intercepts but common slopes
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Random-Slope Models](random-slopes.qmd)
+Mixed model with cluster-specific slopes, allowing effects to vary across groups
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Residual Diagnostics](residual-diagnostics.qmd)
+Four standard residual plots, what they show, and how to read them
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Ridge Regression](ridge-regression.qmd)
+L2 penalty for coefficient shrinkage; stable fits under collinearity
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Robust Regression](robust-regression.qmd)
+M-estimators and MM-estimators for regression resistant to outliers and heavy-tailed errors
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Simple Linear Regression](simple-linear-regression.qmd)
+Fitting, diagnosing, and interpreting a linear regression with a single continuous predictor, from first principles
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Spline Regression](spline-regression.qmd)
+Piecewise-polynomial regression with natural cubic splines for flexible non-linear fits
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Stepwise Regression: Pitfalls](stepwise-regression-pitfalls.qmd)
+Why automated predictor selection by p-value or AIC has serious statistical problems
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Tobit Regression](tobit-regression.qmd)
+Linear regression for outcomes censored at a known threshold
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Truncated Regression](truncated-regression.qmd)
+Regression when observations are missing (not just censored) below or above a threshold
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Worked lme4::lmer Examples](lme4-lmer-examples.qmd)
+Common formula patterns for lmer with interpretation of each output block
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Zero-Inflated Models](zero-inflated-models.qmd)
+Mixture models for count data with more zeros than Poisson or negative binomial predicts
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [glmer: Generalised Mixed Models](glmer-generalized-mixed.qmd)
+Extending mixed models to binary, count, and other GLM outcomes
+:::
+
+:::

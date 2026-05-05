@@ -100,15 +100,3 @@ For ordinal items, polychoric correlations with `psych::fa(..., cor = "poly")` a
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 00f09d074cb94a2ab7a0f132ce82af55 -->
-<img src="https://vg09.met.vgwort.de/na/00f09d074cb94a2ab7a0f132ce82af55"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

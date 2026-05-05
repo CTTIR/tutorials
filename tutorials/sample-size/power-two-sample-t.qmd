@@ -1,0 +1,86 @@
+---
+title: Sample Size for a Two-Sample t-Test
+date: "2026-04-17"
+description: "Power analysis and sample size calculation for comparing two independent group means, with worked examples in R"
+categories:
+  - "Sample Size & Power"
+  - power-analysis
+  - sample-size
+  - t-test
+  - effect-size
+  - study-design
+---
+
+## Introduction
+
+Before running a two-group comparison, the investigator needs to know how many observations per group will be required to detect a difference of scientific importance with acceptable probability. Power analysis for the two-sample t-test answers this question by linking four quantities: the true effect size, the significance level, the power, and the sample size. Given any three, R can solve for the fourth.
+
+## Prerequisites
+
+Familiarity with the two-sample t-test and with the concepts of type I and type II error is assumed. The reader should know that "power" means $1 - \beta$, the probability of rejecting $H_0$ when $H_1$ is true.
+
+## Theory
+
+Under $H_0$, the t statistic follows a central t distribution with $\nu = n_1 + n_2 - 2$ degrees of freedom (Student's test, equal variances). Under $H_1$ where $\mu_1 - \mu_2 = \delta$, the statistic follows a *non-central* t distribution with non-centrality parameter
+
+$$\lambda = \frac{\delta}{\sigma \sqrt{\frac{1}{n_1} + \frac{1}{n_2}}}.$$
+
+Power is the probability that the test statistic exceeds the critical value under this non-central distribution. For Cohen's standardised effect size $d = \delta/\sigma$ and equal group sizes $n_1 = n_2 = n$, this simplifies to $\lambda = d\sqrt{n/2}$.
+
+The four power quantities and their trade-offs:
+
+- **Effect size $d$**: the minimum standardised difference considered scientifically meaningful. By Cohen's conventions, $d = 0.2$ is small, $0.5$ is medium, $0.8$ is large -- but these conventions are field-dependent and should be used with judgement.
+- **Significance level $\alpha$**: usually 0.05 for two-sided testing.
+- **Power**: conventionally 0.80 for exploratory work, 0.90 for confirmatory or registered trials.
+- **Sample size per group $n$**: what we typically solve for.
+
+## Assumptions
+
+Power analysis inherits the assumptions of the t-test it plans for: independent groups, approximately normal data (or large enough $n$ for the CLT), and equal variances for Student's test (unequal for Welch's).
+
+## R Implementation
+
+```r
+library(pwr)
+
+pwr.t.test(d = 0.5, sig.level = 0.05, power = 0.80,
+           type = "two.sample", alternative = "two.sided")
+
+pwr.t.test(n = 30, sig.level = 0.05, power = 0.80,
+           type = "two.sample", alternative = "two.sided")
+
+pwr.t.test(n = 30, d = 0.5, sig.level = 0.05,
+           type = "two.sample", alternative = "two.sided")
+
+library(pwrss)
+pwrss.t.2means(mu1 = 110, mu2 = 100, sd1 = 18, sd2 = 15,
+               power = 0.80, alpha = 0.05)
+```
+
+The first `pwr.t.test()` call asks: how many subjects per group do I need to detect a medium-sized effect ($d = 0.5$) with 80% power? The second asks: given $n = 30$ per group, what is the minimum detectable effect at 80% power? The third asks: given $n = 30$ and $d = 0.5$, what is my power? The `pwrss::pwrss.t.2means()` call works directly in raw-mean terms, which is often more natural when planning a clinical trial.
+
+## Output & Results
+
+The first call returns $n \approx 64$ per group -- 128 subjects in total. The second returns a minimum detectable $d \approx 0.735$, corresponding to a raw difference of about 11 points if $\sigma = 15$. The third returns a power of approximately 0.48, showing that 30 per group is badly underpowered for a medium effect.
+
+```
+     Two-sample t test power calculation
+
+              n = 63.76576
+              d = 0.5
+      sig.level = 0.05
+          power = 0.8
+    alternative = two.sided
+```
+
+## Interpretation
+
+The recommended manuscript phrasing is: "Assuming a between-group standardised mean difference of $d = 0.5$ (a medium effect by Cohen's criteria), a two-sided $\alpha$ of 0.05, and power of 0.80, the required sample size is 64 per group. Allowing for 10% loss to follow-up, we aim to enrol 72 per group (144 total)." The power analysis should be reported in the methods section of the grant or protocol, not buried in an appendix.
+
+## Practical Tips
+
+- Base your effect size on published data or a pilot, not on a convention like $d = 0.5$. If the published effect is $d = 0.3$, planning for $d = 0.5$ will leave you underpowered.
+- Use Welch's sample size for unequal variances (`pwr.t2n.test()` or `pwrss.t.2means()` with `sd1 != sd2`). It is slightly more conservative, which is what you want at the planning stage.
+- Plan for loss to follow-up, noncompliance, and data exclusion by inflating the computed $n$ by a realistic percentage (typically 10-25%).
+- If the minimum clinically important difference (MCID) is known in raw units, use that directly rather than translating to $d$. It is more interpretable to clinicians.
+- Always produce a sensitivity analysis: a curve of power against $n$, or a tornado plot of sample size against plausible values of effect size and SD.

@@ -1,0 +1,234 @@
+---
+title: Meta-Analysis
+description: "Synthesising evidence across studies: fixed- and random-effects models, heterogeneity, publication bias, and network meta-analysis"
+---
+
+Meta-analysis combines results from multiple primary studies into a single summary, with an uncertainty that reflects both within-study sampling variation and between-study differences. Done well, it is the highest tier of quantitative evidence; done carelessly, it averages noise with bias and obscures the conclusion it claims to support.
+
+This area covers the statistical machinery of meta-analysis from the two-study case through to network meta-analysis of dozens of interventions, with attention to the PRISMA reporting standards that govern how the review must be documented.
+
+## Topics
+
+- Effect sizes for continuous outcomes: mean difference, standardised mean difference (Hedges' g, Cohen's d)
+- Effect sizes for binary outcomes: risk ratio, odds ratio, risk difference
+- Effect sizes for correlations and for diagnostic accuracy
+- Fixed-effect and random-effects models; inverse-variance weighting
+- Heterogeneity: Q statistic, I-squared, tau-squared, prediction intervals
+- Subgroup analysis and meta-regression
+- Forest plots, funnel plots, and their interpretation
+- Publication bias: Egger's test, Begg's test, trim-and-fill, selection models
+- Small-study effects and the Hartung-Knapp adjustment for random-effects confidence intervals
+- Risk-of-bias assessment (RoB 2, ROBINS-I) and its incorporation in sensitivity analyses
+- Individual participant data (IPD) meta-analysis
+- Network meta-analysis (NMA): consistency models, inconsistency tests, league tables, SUCRA
+- Diagnostic test accuracy meta-analysis: bivariate model, HSROC
+
+Packages: `meta`, `metafor`, `dmetar`, `netmeta`, `gemtc`, `mada`, `robvis`.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bivariate SROC Curves](bivariate-sroc.qmd)
+Hierarchical summary ROC modelling for diagnostic-accuracy meta-analysis
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Converting Between Effect Sizes](effect-size-conversion.qmd)
+Moving between standardised mean differences, correlations, and odds ratios
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Cumulative Meta-Analysis](cumulative-meta-analysis.qmd)
+Sequentially pooling studies in the order they were published
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Egger's Test for Funnel Asymmetry](egger-test.qmd)
+Formal regression test for small-study effects and publication bias
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Fixed-Effect vs. Random-Effects Meta-Analysis](fixed-vs-random-effects.qmd)
+Two ways to pool study-level effect sizes, and the consequences of each for inference and interpretation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Forest Plots in Meta-Analysis](forest-plot-meta.qmd)
+Standard visualisation of per-study effects, weights, and the pooled estimate
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Funnel Plots](funnel-plot-meta.qmd)
+Visual inspection for small-study effects and publication bias
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Individual Participant Data Meta-Analysis](ipd-meta-analysis.qmd)
+Two-stage vs one-stage analysis of raw data pooled across studies
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Leave-One-Out Meta-Analysis](leave-one-out.qmd)
+Sensitivity of the pooled estimate to each individual study
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Meta-Analysis of Diagnostic Accuracy](diagnostic-test-meta.qmd)
+Bivariate and HSROC models for pooling diagnostic test performance
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Meta-Regression](meta-regression.qmd)
+Explaining between-study heterogeneity with study-level covariates
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [NMA Consistency and Inconsistency](nma-consistency.qmd)
+Loop-specific and global tests for direct-indirect evidence agreement
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [NMA League Tables](nma-league-tables.qmd)
+Pairwise treatment contrasts in a compact triangular grid
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Network Meta-Analysis: Introduction](network-meta-analysis-intro.qmd)
+Combining direct and indirect comparisons across multiple treatments
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Pooling Correlation Coefficients](correlation-pooling.qmd)
+Fisher z transformation for meta-analysis of correlations
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Pooling Log-Odds Ratios](log-odds-ratio-pooling.qmd)
+Fixed and random-effects meta-analysis of binary outcomes on the log scale
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Pooling Risk Ratios](risk-ratio-pooling.qmd)
+Meta-analysis of binary outcomes on the risk-ratio scale
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Prediction Intervals in Meta-Analysis](prediction-interval-meta.qmd)
+The plausible range of a future study's true effect under random-effects
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Quantifying Heterogeneity: Q and I^2](heterogeneity-q-i2.qmd)
+Cochran's Q, I-squared, and their interpretation in meta-analysis
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [SUCRA Rankings](nma-sucra.qmd)
+Surface Under the Cumulative Ranking curve for treatment comparisons
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Selection Models for Publication Bias](selection-models-bias.qmd)
+Weighted-distribution models for adjusting meta-analysis for selection
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Standardised Mean Difference: Hedges' g](smd-hedges-g.qmd)
+Small-sample-corrected standardised effect size for continuous outcomes
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Subgroup Meta-Analysis](subgroup-meta-analysis.qmd)
+Pooling within strata and testing for between-subgroup heterogeneity
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Tau-Squared Estimation](tau-squared-estimation.qmd)
+Estimators of between-study variance: DL, REML, PM, SJ, EB
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Trim-and-Fill](trim-and-fill.qmd)
+Adjusting the pooled estimate for apparent funnel asymmetry
+:::
+
+:::

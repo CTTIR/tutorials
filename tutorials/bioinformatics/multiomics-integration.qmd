@@ -1,0 +1,76 @@
+---
+title: Multi-Omics Integration
+date: "2026-04-17"
+description: "Joint analysis of transcriptomic, genomic, and epigenomic layers"
+categories:
+  - Bioinformatics
+  - multiomics
+  - MOFA
+  - integration
+---
+
+## Introduction
+
+Multi-omics experiments measure transcriptome, methylome, proteome, etc. on the same samples. Joint analysis exposes coordinated variation across layers that single-layer analyses miss -- cis-regulatory effects of methylation, mRNA-protein correspondence, or integrated disease subtypes.
+
+## Prerequisites
+
+Single-omic analysis (DE, methylation, proteomics); PCA / factor analysis basics.
+
+## Theory
+
+**MOFA (Multi-Omics Factor Analysis)** learns latent factors explaining variation across omics layers. Each factor has per-layer weights: factors loading strongly on multiple layers capture shared signal; single-layer factors reflect layer-specific variation. MOFA2 adds sparsity for interpretability.
+
+**Similarity network fusion (SNF)** and **iCluster+** offer alternative approaches; DIABLO (`mixOmics`) builds supervised multi-omic classifiers.
+
+## Assumptions
+
+Samples are matched across layers; layer-specific noise and scaling are handled by the model; sufficient sample size for factor inference (typically $> 50$).
+
+## R Implementation
+
+```r
+library(MOFA2)
+
+set.seed(2026)
+n <- 50
+# Latent factor drives correlated variation across 2 layers
+z <- rnorm(n)
+
+# Layer 1: 200 features (e.g., RNA)
+m_rna <- matrix(rnorm(200 * n, 0, 1), 200, n)
+m_rna[1:20, ] <- m_rna[1:20, ] + outer(rep(1.5, 20), z)
+
+# Layer 2: 100 features (e.g., methylation)
+m_meth <- matrix(rnorm(100 * n, 0, 1), 100, n)
+m_meth[1:10, ] <- m_meth[1:10, ] - outer(rep(1.2, 10), z)
+
+colnames(m_rna) <- colnames(m_meth) <- paste0("S", 1:n)
+rownames(m_rna)  <- paste0("rna_",  1:200)
+rownames(m_meth) <- paste0("meth_", 1:100)
+
+mofa <- create_mofa(list(RNA = m_rna, Methylation = m_meth))
+# Illustrative: actual fitting requires Python backend (reticulate + mofapy2).
+# model_opts <- get_default_model_options(mofa)
+# model_opts$num_factors <- 3
+# mofa_trained <- run_mofa(mofa, training_data_options = list(),
+#                          model_options = model_opts, outfile = tempfile())
+
+mofa
+```
+
+## Output & Results
+
+A trained MOFA model with latent-factor scores per sample, per-layer feature weights, and variance decomposition per factor x layer.
+
+## Interpretation
+
+"MOFA identified 5 latent factors; factor 1 explained 32 % of RNA and 18 % of methylation variance, linked to cancer subtype; factor 2 was RNA-specific and reflected proliferation signature."
+
+## Practical Tips
+
+- Standardise each layer before MOFA (mean = 0, SD = 1) so no one layer dominates.
+- Layer-specific factors often reflect technical artefacts; use them to diagnose batch effects.
+- `DIABLO` in `mixOmics` is the better choice when integration is supervised by an outcome.
+- MOFA requires Python via `reticulate`; test the install with `run_mofa2_docs()` before large runs.
+- Interpret factor weights with domain knowledge; algorithmic factors without biology are uninformative.

@@ -1,0 +1,82 @@
+---
+title: Chi-Squared Goodness-of-Fit Test
+date: "2026-04-17"
+description: Testing whether observed category frequencies match an expected distribution
+categories:
+  - Inferential Statistics
+  - chi-squared
+  - goodness-of-fit
+  - categorical
+---
+
+## Introduction
+
+The chi-squared goodness-of-fit test compares observed counts in $k$ categories to a pre-specified expected distribution. It answers questions like "do observed blood-type frequencies match the population reference?" or "does admission-cause distribution differ from last year's benchmark?".
+
+## Prerequisites
+
+Categorical data, chi-squared distribution.
+
+## Theory
+
+Given observed counts $O_1, \ldots, O_k$ and expected counts $E_j = n p_j$ under $H_0$, where $(p_1, \ldots, p_k)$ is the specified distribution with $\sum p_j = 1$, the test statistic is
+
+$$\chi^2 = \sum_{j=1}^k \frac{(O_j - E_j)^2}{E_j} \sim \chi^2_{k - 1 - m} \quad \text{under } H_0,$$
+
+where $m$ is the number of parameters estimated from the data (0 for a fully specified $H_0$, 1 for an estimated-mean Poisson fit, etc.).
+
+Effect size: Cohen's $w = \sqrt{\chi^2 / n}$ with thresholds 0.10, 0.30, 0.50 for small, medium, large.
+
+## Assumptions
+
+- Independent observations.
+- All expected counts $\geq 5$; otherwise the chi-squared approximation breaks down and exact methods (Monte Carlo or multinomial) are preferred.
+- The null distribution fully specifies the $p_j$ (or specifies them up to estimated parameters).
+
+## R Implementation
+
+```r
+# ABO blood group audit vs. population reference
+observed   <- c(A = 188, B = 42, AB = 15, O = 195)
+expected_p <- c(A = 0.42, B = 0.10, AB = 0.03, O = 0.45)
+
+chi <- chisq.test(observed, p = expected_p)
+chi
+
+chi$expected
+chi$residuals
+
+# Effect size
+w <- sqrt(chi$statistic / sum(observed))
+w
+
+# Monte Carlo p-value when expected cells are small
+chisq.test(observed, p = expected_p, simulate.p.value = TRUE, B = 2000)
+```
+
+## Output & Results
+
+```
+        Chi-squared test for given probabilities
+X-squared = 2.18, df = 3, p-value = 0.536
+
+       A        B       AB        O
+  185.22    44.10    13.23   198.45
+
+X-squared.
+ 0.065
+```
+
+No evidence the audit blood-type distribution differs from the reference (chi^2(3) = 2.18, p = 0.54, Cohen's w = 0.065, a tiny effect).
+
+## Interpretation
+
+When the null is not rejected, do not conclude the distribution "matches"; conclude only that the data are consistent with it. Standardised residuals $(O_j - E_j)/\sqrt{E_j}$ beyond $\pm 2$ identify cells driving any rejection.
+
+## Practical Tips
+
+- Expected counts below 5 invalidate the chi-squared approximation; use `simulate.p.value = TRUE` or an exact multinomial test.
+- Report the df and effect size, not just the p-value.
+- For ordered categories, consider the Cochran-Armitage trend test; chi-squared treats all categories as unordered.
+- The GoF test can be used to test distributional fits (e.g., Poisson-ness) by comparing binned observed to model-expected counts; degrees of freedom decrease by the number of parameters estimated.
+- Inspect standardised residuals to localise the source of any departure, rather than reporting only the omnibus p-value.

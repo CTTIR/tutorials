@@ -1,0 +1,72 @@
+---
+title: Centring and Scaling Predictors
+date: "2026-04-17"
+description: Why and how to centre and scale continuous predictors before regression
+categories:
+  - "Regression & Modelling"
+  - centring
+  - scaling
+  - interpretability
+---
+
+## Introduction
+
+Centring (subtracting the mean) and scaling (dividing by the standard deviation) are simple transformations of continuous predictors that change coefficient interpretation without changing model fit. Centring shifts the intercept to a meaningful value (the predicted outcome at the mean of every predictor) and reduces collinearity between main effects and interaction terms. Scaling makes coefficient magnitudes comparable across predictors that are on different units. Both transformations are routine pre-processing steps in regression with interactions or in any analysis that benchmarks predictor importance by coefficient size.
+
+## Prerequisites
+
+A working understanding of multiple linear regression, intercepts, and the geometric meaning of regression coefficients.
+
+## Theory
+
+**Centring**: $X^c = X - \bar X$. The intercept becomes the predicted $Y$ at the mean of every centred predictor; the slopes are unchanged. For models with interactions $X \cdot Z$, centring reduces the artefactual correlation between $X$, $Z$, and $X \cdot Z$ that inflates standard errors and complicates interpretation.
+
+**Scaling**: $X^s = X / \mathrm{SD}(X)$. The coefficient on $X^s$ is the predicted change in $Y$ per one-standard-deviation increase in $X$, on whatever scale $Y$ is measured. Combined with centring, the result is the standard $z$-score; standardised coefficients are directly comparable across predictors on different units.
+
+Neither transformation changes $R^2$, predictions, residual structure, or significance tests; only the coefficient values and their interpretation change.
+
+## Assumptions
+
+Continuous predictors. For categorical (factor) predictors, "centring" via sum-to-zero contrasts achieves an analogous effect on the intercept interpretation.
+
+## R Implementation
+
+```r
+d <- mtcars
+
+# Centred predictors
+d$wt_c <- d$wt - mean(d$wt)
+d$hp_c <- d$hp - mean(d$hp)
+
+# Centred + scaled (z-scored)
+d$wt_z <- scale(d$wt)[, 1]
+d$hp_z <- scale(d$hp)[, 1]
+
+fit_raw  <- lm(mpg ~ wt + hp,     data = d)
+fit_cent <- lm(mpg ~ wt_c + hp_c, data = d)
+fit_std  <- lm(mpg ~ wt_z + hp_z, data = d)
+
+# Intercept differs; slopes for raw & centred equal; slopes for standardised are per-SD
+coef(fit_raw);  coef(fit_cent);  coef(fit_std)
+```
+
+## Output & Results
+
+Three fits with identical $R^2$, $F$-statistic, and residuals but different coefficient interpretations. The raw model's intercept is $Y$ at $X = 0$ (often outside the data range); the centred model's intercept is $Y$ at the mean of every predictor; the standardised model's slopes are per-SD changes in $Y$.
+
+## Interpretation
+
+A reporting sentence: "Standardised coefficients show that a 1-SD increase in vehicle weight is associated with a 4.2-mpg decrease in fuel economy, while a 1-SD increase in horsepower is associated with a 2.3-mpg decrease (95 % CI $-5.1$ to $-3.3$ and $-3.5$ to $-1.0$ respectively); per standard deviation, weight is the stronger predictor of fuel economy in this sample." Standardised coefficients are the right summary when comparing strengths of predictors on different units.
+
+## Practical Tips
+
+- Centre predictors before adding interactions; this reduces the mechanical correlation between main and interaction terms and stabilises SEs.
+- Scale predictors when benchmarking importance across units; a coefficient of 0.001 on annual income looks small but might be the strongest predictor on a per-SD basis.
+- `scale()` returns a matrix with attributes; index with `[, 1]` to get a plain numeric vector.
+- Store means and SDs from training data when applying the same standardisation to test data; using the test-set mean/SD leaks information.
+- Do not centre or scale the outcome unless interpretation requires it; transformations on $Y$ change predictions and $R^2$ in ways that may be undesirable.
+- For penalised regression (lasso, ridge, elastic net), `glmnet` standardises predictors internally and returns coefficients on the original scale; do not pre-standardise.
+
+## R Packages Used
+
+Base R `scale()` for centring and scaling; `recipes::step_normalize()` and `step_center()` for tidymodels-flavoured pre-processing pipelines; `parameters::standardize_parameters()` for post-hoc standardisation of fitted-model coefficients.

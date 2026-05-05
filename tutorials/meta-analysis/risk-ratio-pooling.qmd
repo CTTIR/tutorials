@@ -1,0 +1,73 @@
+---
+title: Pooling Risk Ratios
+date: "2026-04-17"
+description: Meta-analysis of binary outcomes on the risk-ratio scale
+categories:
+  - Meta-Analysis
+  - risk-ratio
+  - pooling
+  - binary
+---
+
+## Introduction
+
+Risk ratios (RR) — also called relative risks — are more interpretable than odds ratios for common outcomes; they directly express the ratio of event probabilities between two arms. RR approximates OR only when events are rare (probability below ~10 %); for common outcomes, the two diverge substantially. Meta-analytic pooling of binary outcomes from cohort studies and randomised trials therefore typically proceeds on the log-RR scale, analogously to log-OR pooling.
+
+## Prerequisites
+
+A working understanding of risk ratios, log transformations for ratio measures, and inverse-variance meta-analysis under random effects.
+
+## Theory
+
+For a study with $a_i$ events in $a_i + b_i = n_{1i}$ exposed and $c_i$ events in $c_i + d_i = n_{2i}$ unexposed:
+
+$$\log \mathrm{RR}_i = \log \frac{a_i / n_{1i}}{c_i / n_{2i}}, \qquad \mathrm{Var}(\log \mathrm{RR}_i) = \frac{1}{a_i} - \frac{1}{n_{1i}} + \frac{1}{c_i} - \frac{1}{n_{2i}}.$$
+
+Inverse-variance pooling on the log-RR scale follows the same fixed-effect or random-effects distinction as any other meta-analysis. Back-transformation to the natural RR scale via $\exp$ produces interpretable summaries with confidence intervals that respect the multiplicative scale.
+
+## Assumptions
+
+Studies are independent; log-RR is approximately Normal (typically a good approximation when each study has at least 5 events per arm); the population RR is the same across studies (fixed-effect) or distributed around a mean with between-study variance $\tau^2$ (random-effects).
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+k <- 10
+df <- data.frame(
+  ai = rpois(k, 30), n1i = rep(100, k),
+  ci = rpois(k, 20), n2i = rep(100, k)
+)
+
+es <- escalc(measure = "RR",
+             ai = ai, n1i = n1i, ci = ci, n2i = n2i,
+             data = df)
+
+re <- rma(yi, vi, data = es, method = "REML")
+cat("Pooled RR:", round(exp(re$b), 2),
+    " 95% CI:", paste(round(exp(c(re$ci.lb, re$ci.ub)), 2), collapse = "-"), "\n")
+cat("tau^2:", round(re$tau2, 3), "  I^2:", round(re$I2, 1), "%\n")
+```
+
+## Output & Results
+
+`escalc(measure = "RR")` computes per-study log-RR and its variance. `rma()` fits the random-effects model on the log scale; back-transformation gives the pooled RR with confidence intervals on the natural scale, plus $\tau^2$ and $I^2$ for heterogeneity.
+
+## Interpretation
+
+A reporting sentence: "Random-effects meta-analysis of 10 studies (REML, $n$ total = 2{,}000) gave a pooled risk ratio of 1.48 (95 % CI 1.24 to 1.77) with moderate heterogeneity ($I^2 = 35 \%$, $\tau^2 = 0.02$); the intervention is associated with a 48 % higher event rate, with the 95 % CI excluding the null." Always report the heterogeneity statistics alongside the pooled estimate.
+
+## Practical Tips
+
+- Use RR for cohort studies and randomised controlled trials, where baseline risk is meaningful; use OR for case-control studies, where RR is not estimable from the design.
+- For rare events (event rate below 10 %), RR ≈ OR; for common events, the two diverge and the choice matters substantively.
+- Zero-event studies require a continuity correction (`escalc(..., add = 0.5)`) or a rare-events method (Peto OR, Mantel-Haenszel without correction); standard log-RR is undefined when any cell is zero.
+- Present forest plots and reports on the natural scale (RR), not the log scale; readers reason multiplicatively about ratios.
+- Mantel-Haenszel pooling (`metafor::rma.mh()`) is a common alternative for sparse-data settings; it does not require log-transformation and handles zero events more gracefully.
+- For individual-participant-data meta-analysis, fit a logistic regression with study as a random effect; this is more powerful than aggregate-data pooling when the IPD are available.
+
+## R Packages Used
+
+`metafor::escalc()` with `measure = "RR"` and `rma()` for the canonical workflow; `meta::metabin()` as an alternative interface with cleaner forest-plot output; `metafor::rma.mh()` for Mantel-Haenszel pooling; `metafor::rma.peto()` for the Peto method on rare events.

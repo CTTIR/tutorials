@@ -1,0 +1,67 @@
+---
+title: Augmented Dickey-Fuller Test
+date: "2026-04-17"
+description: Testing for unit roots / non-stationarity against a stationary alternative
+categories:
+  - Time Series Analysis
+  - adf
+  - unit-root
+  - stationarity
+---
+
+## Introduction
+
+The augmented Dickey-Fuller (ADF) test is the canonical test for unit roots in time series. A unit root corresponds to random-walk-like non-stationarity in which shocks have permanent effects on the level of the series; standard regression and ARIMA(p, 0, q) models give nonsense results when applied to such data. The ADF test asks whether a unit root is present and, if rejected, supports modelling the series as stationary (or trend-stationary). Pairing ADF with KPSS gives complementary information: the two tests have flipped null hypotheses, and agreement strengthens the verdict.
+
+## Prerequisites
+
+A working understanding of stationarity, autoregressive models, the difference between mean-reverting and random-walk processes, and the role of differencing in inducing stationarity.
+
+## Theory
+
+The ADF test fits the regression
+
+$$\Delta y_t = \alpha + \beta t + \gamma y_{t-1} + \sum_{i=1}^p \delta_i \Delta y_{t-i} + \varepsilon_t,$$
+
+and tests $\gamma = 0$ (unit root) against $\gamma < 0$ (stationary). The "augmented" $p$ lagged differences absorb autocorrelation in the residuals and validate the test under more general AR processes than the original Dickey-Fuller. Under the unit-root null, the test statistic does not follow a standard normal distribution; tabulated Dickey-Fuller critical values are used.
+
+Three deterministic specifications are common: no intercept (rare), intercept only ("drift"), and intercept plus linear trend. The choice should reflect the visible behaviour of the series.
+
+## Assumptions
+
+A linear autoregressive structure; no structural breaks (which invalidate the test); the lag order $p$ is large enough to whiten the residuals.
+
+## R Implementation
+
+```r
+library(tseries); library(urca)
+
+x <- cumsum(rnorm(100))     # random walk = unit root
+
+adf.test(x)                # default lag order
+adf.test(diff(x))          # stationary after differencing
+
+# urca version with formal output
+summary(ur.df(x, type = "drift", selectlags = "AIC"))
+```
+
+## Output & Results
+
+`adf.test()` returns the ADF statistic and a $p$-value computed from the Dickey-Fuller distribution. `urca::ur.df()` provides richer output with critical values at multiple significance levels and automatic lag selection by AIC or BIC.
+
+## Interpretation
+
+A reporting sentence: "The ADF test on the random-walk series gave a statistic of $-1.50$ ($p = 0.52$, fail to reject unit root); after first-differencing, ADF gave $-9.83$ ($p < 0.01$, reject unit root in favour of stationarity), confirming the series is integrated of order 1." Always state the deterministic specification (drift, trend, none) and the lag order chosen.
+
+## Practical Tips
+
+- Include an intercept (`type = "drift"`) for series that fluctuate around a non-zero mean; add a trend (`type = "trend"`) for series with a visible linear trend.
+- Use `selectlags = "AIC"` or `"BIC"` in `urca::ur.df()` for automatic lag selection; the default in `tseries::adf.test()` is `trunc(...)` which is sometimes too small.
+- Structural breaks invalidate ADF; if a break is plausible, use Zivot-Andrews (`urca::ur.za()`) which extends the test to allow one endogenous break.
+- Pair with KPSS for the complementary perspective: agreement (ADF rejects, KPSS does not) confirms stationarity; the reverse confirms a unit root.
+- Results are sensitive to specification; try several deterministic options and lag orders, and report a robust summary if conclusions hold across them.
+- For multi-series unit-root testing on panel data, use Im-Pesaran-Shin (`plm::purtest`) or Levin-Lin-Chu.
+
+## R Packages Used
+
+`tseries::adf.test()` for the canonical ADF; `urca::ur.df()` for richer output and lag-selection tools; `urca::ur.za()` for the Zivot-Andrews test with structural breaks; `forecast::ndiffs()` for an integrated workflow that determines the required differencing order from KPSS / ADF / Phillips-Perron.

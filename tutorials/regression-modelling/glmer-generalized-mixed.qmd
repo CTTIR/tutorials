@@ -1,0 +1,75 @@
+---
+title: "glmer: Generalised Mixed Models"
+date: "2026-04-17"
+description: "Extending mixed models to binary, count, and other GLM outcomes"
+categories:
+  - "Regression & Modelling"
+  - glmer
+  - glmm
+  - binary-mixed
+  - count-mixed
+---
+
+## Introduction
+
+`lme4::glmer()` fits generalised linear mixed models (GLMMs) — binary, count, and other non-Gaussian outcomes with random effects. The function inherits the random-effects formula syntax of `lmer()` and the family / link conventions of `glm()`, combining them into a single estimation problem. For binary outcomes (logistic mixed models), Poisson rates with cluster structure, and other GLM-style problems with repeated measures or hierarchical sampling, `glmer()` is the standard tool. The newer `glmmTMB` package is faster, more flexible (it handles overdispersed and zero-inflated families natively), and increasingly the recommended default.
+
+## Prerequisites
+
+A working understanding of generalised linear models, mixed-effects models, and link functions; familiarity with `lme4` formula syntax for random effects.
+
+## Theory
+
+The GLMM is
+
+$$g\bigl(\mathbb E[Y \mid u]\bigr) = X^\top \beta + Z^\top u, \qquad u \sim \mathcal N(0, \Sigma),$$
+
+with $g$ the link function (logit for binary, log for Poisson, log-odds-cumulative for ordinal). The random effects are placed on the linear-predictor scale, so interpreting their variance requires caution: a random-intercept SD of 1 on the logit scale corresponds to substantial between-cluster variability in baseline probability ($\pm 1$ SD spans a 0.27-to-0.73 baseline range from a centre of 0.50).
+
+Estimation uses Laplace approximation by default; adaptive Gauss-Hermite quadrature (`nAGQ > 1`) gives better accuracy at higher computational cost.
+
+## Assumptions
+
+GLM-family assumptions on the conditional distribution, multivariate Normal random effects, conditional independence given random effects, and the appropriate link function for the outcome family.
+
+## R Implementation
+
+```r
+library(lme4); library(glmmTMB)
+
+set.seed(2026)
+# Binary outcome: 20 subjects x 10 trials
+d <- expand.grid(subject = factor(1:20), trial = 1:10)
+d$x <- rnorm(nrow(d))
+subj_int <- rnorm(20, 0, 1.2)
+d$lp <- -0.5 + subj_int[as.integer(d$subject)] + 0.5 * d$x
+d$y <- rbinom(nrow(d), 1, plogis(d$lp))
+
+# lme4 glmer (binomial)
+fit <- glmer(y ~ x + (1 | subject), data = d, family = binomial)
+summary(fit)
+
+# glmmTMB equivalent with more features
+fit_tmb <- glmmTMB(y ~ x + (1 | subject), data = d, family = binomial)
+```
+
+## Output & Results
+
+`summary(fit)` reports fixed-effect coefficients on the linear-predictor (logit, log) scale with standard errors, Wald $z$ statistics, and $p$-values, plus random-effect variances and covariances and the AIC. Exponentiating fixed-effect coefficients gives odds ratios (binomial), rate ratios (Poisson), or other family-appropriate effect-size measures.
+
+## Interpretation
+
+A reporting sentence: "A binomial GLMM estimated the population-level slope at 0.51 on the log-odds scale (OR = 1.66, 95 % CI 1.34 to 2.04, $p < 0.001$); the random-intercept standard deviation was 1.10, indicating substantial between-subject variability in baseline log-odds. Coefficients are conditional on subject; for marginal effects use `ggeffects::ggpredict`." Always state whether fixed-effect interpretations are conditional or marginal — they are different scales.
+
+## Practical Tips
+
+- Laplace approximation is the default; for binary outcomes with small clusters, raise `nAGQ` to 7 or 11 for better accuracy.
+- Convergence warnings are common with binary data; try `glmmTMB` for a more robust optimiser, or switch to Bayesian fitting (`brms`).
+- Fixed-effect coefficients are conditional on the random effects; for marginal (population-averaged) effects, use generalised estimating equations (GEE) or post-process with `ggeffects::ggpredict()` or `marginaleffects::avg_predictions()`.
+- For overdispersed counts, `glmmTMB(family = nbinom2)` is far cleaner than the deprecated `glmer.nb()`.
+- For zero-inflated outcomes, `glmmTMB` handles the zero-inflation component natively; `lme4` does not.
+- Monitor singular fits — random-effect variances estimated near zero — and simplify the random structure when they appear.
+
+## R Packages Used
+
+`lme4` for `glmer()` with Laplace and adaptive Gauss-Hermite quadrature; `glmmTMB` for fast TMB-based GLMM fitting with overdispersed and zero-inflated families; `pbkrtest` for parametric-bootstrap LRTs on variance components; `ggeffects` and `marginaleffects` for marginal effects; `brms` for Bayesian GLMMs.

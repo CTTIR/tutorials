@@ -1,0 +1,67 @@
+---
+title: "Network Meta-Analysis: Introduction"
+date: "2026-04-17"
+description: Combining direct and indirect comparisons across multiple treatments
+categories:
+  - Meta-Analysis
+  - network-meta-analysis
+  - indirect
+  - mtc
+---
+
+## Introduction
+
+Network meta-analysis (NMA), or mixed-treatment comparison (MTC), pools evidence across studies comparing different pairs of treatments to estimate a coherent set of relative effects. It enables comparisons for which no direct head-to-head trials exist, provided indirect paths in the evidence network connect the treatments.
+
+## Prerequisites
+
+Pairwise meta-analysis; graph structure; consistency concept.
+
+## Theory
+
+A network has nodes (treatments) and edges (pairwise comparisons with at least one study). Direct evidence = studies comparing treatments directly; indirect evidence = inferred via a common comparator. The pooled estimate combines both under an assumption of **consistency** (direct = indirect estimates).
+
+Implementation: frequentist (`netmeta`) or Bayesian (`gemtc`, `BUGSnet`).
+
+## Assumptions
+
+**Transitivity**: studies in the network are sufficiently similar that indirect comparisons are valid.
+**Consistency**: direct and indirect estimates of the same contrast agree within sampling error.
+
+## R Implementation
+
+```r
+library(netmeta)
+
+# Example dataset
+set.seed(2026)
+net_df <- data.frame(
+  study = c("S1", "S1", "S2", "S2", "S3", "S3", "S4", "S4", "S5", "S5"),
+  treat = c("A", "B", "A", "C", "B", "C", "A", "D", "C", "D"),
+  TE    = c(0, -0.3, 0, -0.5, 0.4, 0.2, 0, -0.2, 0, 0.3),
+  seTE  = c(0.2, 0.2, 0.25, 0.25, 0.3, 0.3, 0.2, 0.2, 0.22, 0.22)
+)
+# Rearrange to pairs
+p_df <- pairwise(treat = treat, TE = TE, seTE = seTE,
+                 studlab = study, data = net_df)
+
+net <- netmeta(p_df, common = FALSE, reference = "A")
+summary(net)
+netgraph(net)
+```
+
+## Output & Results
+
+A network graph, pooled treatment effects relative to the reference, and overall I^2.
+
+## Interpretation
+
+"Network meta-analysis of 5 studies covering 4 treatments (A reference, B, C, D) yielded pooled SMDs: B vs A -0.22 (-0.41, -0.03); C vs A -0.35 (-0.58, -0.12); D vs A 0.05 (-0.15, 0.25). Transitivity was plausible; consistency was not violated."
+
+## Practical Tips
+
+- Always produce a network graph first; disconnected components cannot be compared.
+- Check transitivity via study characteristics (populations, doses, outcomes).
+- Use SUCRA to rank treatments by their probability of being best.
+- Report PRISMA-NMA checklist; network meta-analyses are complex and demand transparency.
+- Bayesian NMA via `gemtc` is more flexible for hierarchical models and missing-arm data.

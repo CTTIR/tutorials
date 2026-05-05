@@ -1,0 +1,82 @@
+---
+title: DNA Methylation Analysis
+date: "2026-04-17"
+description: Differentially methylated positions and regions from bisulfite or array data
+categories:
+  - Bioinformatics
+  - methylation
+  - bisulfite
+  - minfi
+---
+
+## Introduction
+
+DNA methylation at CpG dinucleotides is a stable epigenetic mark that regulates gene expression and varies with age, tissue type, environmental exposures, and disease state. The two dominant assays are Illumina arrays (450K, 850K EPIC) measuring methylation at hundreds of thousands of CpGs and whole-genome bisulfite sequencing (WGBS) covering nearly all CpGs at higher cost. Differential methylation analysis identifies CpG positions or regions whose methylation differs between groups, often serving as biomarkers (e.g., cancer subtype classification, age estimation).
+
+## Prerequisites
+
+A working understanding of bisulfite conversion chemistry (unmethylated C → T, methylated C → C), the difference between beta-values and M-values as methylation summaries, and basic linear-modelling on continuous outcomes.
+
+## Theory
+
+Two methylation summaries:
+
+- **Beta-value**: $\beta = M / (M + U + \alpha)$, the proportion of methylated reads (with $\alpha$ a small offset to stabilise low-coverage estimates). Intuitive (0 = fully unmethylated, 1 = fully methylated) but heteroscedastic — variance is largest near 0.5.
+- **M-value**: $\log_2(M / U)$, the log-ratio of methylated to unmethylated. Linear and approximately homoscedastic; preferred for regression.
+
+The standard pipeline:
+
+1. Read raw IDAT files (`minfi::read.metharray.exp`).
+2. Normalise (SWAN, functional normalisation, BMIQ).
+3. Detect and remove outlier samples and cross-reactive probes.
+4. Differential methylation at probe level via limma on M-values.
+5. Region-level analysis (DMRcate, bumphunter) for smoother small-effect detection.
+
+## Assumptions
+
+Array probes are well-designed (no major cross-reactivity); batch effects are identified and modelled; cell-type composition is adjusted for in blood or other heterogeneous samples — failure to do so creates spurious associations.
+
+## R Implementation
+
+```r
+library(limma)
+
+set.seed(2026)
+n_cpgs <- 1000; n_samples <- 12
+M_values <- matrix(rnorm(n_cpgs * n_samples, mean = 0, sd = 2),
+                   n_cpgs, n_samples)
+rownames(M_values) <- paste0("cg", 1:n_cpgs)
+colnames(M_values) <- paste0("S", 1:n_samples)
+
+group <- factor(rep(c("ctrl", "case"), each = 6))
+# Inject differential methylation in 50 CpGs
+M_values[1:50, group == "case"] <- M_values[1:50, group == "case"] + 1.5
+
+design <- model.matrix(~ group)
+fit <- lmFit(M_values, design)
+fit <- eBayes(fit)
+
+topTable(fit, coef = 2, n = 5)
+summary(decideTests(fit))
+```
+
+## Output & Results
+
+`topTable()` returns a per-CpG table with log fold change in M-value, raw $p$-value, and BH-adjusted $p$-value. The 50 injected CpGs should appear at the top of the ranked list with the largest absolute fold changes and most significant $p$-values.
+
+## Interpretation
+
+A reporting sentence: "Epigenome-wide differential methylation analysis (limma on M-values, design adjusting for age and estimated cell-type composition) identified 1{,}240 differentially methylated CpGs at Bonferroni $p < 10^{-7}$; 62 % were hypermethylated in cases, concentrated in CpG islands of known tumour-suppressor loci. Region-level analysis (DMRcate) identified 87 differentially methylated regions overlapping 64 unique genes." Always state the multiple-testing correction, cell-type adjustment strategy, and use of M-values vs beta-values.
+
+## Practical Tips
+
+- Fit regression models on M-values (homoscedastic), but report effect sizes in beta-values (more interpretable as "% methylation difference") for clinical audiences.
+- Cell-type deconvolution (`EpiDISH`, `FlowSorted.Blood.450k`) is mandatory for blood-based EWAS; unadjusted results predominantly reflect composition differences.
+- Region-level analysis (DMRcate, bumphunter) is more powerful than probe-level for small consistent effects across nearby CpGs; it also reduces multiple-testing burden.
+- Batch effects (array plate, chip, scan date) are very strong in methylation data; include as covariates or run ComBat.
+- For age-related studies, the Horvath, Hannum, or PhenoAge clocks give DNA methylation age estimates that are biologically interpretable; report alongside chronological age.
+- Standardised EWAS pipelines (`meffil`, `PaCES`) offer one-call QC and analysis with sensible defaults.
+
+## R Packages Used
+
+`minfi` for IDAT reading, normalisation, and basic differential analysis; `limma` for linear-modelling on M-values; `DMRcate` for region-level differential methylation; `EpiDISH` and `FlowSorted.Blood.450k` for cell-type deconvolution; `bumphunter` for an alternative region detector; `meffil` for an end-to-end EWAS pipeline; `methylKit` for WGBS analysis.

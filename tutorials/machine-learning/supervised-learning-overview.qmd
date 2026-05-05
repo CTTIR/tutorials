@@ -1,0 +1,74 @@
+---
+title: "Supervised Learning: Overview"
+date: "2026-04-17"
+description: "Framework, loss functions, generalisation, and the bias-variance decomposition"
+categories:
+  - Machine Learning
+  - supervised-learning
+  - loss
+  - generalisation
+---
+
+## Introduction
+
+Supervised learning uses labelled data $(x_i, y_i)_{i=1}^{n}$ to learn a function $f$ that predicts $y$ from new $x$. The enterprise is defined by three choices: a **hypothesis class** (tree, linear model, neural net), a **loss function** (squared error, cross-entropy), and an **optimisation** procedure. Generalisation -- performance on unseen data -- is the goal, and the bias-variance decomposition is the classical lens for understanding why models fail.
+
+## Prerequisites
+
+Probability, linear algebra, basic statistics.
+
+## Theory
+
+**Empirical risk minimisation (ERM)**: $\hat{f} = \arg\min_{f \in \mathcal{F}} \frac{1}{n}\sum_i L(y_i, f(x_i))$.
+
+**Loss functions**:
+- Regression: squared loss $(y - f)^2$, absolute loss $|y - f|$.
+- Classification: 0/1 (intractable), log loss (cross-entropy), hinge (SVMs).
+
+**Bias-variance decomposition** for squared loss:
+$$\mathbb{E}[(y - \hat{f}(x))^2] = \text{Bias}^2 + \text{Variance} + \sigma^2_{\text{noise}}.$$
+
+Flexible models have low bias, high variance; rigid models the reverse. Regularisation trades one for the other.
+
+## Assumptions
+
+$(x, y)$ pairs are drawn iid from some joint distribution; the deployment distribution matches the training distribution (no distribution shift).
+
+## R Implementation
+
+```r
+library(tidymodels)
+
+set.seed(2026)
+n <- 300
+x <- runif(n, 0, 2 * pi)
+y <- sin(x) + rnorm(n, 0, 0.3)
+df <- tibble(x = x, y = y)
+
+split <- initial_split(df, prop = 0.7)
+train <- training(split); test <- testing(split)
+
+# Two models of different flexibility
+m_rigid <- lm(y ~ x, data = train)
+m_flex  <- loess(y ~ x, data = train, span = 0.2)
+
+rmse <- function(yhat, y) sqrt(mean((yhat - y)^2))
+rmse(predict(m_rigid, test), test$y)
+rmse(predict(m_flex,  test), test$y)
+```
+
+## Output & Results
+
+The flexible loess model has lower test RMSE on this non-linear signal; the rigid linear model under-fits.
+
+## Interpretation
+
+"The sinusoidal signal is captured by loess (test RMSE 0.31) but missed by linear regression (test RMSE 0.68), illustrating how bias dominates when the hypothesis class is too restrictive."
+
+## Practical Tips
+
+- Always report test performance, never training performance, as a generalisation estimate.
+- The no-free-lunch theorem: no single model wins everywhere; match model to the data-generating process.
+- Stratify classification splits to preserve class proportions.
+- Use cross-validation for small-to-moderate data; a single train/test split is high-variance.
+- Track multiple metrics: RMSE and MAE together are more informative than either alone.

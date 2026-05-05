@@ -1,0 +1,74 @@
+---
+title: Generalised Estimating Equations
+date: "2026-04-17"
+description: Marginal regression models for clustered data with working correlation structures
+categories:
+  - "Regression & Modelling"
+  - gee
+  - marginal-model
+  - working-correlation
+---
+
+## Introduction
+
+Generalised estimating equations (GEE) fit marginal regression models for clustered data — repeated measures, longitudinal outcomes, familial correlations — without specifying random effects. Where mixed models target subject-specific (conditional) effects, GEE targets population-averaged (marginal) effects, answering the question "what is the average effect across the population?" rather than "what is the effect for a typical subject?" The two interpretations coincide for linear models with identity link but diverge for non-linear links (logistic, log).
+
+## Prerequisites
+
+A working understanding of generalised linear models, the difference between conditional and marginal effects, and basic familiarity with cluster-robust standard errors.
+
+## Theory
+
+GEE specifies a mean structure $g(\mu_{ij}) = X_{ij}^\top \beta$ for observation $j$ in cluster $i$ and a *working correlation* matrix $R(\alpha)$ governing within-cluster dependence. Standard choices:
+
+- **Independence**: ignore correlation; coefficients still consistent.
+- **Exchangeable**: equal correlation between all pairs within cluster.
+- **AR(1)**: correlation decays geometrically with time gap.
+- **Unstructured**: each pairwise correlation estimated separately.
+
+Coefficient estimates are consistent even under correlation misspecification; standard errors use the sandwich (robust) variance estimator. The working-correlation choice affects efficiency but not asymptotic consistency.
+
+QIC (quasi-likelihood information criterion) generalises AIC for GEE and is used for selecting both the working correlation and the mean structure.
+
+## Assumptions
+
+Independent clusters, correctly specified mean model, and missing-completely-at-random (MCAR) for missing observations. The MCAR requirement is stricter than the MAR assumption of mixed models, so heavy missingness can favour the latter.
+
+## R Implementation
+
+```r
+library(geepack)
+
+data(respiratory, package = "geepack")
+fit <- geeglm(outcome ~ treat + age + sex, id = id, data = respiratory,
+              family = binomial, corstr = "exchangeable")
+summary(fit)
+
+# AR(1) correlation
+fit_ar <- geeglm(outcome ~ treat + age + sex, id = id, data = respiratory,
+                  family = binomial, corstr = "ar1")
+
+# QIC for correlation structure selection
+QIC(fit); QIC(fit_ar)
+```
+
+## Output & Results
+
+`summary(fit)` returns marginal coefficients with sandwich-robust standard errors and Wald $z$-tests. `QIC()` provides a quasi-likelihood information criterion for comparing models with different working correlations or different mean structures.
+
+## Interpretation
+
+A reporting sentence: "A GEE logistic regression with exchangeable working correlation estimated the population-averaged odds ratio for treatment at 3.7 (95 % CI 2.0 to 6.6, $p < 0.001$); standard errors used the sandwich variance estimator to protect against working-correlation misspecification, and QIC favoured exchangeable over AR(1) ($\Delta\mathrm{QIC} = 4$)." Always specify the working-correlation structure and use sandwich SEs.
+
+## Practical Tips
+
+- Sandwich SEs are the standard inferential tool for GEE; do not rely on naive model-based SEs.
+- Use QIC for selecting the working correlation; AIC and BIC do not apply because GEE is quasi-likelihood, not likelihood.
+- Choose between mixed models and GEE based on the inferential question: mixed for subject-specific effects, GEE for population-averaged.
+- For longitudinal binary outcomes, exchangeable working correlation is a sensible default; AR(1) when measurements are evenly spaced and correlation decays in time.
+- For small numbers of clusters ($< 40$), sandwich SEs can be biased downward; use small-sample corrections (`geesmv` package) or fall back on mixed models with appropriate denominator df.
+- Missing data: GEE requires MCAR for unbiased estimation, while mixed models tolerate MAR; consider this trade-off when choosing.
+
+## R Packages Used
+
+`geepack` for `geeglm()` and QIC; `gee` for an alternative implementation; `geeM` for high-performance GEE on large datasets; `geesmv` for small-sample SE corrections; `multgee` for GEE with multinomial outcomes.

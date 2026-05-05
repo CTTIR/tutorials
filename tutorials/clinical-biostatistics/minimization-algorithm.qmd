@@ -1,0 +1,72 @@
+---
+title: Minimisation Algorithm
+date: "2026-04-17"
+description: Covariate-adaptive allocation that prospectively minimises imbalance
+categories:
+  - Clinical Biostatistics
+  - minimisation
+  - adaptive
+  - randomisation
+---
+
+## Introduction
+
+Minimisation, introduced by Taves (1974) and refined by Pocock and Simon (1975), is a covariate-adaptive allocation procedure that assigns each new participant to the treatment arm that prospectively makes the distribution of pre-specified prognostic covariates most balanced across arms. Unlike stratified block randomisation, which requires a separate randomisation list for every stratum and quickly becomes impractical when more than two or three covariates need balancing, minimisation handles many prognostic factors simultaneously in a single allocation framework. It is now widely used in trials with several important baseline covariates and small-to-moderate sample sizes, where stratified randomisation would create too many empty strata to be useful.
+
+## Prerequisites
+
+A working understanding of simple, block, and stratified randomisation; balance metrics for cross-tabulated baseline covariates; and the regulatory framework around covariate-adaptive allocation.
+
+## Theory
+
+For each candidate arm assignment, the algorithm computes a balance score — typically the sum across covariates of marginal imbalances that would result from that assignment. The new participant is allocated to the balance-minimising arm with high probability $p$ (commonly 0.8 or 0.9), and to the other arm with probability $1 - p$ to preserve a degree of allocation unpredictability. The probabilistic element matters: a deterministic minimisation that always chooses the balance-minimising arm becomes predictable to investigators who know the algorithm and the previous assignments, compromising allocation concealment.
+
+## Assumptions
+
+The covariates to be balanced are pre-specified in the protocol, allocation is performed centrally (typically through an interactive web-response system) rather than manually, and the trial's analysis model includes all minimisation covariates as fixed effects to preserve valid inference under randomisation theory.
+
+## R Implementation
+
+```r
+library(Minirand)
+
+set.seed(2026)
+n <- 60
+covmat <- data.frame(
+  centre = sample(c("A", "B", "C"), n, replace = TRUE),
+  sex    = sample(c("M", "F"), n, replace = TRUE),
+  age_g  = sample(c("young", "old"), n, replace = TRUE)
+)
+
+res <- character(n)
+for (j in 1:n) {
+  res[j] <- Minirand(covmat = covmat, covwt = rep(1, 3),
+                     ntrt = 2, trtseq = c("A", "B"),
+                     ratio = c(1, 1),
+                     p = 0.9, j = j, result = res)
+}
+
+table(trt = res, centre = covmat$centre)
+table(trt = res, sex = covmat$sex)
+```
+
+## Output & Results
+
+`Minirand()` allocates each subject sequentially based on the prior allocation history and the new subject's covariate profile. Cross-tabulations of treatment by each covariate show approximately equal arm counts within every covariate level — the design's primary objective — even when no single covariate combination has many subjects.
+
+## Interpretation
+
+A reporting sentence: "Treatment allocation used Pocock-Simon minimisation balancing on three pre-specified covariates (centre, sex, age category), each with equal weight; the random component used probability 0.9 of allocation to the balance-minimising arm. The trial's analysis model retained centre, sex, and age category as fixed-effect covariates to preserve valid inference under minimisation; in the final 60-subject sample, the maximum marginal arm imbalance on any covariate was 1 subject." Always state the random-component probability and the analysis-model covariates.
+
+## Practical Tips
+
+- Always analyse the trial with the minimisation covariates as fixed-effect adjustments in the primary analysis model; omitting them violates the randomisation-inference framework that minimisation relies on, and the resulting standard errors are typically too small.
+- Pre-specify the covariates, their weights, and the random-component probability $p$ in the protocol and SAP; adding covariates post hoc defeats minimisation's protective role and is disallowed by most regulators.
+- Commercial IWRS systems are required for robust minimisation in any non-trivial trial; manual implementation is error-prone, especially as the trial grows, and a single manual error can compromise allocation concealment for the entire study.
+- FDA and EMA accept minimisation when the method, covariates, and analysis model are pre-specified; the regulatory concern about covariate-adaptive allocation is largely addressed by transparent documentation and analysis-model adjustment.
+- Minimisation is less transparent than stratified block randomisation — investigators cannot reproduce the allocation list from a simple description — so the protocol should describe the algorithm carefully, including the balance metric, weights, and probability parameter.
+- For trials with very few prognostic covariates and moderate sample size, stratified block randomisation is often preferable because of its operational simplicity; minimisation's advantage grows with the number of covariates and with smaller per-stratum sample sizes.
+
+## R Packages Used
+
+`Minirand` for canonical Pocock-Simon minimisation with arbitrary weights and ratio support; `randomizeR` for an alternative interface integrated with broader randomisation simulation; `bcrm` for biased-coin and minimisation alternatives; `RandomizationLogic` for full IWRS-style simulation including audit trail; `Mediana` for trial-design simulation with minimisation-allocation strategies.

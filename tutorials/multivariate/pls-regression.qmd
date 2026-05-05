@@ -1,0 +1,66 @@
+---
+title: Partial Least Squares Regression
+date: "2026-04-17"
+description: Regression using latent components optimised for outcome prediction in high dimensions
+categories:
+  - Multivariate Statistics
+  - pls
+  - regression
+  - latent-components
+---
+
+## Introduction
+
+Partial least squares (PLS) regression is a latent-component method designed for the regime where predictors are numerous, correlated, and possibly outnumber observations — exactly the situation in which ordinary least squares fails. It extracts components from the predictor matrix that are simultaneously high-variance and strongly correlated with the outcome, then uses those components as the regression basis. Chemometrics and metabolomics use PLS as their default regression workhorse, and in bioinformatics it competes with elastic net and principal-components regression for high-dimensional prediction tasks.
+
+## Prerequisites
+
+A working understanding of principal-components regression, multiple linear regression, cross-validation, and the trade-off between variance explanation and prediction.
+
+## Theory
+
+PCA finds orthogonal directions in $X$ that maximise variance of $X$. PLS finds directions that maximise *covariance* with $Y$ — the latent components are simultaneously high-variance in $X$ and predictive of $Y$. With $a$ components, the model is
+
+$$\hat Y = T_a Q_a^\top, \qquad T_a = X W_a,$$
+
+where $W_a$ are the PLS weights and $T_a$ the resulting latent scores. The number of components is chosen by cross-validation, typically minimising root-mean-square error of prediction (RMSEP). PLS regression coefficients in the original predictor space are recovered as $\hat\beta_{\text{PLS}} = W_a (P_a^\top W_a)^{-1} Q_a^\top$.
+
+## Assumptions
+
+Linear relationships between latent components and the outcome, independent observations, and (for inference) homoscedastic Normal residuals. PLS itself is fairly assumption-light for prediction; cross-validated RMSEP is the primary quality criterion.
+
+## R Implementation
+
+```r
+library(pls)
+
+data(mtcars)
+fit <- plsr(mpg ~ ., data = mtcars, validation = "CV", ncomp = 5)
+summary(fit)
+validationplot(fit, val.type = "RMSEP")
+
+# Use the best number of components
+n_comp <- 2
+pred <- predict(fit, ncomp = n_comp)
+```
+
+## Output & Results
+
+`summary(fit)` reports cumulative explained variance in $X$ and in $Y$ for each component count, plus cross-validated RMSEP. `validationplot()` shows the RMSEP curve against component count, with a clear minimum at the optimal number of components.
+
+## Interpretation
+
+A reporting sentence: "PLS regression with two latent components yielded a cross-validated RMSEP of 2.3 mpg on the 32-row `mtcars` dataset; the two components captured 85 % of variance in the predictors and 92 % of variance in the outcome, after which additional components gave diminishing returns." Report both $X$- and $Y$-variance explained; PLS optimises the latter, but readers familiar with PCA may expect the former.
+
+## Practical Tips
+
+- Always use cross-validation to choose the number of components; in-sample fit is monotonically better with more components and selects too many.
+- For classification, PLS-DA (`mixOmics::plsda()`) dummy-codes the outcome and applies PLS regression; it remains popular in metabolomics.
+- Sparse PLS (`mixOmics::spls()`) adds variable selection at each component, useful when interpretability of individual predictors matters.
+- For truly wide data ($p \gg n$), PLS and sparse PLS are core tools alongside ridge, lasso, and elastic net; cross-validate all four for benchmarking.
+- Interpret latent components cautiously; they are linear combinations of all (or many) predictors and rarely have direct biological interpretations.
+- For non-linear extensions, kernel PLS and PLS with spline-transformed predictors generalise to non-linear response surfaces.
+
+## R Packages Used
+
+`pls` for `plsr()`, `mvr()`, and the standard cross-validation framework; `mixOmics` for PLS-DA, sparse PLS, and multi-block extensions popular in omics; `caret::train()` for unified cross-validated comparison against ridge, lasso, and elastic-net regression; `plsmod` for tidymodels-flavoured PLS interfaces.

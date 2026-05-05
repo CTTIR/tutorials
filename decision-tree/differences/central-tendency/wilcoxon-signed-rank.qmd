@@ -92,15 +92,3 @@ For paired ranks, the rank-biserial correlation is computed from the ratio of po
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 009c8115a1b44cdaa5845dd89ba4c34c -->
-<img src="https://vg09.met.vgwort.de/na/009c8115a1b44cdaa5845dd89ba4c34c"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

@@ -1,0 +1,70 @@
+---
+title: Power for One-Way ANOVA
+date: "2026-04-17"
+description: Sample size for detecting a difference among three or more group means
+categories:
+  - "Sample Size & Power"
+  - power
+  - anova
+  - cohen-f
+  - non-central-f
+---
+
+## Introduction
+
+Power analysis for one-way ANOVA computes the per-group sample size needed to detect a specified pattern of differences among three or more group means with adequate probability. Where the two-sample $t$-test handles the simple two-group comparison, the one-way ANOVA generalises the comparison to any number of groups, and its power calculation must therefore handle a multi-group effect-size measure rather than a single mean difference. Cohen's $f$ is the standard standardised effect size; it captures the spread of true group means relative to the within-group standard deviation in a single number that maps cleanly to the non-central $F$ distribution under the alternative hypothesis.
+
+## Prerequisites
+
+A working understanding of one-way ANOVA, the omnibus $F$-test, the non-central $F$ distribution, and Cohen's $f$ as the standardised effect size for ANOVA.
+
+## Theory
+
+Cohen's $f$ for one-way ANOVA is
+
+$$f = \frac{\sigma_{\text{between}}}{\sigma_{\text{within}}},$$
+
+the SD of the true group means divided by the within-group SD. The relationship to $\eta^2$ is $f = \sqrt{\eta^2 / (1 - \eta^2)}$. Cohen's conventional benchmarks are 0.10 (small), 0.25 (medium), and 0.40 (large). Under the alternative hypothesis, the omnibus $F$-statistic follows a non-central $F$ with $(k-1, N - k)$ degrees of freedom and non-centrality $\lambda = N f^2$, where $N$ is the total sample size across $k$ groups; power is the tail probability of this non-central $F$ above the critical value.
+
+## Assumptions
+
+The design is balanced (equal $n$ per group; modest imbalance is tolerable but reduces efficiency), within-group variances are approximately equal (homogeneity of variance), and residuals are approximately Normal. Welch-corrected variants accommodate variance heterogeneity at the cost of slightly more complex power calculations.
+
+## R Implementation
+
+```r
+library(pwr)
+
+pwr.anova.test(k = 4, f = 0.25, sig.level = 0.05, power = 0.80)
+
+pwr.anova.test(k = 3, f = 0.10, power = 0.80)
+pwr.anova.test(k = 3, f = 0.25, power = 0.80)
+pwr.anova.test(k = 3, f = 0.40, power = 0.80)
+
+group_means <- c(50, 55, 58)
+pooled_sd   <- 8
+grand_mean  <- mean(group_means)
+f_est <- sqrt(mean((group_means - grand_mean)^2)) / pooled_sd
+f_est
+```
+
+## Output & Results
+
+`pwr.anova.test()` returns the per-group sample size required to achieve target power at specified $f$, $\alpha$, and number of groups. For $k = 4$ groups at medium effect $f = 0.25$, 45 per group (180 total) achieves 80 % power; computing $f$ directly from substantive expected group means and a pooled within-group SD ties the calculation to scientifically defensible assumptions.
+
+## Interpretation
+
+A reporting sentence: "With four groups and an anticipated Cohen's $f = 0.25$ (medium effect by Cohen's convention; equivalent to expected group means differing by approximately 0.5 within-group SDs), $n = 45$ participants per group (180 total) are required for 80 % power at $\alpha = 0.05$ using a one-way ANOVA. The protocol allocates 50 per group to allow for 10 % attrition, and pre-specified pairwise Tukey HSD comparisons follow if the omnibus is significant." Always describe $f$ in terms of the underlying group-mean structure.
+
+## Practical Tips
+
+- Compute Cohen's $f$ from substantive expectations about group means and within-group SD wherever possible, rather than relying on Cohen's medium/large benchmarks; tying the calculation to the actual expected pattern is far more defensible than invoking generic effect-size labels.
+- For unequal group variances, power is approximate under the standard formulas; use Welch-adjusted simulation (or `WebPower::wp.kanova()` with explicit variance specification) when heterogeneity is substantial.
+- Unbalanced designs have lower power than balanced designs at the same total $N$; the loss is small for modest imbalances but grows quickly for ratios more extreme than 2:1. Plan for balance whenever feasible.
+- For many groups with a single pre-specified contrast of primary interest (e.g., linear trend across ordered groups, treatment-vs-control contrast), pre-specified contrast tests have higher power than the omnibus $F$-test and should be used in preference.
+- Simulation-based power (`simr`, `Superpower`, `faux`) is more flexible for complex designs — unbalanced cells, heterogeneous variances, non-Normal outcomes, mixed-effects structures — and is increasingly the default approach in modern protocol development.
+- For factorial ANOVA (two or more between-subjects factors), the calculation extends naturally with effect sizes for each main effect and interaction; `Superpower::ANOVA_power()` is the standard tool.
+
+## R Packages Used
+
+`pwr::pwr.anova.test()` for canonical balanced one-way ANOVA power; `WebPower::wp.kanova()` for an alternative interface and unequal-variance extensions; `Superpower::ANOVA_power()` and `Superpower::ANOVA_exact()` for factorial-ANOVA power simulation; `pwrss::pwrss.f.ancova()` for ANCOVA-power calculations; `simr::powerSim()` for general simulation-based ANOVA power.

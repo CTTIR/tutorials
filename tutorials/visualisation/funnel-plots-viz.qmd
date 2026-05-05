@@ -1,0 +1,69 @@
+---
+title: Funnel Plots (Visualisation)
+date: "2026-04-17"
+description: Study effect vs. precision plot used to detect publication bias in meta-analysis
+categories:
+  - Data Visualisation
+  - funnel-plot
+  - publication-bias
+  - meta-analysis
+---
+
+## Introduction
+
+A funnel plot is the canonical visualisation for diagnosing publication bias in meta-analysis. It plots each study's effect size against its precision (or its standard error), forming an inverted-funnel shape under the null of no bias: large precise studies cluster near the pooled estimate at the narrow top of the funnel, smaller imprecise studies scatter wider at the base. Asymmetry of the funnel — typically a missing wedge of small null or negative studies — suggests that studies have been suppressed for non-statistical reasons, often because the field's preferred direction is positive and significant.
+
+## Prerequisites
+
+A working understanding of meta-analysis, the relationship between sample size and standard error, and the difference between heterogeneity and publication bias as competing explanations for asymmetry.
+
+## Theory
+
+A funnel plot has axes:
+
+- **x**: effect size (log odds ratio, log hazard ratio, standardised mean difference, etc.).
+- **y**: standard error (with smaller SEs at the top, so the funnel narrows upward) or precision $1/\mathrm{SE}$.
+
+Under the null of no publication bias and no small-study effects, studies fall symmetrically inside a triangular pseudo-confidence funnel centred on the pooled estimate. Asymmetry — most commonly an absence of small studies on one side — is the visual cue for bias. Formal tests quantify it: Egger's regression of the standardised effect on its precision is the most widely used; Begg–Mazumdar's rank correlation is more robust to sparse data. Trim-and-fill (`metafor::trimfill()`) imputes missing studies to estimate a bias-adjusted effect.
+
+## Assumptions
+
+A meta-analysis with at least 10 studies (fewer makes asymmetry impossible to judge), study-level effects and standard errors on a comparable scale, and the working assumption that no other sources (e.g. true heterogeneity correlated with study size) explain the asymmetry.
+
+## R Implementation
+
+```r
+library(metafor)
+
+# Meta-analysis of 10 hypothetical studies
+dat <- data.frame(
+  yi = c(-0.1, -0.3, -0.5, -0.4, -0.2, -0.6, -0.7, -0.3, -0.9, -1.2),
+  vi = c(0.04, 0.03, 0.08, 0.05, 0.02, 0.09, 0.07, 0.06, 0.10, 0.12)
+)
+res <- rma(yi = yi, vi = vi, data = dat, method = "REML")
+funnel(res, main = "Funnel plot of 10 studies")
+
+# Egger test
+regtest(res, model = "lm")
+```
+
+## Output & Results
+
+A funnel plot with each study marked at its $(y_i, \mathrm{SE}_i)$ position, a vertical line at the pooled estimate, and pseudo-95 % confidence funnel boundaries that widen as standard error increases. `regtest()` returns Egger's test slope and $p$-value; a significant slope is conventional evidence of asymmetry.
+
+## Interpretation
+
+A reporting sentence: "The funnel plot of 10 studies showed visible asymmetry (Egger's regression slope $-2.1$, $p = 0.04$); trim-and-fill imputed three additional studies on the right and shifted the pooled estimate from $-0.55$ (95 % CI $-0.78$ to $-0.32$) to $-0.42$ (95 % CI $-0.66$ to $-0.17$), suggesting that publication bias inflates the apparent effect by roughly 25 %." Always pair the visual with a formal test; a single test rarely provides strong evidence on its own.
+
+## Practical Tips
+
+- Require at least 10 studies before drawing conclusions from a funnel plot; fewer studies cannot support a meaningful asymmetry test.
+- True between-study heterogeneity correlated with study size (smaller studies in different populations) can mimic publication-bias asymmetry; consider both explanations.
+- `metafor::trimfill()` adjusts for detected asymmetry but is not a cure — it is one of several sensitivity analyses to report.
+- Contour-enhanced funnel plots (`funnel(res, level = c(90, 95, 99))`) overlay significance contours, helping to distinguish bias from heterogeneity.
+- For binary outcomes, plot on the log-OR or log-RR scale; raw OR axes distort the symmetry under the null.
+- Custom `ggplot2` funnel plots are easy to build (`geom_point()` plus `geom_segment()` for the funnel boundaries) when journal style requires consistent typography across figures.
+
+## R Packages Used
+
+`metafor` for `rma()`, `funnel()`, `regtest()`, and `trimfill()`; `meta` for `metabias()` and alternative funnel implementations; `ggplot2` for hand-built funnel plots when the default base-graphics output does not match a publication's style; `dmetar` for additional bias diagnostics.

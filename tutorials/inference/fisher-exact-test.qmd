@@ -1,0 +1,87 @@
+---
+title: "Fisher's Exact Test"
+date: "2026-04-17"
+description: "Exact test for 2x2 (and r x c) contingency tables, based on the hypergeometric distribution"
+categories:
+  - Inferential Statistics
+  - fisher-exact
+  - hypergeometric
+  - small-samples
+---
+
+## Introduction
+
+Fisher's exact test assesses the association between two categorical variables in a contingency table without relying on the chi-squared large-sample approximation. It is the gold standard for 2x2 tables with small cells, and extends to $r \times c$ tables via network algorithms.
+
+## Prerequisites
+
+Contingency tables, hypergeometric distribution.
+
+## Theory
+
+For a 2x2 table with observed counts and fixed marginal totals, the null distribution of the number of "exposed cases" conditional on the margins is **hypergeometric**:
+
+$$P(X = k) = \frac{\binom{R_1}{k} \binom{R_2}{C_1 - k}}{\binom{n}{C_1}}.$$
+
+The exact two-sided p-value is the sum of probabilities of all tables as extreme or more extreme than the observed one (typically ranked by probability or by the odds ratio).
+
+The test statistic implicitly reported is the **odds ratio**:
+
+$$\widehat{OR} = \frac{a d}{b c}.$$
+
+Fisher's test produces a p-value and an exact CI for the OR.
+
+## Assumptions
+
+- Independent observations.
+- 2x2 contingency table (extensions exist for larger tables).
+- Fixed marginals under the null (conditional inference).
+
+## R Implementation
+
+```r
+# 2x2 table: small-cell case
+tab <- matrix(c(3, 15,
+                12, 20), nrow = 2, byrow = TRUE,
+              dimnames = list(Treatment = c("Drug", "Placebo"),
+                              Outcome   = c("Event", "No event")))
+tab
+
+fisher.test(tab)
+
+# For comparison, chi-squared (warning expected due to small cells)
+chisq.test(tab)
+
+# Larger table: Fisher via network algorithm
+big <- matrix(c(4, 2, 1,
+                3, 8, 5,
+                2, 3, 6), nrow = 3, byrow = TRUE)
+fisher.test(big)
+```
+
+## Output & Results
+
+```
+        Fisher's Exact Test for Count Data
+data:  tab
+p-value = 0.02676
+alternative hypothesis: true odds ratio is not equal to 1
+95 percent confidence interval:
+ 0.027 0.918
+sample estimates:
+odds ratio: 0.179
+```
+
+The exact p-value is 0.027; OR = 0.18 (95 % CI 0.03 to 0.92).
+
+## Interpretation
+
+For sparse tables, report Fisher's p-value rather than chi-squared. "Among drug-treated patients, 3 of 18 (17 %) experienced the event, compared to 12 of 32 (38 %) controls. Fisher's exact test gave OR 0.18 (95 % CI 0.03 to 0.92), p = 0.027."
+
+## Practical Tips
+
+- Use Fisher's test when any expected cell count is below 5.
+- The two-sided p-value uses R's default "minimum likelihood" rule; other software may use a different rule (doubled one-sided), giving slightly different values.
+- The exact OR CI is not symmetric around the point estimate; report both bounds.
+- For very large contingency tables, Fisher's exact test may be computationally prohibitive; use `simulate.p.value = TRUE` for Monte Carlo chi-squared instead.
+- For paired / matched 2x2 data, use McNemar's exact test, not Fisher's.

@@ -1,0 +1,67 @@
+---
+title: "Reliability and Cronbach's Alpha"
+date: "2026-04-17"
+description: Internal consistency of multi-item scales
+categories:
+  - Clinical Biostatistics
+  - cronbach
+  - reliability
+  - internal-consistency
+---
+
+## Introduction
+
+Cronbach's alpha, introduced by Lee Cronbach in 1951, summarises the internal consistency of a multi-item scale by quantifying how strongly the items co-vary after accounting for the total number of items. The intuition is that items intended to measure the same underlying construct should correlate with each other; alpha rises with the average inter-item correlation and with the number of items. Cronbach's alpha is now ubiquitous in questionnaire validation, patient-reported-outcome (PRO) instrument development, psychometric evaluation of clinical scales, and any setting where a composite score is formed from multiple ordinal or continuous items. Despite well-known statistical limitations, it remains the single most reported reliability statistic in the clinical-research literature.
+
+## Prerequisites
+
+A working understanding of classical test theory, the concept of a true score plus measurement error, and the construction of composite scores from multi-item rating scales.
+
+## Theory
+
+Cronbach's alpha is
+
+$$\alpha = \frac{k}{k - 1}\left(1 - \frac{\sum_{i=1}^k \sigma_i^2}{\sigma_T^2}\right),$$
+
+with $k$ the number of items, $\sigma_i^2$ the variance of item $i$, and $\sigma_T^2$ the variance of the total summed score. The statistic ranges from $-\infty$ (theoretically; in practice 0) to 1. Conventional thresholds are 0.70 (acceptable), 0.80 (good), and 0.90 (excellent), with values above 0.95 typically indicating redundant items rather than superior reliability. McDonald's omega is a more flexible alternative when the assumption of tau-equivalence (equal true-score variances across items) is doubtful.
+
+## Assumptions
+
+Items are tau-equivalent (each item measures the same true construct with the same loading), the scale is unidimensional (a single underlying factor explains the inter-item covariance structure), and items are continuous or quasi-continuous (Likert with at least 5 levels). Violations are common, and McDonald's omega or hierarchical-omega estimators give a more honest reliability estimate when the assumptions are not met.
+
+## R Implementation
+
+```r
+library(psych)
+
+set.seed(2026)
+n <- 200
+theta <- rnorm(n)
+items <- sapply(1:8, function(i) 0.7 * theta + rnorm(n, 0, 0.7))
+colnames(items) <- paste0("q", 1:8)
+
+alpha_res <- psych::alpha(items)
+alpha_res$total
+alpha_res$alpha.drop[, c("raw_alpha", "std.alpha")]
+```
+
+## Output & Results
+
+`psych::alpha()` returns the raw and standardised Cronbach's alpha for the full scale, plus an "alpha drop" table showing how alpha would change if each item were removed. A large positive drop (alpha increases without an item) flags that item as inconsistent with the rest of the scale and a candidate for revision or removal. The output also includes 95 % confidence intervals (via Feldt's method) and the average inter-item correlation, which is often more informative than alpha itself.
+
+## Interpretation
+
+A reporting sentence: "The eight-item PRO scale had Cronbach's alpha 0.82 (95 % CI 0.78 to 0.86, Feldt method), indicating good internal consistency. The average inter-item correlation was 0.36, supporting the tau-equivalence assumption qualitatively. No single item substantially changed alpha when dropped (largest drop $-0.01$), so all items were retained for the final scale. McDonald's omega-total was 0.83, in close agreement with alpha." Always report both alpha and omega when feasible.
+
+## Practical Tips
+
+- Alpha depends on the number of items: long scales inflate alpha mechanically, even when items are only weakly inter-correlated. Reporting the average inter-item correlation alongside alpha gives readers a fairer picture of true item coherence.
+- Low alpha (< 0.70) may reflect a multi-dimensional scale rather than unreliable items. Always check the factor structure with exploratory or confirmatory factor analysis before concluding that items are unreliable.
+- Very high alpha (> 0.95) suggests redundant items measuring essentially the same content; consider trimming the scale by removing the most redundant items, which improves administrative efficiency without sacrificing reliability.
+- For ordinal items with fewer than five categories, the standard Pearson-correlation-based alpha is biased downward; use ordinal alpha (computed from polychoric correlations) or McDonald's omega instead.
+- Pair Cronbach's alpha with confirmatory factor analysis (CFA) to verify the assumed unidimensional structure; alpha computed on a multidimensional scale is uninterpretable as a reliability statistic.
+- For test-retest reliability and inter-rater reliability, the appropriate statistics are the intraclass correlation coefficient (ICC) and Cohen's or Fleiss's kappa, respectively; alpha measures only internal consistency, not stability or agreement.
+
+## R Packages Used
+
+`psych::alpha()` for the canonical Cronbach's alpha with drop analysis, `psych::omega()` for McDonald's omega and hierarchical-omega; `ltm::cronbach.alpha()` as a lightweight alternative; `MBESS::ci.reliability()` for advanced CIs (Feldt, bootstrap, Bonett); `lavaan` for confirmatory factor analysis to verify the unidimensional assumption.

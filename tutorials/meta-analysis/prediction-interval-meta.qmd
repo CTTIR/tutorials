@@ -1,0 +1,68 @@
+---
+title: Prediction Intervals in Meta-Analysis
+date: "2026-04-17"
+description: "The plausible range of a future study's true effect under random-effects"
+categories:
+  - Meta-Analysis
+  - prediction-interval
+  - heterogeneity
+  - random-effects
+---
+
+## Introduction
+
+A 95 % confidence interval on a pooled meta-analytic estimate describes uncertainty about the **mean** true effect across the included studies. The prediction interval (PI), in contrast, describes the plausible range of the **true effect in a future study** drawn from the same population, propagating both the uncertainty in the mean and the between-study heterogeneity $\tau^2$. Under non-trivial heterogeneity the PI is substantially wider than the CI, and it is far more clinically meaningful: a clinician treating the next patient cares less about uncertainty in the average across past studies than about the range of effects they might plausibly see in their own clinical context. Modern meta-analysis reporting standards (PRISMA, GRADE) increasingly require the PI alongside the CI for any random-effects synthesis.
+
+## Prerequisites
+
+A working understanding of random-effects meta-analysis, the role of between-study variance $\tau^2$, and the conceptual difference between uncertainty about a mean and uncertainty about a future realisation.
+
+## Theory
+
+The 95 % prediction interval under a random-effects meta-analysis with $k$ studies is
+
+$$\mathrm{PI}_{95\%} = \hat\theta \pm t_{0.975, k-2} \sqrt{\hat\tau^2 + \mathrm{SE}(\hat\theta)^2}.$$
+
+Two features distinguish it from the CI: the use of Student's $t$ with $k - 2$ degrees of freedom rather than the normal quantile, and the addition of $\hat\tau^2$ inside the square root. As heterogeneity grows the PI widens considerably while the CI is comparatively unchanged, so the gap between them is itself a useful diagnostic for how much pooling has — or has not — clarified the underlying effect.
+
+## Assumptions
+
+The random-effects model is valid; $\tau^2$ is reasonably estimated (typically by REML, which is the recommended default); future studies are exchangeable with the included ones, drawing their true effects from the same Normal distribution centred on the pooled mean.
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+k <- 10
+yi <- rnorm(k, 0.4, 0.25)
+vi <- 1 / sample(50:200, k, replace = TRUE)
+
+res <- rma(yi, vi, method = "REML")
+summary(res)
+
+pi <- predict(res, addx = NULL)
+pi[, c("pred", "pi.lb", "pi.ub")]
+```
+
+## Output & Results
+
+`predict()` on an `rma` object returns the pooled estimate, its confidence interval (for the mean), and the 95 % prediction interval (for a future study). Whenever $\tau^2 > 0$ the PI is strictly wider than the CI, and the gap is informative: a small gap means heterogeneity is negligible and the pool is informative about future studies, while a large gap means the pool tells you the average but not what to expect next.
+
+## Interpretation
+
+A reporting sentence: "The pooled standardised mean difference was 0.38 (95 % CI 0.20 to 0.56) under random-effects REML pooling. The 95 % prediction interval was wider, $[-0.10, 0.86]$, indicating that in a new study the true effect could plausibly range from a small negative value to a large positive value, consistent with the moderate heterogeneity observed ($I^2 = 41 \%$, $\tau^2 = 0.04$). Clinical interpretation should account for this dispersion rather than rely solely on the pooled mean." Always report the CI and PI together for random-effects pools.
+
+## Practical Tips
+
+- Always report both the CI (uncertainty about the mean) and the PI (uncertainty about a future study) in a random-effects meta-analysis; they answer different questions and the difference is itself informative.
+- A wide PI alongside a narrow CI is a distinctive pattern indicating heterogeneity that does not diminish with pooling; it should be acknowledged explicitly in the discussion as a limitation of the synthesis.
+- For meta-analyses with very few studies (typically $k < 5$), the PI is unstable and very wide because $\tau^2$ is poorly estimated; report it but interpret with caution and consider Hartung–Knapp adjustment.
+- A PI that crosses the null while the CI does not is a common and important pattern: it means the pooled mean is "significant" but a meaningful proportion of future studies might find no effect at all. This finding typically reshapes interpretation and should be highlighted, not buried.
+- The Hartung–Knapp–Sidik–Jonkman adjustment widens the CI in small samples and modestly affects the PI; for $k \leq 20$, it is the recommended default.
+- Display the PI graphically on the forest plot as a dashed bar around the pooled diamond (`addpred = TRUE` in `metafor::forest()`); seeing it visually conveys more than reporting it numerically.
+
+## R Packages Used
+
+`metafor::predict.rma()` for the canonical PI computation alongside the CI; `metafor::forest()` with `addpred = TRUE` for graphical display; `meta::print.meta()` reports PI in summary output for `meta` objects; `dmetar::pi()` for an explicit prediction-interval helper used in teaching contexts.

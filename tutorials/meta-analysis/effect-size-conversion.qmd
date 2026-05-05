@@ -1,0 +1,75 @@
+---
+title: Converting Between Effect Sizes
+date: "2026-04-17"
+description: "Moving between standardised mean differences, correlations, and odds ratios"
+categories:
+  - Meta-Analysis
+  - effect-size
+  - conversion
+  - d-to-r
+---
+
+## Introduction
+
+A single meta-analysis often spans studies that report effect sizes in different metrics: some randomised trials report standardised mean differences (Cohen's $d$ or Hedges's $g$), some observational analyses report correlations ($r$), and some binary-outcome studies report odds ratios (OR) or risk ratios (RR). Pooling such heterogeneous evidence requires converting every per-study effect to a common metric — typically $d$ when most studies are continuous, OR when most are binary, or $r$ when most are correlational. Analytical conversion formulas, derived under standard latent-distribution assumptions, map between metrics together with their variances. Doing the conversion correctly — and documenting the assumptions — is critical because naively recycling an effect size between scales without proper variance propagation produces falsely precise pooled estimates.
+
+## Prerequisites
+
+A working understanding of the principal effect-size metrics ($d$, $r$, OR, RR), their variance formulas, and the delta method for propagating variance through non-linear transformations.
+
+## Theory
+
+The standard conversion formulas, all derived under the assumption that the underlying latent variable is approximately Normal, are:
+
+$$d \to r: \quad r = \frac{d}{\sqrt{d^2 + a}}, \qquad a = \frac{(n_1 + n_2)^2}{n_1 n_2};$$
+
+$$\log\mathrm{OR} \to d: \quad d = \log(\mathrm{OR}) \cdot \frac{\sqrt{3}}{\pi};$$
+
+$$r \to d: \quad d = \frac{2r}{\sqrt{1 - r^2}}.$$
+
+Each conversion has a corresponding variance formula obtained by the delta method; using these (rather than the un-transformed variance) is essential, because the non-linear mapping changes the precision of the resulting estimate.
+
+## Assumptions
+
+The underlying latent distributions are approximately Normal (for $d \leftrightarrow r$ conversions) or follow the standard logistic-Normal correspondence (for OR conversions), the dichotomisation underlying any reported OR was approximately at the median of the latent variable, and the variance is propagated through the conversion using the appropriate formula rather than the original metric's variance.
+
+## R Implementation
+
+```r
+library(esc)
+
+set.seed(2026)
+d <- 0.5; var_d <- 0.04; n1 <- 50; n2 <- 50
+conv_dr <- esc::convert_d2r(d = d, v = var_d,
+                            grp1n = n1, grp2n = n2)
+conv_dr
+
+log_or <- log(2.5); var_logor <- 0.15
+conv_od <- esc::convert_or2d(or = exp(log_or), v = var_logor)
+conv_od
+
+r <- 0.3; var_r <- 0.004
+conv_rd <- esc::convert_r2d(r = r, v = var_r)
+conv_rd
+```
+
+## Output & Results
+
+The `esc` package returns a list with the converted point estimate, its delta-method variance, and the corresponding standard error and confidence interval. Each conversion preserves both the central effect and a properly propagated variance, allowing inverse-variance pooling on the harmonised metric without artificially inflating precision.
+
+## Interpretation
+
+A reporting sentence: "Effect sizes were harmonised to standardised mean differences. Continuous-outcome studies contributed $d = 0.50$ directly; binary-outcome studies were converted from $\mathrm{OR} = 2.5$ to $d = 0.51$ using $d = \log(\mathrm{OR}) \cdot \sqrt{3}/\pi$; correlational studies were converted from $r = 0.30$ to $d = 0.63$ using $d = 2r/\sqrt{1 - r^2}$. Variances were propagated by the delta method. The common metric enabled inverse-variance pooling across study designs and is documented in PRISMA Supplementary Table S2." Always document every conversion explicitly.
+
+## Practical Tips
+
+- Use validated conversion functions from `esc`, `compute.es`, or `metafor::escalc()`; manual arithmetic with these formulas is highly error-prone, especially for variance propagation.
+- Always propagate variance through the conversion using the delta-method-derived formulas; using the original metric's variance produces falsely narrow confidence intervals on the converted scale.
+- Converting between binary and continuous metrics assumes a logistic-Normal latent-variable structure; for outcomes that obviously violate this — categorical with more than two levels treated as binary, very skewed continuous variables — the conversion is approximate at best.
+- For highly skewed continuous outcomes (e.g., counts, costs, biomarkers with long tails), $d$-based conversions may misrepresent the substantive effect; consider rank-based effect sizes or per-domain pooling instead.
+- Document every conversion in a PRISMA supplementary table, including the formula used, the input quantities, the converted estimate, and its propagated variance — methodological reviewers routinely check this.
+- When the meta-analysis is mostly one metric with a few studies in another, conversion is appropriate; when the metrics are evenly split, consider whether a combined-metric analysis (e.g., a generalised linear mixed model on the underlying outcome) might be more defensible.
+
+## R Packages Used
+
+`esc` for conversion functions across $d$, $r$, OR, and other effect sizes with delta-method variance; `compute.es` for an alternative comprehensive conversion library; `metafor::escalc()` and `metafor::conv.delta()` for canonical conversions and general delta-method variance propagation; `effectsize` for tidyverse-style effect-size computation and conversion alongside primary analyses.

@@ -1,0 +1,92 @@
+---
+title: Measures of Shape
+date: "2026-04-17"
+description: "Skewness and kurtosis: summarising the asymmetry and tail heaviness of a distribution beyond location and spread"
+categories:
+  - Descriptive Statistics
+  - skewness
+  - kurtosis
+  - shape
+  - distribution
+---
+
+## Introduction
+
+Central tendency and dispersion alone do not describe a distribution completely: two samples with the same mean and SD can look very different if one is symmetric and the other skewed, or if one has thin tails and the other heavy tails. Skewness and kurtosis are the conventional third- and fourth-moment summaries that capture these shape features.
+
+## Prerequisites
+
+The reader should know what the mean, variance, and standard deviation are, and should understand what a histogram shows.
+
+## Theory
+
+The **skewness** of a distribution measures its asymmetry:
+
+$$g_1 = \frac{1}{n} \sum \left(\frac{x_i - \bar{x}}{s}\right)^3.$$
+
+Positive skewness indicates a right-tailed distribution (mean > median); negative skewness indicates a left tail. For a normal distribution, $g_1 = 0$. Absolute values greater than about 1 are considered substantial.
+
+The **kurtosis** measures tail heaviness:
+
+$$g_2 = \frac{1}{n} \sum \left(\frac{x_i - \bar{x}}{s}\right)^4.$$
+
+For a normal, $g_2 = 3$. By convention, **excess kurtosis** is reported as $g_2 - 3$: zero means normal-like tails, positive means heavier (leptokurtic), negative means lighter (platykurtic). High kurtosis signals that a few observations contribute a large share of the variance; in finance this is the "fat tails" that break many standard models.
+
+Both statistics are moment-based and therefore sensitive to outliers. In small samples, their estimates are noisy.
+
+## Assumptions
+
+Skewness and kurtosis are descriptive and require no distributional assumption. Their asymptotic standard errors assume independent observations with finite sixth moment for skewness and eighth for kurtosis.
+
+## R Implementation
+
+```r
+library(moments)
+library(psych)
+
+set.seed(2026)
+
+symmetric   <- rnorm(5000, mean = 0, sd = 1)
+right_skewed <- rlnorm(5000, meanlog = 0, sdlog = 0.6)
+heavy_tailed <- rt(5000, df = 4)
+
+shape_summary <- function(x, label) {
+  data.frame(
+    variable = label,
+    skewness = moments::skewness(x),
+    kurtosis = moments::kurtosis(x),
+    excess_kurtosis = moments::kurtosis(x) - 3
+  )
+}
+
+rbind(
+  shape_summary(symmetric,    "Normal"),
+  shape_summary(right_skewed, "Log-normal"),
+  shape_summary(heavy_tailed, "t, df=4")
+)
+
+psych::describe(data.frame(symmetric, right_skewed, heavy_tailed),
+                skew = TRUE, ranges = FALSE)
+```
+
+## Output & Results
+
+| variable | skewness | kurtosis | excess kurtosis |
+|---|---|---|---|
+| Normal | 0.01 | 3.02 | 0.02 |
+| Log-normal | 1.95 | 9.96 | 6.96 |
+| t, df=4 | -0.02 | 7.41 | 4.41 |
+
+The normal sample has skewness and excess kurtosis near zero. The log-normal is strongly right-skewed and heavy-tailed. The t-distribution with 4 df is symmetric but very heavy-tailed.
+
+## Interpretation
+
+Report shape statistics alongside location and dispersion for any distribution whose histogram is not obviously normal. In a methods section: "Serum CRP was right-skewed (skewness = 1.8, excess kurtosis = 3.2), so log-transformation was applied before parametric testing."
+
+## Practical Tips
+
+- Skewness and kurtosis are sensitive to outliers; a single extreme point can drive $g_1$ past 1.
+- In small samples ($n < 30$), estimates are noisy; do not over-interpret small deviations from zero.
+- For normality assessment, prefer graphical methods (Q-Q plots) over numerical skewness and kurtosis thresholds.
+- Different software use slightly different bias corrections; `moments::skewness` uses the $g_1$ form, `psych::describe` uses the $G_1$ form with a small-sample correction.
+- Log transformation often reduces both skewness and excess kurtosis in right-skewed biomedical data.

@@ -1,0 +1,87 @@
+---
+title: "Holm's Step-Down Correction"
+date: "2026-04-17"
+description: Sequential Bonferroni with uniformly greater power; controls FWER
+categories:
+  - Inferential Statistics
+  - holm
+  - sequential
+  - multiple-testing
+  - fwer
+---
+
+## Introduction
+
+Holm's (1979) step-down procedure controls the family-wise error rate (FWER) but is uniformly more powerful than Bonferroni. It tests the smallest p-value against $\alpha/m$, and each subsequent p-value against a progressively larger threshold as the earlier hypotheses are rejected.
+
+## Prerequisites
+
+Bonferroni correction, multiple testing.
+
+## Theory
+
+Order the $m$ p-values as $p_{(1)} \leq p_{(2)} \leq \ldots \leq p_{(m)}$. Define thresholds
+
+$$\alpha_j = \alpha / (m - j + 1)$$
+
+for $j = 1, \ldots, m$. Reject $H_{(1)}$ if $p_{(1)} \leq \alpha_1$; if so, reject $H_{(2)}$ if $p_{(2)} \leq \alpha_2$; continue sequentially. Stop at the first non-rejection; all subsequent hypotheses are also not rejected.
+
+Equivalently, the Holm-adjusted p-value is
+
+$$p_{(j)}^{\text{adj}} = \min\!\left[1, \max_{i \leq j}(m - i + 1) p_{(i)}\right].$$
+
+Holm always rejects at least as many hypotheses as Bonferroni, strictly more when any rejection occurs. It controls FWER at $\alpha$ under any dependence structure.
+
+## Assumptions
+
+Same as Bonferroni: no distributional assumptions on the p-values beyond validity.
+
+## R Implementation
+
+```r
+# Simulated p-values across 8 tests
+p_raw <- c(0.001, 0.005, 0.012, 0.018, 0.025, 0.040, 0.080, 0.2)
+m <- length(p_raw)
+
+# Holm via p.adjust
+p_holm <- p.adjust(p_raw, method = "holm")
+
+# Bonferroni for comparison
+p_bonf <- p.adjust(p_raw, method = "bonferroni")
+
+data.frame(
+  raw = p_raw,
+  bonf = p_bonf,
+  holm = p_holm,
+  reject_at_0.05_holm = p_holm < 0.05,
+  reject_at_0.05_bonf = p_bonf < 0.05
+)
+```
+
+## Output & Results
+
+```
+    raw  bonf   holm reject_at_0.05_holm reject_at_0.05_bonf
+1 0.001 0.008 0.008                TRUE                TRUE
+2 0.005 0.040 0.035                TRUE                TRUE
+3 0.012 0.096 0.072               FALSE               FALSE
+4 0.018 0.144 0.090               FALSE               FALSE
+5 0.025 0.200 0.100               FALSE               FALSE
+6 0.040 0.320 0.120               FALSE               FALSE
+7 0.080 0.640 0.160               FALSE               FALSE
+8 0.200 1.000 0.200               FALSE               FALSE
+```
+
+Both Holm and Bonferroni reject the same two hypotheses here. Holm's adjusted p-values are always $\leq$ Bonferroni's, opening space for additional rejections in other examples.
+
+## Interpretation
+
+"After Holm step-down correction for multiple testing, two of the eight tests reached significance at family-wise $\alpha = 0.05$ (raw p = 0.001 and 0.005)."
+
+## Practical Tips
+
+- Prefer Holm to Bonferroni by default; it is always at least as powerful and equally valid.
+- Both procedures assume no prior ordering of hypotheses; if hypotheses are pre-ordered, fixed-sequence testing is more powerful.
+- For very large $m$, FWER-controlling procedures are harsh; consider FDR methods (Benjamini-Hochberg) instead.
+- Hochberg's step-up procedure is slightly more powerful than Holm but requires independence or positive dependence.
+- Holm can be combined with post-hoc comparisons and with stratified tests without additional adjustment.

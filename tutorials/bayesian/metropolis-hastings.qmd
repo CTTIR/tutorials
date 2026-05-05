@@ -1,0 +1,85 @@
+---
+title: Metropolis-Hastings
+date: "2026-04-17"
+description: The foundational MCMC algorithm with proposal distribution and accept/reject rule
+categories:
+  - Bayesian Statistics
+  - metropolis-hastings
+  - mcmc
+  - proposal
+---
+
+## Introduction
+
+The Metropolis-Hastings algorithm is the original general-purpose MCMC sampler and remains the conceptual reference against which all subsequent algorithms are explained. Given only an unnormalised target density, it produces a Markov chain whose stationary distribution is that target by repeatedly proposing a candidate value and accepting or rejecting it based on a simple density-ratio rule. The trade-off is universality versus efficiency: MH works for any target one can evaluate, but tuning proposals for high-dimensional or strongly correlated posteriors becomes painful, which is why HMC has displaced random-walk MH for most modern Bayesian software.
+
+## Prerequisites
+
+A working understanding of Markov chains, conditional probability, and the role of the unnormalised posterior in Bayesian inference. Familiarity with R's distribution functions (`rnorm`, `dunif`) is needed for the example.
+
+## Theory
+
+Given the current state $\theta$, one iteration of MH proceeds as:
+
+1. Propose $\theta^*$ from a proposal kernel $q(\theta^* \mid \theta)$.
+2. Compute the acceptance probability $\alpha = \min\!\left(1, \dfrac{p(\theta^*) q(\theta \mid \theta^*)}{p(\theta) q(\theta^* \mid \theta)}\right)$.
+3. With probability $\alpha$ set the next state to $\theta^*$; otherwise keep $\theta$.
+
+For a symmetric proposal (Gaussian random walk centred at the current state) the proposal terms cancel and the acceptance ratio is simply the ratio of target densities. Detailed balance ensures the chain has the target as its invariant distribution; ergodicity (irreducibility plus aperiodicity) ensures convergence regardless of the starting value.
+
+## Assumptions
+
+The unnormalised target density is computable everywhere in the support. The proposal kernel must give the chain a positive probability of reaching every part of the support; otherwise the chain is reducible and never explores the full posterior.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+# Target: Beta(4, 8) (unnormalised density is fine)
+log_target <- function(x) {
+  if (x <= 0 || x >= 1) return(-Inf)
+  (4 - 1) * log(x) + (8 - 1) * log(1 - x)
+}
+
+n_iter <- 10000
+theta <- numeric(n_iter)
+theta[1] <- 0.5
+sigma_prop <- 0.1
+
+for (i in 2:n_iter) {
+  prop <- rnorm(1, theta[i-1], sigma_prop)
+  log_ratio <- log_target(prop) - log_target(theta[i-1])
+  if (log(runif(1)) < log_ratio) theta[i] <- prop
+  else theta[i] <- theta[i-1]
+}
+
+# Diagnostic: trace + histogram
+par(mfrow = c(1, 2))
+plot(theta, type = "l")
+hist(theta[-(1:1000)], breaks = 50, freq = FALSE, main = "Posterior samples")
+curve(dbeta(x, 4, 8), add = TRUE, col = "red", lwd = 2)
+par(mfrow = c(1, 1))
+
+mean(theta[-(1:1000)])     # posterior mean
+```
+
+## Output & Results
+
+A 10,000-step chain whose post-burn-in histogram aligns with the analytic Beta(4, 8) density. The trace plot, the histogram, and the posterior mean (around $4 / (4+8) = 0.33$) confirm convergence; the autocorrelation function tells you how many independent draws the chain is worth.
+
+## Interpretation
+
+A reporting sentence: "A random-walk Metropolis-Hastings sampler with proposal $\mathcal N(\theta^{(t)}, 0.1^2)$ produced 9,000 post-burn-in draws; the histogram tracked the analytic Beta(4, 8) target, and the posterior mean of 0.33 matched the closed-form value to within Monte Carlo error." Quote the acceptance rate so readers can judge whether the proposal was tuned reasonably.
+
+## Practical Tips
+
+- Tune the proposal scale for an acceptance rate near 25–40 % for one-dimensional random walks (Roberts–Gelman–Gilks rule); for higher dimensions, lower rates are optimal.
+- Discard a burn-in of 1,000–5,000 iterations and inspect the trace plot for visible drift before computing summaries.
+- When parameters are correlated, a coordinate-wise random walk has poor mixing; switch to block updates with a multivariate Normal proposal whose covariance approximates the posterior, or move to HMC.
+- Use $\hat R$ across multiple chains rather than relying on a single trace; a single chain cannot reveal mode-trapping.
+- For tall posteriors with many parameters, modern HMC samplers (Stan, NUTS) almost always mix dramatically better than basic MH; reach for MH only when the target is hard to differentiate or has discrete components.
+
+## R Packages Used
+
+Base R is enough for hand-coded MH; `MCMCpack` and `mcmc` provide tuned implementations for canonical models, and `coda` contributes diagnostic plots and convergence statistics applicable to MH chains from any source.

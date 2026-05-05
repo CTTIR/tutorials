@@ -1,0 +1,72 @@
+---
+title: Probit Regression
+date: "2026-04-17"
+description: Binary regression using the cumulative normal link
+categories:
+  - "Regression & Modelling"
+  - probit
+  - binary
+  - glm
+---
+
+## Introduction
+
+Probit regression models a binary outcome through the inverse of the standard Normal cumulative distribution function — the same idea as logistic regression but with a Normal-tailed link instead of a logistic-tailed one. The two methods produce essentially identical predicted probabilities; their coefficients differ by a fixed scaling factor of about 1.6. Probit is the natural choice when a latent Normal-variable interpretation matches the substantive theory; logistic is more common in clinical reporting because odds ratios are easier to communicate.
+
+## Prerequisites
+
+A working understanding of logistic regression, the standard Normal CDF, and the latent-variable interpretation of binary regression.
+
+## Theory
+
+The probit model is
+
+$$\mathrm P(Y = 1 \mid X) = \Phi(\beta_0 + \beta_1 X_1 + \dots + \beta_p X_p),$$
+
+where $\Phi$ is the standard Normal CDF. Coefficients are interpretable on the probit scale: a one-unit increase in $X_j$ corresponds to a $\beta_j$-standard-deviation change in the underlying latent Normal propensity. The inverse relationship $\Phi^{-1}(p) = X^\top \beta$ is the probit link.
+
+Probit coefficients are approximately logistic coefficients divided by 1.6 ($\sigma_{\mathrm{logistic}} = \pi / \sqrt 3 \approx 1.81$ vs. $\sigma_{\mathrm{Normal}} = 1$). The link functions agree near $p = 0.5$ but diverge slightly in the tails — logistic has heavier tails — so coefficient comparisons across the two scales require the rescaling.
+
+## Assumptions
+
+Binary outcome, independent observations, latent linear relationship on the probit scale, and adequate sample size relative to predictors (events-per-variable $\ge 10$).
+
+## R Implementation
+
+```r
+d <- mtcars
+d$am <- factor(d$am)
+
+fit_probit <- glm(am ~ wt + hp, data = d,
+                  family = binomial(link = "probit"))
+summary(fit_probit)
+
+# Compare with logit
+fit_logit <- glm(am ~ wt + hp, data = d, family = binomial)
+
+# Predictions should be similar
+pred_p <- predict(fit_probit, type = "response")
+pred_l <- predict(fit_logit, type = "response")
+cor(pred_p, pred_l)
+```
+
+## Output & Results
+
+`summary(fit_probit)` returns coefficients on the probit scale with Wald $z$-tests. The correlation between probit and logit predicted probabilities is typically above 0.999, confirming that the two methods are interchangeable for prediction purposes.
+
+## Interpretation
+
+A reporting sentence: "Probit regression estimated that each 1000-lb increase in vehicle weight reduced the latent propensity for manual transmission by 1.8 SDs (probit coefficient $-1.8$, 95 % CI $-3.0$ to $-0.7$, $p = 0.002$); the average marginal effect on the probability scale was $-0.27$ per 1000 lbs (95 % CI $-0.42$ to $-0.13$, computed via `margins`)." Always pair probit coefficients with average marginal effects when communicating to non-statistical audiences.
+
+## Practical Tips
+
+- Probit and logistic give essentially identical predicted probabilities; choose based on convention or latent-variable interpretation, not on prediction accuracy.
+- Probit coefficients lack the clean odds-ratio interpretation of logistic; report average marginal effects (`margins::margins`, `marginaleffects::avg_predictions`) for clinical communication.
+- For multilevel or Bayesian binary models, probit links are sometimes computationally simpler than logistic; `brms` and `Stan` handle both.
+- The probit-vs-logit choice is almost always a matter of reporting convention rather than statistical superiority.
+- For ordinal extensions, probit gives the cumulative-probit (or threshold) model; for survival analysis, the probit link appears in some accelerated-failure-time formulations.
+- Predictions from both models should agree to within 1–2 percentage points across the full range of fitted probabilities; large discrepancies signal model misspecification.
+
+## R Packages Used
+
+Base R `glm()` with `family = binomial(link = "probit")`; `margins::margins()` and `marginaleffects::avg_predictions()` for average marginal effects; `mfx::probitmfx()` for direct marginal-effect output; `mvProbit` for multivariate probit when multiple binary outcomes are jointly modelled.

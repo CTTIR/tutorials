@@ -1,0 +1,70 @@
+---
+title: "Competing Risks: Cumulative Incidence"
+date: "2026-04-17"
+description: Estimating the probability of each event type in the presence of competing risks
+categories:
+  - Survival Analysis
+  - competing-risks
+  - cif
+  - cmprsk
+---
+
+## Introduction
+
+A competing risk is an event whose occurrence prevents the event of interest from happening — death from a non-disease cause prevents disease-specific death, retirement prevents return-to-work, and so on. In this setting the standard Kaplan-Meier estimator overestimates the cumulative incidence of the event of interest, because it treats competing events as censoring rather than as the absorbing states they actually are. The cumulative incidence function (CIF), estimated non-parametrically by Aalen-Johansen, is the correct summary: it gives the probability of having experienced each cause by time $t$ in the presence of all other competing causes.
+
+## Prerequisites
+
+A working understanding of survival analysis, censoring, and the Kaplan-Meier estimator; familiarity with multi-state thinking ("alive → cause-1 event" vs "alive → cause-2 event") helps.
+
+## Theory
+
+The CIF for cause $k$ is
+
+$$\mathrm{CIF}_k(t) = \mathrm P(T \le t, \text{cause} = k) = \int_0^t S(u^-) h_k(u) \, \mathrm d u,$$
+
+where $h_k$ is the cause-specific hazard and $S$ is the overall (any-cause) survival. Summing CIFs across causes recovers $1 - S(t)$. The Aalen-Johansen estimator generalises Nelson-Aalen for multi-state processes; Gray's test compares CIFs across groups, with the null that the CIF for the event of interest is equal across groups. For regression, the Fine-Gray subdistribution-hazards model targets covariate effects on the CIF directly, whereas cause-specific Cox models target effects on the cause-specific hazard — the two answer different scientific questions.
+
+## Assumptions
+
+Non-informative censoring (independent of competing causes), only one event per subject (the first event ends follow-up), and accurate cause classification.
+
+## R Implementation
+
+```r
+library(cmprsk)
+
+# Simulated: event causes 1 (event of interest), 2 (competing), 0 (censored)
+set.seed(2026)
+t_time <- rexp(300, 0.3)
+cause <- sample(0:2, 300, replace = TRUE, prob = c(0.3, 0.5, 0.2))
+group <- factor(sample(c("A", "B"), 300, replace = TRUE))
+
+fit <- cuminc(t_time, cause, group)
+plot(fit, xlab = "Time", ylab = "Cumulative incidence",
+     color = c("red", "blue", "green", "orange"))
+
+# Gray's test for equality of CIFs
+print(fit)
+```
+
+## Output & Results
+
+`cuminc()` returns CIF estimates for each combination of cause and group, plus Gray's test $\chi^2$ statistics for equality across groups within each cause. The plot overlays the four CIF curves; cumulative incidences for the two causes within each group sum to less than the corresponding $1 - S$ at every time.
+
+## Interpretation
+
+A reporting sentence: "The five-year cumulative incidence of event 1 was 25 % in group A and 40 % in group B (Gray's test $p = 0.01$); event 2 incidences were 20 % vs 18 % ($p = 0.65$). KM analysis would have estimated event-1 incidence in group B at 52 %, illustrating the upward bias of ignoring the competing cause." Always present CIFs for every competing cause and explain why KM is inappropriate.
+
+## Practical Tips
+
+- Never report $1 - \hat S(t)$ from Kaplan-Meier as "cumulative incidence" in competing-risks settings; it overestimates the true cumulative incidence.
+- Plot the CIF for every competing cause so readers see the partition of the overall event probability across causes.
+- For regression effects on the CIF (e.g., "this covariate increases the cumulative incidence of cause 1"), use Fine-Gray subdistribution hazards (`cmprsk::crr` or `riskRegression::FGR`).
+- For mechanistic effects on cause-specific hazards (e.g., "this drug accelerates cause-1 events but the drop in event-1 cumulative incidence is driven by competing event 2"), use cause-specific Cox models.
+- Gray's test compares CIFs; the log-rank test on cause-1 events with cause-2 events censored compares cause-specific hazards. Report both when they disagree.
+- For visualisation in `ggplot2`, `tidycmprsk` and `ggsurvfit` provide tidy interfaces with cleaner output than base `cmprsk::plot.cuminc()`.
+
+## R Packages Used
+
+`cmprsk` for `cuminc()` and `crr()` (Fine-Gray); `tidycmprsk` for tidy-style competing-risks workflows; `riskRegression` for `FGR()`, `CSC()` (cause-specific Cox), and unified prediction interfaces; `ggsurvfit` for ggplot-friendly CIF plots.

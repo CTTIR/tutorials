@@ -1,0 +1,101 @@
+---
+title: The Chi-Squared Distribution
+date: "2026-04-17"
+description: Sum of squared independent standard normals; foundation of chi-squared tests and ANOVA
+categories:
+  - Probability Theory
+  - chi-squared
+  - df
+  - variance
+  - goodness-of-fit
+---
+
+## Introduction
+
+The chi-squared distribution arises as the sum of squared independent standard normal random variables. It is the sampling distribution of the sample variance under normality, the reference distribution for goodness-of-fit and contingency tests, and a key ingredient in the F distribution used throughout ANOVA.
+
+## Prerequisites
+
+Normal distribution, basic calculus.
+
+## Theory
+
+If $Z_1, \ldots, Z_k$ are iid standard normal, then
+
+$$Q = \sum_{i=1}^k Z_i^2 \sim \chi^2_k.$$
+
+The parameter $k$ is the **degrees of freedom**. The PDF is
+
+$$f(x) = \frac{1}{2^{k/2} \Gamma(k/2)} x^{k/2 - 1} e^{-x/2}, \qquad x > 0.$$
+
+Moments: $E[Q] = k$, $\mathrm{Var}(Q) = 2k$.
+
+**Sum property**: if $Q_1 \sim \chi^2_{k_1}$ and $Q_2 \sim \chi^2_{k_2}$ are independent, then $Q_1 + Q_2 \sim \chi^2_{k_1 + k_2}$.
+
+**Sample variance**: for iid normal $X_1, \ldots, X_n$ with variance $\sigma^2$,
+
+$$\frac{(n - 1) s^2}{\sigma^2} \sim \chi^2_{n - 1}.$$
+
+This is the basis of confidence intervals for a normal variance.
+
+**Large-df behaviour**: $\chi^2_k$ is approximately normal for large $k$ (by the CLT applied to the sum of squared normals).
+
+## Assumptions
+
+For the sample-variance result: iid normal observations. For the goodness-of-fit approximation in chi-squared tests: independent observations and large enough expected cell counts.
+
+## R Implementation
+
+```r
+k <- 5
+
+# PDF and CDF
+x <- seq(0, 20, length.out = 400)
+plot(x, dchisq(x, df = k), type = "l", col = "#2A9D8F", lwd = 2,
+     main = paste("Chi-squared,", k, "df"), ylab = "f(x)")
+
+# Moments
+c(theoretical_mean = k, theoretical_var = 2 * k,
+  empirical_mean   = mean(rchisq(1e5, k)),
+  empirical_var    = var(rchisq(1e5, k)))
+
+# Verify: sum of k squared standard normals
+n <- 1e5
+Q_direct <- rchisq(n, df = k)
+Q_from_normals <- rowSums(matrix(rnorm(n * k), n, k)^2)
+c(mean_direct = mean(Q_direct), mean_from_normals = mean(Q_from_normals))
+
+# Confidence interval for a variance
+set.seed(2026)
+X <- rnorm(30, mean = 0, sd = 2)
+s2 <- var(X)
+n <- length(X)
+chi_l <- qchisq(0.025, n - 1); chi_u <- qchisq(0.975, n - 1)
+c((n - 1) * s2 / chi_u, (n - 1) * s2 / chi_l)
+```
+
+## Output & Results
+
+```
+theoretical_mean  theoretical_var  empirical_mean  empirical_var
+            5.0             10.0           5.003           9.98
+
+mean_direct mean_from_normals
+      5.005             5.004
+
+[1] 2.542 7.206
+```
+
+A 95% CI for the true variance (which is 4) is (2.54, 7.21), which captures the true value. The sum-of-squared-normals construction produces the expected mean of 5.
+
+## Interpretation
+
+Chi-squared tests of independence, goodness-of-fit, and variance homogeneity all reference the chi-squared distribution. Reporting a test statistic value like "$\chi^2_3 = 9.5$, $p = 0.023$" is reporting a chi-squared-distributed statistic with its p-value.
+
+## Practical Tips
+
+- Chi-squared confidence intervals for variance are highly sensitive to the normality assumption.
+- For large df, use the normal approximation: $\chi^2_k \approx \mathcal{N}(k, 2k)$, or more accurately $\sqrt{2 \chi^2_k} \approx \mathcal{N}(\sqrt{2k - 1}, 1)$.
+- Chi-squared tests with small expected counts are poorly approximated; use exact tests or Monte Carlo.
+- Non-central chi-squared (with non-centrality parameter $\lambda$) governs power calculations for chi-squared tests.
+- The square of a $t_\nu$ is $F_{1, \nu}$, not chi-squared; do not conflate.

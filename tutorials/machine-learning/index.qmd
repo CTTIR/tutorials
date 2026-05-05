@@ -1,0 +1,402 @@
+---
+title: Machine Learning
+description: "Predictive modelling with trees, ensembles, SVMs, neural networks, and principled workflows for validation and feature selection"
+---
+
+Machine learning in applied statistics is ultimately about prediction: building a model whose accuracy on unseen data is the criterion of success. This area covers the major supervised and unsupervised methods a biostatistician is likely to use, framed around the workflow that separates honest ML from overfit artefacts: train/test splits, cross-validation, tuning on validation folds, and evaluation on a held-out set.
+
+Every tutorial uses `tidymodels` as the default framework, with `caret` shown for legacy projects and `mlr3` referenced for advanced needs. Emphasis is on reproducible pipelines, proper leakage-free preprocessing, and calibrated performance estimates.
+
+## Topics covered
+
+- The supervised learning framework: features, targets, loss functions, generalisation
+- Resampling: holdout, k-fold CV, repeated CV, stratified CV, nested CV for tuning
+- Tree methods: CART, conditional inference trees, pruning strategies
+- Ensembles: bagging, random forests, boosted trees (XGBoost, LightGBM)
+- Support vector machines: linear, polynomial, RBF kernels; soft-margin formulation
+- k-nearest neighbours and its curse of dimensionality
+- Neural networks with `torch` for R; feedforward, convolutional, recurrent architectures
+- Regularisation for generalisation: ridge, lasso, dropout, early stopping
+- Feature engineering with `recipes`: imputation, encoding, scaling, interactions, spline bases
+- Feature selection: filter, wrapper, and embedded approaches
+- Imbalanced classification: SMOTE, class weights, threshold tuning, calibration
+- Interpretability: variable importance, partial dependence, SHAP values, LIME
+- Unsupervised methods: clustering, anomaly detection, self-organising maps
+
+The goal throughout is a pipeline a reader could defend in a peer review: properly validated, honestly tuned, and clearly interpreted.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [A Complete mlr3 Workflow](mlr3-workflow.qmd)
+End-to-end modelling with mlr3: tasks, learners, resamplings, and tuning
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [A Complete tidymodels Workflow](tidymodels-workflow.qmd)
+End-to-end modelling in tidymodels: recipes, parsnip, workflows, and tuning
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Anomaly Detection](anomaly-detection.qmd)
+Unsupervised methods for flagging rare, unusual observations
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bagging](bagging.qmd)
+Bootstrap aggregation: variance reduction through averaging
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Calibration Plots](calibration-plots.qmd)
+Reliability diagrams: do predicted probabilities match observed frequencies?
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [CatBoost](catboost.qmd)
+Gradient boosting with native categorical handling and ordered target encoding
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Class Weights for Imbalanced Data](class-weights-imbalanced.qmd)
+Loss-based weighting as an alternative to resampling
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Convolutional Neural Networks: Introduction](cnn-introduction.qmd)
+Spatial filters and pooling for image and signal learning
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Cross-Validation](cross-validation.qmd)
+Estimating out-of-sample predictive performance honestly with k-fold, repeated, nested, and leave-one-out cross-validation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [DBSCAN as an ML Tool](clustering-dbscan-ml.qmd)
+Density-based clustering and outlier detection in one step
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Decision Trees (CART)](decision-trees-cart.qmd)
+Recursive binary partitioning with Gini or variance splits
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Dropout and Early Stopping](dropout-early-stopping.qmd)
+Two of the most effective neural-network regularisation techniques
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Extremely Randomised Trees](extremely-randomized-trees.qmd)
+Extra Trees: random thresholds for faster and more regularised ensembles
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Feature Engineering](feature-engineering.qmd)
+Transformations, interactions, and encodings to expose signal to models
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Feature Selection](feature-selection.qmd)
+Filter, wrapper, and embedded strategies to reduce the feature space
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Feedforward Networks in torch](feedforward-networks-torch.qmd)
+Building and training deep feedforward networks in R with the torch package
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Gradient Boosting](gradient-boosting.qmd)
+Stagewise additive modelling with gradient descent on loss
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Isolation Forest](isolation-forest.qmd)
+Tree-based unsupervised anomaly detection via path length
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Isotonic Regression Calibration](isotonic-regression.qmd)
+Non-parametric monotone calibration via pool-adjacent-violators
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Kernel SVMs](svm-kernel.qmd)
+Non-linear classification via the kernel trick with RBF and polynomial kernels
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [LIME Explanations](lime-explanations.qmd)
+Local Interpretable Model-Agnostic Explanations via surrogate linear models
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [LightGBM](lightgbm.qmd)
+Histogram-based leaf-wise gradient boosting for large datasets
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Linear Discriminant as ML](linear-discriminant-ml.qmd)
+LDA as a classifier with shared Gaussian class-conditional covariance
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Linear Support Vector Machines](svm-linear.qmd)
+Large-margin classifiers with soft-margin slack and the C parameter
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Logistic Regression as ML](logistic-regression-ml.qmd)
+Linear classifier with log-loss and L1/L2 regularisation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Naive Bayes](naive-bayes.qmd)
+Probabilistic classification under conditional independence
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Nested Cross-Validation](nested-cv.qmd)
+Honest model evaluation with separate loops for tuning and assessment
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Neural Networks: Introduction](neural-networks-intro.qmd)
+From perceptrons to multi-layer networks: weights, layers, and activation functions
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Partial Dependence Plots](partial-dependence-plots.qmd)
+Marginal effect of a feature on model predictions
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Platt Scaling](platt-scaling.qmd)
+Logistic recalibration: mapping raw scores to calibrated probabilities
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Preprocessing with recipes](recipes-preprocessing.qmd)
+Leak-free feature engineering in tidymodels with recipes
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [RNNs and LSTMs: Introduction](rnn-lstm-intro.qmd)
+Recurrent networks for sequence modelling with gated memory
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Random Forests](random-forest.qmd)
+Bagging decision trees with random feature subsets for robust ensembles
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Regularisation in ML](regularization-ridge-lasso-ml.qmd)
+L2 ridge, L1 lasso, and elastic net for controlling model complexity
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [SHAP Values](shap-values.qmd)
+Game-theoretic local feature attributions via Shapley values
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [SMOTE for Imbalanced Classes](smote-imbalanced.qmd)
+Synthetic Minority Oversampling Technique for class-imbalanced classification
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Stacking Ensembles](stacking-ensembles.qmd)
+Combining heterogeneous base models via a meta-learner
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Supervised Learning: Overview](supervised-learning-overview.qmd)
+Framework, loss functions, generalisation, and the bias-variance decomposition
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Bias-Variance Tradeoff](bias-variance-tradeoff.qmd)
+Decomposition of prediction error into structural and sampling components
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Train-Test Splits](train-test-split.qmd)
+Holdout evaluation, stratification, and honest generalisation estimates
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Transformers: Overview](transformer-overview.qmd)
+Self-attention architectures underlying modern NLP and beyond
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Variable Importance](variable-importance.qmd)
+Impurity-based and permutation importance for tree ensembles and beyond
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [XGBoost](xgboost.qmd)
+Regularised gradient boosting with sparsity awareness and early stopping
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [k-Means as an ML Tool](clustering-kmeans-ml.qmd)
+Using k-means for feature engineering, quantisation, and pre-segmentation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [k-Nearest Neighbours Classification](knn-classification.qmd)
+Instance-based learning with majority voting among nearest neighbours
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [k-Nearest Neighbours Regression](knn-regression.qmd)
+Local averaging for non-parametric regression
+:::
+
+:::

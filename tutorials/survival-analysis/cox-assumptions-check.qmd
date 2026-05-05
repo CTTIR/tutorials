@@ -1,0 +1,71 @@
+---
+title: Checking Cox Assumptions
+date: "2026-04-17"
+description: "Diagnostics for proportional hazards, functional form, and influential observations"
+categories:
+  - Survival Analysis
+  - cox-diagnostics
+  - schoenfeld
+  - martingale
+---
+
+## Introduction
+
+A fitted Cox model is only as good as its assumptions: proportional hazards across covariate levels, the right functional form for continuous predictors, and the absence of one or two highly influential observations driving the coefficient estimates. Three residual families address these in turn — Schoenfeld for proportional hazards, martingale for functional form, and DFBETA-style influence diagnostics for unduly leveraged observations. Reporting all three is now standard for any clinical-trial Cox analysis.
+
+## Prerequisites
+
+A working understanding of Cox proportional-hazards regression, residual-based diagnostics, and the difference between the proportional-hazards assumption and the linearity-of-the-linear-predictor assumption.
+
+## Theory
+
+- **Schoenfeld residuals** are computed at each event time as the difference between the observed covariate value and the expected value across the risk set. Under proportional hazards, they should have no systematic relationship with time. `cox.zph()` tests the correlation between scaled residuals and a time transform (default $g(t) = \log t$).
+- **Martingale residuals** are observed minus expected events for each subject. Plotting them against a continuous covariate exposes non-linearity: a smooth trend indicates the linear-predictor assumption fails for that covariate.
+- **Deviance residuals** normalise martingale residuals to make outlying observations visible on a roughly symmetric scale.
+- **DFBETA** measures how much each coefficient changes when each individual observation is removed; large absolute values flag influential observations whose exclusion changes the conclusions.
+
+## Assumptions
+
+A Cox model has been fitted, with sufficient events to estimate residuals reliably (typically at least 10 events per covariate, and substantially more for stable diagnostic plots).
+
+## R Implementation
+
+```r
+library(survival); library(survminer)
+
+data(lung)
+fit <- coxph(Surv(time, status) ~ age + sex + ph.ecog, data = lung)
+
+# PH test
+zph <- cox.zph(fit)
+print(zph)
+ggcoxzph(zph)
+
+# Linearity check for continuous age
+ggcoxfunctional(Surv(time, status) ~ age,
+  data = na.omit(lung[, c("time", "status", "age")]))
+
+# Influential observations
+ggcoxdiagnostics(fit, type = "dfbeta")
+```
+
+## Output & Results
+
+`cox.zph()` returns per-covariate $\chi^2$ tests and a global test for proportional hazards. `ggcoxzph()` plots the smoothed scaled Schoenfeld residuals with a horizontal reference at the constant-HR null. `ggcoxfunctional()` plots martingale residuals against the continuous covariate with a smoother. `ggcoxdiagnostics()` displays DFBETA for each coefficient.
+
+## Interpretation
+
+A reporting sentence: "Diagnostics for the Cox model showed no PH violations (Schoenfeld global $p = 0.08$, per-covariate $p > 0.10$), approximately linear effects for age (martingale residuals showed no systematic trend), and three influential observations (DFBETA $> 0.1$ in absolute value) that were investigated and retained after sensitivity analysis showed coefficients changed by less than 5 %." Always report the global PH test, the per-covariate tests, and any sensitivity analysis you ran.
+
+## Practical Tips
+
+- If PH fails for a covariate, choose between stratification (`+ strata(var)`) and a time-varying coefficient via `tt()` or `survSplit()`; the choice depends on whether the stratifier's effect is itself of interest.
+- If linearity fails for a continuous covariate, add a restricted cubic spline (`rms::rcs()` or `splines::ns()`) instead of dichotomising; categorisation discards information.
+- Influential observations identified by DFBETA should be inspected for data errors first; if real, rerun without them as a sensitivity analysis and report any material changes.
+- The global Schoenfeld test aggregates per-covariate tests; a global non-significant result with one significant per-covariate test still warrants action on that covariate.
+- For continuous covariates with non-linear effects, the martingale-residual plot against the variable is often more informative than any formal test.
+- All three diagnostics should appear in a model-checking section; reporting only the model output without diagnostics is no longer acceptable in clinical-trial publications.
+
+## R Packages Used
+
+`survival` for `cox.zph()`, `residuals()`, and `coxph()` with strata; `survminer` for `ggcoxzph()`, `ggcoxfunctional()`, `ggcoxdiagnostics()`, and ggplot-flavoured Cox diagnostics; `rms` for `cph()` with built-in spline and validation tools; `flexsurv` and `timereg` for parametric and additive-hazards alternatives when assumptions fail.

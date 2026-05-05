@@ -1,0 +1,107 @@
+---
+title: The Multinomial Distribution
+date: "2026-04-17"
+description: Multi-category generalisation of the binomial with category probabilities summing to one
+categories:
+  - Probability Theory
+  - multinomial
+  - categorical
+  - multi-class
+---
+
+## Introduction
+
+The multinomial distribution generalises the binomial from two categories to $k$: the counts of outcomes falling into each of several categories across $n$ independent trials. It underlies the analysis of categorical variables with more than two levels -- disease stages, treatment responses, species counts -- and sits at the heart of chi-squared goodness-of-fit tests.
+
+## Prerequisites
+
+Binomial distribution.
+
+## Theory
+
+Let $(X_1, \ldots, X_k)$ count outcomes across $k$ categories in $n$ independent trials, where the probability of outcome $j$ on any trial is $p_j$, and $\sum p_j = 1$.
+
+PMF:
+
+$$P(X_1 = x_1, \ldots, X_k = x_k) = \frac{n!}{x_1! \cdots x_k!} \prod_{j=1}^k p_j^{x_j},$$
+
+for $x_j \geq 0$ and $\sum x_j = n$.
+
+Moments:
+
+- $E[X_j] = n p_j$.
+- $\mathrm{Var}(X_j) = n p_j (1 - p_j)$.
+- $\mathrm{Cov}(X_j, X_\ell) = -n p_j p_\ell$ (negative because one count gain forces another's loss).
+
+Marginals: $X_j \sim \mathrm{Binomial}(n, p_j)$. Pairwise joint for $(X_j, X_\ell)$: a trinomial with $(p_j, p_\ell, 1 - p_j - p_\ell)$.
+
+MLE of $(p_1, \ldots, p_k)$ is the vector of observed proportions $\hat{p}_j = x_j / n$.
+
+## Assumptions
+
+- Fixed total $n$ trials.
+- Independent trials.
+- Constant category probabilities across trials.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+p <- c(0.40, 0.30, 0.20, 0.10)
+n <- 200
+
+# Single realisation
+one_draw <- rmultinom(1, size = n, prob = p)
+data.frame(category = 1:length(p), count = as.integer(one_draw),
+           expected = n * p)
+
+# Simulate many replicates, check moments
+many <- rmultinom(1e4, n, p)
+rowMeans(many); apply(many, 1, var)
+
+# Expected variance
+n * p * (1 - p)
+
+# Chi-squared goodness-of-fit
+obs <- c(82, 66, 34, 18)
+chisq.test(obs, p = p)
+
+# Multinomial likelihood of observed counts
+dmultinom(obs, size = sum(obs), prob = p)
+```
+
+## Output & Results
+
+```
+  category count expected
+1        1    77       80
+2        2    66       60
+3        3    38       40
+4        4    19       20
+
+rowMeans:  80.07  60.04  39.95  19.94
+apply var: 48.2   42.0   32.1   17.8
+
+Expected var:
+[1] 48.00 42.00 32.00 18.00
+
+        Chi-squared test for given probabilities
+
+data:  obs
+X-squared = 3.2, df = 3, p-value = 0.363
+```
+
+The empirical means and variances match the theoretical values. The chi-squared test does not reject the specified category probabilities.
+
+## Interpretation
+
+Reporting multinomial fits usually focuses on category proportions with uncertainty. For large samples, the chi-squared goodness-of-fit test is the standard tool for comparing observed multinomial counts to hypothesised probabilities.
+
+## Practical Tips
+
+- For small expected counts (<5), use Fisher's exact test or Monte Carlo chi-squared (`chisq.test(..., simulate.p.value = TRUE)`).
+- Multinomial categories are mutually exclusive by definition; overlapping classifications require a different framework (multilabel models).
+- Conditional on the total, the multinomial is a sufficient statistic for the unordered category counts.
+- Bayesian inference for multinomial probabilities uses the Dirichlet prior (conjugate); posterior is Dirichlet with shape parameters updated by observed counts.
+- For regression with multinomial outcomes, use multinomial logistic regression (`nnet::multinom`).

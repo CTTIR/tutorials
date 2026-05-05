@@ -1,0 +1,101 @@
+---
+title: The Negative Binomial Distribution
+date: "2026-04-17"
+description: "Overdispersed count distribution, derivable as a gamma mixture of Poissons"
+categories:
+  - Probability Theory
+  - negative-binomial
+  - overdispersion
+  - count-data
+---
+
+## Introduction
+
+The negative binomial distribution is the workhorse model for overdispersed counts -- counts whose variance exceeds their mean. It arises naturally as the number of failures before the $r$-th success in a sequence of Bernoulli trials, or as a gamma mixture of Poisson distributions. It dominates modern count-regression practice (RNA-seq, public-health incidence, insurance claims).
+
+## Prerequisites
+
+Geometric and Poisson distributions; gamma distribution is useful for the mixture interpretation.
+
+## Theory
+
+Two standard parameterisations:
+
+**Counts-of-failures form**: $Y$ is the number of failures before the $r$-th success in iid Bernoulli$(p)$ trials:
+
+$$P(Y = k) = \binom{k + r - 1}{k} p^r (1 - p)^k, \qquad k = 0, 1, 2, \ldots$$
+
+**Mean-dispersion form**: parameterise by mean $\mu$ and dispersion (size) parameter $\theta$ with
+
+$$P(Y = k) = \frac{\Gamma(k + \theta)}{k! \, \Gamma(\theta)} \left(\frac{\theta}{\theta + \mu}\right)^\theta \left(\frac{\mu}{\theta + \mu}\right)^k.$$
+
+Moments in the mean-dispersion form:
+
+- $E[Y] = \mu$.
+- $\mathrm{Var}(Y) = \mu + \mu^2 / \theta$.
+
+**Gamma-Poisson interpretation**: if $\Lambda \sim \mathrm{Gamma}(\theta, \theta/\mu)$ and $Y \mid \Lambda \sim \mathrm{Poisson}(\Lambda)$, then marginally $Y \sim \mathrm{NegBin}(\mu, \theta)$. As $\theta \to \infty$, the NB collapses to Poisson$(\mu)$.
+
+**Geometric as a special case**: $r = 1$ (or $\theta = 1$) recovers the geometric distribution.
+
+## Assumptions
+
+No common-rate assumption (unlike Poisson); the heterogeneity in underlying rates is parameterised by $\theta$.
+
+## R Implementation
+
+```r
+library(MASS)
+
+# R's rnbinom: parameterise by size (= theta) and mu
+mu <- 5; theta <- 2
+Y <- rnbinom(1e5, size = theta, mu = mu)
+
+c(mean     = mean(Y),
+  variance = var(Y),
+  expected_var = mu + mu^2 / theta)
+
+# PMF comparison to Poisson
+k <- 0:20
+pmf_nb   <- dnbinom(k, size = theta, mu = mu)
+pmf_pois <- dpois(k, lambda = mu)
+
+data.frame(k, nb = round(pmf_nb, 4), poisson = round(pmf_pois, 4))
+
+# Fit by MLE using MASS::glm.nb
+df <- data.frame(y = Y, x = rnorm(1e5))
+fit <- glm.nb(y ~ x, data = df)
+summary(fit)$theta
+```
+
+## Output & Results
+
+```
+     mean  variance expected_var
+    5.020    17.48        17.50
+
+    k      nb  poisson
+1   0  0.2041   0.0067
+2   1  0.2041   0.0337
+3   2  0.1701   0.0842
+4   3  0.1296   0.1404
+5   4  0.0925   0.1755
+6   5  0.0634   0.1755
+...
+
+[1] 1.998        # estimated theta
+```
+
+Empirical variance (17.5) matches the theoretical $\mu + \mu^2/\theta = 5 + 25/2 = 17.5$. The MLE of $\theta$ is close to the true value 2.
+
+## Interpretation
+
+Negative binomial is the default count-data model in modern applied work. In a manuscript: "incidence rates were compared using negative binomial regression to account for overdispersion (dispersion estimated as $\theta = 2.0$)". Always report the dispersion parameter alongside the rate ratios.
+
+## Practical Tips
+
+- Detect overdispersion by fitting a Poisson first and checking residual deviance $\approx$ df; ratios $> 1.5$ suggest overdispersion.
+- `glm.nb` jointly estimates regression coefficients and dispersion; faster-but-less-flexible alternatives include `glmmTMB` and `brms`.
+- Zero-inflated variants (`pscl::zeroinfl` with `dist = "negbin"`) handle excess zeros on top of overdispersion.
+- Reparameterisations: some textbooks use $(n, p)$, some $(\mu, \theta)$; R's `rnbinom(n, size, prob)` or `rnbinom(n, size, mu)` accepts either.
+- In RNA-seq, DESeq2 and edgeR both model counts as negative binomial with shrinkage on the dispersion parameter.

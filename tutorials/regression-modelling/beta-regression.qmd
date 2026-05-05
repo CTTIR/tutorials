@@ -1,0 +1,72 @@
+---
+title: Beta Regression
+date: "2026-04-17"
+description: "Regression for continuous outcomes in (0, 1): proportions, percentages, fractions"
+categories:
+  - "Regression & Modelling"
+  - beta-regression
+  - proportion
+  - betareg
+---
+
+## Introduction
+
+Beta regression models continuous outcomes constrained to the open unit interval $(0, 1)$ — proportions, percentages expressed as fractions, biomarker ratios that range from 0 to 1. Ordinary least squares fails on such data: it can predict values outside $(0, 1)$, the residuals are typically heteroscedastic and asymmetric, and confidence intervals on the boundary are unreliable. Beta regression respects the bound, models heteroscedasticity through a precision parameter, and returns interpretable coefficients on the logit scale (or any other supported link).
+
+## Prerequisites
+
+A working understanding of the Beta distribution, generalised linear models, and the logit link as a transformation of probabilities to the real line.
+
+## Theory
+
+The model parameterises $Y$ as Beta with mean $\mu$ and precision $\phi$:
+
+$$Y \mid x \sim \mathrm{Beta}(\mu\phi, (1 - \mu)\phi),$$
+
+with $\mathrm{logit}(\mu) = x^\top \beta$ and $\phi > 0$ a precision parameter (larger $\phi$ means tighter concentration around $\mu$). Variable-dispersion beta regression allows $\phi$ to depend on covariates as well, capturing heteroscedasticity directly. Coefficients are interpretable as log-odds ratios on the proportion: a unit increase in $x_j$ multiplies the odds of "success-vs-failure" of the proportion by $\exp(\beta_j)$.
+
+Values exactly 0 or 1 are excluded from the standard model; common remedies include a small linear shift ($y^* = (y(n-1) + 0.5)/n$) or a zero-one-inflated beta model that adds explicit point-mass components.
+
+## Assumptions
+
+Outcome strictly in $(0, 1)$ (no exact 0 or 1 unless using zero-one-inflated extensions); logit (or chosen) link appropriate; independent observations.
+
+## R Implementation
+
+```r
+library(betareg)
+
+set.seed(2026)
+x <- rnorm(200)
+eta <- 0.2 + 0.8 * x
+mu  <- plogis(eta)
+phi <- 10
+y <- rbeta(200, mu * phi, (1 - mu) * phi)
+
+fit <- betareg(y ~ x)
+summary(fit)
+
+# Predictions on the probability scale
+head(predict(fit, type = "response"))
+```
+
+## Output & Results
+
+`summary(fit)` reports coefficients on the logit scale (with Wald $z$-tests), the precision parameter $\hat\phi$, and pseudo-$R^2$. `predict(..., type = "response")` returns predictions back on the $(0, 1)$ scale.
+
+## Interpretation
+
+A reporting sentence: "Beta regression of the bounded outcome on $x$ estimated $\hat\beta = 0.79$ on the logit scale (odds ratio 2.20, 95 % CI 1.79 to 2.71, $p < 0.001$); the precision parameter was $\hat\phi = 9.6$, indicating moderate concentration around the conditional mean. A 1-SD increase in $x$ is associated with a roughly two-fold increase in the odds of a higher proportion." Always report both the coefficient and the precision; the precision controls the implied uncertainty.
+
+## Practical Tips
+
+- Outcomes exactly equal to 0 or 1 need either a small shift transformation ($y^* = (y(n-1) + 0.5)/n$) or a zero-one-inflated beta model (`gamlss::gamlss(family = BEINF)` or `zoib::zoib`).
+- Variable-dispersion beta regression — modelling $\phi$ on covariates — handles heteroscedasticity directly via `betareg(y ~ x | z)` syntax.
+- For longitudinal or clustered proportion data, `glmmTMB(family = beta_family())` adds random effects to a beta GLM.
+- The default link is logit; alternatives (probit, cloglog) are available via the `link` argument and rarely change conclusions materially.
+- Pearson and quantile residuals are the right diagnostic tools; standard residuals can be misleading for bounded outcomes.
+- Compare beta regression against a quasi-binomial GLM with a logit link; the latter is sometimes simpler and gives similar conclusions for moderate dispersion.
+
+## R Packages Used
+
+`betareg` for `betareg()` with fixed and variable dispersion; `gamlss` and `gamlss.dist` for zero-one-inflated beta and other bounded distributions; `glmmTMB` for beta GLMMs; `zoib` for fully Bayesian zero-one-inflated beta regression; `DHARMa` for residual diagnostics across non-Gaussian families.

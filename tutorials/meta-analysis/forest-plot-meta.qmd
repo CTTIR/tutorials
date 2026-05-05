@@ -1,0 +1,69 @@
+---
+title: Forest Plots in Meta-Analysis
+date: "2026-04-17"
+description: "Standard visualisation of per-study effects, weights, and the pooled estimate"
+categories:
+  - Meta-Analysis
+  - forest-plot
+  - pooled
+  - weights
+---
+
+## Introduction
+
+The forest plot is the canonical meta-analysis figure and the single most important visual artefact a systematic review delivers. Each included study appears as a row with its point estimate, confidence interval, and pooling weight; the overall summary is rendered at the bottom as a diamond whose width represents the pooled confidence interval. This compact layout simultaneously conveys per-study effects, study-level precision, between-study scatter, and the overall conclusion — all in a glance, without needing to consult a separate table. Editorial standards in major clinical journals routinely require a forest plot for every meta-analytic synthesis, and reviewers rely on it to judge whether the pooled estimate fairly represents the constituent studies.
+
+## Prerequisites
+
+Inverse-variance pooling, the distinction between fixed-effect and random-effects models, and an understanding of how meta-analytic weights translate study precision into influence on the summary estimate.
+
+## Theory
+
+Each study's square is plotted at its point estimate with size proportional to its meta-analytic weight (inverse variance under fixed-effect, or DerSimonian–Laird / REML weights under random-effects). Horizontal whiskers extend to the 95 % confidence interval. The pooled estimate is a diamond centred at the summary, with horizontal extent equal to the pooled CI; under random-effects models, an additional prediction interval is often overlaid as a dashed bar to convey where the next study's true effect is plausibly expected.
+
+Standard columns include: study label (often author + year), sample sizes per arm, point estimate with CI, and the percent weight contribution. Heterogeneity statistics ($Q$, $I^2$, $\tau^2$) typically appear in the figure footer.
+
+## Assumptions
+
+Study-level estimates and their variances are on the same scale, expressed in the same direction (so that "to the right of zero" or "to the right of one" has a consistent clinical meaning), and pooled under a stated model. Forest plots themselves do not impose extra assumptions — they visualise whatever model produced the inputs.
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+k <- 8
+yi <- c(0.32, 0.51, 0.28, 0.45, 0.38, 0.22, 0.60, 0.35)
+vi <- c(0.02, 0.03, 0.015, 0.025, 0.04, 0.018, 0.05, 0.022)
+authors <- paste("Study", LETTERS[1:k])
+
+res <- rma(yi, vi, method = "REML")
+
+forest(res, slab = authors,
+       header = c("Study", "SMD [95% CI]"),
+       xlab = "Standardised mean difference (Hedges' g)",
+       mlab = "Random-effects (REML)",
+       cex = 0.9)
+```
+
+## Output & Results
+
+The `forest()` method renders study-wise rows with squares sized by random-effects weight, whiskers showing 95 % CIs, and a summary diamond at the bottom. The header and label arguments customise the axis label and column heads, and `addpred = TRUE` overlays the random-effects prediction interval as a dashed bar around the diamond.
+
+## Interpretation
+
+A reporting sentence: "The forest plot summarises eight randomised trials; seven favour the intervention with confidence intervals excluding the null, and the random-effects pooled SMD is 0.39 (95 % CI 0.28 to 0.50, $I^2 = 27 \%$, $\tau^2 = 0.012$). The 95 % prediction interval (0.10 to 0.68) suggests the true effect in a future trial is likely positive but variable in magnitude." Always pair the forest plot with prose that quantifies both the central effect and the heterogeneity context.
+
+## Practical Tips
+
+- Sort studies by publication year (for temporal reading), by effect size (for visual scanning of dispersion), or by subgroup (for pre-specified comparisons); the choice should match the scientific question.
+- Always include heterogeneity statistics ($I^2$, $\tau^2$, $Q$) in the figure footer; readers cannot judge "is this pool reasonable?" without them.
+- Overlay the prediction interval (`addpred = TRUE` in `metafor`); a CI describes uncertainty about the mean, but the prediction interval is what readers actually want to know about future studies.
+- For complex layouts — multiple subgroups, side-by-side outcomes, risk-of-bias columns — `forestplot`, `forester`, or `metafor::forest()` with custom `ilab` arguments give finer control than the default `meta::forest()`.
+- Always include a clear directional legend ("favours intervention ← → favours control"); ambiguity here is the most common cause of reader misinterpretation.
+- Round to a sensible number of digits (typically 2 for SMDs, 2 for log-ratios back-transformed); excessive precision suggests false confidence and clutters the plot.
+
+## R Packages Used
+
+`metafor::forest()` for the canonical method, with `addpred`, `ilab`, and slab customisation; `meta::forest()` for the alternative `meta`-package interface with simpler defaults; `forestplot` and `forester` for highly customised layouts including categorical variables, multiple effects, and risk-of-bias columns; `metaviz` for ggplot-based forest plots with publication-ready theming.

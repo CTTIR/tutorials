@@ -1,0 +1,71 @@
+---
+title: Orthogonal Arrays
+date: "2026-04-17"
+description: "Tabulated fractional-factorial arrays L4, L8, L9, L16, L27"
+categories:
+  - Experimental Design
+  - orthogonal-array
+  - taguchi
+  - fractional
+---
+
+## Introduction
+
+Orthogonal arrays (OAs) are tabulated fractional-factorial designs in which every pair of columns contains every combination of levels an equal number of times. Genichi Taguchi popularised a catalogue of specific OAs — $L_4$, $L_8$, $L_9$, $L_{16}$, $L_{18}$, $L_{27}$, and others — as economical screening designs in his quality-engineering framework, and the labels are now standard shorthand in industrial DoE. The orthogonality property guarantees that main effects of distinct factors are estimated independently and on equal footing, so OAs deliver the cleanest possible main-effect estimates from the smallest possible run count, given the assumed effect-sparsity context.
+
+## Prerequisites
+
+Familiarity with fractional factorial designs, the Plackett–Burman family, and the concept of orthogonality among columns of a design matrix.
+
+## Theory
+
+An $L_n(m^k)$ array has $n$ rows (runs) and $k$ columns (factors), each column at $m$ equally-replicated levels. Orthogonality means that for any pair of columns each combination of levels appears an equal number of times, ensuring uncorrelated main-effect estimates.
+
+The standard catalogue includes:
+
+- **L4**: 4 runs, up to 3 two-level factors.
+- **L8**: 8 runs, up to 7 two-level factors.
+- **L9**: 9 runs, up to 4 three-level factors.
+- **L16**: 16 runs, up to 15 two-level factors.
+- **L18**: 18 runs, one two-level factor plus 7 three-level factors (mixed-level).
+- **L27**: 27 runs, up to 13 three-level factors.
+
+## Assumptions
+
+Main effects dominate the response (effect-sparsity principle); two-factor and higher-order interactions are either negligible or have been assigned to specific pre-determined columns by reading the array's linear-graph; runs are independent with constant residual variance.
+
+## R Implementation
+
+```r
+library(qualityTools)
+
+l9 <- taguchiDesign("L9_3^4")
+summary(l9)
+
+set.seed(2026)
+l9$y <- rnorm(9, mean = 10 + 2 * as.numeric(l9$A) -
+                      1.5 * as.numeric(l9$C), sd = 0.5)
+
+effectPlot(l9, response = "y")
+```
+
+## Output & Results
+
+`taguchiDesign()` returns the requested standard array as a `qualityTools` design object; `effectPlot()` renders the main-effects plot showing the average response at each level of each factor. Reading the plot — the factor whose level-mean line shows the steepest slope is most active — is the canonical first interpretation step in a Taguchi-style screening analysis.
+
+## Interpretation
+
+A reporting sentence: "The $L_9$ orthogonal array screened four three-level factors in nine runs. The main-effects plot identified factors A and C as active (level means ranging across $\sim 4$ units of response), with optimal levels A$_3$ and C$_1$. Factors B and D showed nearly flat level-means and were inactive. The active subset will be carried forward into a full $3^2$ factorial with replicated centre points to characterise curvature." Always justify "active" assignments by effect magnitude rather than $p$-values alone in OA screening.
+
+## Practical Tips
+
+- Taguchi orthogonal arrays are a subset of the broader fractional-factorial framework; modern DoE practice often prefers `FrF2`, `DoE.base`, and `conf.design` constructions for greater flexibility, explicit alias documentation, and Lenth-style analysis tools.
+- Interaction analysis from an OA requires consulting the array's linear-graph (a graphical representation of which column-pair maps to which interaction); without it, interactions are confounded silently with main effects.
+- Mixed-level orthogonal arrays such as $L_{18}$ and $L_{36}$ accommodate combinations of two-level and three-level factors and are useful when one or two factors warrant a quadratic check while others are clearly two-level.
+- Follow up an OA screening with a higher-resolution design on the small subset of active factors identified; the screen-then-characterise sequence is the canonical industrial-DoE workflow and applies to OAs as much as to standard fractional factorials.
+- Custom-designed D-optimal designs from `AlgDesign::optFederov()` often beat off-the-shelf Taguchi arrays in efficiency, especially for unusual factor counts, mixed levels, or constrained design regions; consider them when the standard catalogue does not fit cleanly.
+- The Taguchi philosophy distinguishes "control" factors from "noise" factors via inner and outer arrays; this is the basis of robust parameter design and is treated separately in dedicated robust-design tutorials.
+
+## R Packages Used
+
+`qualityTools::taguchiDesign()` for standard Taguchi catalogue arrays and `effectPlot()` for main-effects visualisation; `DoE.base::oa.design()` for general orthogonal-array construction beyond the Taguchi catalogue; `FrF2` for fractional factorials including those equivalent to Taguchi arrays; `AlgDesign` for computer-generated D-optimal alternatives; `conf.design` for low-level construction of confounding patterns.

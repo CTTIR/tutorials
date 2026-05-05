@@ -1,0 +1,72 @@
+---
+title: Spectral Analysis
+date: "2026-04-17"
+description: Decomposing a time series into frequency components via periodogram and spectral density
+categories:
+  - Time Series Analysis
+  - spectral
+  - periodogram
+  - frequency-domain
+---
+
+## Introduction
+
+Spectral analysis examines a time series in the frequency domain rather than the time domain. Periodicities appear as peaks in the power spectrum, slow trends dominate the low-frequency end, and white noise has a flat spectrum. The view is complementary to autocorrelation-based time-domain analysis: the spectral density and the autocovariance function are Fourier-transform pairs, so neither view contains information the other lacks, but each makes different features easier to see.
+
+## Prerequisites
+
+A working understanding of Fourier analysis, the autocovariance function, and the time-frequency duality of stationary processes.
+
+## Theory
+
+For a stationary process with autocovariance function $\gamma_k$, the spectral density is
+
+$$S(f) = \sum_{k=-\infty}^{\infty} \gamma_k e^{-2\pi i f k},$$
+
+defined on $f \in [-1/2, 1/2]$ for unit-spaced data. The periodogram is the sample-based estimator, computed as the squared magnitude of the FFT of the centred series divided by the series length. Raw periodograms are inconsistent (variance does not decrease with $n$), so smoothing — Bartlett, Welch, kernel-based, or multi-taper — is applied to produce stable spectral estimates.
+
+A peak at frequency $f$ indicates a cyclic component with period $1/f$ time units; the area under a frequency band is the variance contribution from that band.
+
+## Assumptions
+
+The series is approximately stationary (or has been made so by detrending and differencing); sufficient length for frequency resolution $1/n$ to distinguish nearby peaks.
+
+## R Implementation
+
+```r
+# Simulated series with two cycles
+set.seed(2026)
+t <- 1:500
+y <- sin(2 * pi * t / 12) + 0.5 * sin(2 * pi * t / 4) + rnorm(500, 0, 0.3)
+
+# Periodogram
+spec_p <- spectrum(y, plot = FALSE)
+plot(spec_p, main = "Raw periodogram")
+
+# Smoothed
+spec_s <- spectrum(y, spans = c(5, 5), plot = FALSE)
+plot(spec_s, main = "Smoothed periodogram")
+abline(v = 1/12, col = "red", lty = 2)
+abline(v = 1/4,  col = "red", lty = 2)
+```
+
+## Output & Results
+
+`spectrum()` returns the periodogram with frequencies and spectral-density estimates, plus the chosen smoothing-window structure. The plot shows distinct peaks at $f = 1/12$ and $f = 1/4$, matching the simulated cycles.
+
+## Interpretation
+
+A reporting sentence: "Spectral analysis of the simulated series with two embedded cycles produced peaks at frequencies $f = 0.083$ (period 12) and $f = 0.25$ (period 4) on the smoothed periodogram with spans = c(5, 5); the relative peak heights match the relative amplitudes of the simulated components." Always state the smoothing window in the figure caption; raw periodograms are noisy and often misread.
+
+## Practical Tips
+
+- Smoothing (`spans = c(5, 5)` or similar) trades variance for bias; tune to balance peak detection against resolution.
+- Frequency resolution is $1/n$; for closely spaced periodicities, longer series are essential.
+- Use a log-log plot of frequency vs spectral density to expose power-law behaviour and broadband features.
+- Multi-taper estimation (`multitaper::spec.mtm`) provides better bias-variance trade-off than spans-based smoothing for short series.
+- Spectral analysis complements ACF / PACF; use both, especially when looking for cyclic versus trend structure.
+- For non-stationary series, time-frequency methods (short-time Fourier, wavelets) generalise the stationary spectral framework.
+
+## R Packages Used
+
+Base R `spectrum()` for periodograms with smoothing; `multitaper::spec.mtm()` for multi-taper estimation; `astsa::mvspec()` for multivariate spectral analysis; `WaveletComp` for time-frequency localisation when stationarity fails.

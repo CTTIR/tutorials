@@ -1,0 +1,65 @@
+---
+title: Power for Equivalence (TOST)
+date: "2026-04-17"
+description: Sample size for two-one-sided-tests equivalence testing within a pre-specified margin
+categories:
+  - "Sample Size & Power"
+  - power
+  - tost
+  - equivalence
+  - margin
+---
+
+## Introduction
+
+Power analysis for equivalence testing via the two-one-sided-tests (TOST) procedure requires that both one-sided null hypotheses — that the true effect lies below the lower equivalence bound and that it lies above the upper equivalence bound — be rejected at level $\alpha$. The required sample size depends on the equivalence margin (set by clinical or regulatory convention), the anticipated true effect (typically zero or near-zero for an honest equivalence claim), and the variance. TOST sample-size calculations are widely used in bioequivalence studies of generic drugs (where the regulatory margin is fixed at 80–125 % on the log scale), in non-inferiority trials reframed as equivalence, and in therapeutic-equivalence studies of competing devices or formulations.
+
+## Prerequisites
+
+A working understanding of TOST equivalence testing, the role of the equivalence margin, and the difference between equivalence (CI within the margin) and traditional superiority testing (CI excluding the null).
+
+## Theory
+
+For two groups with true mean difference $\delta$ and pooled SD $\sigma$, and symmetric equivalence margin $\pm \Delta$, the power to conclude equivalence is approximately
+
+$$\Pr\!\left(\frac{|\bar X_1 - \bar X_2 - \delta|}{\sigma \sqrt{2/n}} < z_{1-\alpha} \cdot \frac{\Delta - |\delta|}{\Delta \cdot \sigma \sqrt{2/n}}\right).$$
+
+Two important features fall out of this expression. First, when the true effect is at the centre of the equivalence margin ($\delta = 0$), the required sample size is minimised. Second, when the true effect equals the boundary ($|\delta| = \Delta$), equivalence cannot be established regardless of $n$ — the test is fundamentally underpowered at the boundary.
+
+## Assumptions
+
+The equivalence margin is pre-specified and substantively justified, the anticipated true effect $\delta$ is realistically estimated, the data are approximately Normal or the sample is large enough for the central limit theorem, and the variance is known or accurately estimated from pilot data.
+
+## R Implementation
+
+```r
+library(TOSTER); library(PowerTOST)
+
+sampleN.TOST(alpha = 0.05, targetpower = 0.80,
+             theta0 = 1.00, theta1 = 0.80, theta2 = 1.25,
+             CV = 0.20, design = "2x2")
+
+power_t_TOST(alpha = 0.05, low_eqbound = -2, high_eqbound = 2,
+             mu = 0, sd = 5, type = "two.sample", n = 65)
+```
+
+## Output & Results
+
+`sampleN.TOST()` returns the required sample size for bioequivalence with the regulatory 80–125 % margin on the log scale; for 20 % within-subject CV and true ratio 1.00, $n \approx 24$ in a 2 × 2 crossover. `power_t_TOST()` computes power for a generic two-sample equivalence test with arbitrary symmetric or asymmetric margin: at $\pm 2$ unit margin, true difference 0, and SD 5, $n = 65$ per group achieves 81 % power.
+
+## Interpretation
+
+A reporting sentence: "To establish bioequivalence (regulatory 80–125 % equivalence margin on the log scale) with 80 % power at $\alpha = 0.05$, assuming a 20 % within-subject coefficient of variation and a true geometric mean ratio of 1.00, $n = 24$ subjects are required in a 2 × 2 crossover design. The protocol enrols 28 to allow for 15 % dropout. Sensitivity analyses across CV $\in [15 \%, 30 \%]$ yield required $n$ from 16 to 38, and across true ratio $\in [0.95, 1.05]$ from 24 to 33." Always state the margin and the assumed true effect.
+
+## Practical Tips
+
+- The equivalence margin is a substantive and regulatory choice, not a statistical one; set it based on clinical or regulatory conventions (e.g., the 80–125 % bioequivalence margin) or on a pre-specified clinical-acceptance criterion, and justify the choice in the protocol.
+- Power drops sharply as the anticipated true effect approaches the equivalence margin; always include sensitivity analysis over a plausible range of true effects to demonstrate that the design is robust to mild deviations from the central assumption.
+- Crossover bioequivalence trials use within-subject variance ($\mathrm{CV}_w$), which is typically smaller than between-subject variance; plan accordingly with the appropriate within-subject CV from pilot or literature.
+- Asymmetric equivalence margins are supported by most TOST tools (`low_eqbound` ≠ `high_eqbound`) and are useful when only one direction of effect carries a clinical penalty; for example, a drug that is allowed to be more effective but not less effective than the reference.
+- Non-inferiority testing is mathematically a one-sided TOST against a single non-inferiority margin; the required sample size is roughly half of a two-sided equivalence test for the same margin and assumptions, reflecting the simpler hypothesis.
+- For highly variable drugs (within-subject CV above 30 %), reference-scaled bioequivalence widens the margin proportionally to the reference variability; standard fixed-margin TOST sample-size tools under-estimate the required $n$ for these compounds.
+
+## R Packages Used
+
+`PowerTOST` for canonical bioequivalence and equivalence sample-size and power across crossover and parallel-group designs; `TOSTER` for general TOST analysis and power on raw and standardised effect sizes; `MBESS` and `pwrss::pwrss.t.2means()` for related precision and equivalence calculations; `bear` for end-to-end FDA-compliant bioequivalence workflow; `replicateBE` for replicate-design reference-scaled bioequivalence.

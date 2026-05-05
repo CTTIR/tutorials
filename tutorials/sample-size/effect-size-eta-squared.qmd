@@ -1,0 +1,83 @@
+---
+title: "Effect Size: Eta-Squared"
+date: "2026-04-17"
+description: "Proportion of variance explained in ANOVA and its partial, generalised, and omega variants"
+categories:
+  - "Sample Size & Power"
+  - effect-size
+  - eta-squared
+  - anova
+  - variance-explained
+---
+
+## Introduction
+
+Eta-squared ($\eta^2$) is the standard effect-size measure for analysis of variance: the proportion of total variance in the outcome attributable to a factor. It complements the omnibus $F$-test, which reports significance, by quantifying magnitude — how much of the variability in the response is explained by the categorical factor of interest. Several variants of eta-squared are widely used in different ANOVA designs: classical $\eta^2$ in one-way designs, partial $\eta_p^2$ in factorial between-subjects designs, generalised $\eta_G^2$ in mixed designs that combine between- and within-subjects factors, and omega-squared $\omega^2$ as an unbiased alternative preferred in small samples. Reporting the appropriate variant alongside the $F$-test result is now standard in psychology, neuroscience, and clinical-trial publications.
+
+## Prerequisites
+
+A working understanding of one-way and factorial ANOVA, the partitioning of sums of squares into factor and error components, and the distinction between between-subjects and within-subjects factors.
+
+## Theory
+
+**Classical eta-squared** is
+
+$$\eta^2 = \frac{\mathrm{SS}_{\text{factor}}}{\mathrm{SS}_{\text{total}}}.$$
+
+**Partial eta-squared**, for factorial designs, removes other factors' variance from the denominator:
+
+$$\eta_p^2 = \frac{\mathrm{SS}_{\text{factor}}}{\mathrm{SS}_{\text{factor}} + \mathrm{SS}_{\text{error}}}.$$
+
+**Generalised eta-squared** (Bakeman, 2005), for mixed designs combining within- and between-subjects factors, uses a denominator that depends on the design and is comparable across between- and within-subjects effects.
+
+**Omega-squared** $\omega^2$ corrects for the upward bias of $\eta^2$ in small samples:
+
+$$\omega^2 = \frac{\mathrm{SS}_{\text{factor}} - \mathrm{df}_{\text{factor}} \cdot \mathrm{MSE}}{\mathrm{SS}_{\text{total}} + \mathrm{MSE}}.$$
+
+Cohen's conventional thresholds for $\eta^2$ are 0.01 (small), 0.06 (medium), and 0.14 (large).
+
+## Assumptions
+
+The same as the underlying ANOVA: independent observations (within a stratum), Normal residuals, homogeneous variances. The eta-squared family does not impose additional assumptions beyond those of the ANOVA from which the sums of squares are computed.
+
+## R Implementation
+
+```r
+library(effectsize)
+set.seed(2026)
+
+df <- data.frame(
+  A = factor(rep(c("A1", "A2"), each = 30)),
+  B = factor(rep(c("B1", "B2", "B3"), 20)),
+  y = rnorm(60)
+)
+df$y <- df$y + 0.5 * (df$A == "A2") + 0.3 * (df$B == "B2") + 0.1 * (df$B == "B3")
+
+fit <- aov(y ~ A * B, data = df)
+
+eta_squared(fit)
+eta_squared(fit, partial = TRUE)
+eta_squared(fit, generalized = TRUE)
+omega_squared(fit)
+```
+
+## Output & Results
+
+`effectsize::eta_squared()` and `omega_squared()` return point estimates and confidence intervals for each ANOVA term. The output reports the appropriate variant for the requested design, with $\eta_p^2$ interpretable as the variance explained by each factor relative to itself plus error, holding other factors constant.
+
+## Interpretation
+
+A reporting sentence: "The factorial ANOVA showed a small main effect of factor A on the outcome (partial $\eta_p^2 = 0.06$, 95 % CI 0.01 to 0.21, $F_{1, 54} = 3.4$, $p = 0.07$); other terms were small and non-significant. Reporting partial $\eta_p^2$ rather than classical $\eta^2$ is appropriate for this between-subjects factorial design because each effect's variance share is computed relative to its own error stratum. Omega-squared values were 0.04 and 0.00 respectively, slightly more conservative as expected." Always specify which $\eta^2$ variant.
+
+## Practical Tips
+
+- Report partial $\eta_p^2$ for between-subjects factorial designs; classical $\eta^2$ in factorial contexts conflates a factor's variance share with all other factors and is rarely the right summary.
+- Use generalised $\eta_G^2$ (Bakeman, 2005) for mixed designs that combine within-subjects and between-subjects factors; it gives effect sizes that are directly comparable across the two types of factor, where partial $\eta_p^2$ is not.
+- Prefer omega-squared $\omega^2$ in small samples (typically $n < 30$ per cell); $\eta^2$ is upward-biased in small samples and $\omega^2$ corrects this. Report both when feasible.
+- Always report a confidence interval on the effect size, not just the point estimate; CIs on $\eta^2$ are non-central-$F$-based and are reported by `effectsize::eta_squared()` directly.
+- Cohen's thresholds (0.01 / 0.06 / 0.14) come from behavioural research and may not be appropriate benchmarks in biomedical or physical-science contexts where larger effects are routinely expected; interpret thresholds in light of substantive expectations rather than treating them as universal.
+- For the related $f^2 = \eta^2/(1 - \eta^2)$ effect size used in regression power analysis, the conversion is direct and useful when designing follow-up studies based on existing ANOVA results.
+
+## R Packages Used
+
+`effectsize::eta_squared()`, `effectsize::omega_squared()`, and `effectsize::epsilon_squared()` for the canonical effect-size family with confidence intervals; `lsr::etaSquared()` for an alternative interface; `MOTE::eta.full.SS()` for textbook-companion calculations; `BayesFactor` for Bayesian effect-size estimation; `Superpower` for ANOVA-design power simulation that also produces eta-squared estimates.

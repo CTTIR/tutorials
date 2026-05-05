@@ -1,0 +1,76 @@
+---
+title: Conditional Power
+date: "2026-04-17"
+description: Probability of eventual trial success given interim data
+categories:
+  - Clinical Biostatistics
+  - conditional-power
+  - futility
+  - interim
+---
+
+## Introduction
+
+Conditional power is the probability of rejecting the null at the final analysis given the observed interim data and an assumed treatment effect for the remainder. It is the standard tool for futility stopping: a low conditional power indicates the trial is unlikely to succeed even with favourable future data.
+
+## Prerequisites
+
+Group-sequential designs; interim analyses; power calculations.
+
+## Theory
+
+For a two-sided Z-test at fraction $t$ of information, conditional power under assumption $\theta$ is
+$$\text{CP}(\theta) = 1 - \Phi\left(\frac{z_{1-\alpha} \sqrt{1} - \sqrt{t} \, Z_t - (1 - t) \theta / \sqrt{V}}{\sqrt{1 - t}}\right)$$
+where $Z_t$ is the observed interim statistic and $V$ is the information.
+
+Typical futility trigger: stop if CP(assumed effect) < 20 %.
+
+## Assumptions
+
+Assumed effect for the remainder of the trial is appropriate (observed, target, or conservative); test is Z-like.
+
+## R Implementation
+
+```r
+library(rpact)
+
+design <- getDesignGroupSequential(
+  sided = 1, alpha = 0.025, beta = 0.2,
+  typeOfDesign = "OF",
+  informationRates = c(0.5, 1)
+)
+
+# Interim analysis results: observed Z = 0.4 (weak signal)
+results <- getDataSet(n1 = c(50, 50), means1 = c(0.1, NA),
+                      stDevs1 = c(1, NA), n2 = c(50, 50),
+                      means2 = c(0, NA), stDevs2 = c(1, NA))
+
+ana <- getAnalysisResults(design = design, dataInput = results,
+                          thetaH0 = 0, stage = 1)
+
+# Conditional power at planned effect (delta = 0.3) and observed trend
+cond <- getConditionalPower(ana,
+                            nPlanned = c(50, 50),
+                            thetaH1 = c(0.1, 0.3))
+cond
+```
+
+## Output & Results
+
+Conditional power at two assumed future effects; if CP at the planned effect is low (say < 20 %), a DMC might recommend futility stopping.
+
+## Interpretation
+
+"Interim conditional power under the originally planned effect was 0.18; under the observed interim trend, 0.11. The DMC recommended futility stopping at the pre-specified < 20 % threshold."
+
+## Practical Tips
+
+- Always pre-specify the futility threshold and assumed effect in the SAP.
+- CP under the **observed effect** is the "optimistic" view; CP under zero effect is the conservative view.
+- **Predictive power** (Bayesian analogue) averages CP over a posterior for the effect -- often preferred in modern trials.
+- Futility boundaries are typically **non-binding** (can be overridden by DMC) to preserve alpha.
+- CP-based futility can save substantial cost in otherwise failing trials.
+
+## Reporting
+
+A clear conditional-power report distinguishes the assumed effect from the observed interim effect, and presents both anchors so reviewers can judge the futility decision against the original design intent and against the trial's actual interim trajectory. Quote the threshold prospectively recorded in the statistical analysis plan and state whether crossing it triggered a binding stop or only a recommendation that the data monitoring committee could override. Where Bayesian predictive power was computed, report the prior used for the effect and explain why that prior was deemed plausible at the design stage, since the futility decision is only as defensible as the assumptions feeding it.

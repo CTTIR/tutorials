@@ -1,0 +1,79 @@
+---
+title: Single-Cell with Seurat
+date: "2026-04-17"
+description: End-to-end workflow for single-cell RNA-seq analysis in Seurat
+categories:
+  - Bioinformatics
+  - scrnaseq
+  - seurat
+  - workflow
+---
+
+## Introduction
+
+Seurat is the most widely used R framework for single-cell RNA-seq (scRNA-seq) analysis. A standard Seurat workflow loads a count matrix from Cell Ranger or a similar source, performs quality control on per-cell metrics, normalises expression, selects variable features, scales, runs dimensionality reduction (PCA + UMAP/t-SNE), clusters cells, and identifies marker genes. The framework's strength is its end-to-end coverage and large user community; the alternative Bioconductor stack (`SingleCellExperiment` + `scran`) offers comparable functionality with tighter integration into the broader Bioconductor ecosystem.
+
+## Prerequisites
+
+A working understanding of single-cell RNA-seq experimental design, count matrices from droplet-based protocols (10x Chromium), and basic clustering and dimensionality-reduction concepts.
+
+## Theory
+
+Seurat stores cells × genes counts and derived matrices in a `Seurat` object with structured slots for raw counts, normalised data, variable features, scaled data, dimensional reductions, and per-cell metadata. The standard pipeline:
+
+1. **QC**: filter cells by minimum gene count, maximum percent mitochondrial reads, library size thresholds.
+2. **Normalisation**: log-normalisation (`NormalizeData`) or regularised regression (`SCTransform`).
+3. **Variable-feature selection**: identify genes with biologically interesting variability.
+4. **Scaling**: centre and unit-variance scale variable features.
+5. **PCA**: linear dimensionality reduction on scaled variable features.
+6. **Graph-based clustering**: shared-nearest-neighbour graph + Louvain or Leiden community detection.
+7. **UMAP / t-SNE**: non-linear visualisation only — not used for clustering decisions.
+
+## Assumptions
+
+Each droplet is mostly single-cell (low doublet rate, typically below 5 %); per-cell library size correlates with mRNA content; variable genes capture biological signal rather than technical noise.
+
+## R Implementation
+
+```r
+library(Seurat)
+
+set.seed(2026)
+# Minimal simulated count matrix (300 cells x 200 genes)
+counts <- matrix(rpois(300 * 200, lambda = 2), 200, 300)
+rownames(counts) <- paste0("gene_", 1:200)
+colnames(counts) <- paste0("cell_", 1:300)
+
+so <- CreateSeuratObject(counts = counts, min.cells = 3, min.features = 10)
+so <- NormalizeData(so, verbose = FALSE)
+so <- FindVariableFeatures(so, nfeatures = 100, verbose = FALSE)
+so <- ScaleData(so, verbose = FALSE)
+so <- RunPCA(so, npcs = 10, verbose = FALSE)
+so <- FindNeighbors(so, dims = 1:10, verbose = FALSE)
+so <- FindClusters(so, resolution = 0.5, verbose = FALSE)
+so <- RunUMAP(so, dims = 1:10, verbose = FALSE)
+
+table(Idents(so))
+DimPlot(so, reduction = "umap", label = TRUE)
+```
+
+## Output & Results
+
+A `Seurat` object containing per-cell cluster assignments, dimensional-reduction coordinates (PCA, UMAP), and gene-level statistics. `DimPlot()` produces the canonical UMAP visualisation with cluster boundaries; `FeaturePlot()` overlays gene expression on the UMAP.
+
+## Interpretation
+
+A reporting sentence: "Standard Seurat processing of the 300-cell dataset (`NormalizeData`, `FindVariableFeatures`, `ScaleData`, `RunPCA`, Louvain clustering at resolution 0.5) produced 5 clusters; cluster 3 uniquely expressed CD8A and CD8B, consistent with cytotoxic T cells, and cluster 1 expressed CD79A and MS4A1, consistent with B cells." Always describe the QC thresholds, normalisation method, number of PCs, and clustering resolution.
+
+## Practical Tips
+
+- Run QC before normalisation; low-quality cells dominate variable-feature selection and contaminate downstream clustering.
+- Use `SCTransform` instead of `NormalizeData + FindVariableFeatures + ScaleData` for a more principled variance-stabilising approach; SCTransform is the modern default for new analyses.
+- The clustering `resolution` controls cluster granularity; explore values from 0.2 to 1.2 and pick based on biological interpretability rather than a single statistical criterion.
+- Document Seurat version with `sessionInfo()`; the API has changed substantially between major versions (v3, v4, v5), and old code may not run on current versions.
+- For very large datasets ($> 100{,}000$ cells), use Seurat v5's sketch-based subsampling or switch to the Bioconductor stack (`SingleCellExperiment`, `scran`) for memory efficiency.
+- Pair clustering results with marker-gene analysis (`FindAllMarkers`) and biological annotation (SingleR, scType) before reporting cluster identities.
+
+## R Packages Used
+
+`Seurat` for the canonical end-to-end scRNA-seq workflow; `SingleCellExperiment` for the Bioconductor data structure; `scran` and `scater` for Bioconductor-style normalisation and clustering; `harmony` for batch correction; `SingleR` for automatic cell-type annotation; `DoubletFinder` for doublet detection.

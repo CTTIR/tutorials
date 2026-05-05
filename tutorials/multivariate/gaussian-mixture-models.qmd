@@ -1,0 +1,71 @@
+---
+title: Gaussian Mixture Models
+date: "2026-04-17"
+description: "Model-based clustering via mixtures of multivariate normals, fitted by EM"
+categories:
+  - Multivariate Statistics
+  - gmm
+  - mixture-model
+  - em-algorithm
+  - mclust
+---
+
+## Introduction
+
+Gaussian mixture models (GMMs) represent the data as a weighted sum of several multivariate Normal distributions, each component characterising a latent cluster. Unlike $k$-means, which is essentially a hard-assignment heuristic, GMMs are fully probabilistic generative models: each observation has a posterior probability of belonging to each cluster, the clusters can have different shapes (covariance structures), and model-selection criteria (BIC) handle the choice of cluster count without ad-hoc heuristics. The `mclust` package enumerates a small library of covariance structures and selects the best automatically.
+
+## Prerequisites
+
+A working understanding of the multivariate Normal distribution, the EM algorithm for latent-variable models, and the BIC as a model-selection criterion.
+
+## Theory
+
+The mixture density is
+
+$$p(x) = \sum_{k=1}^K \pi_k \, \mathcal N(x \mid \mu_k, \Sigma_k),$$
+
+with mixing proportions $\pi_k \ge 0$ summing to 1. Maximum-likelihood estimation alternates an E-step (compute posterior responsibilities $\gamma_{ik} = \pi_k \mathcal N(x_i \mid \mu_k, \Sigma_k) / p(x_i)$) and an M-step (update $\pi_k, \mu_k, \Sigma_k$ from the responsibilities). `mclust` parameterises the covariance via 14 structures from spherical-equal-volume to fully-unconstrained-different-shape and orientation, indexed by three letters: volume, shape, orientation, each Equal or Varying. BIC selects the best combination of structure and component count.
+
+## Assumptions
+
+Multivariate Normal mixture components, independent observations, and a sample size large enough to estimate component covariances stably (the most flexible models require $\Omega(K p^2)$ observations for $K$ clusters in $p$ dimensions).
+
+## R Implementation
+
+```r
+library(mclust)
+
+X <- iris[, 1:4]
+fit <- Mclust(X)
+summary(fit)
+
+# Soft assignments
+head(fit$z)
+
+# Plot
+plot(fit, what = "classification")
+
+# BIC across models and K
+plot(fit, what = "BIC")
+```
+
+## Output & Results
+
+`Mclust()` returns the best model code (e.g. "VEV"), the number of components, BIC values across the model space, the fitted parameters, and the matrix of soft assignment probabilities `fit$z`. `plot(fit, what = "BIC")` shows BIC against component count for each covariance structure, making the selection rationale visible.
+
+## Interpretation
+
+A reporting sentence: "`mclust` selected a VEV (varying volume, equal shape, varying orientation) model with three components ($\mathrm{BIC} = -560.4$, $\Delta\mathrm{BIC}$ to the second-best model 18.2); the three components closely match the iris species (overall accuracy 97 %), and the soft assignments quantify uncertainty for the seven observations classified differently from their species labels." Always report the chosen covariance structure and BIC value.
+
+## Practical Tips
+
+- Use BIC for model selection across $K$ and covariance structure jointly; comparing $K$ at fixed structure or vice versa misses the joint optimum.
+- Soft assignments (`fit$z`) are useful for downstream uncertainty propagation; rather than committing to one cluster label, propagate the posterior probabilities into subsequent analyses.
+- For high-dimensional data ($p > n$), regularised mixture models (`HDclassif`, `pgmm`) or variational EM are needed; standard `mclust` is unstable when $\Sigma_k$ has more parameters than observations.
+- Outliers can distort the Normal components; consider $t$-mixture models (`teigen::teigen`) for heavier-tailed components, or trimmed EM (`tclust`) for robustness.
+- Log-likelihood can become unbounded for unconstrained covariances when a component covers a single observation; `mclust` adds a small prior to prevent this, but watch for warnings.
+- For very large $n$, mini-batch EM and online variants scale to millions of observations, but the `mclust` defaults handle up to a few thousand comfortably.
+
+## R Packages Used
+
+`mclust` for `Mclust()`, BIC selection across the 14-model library, and visualisation; `flexmix` for finite mixtures of regressions and other generalised mixture models; `teigen` for $t$-mixture models robust to outliers; `tclust` for trimmed mixture models with explicit contamination handling.

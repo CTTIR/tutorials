@@ -1,0 +1,71 @@
+---
+title: Changepoint Detection
+date: "2026-04-17"
+description: "Identifying abrupt shifts in mean, variance, or slope of a time series"
+categories:
+  - Time Series Analysis
+  - changepoint
+  - pelt
+  - segmentation
+---
+
+## Introduction
+
+Changepoint detection identifies the times at which the statistical properties of a time series — mean, variance, regression coefficients, or full distribution — change abruptly. Applications range from monitoring physiological signals (heart-rate or EEG state changes), to detecting regime shifts in financial and economic series, to segmenting long sensor recordings into homogeneous epochs. The output is a list of changepoint times together with the within-segment summaries between them; the methodological choices concern the change type, the detection algorithm, and the penalty controlling sensitivity.
+
+## Prerequisites
+
+A working understanding of hypothesis testing, segmentation, and the trade-off between detecting true changepoints and false positives.
+
+## Theory
+
+Three algorithm classes dominate:
+
+- **Binary segmentation**: recursively detect a single changepoint, partition the series, and apply the same procedure to each segment. Fast but greedy; can miss configurations of multiple nearby changepoints.
+- **PELT** (Pruned Exact Linear Time): finds the optimal segmentation under a penalty in $O(n)$ when the penalty satisfies a regularity condition. The standard modern method.
+- **Segment Neighbourhood**: dynamic programming for the optimal partition under a fixed maximum number of changepoints.
+
+The penalty (BIC, MBIC, Hannan-Quinn, or AIC) controls how many changepoints are reported; a larger penalty yields fewer changepoints. Different change types have different test statistics: mean changes use the likelihood-ratio test under a Normal model; variance changes use the same with $\sigma$ as the parameter; meanvar combines both; regression changepoints generalise to coefficient breaks.
+
+## Assumptions
+
+Independent observations within segments (or correctly specified within-segment dependence structure); the change type matches the underlying signal (mean shifts vs variance shifts vs regression breaks).
+
+## R Implementation
+
+```r
+library(changepoint)
+
+set.seed(2026)
+x <- c(rnorm(100, 0, 1), rnorm(100, 3, 1), rnorm(100, -1, 1))
+
+# Mean changes via PELT
+cp <- cpt.mean(x, method = "PELT", penalty = "BIC")
+cpts(cp)
+plot(cp)
+
+# Variance changes
+cp_v <- cpt.var(x, method = "PELT")
+cpts(cp_v)
+```
+
+## Output & Results
+
+`cpt.mean()` returns a `cpt` object with the changepoint times accessible via `cpts()`, the within-segment means via `param.est()`, and a plot showing the detected segments. The simulated three-segment structure is recovered with changepoints at times 100 and 200.
+
+## Interpretation
+
+A reporting sentence: "PELT with BIC penalty detected two changepoints at times 100 and 200, recovering the simulated three-segment mean structure (segment means $0.04$, $2.95$, $-0.97$); a sensitivity analysis with MBIC and Hannan-Quinn penalties yielded the same changepoints." Always report the algorithm, the penalty, and a sensitivity check across penalties.
+
+## Practical Tips
+
+- Choose the right change type: `cpt.mean` for mean shifts, `cpt.var` for variance shifts, `cpt.meanvar` for both, regression-based methods for coefficient breaks.
+- The penalty controls false positives; try several (BIC, MBIC, Hannan-Quinn) and check that conclusions are robust.
+- For non-stationary noise within segments, model the noise (ARIMA) first and apply changepoint detection to the residuals.
+- Bayesian alternatives (`bcp::bcp`) give per-time changepoint posterior probabilities, which are more informative than a hard list of detected changepoints.
+- PELT is offline — it requires the full series. For online (real-time) detection, use CUSUM, Page-Hinkley, or Bayesian online methods.
+- For multivariate changepoint detection, `ecp` and `InspectChangepoint` extend PELT-style methods to vector time series.
+
+## R Packages Used
+
+`changepoint` for `cpt.mean()`, `cpt.var()`, `cpt.meanvar()`, and PELT/Binary Segmentation algorithms; `bcp` for Bayesian changepoint detection with posterior probabilities; `ecp` for non-parametric multivariate changepoints; `cpm` for online changepoint methods.

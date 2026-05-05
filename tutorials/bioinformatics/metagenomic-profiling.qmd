@@ -1,0 +1,81 @@
+---
+title: Metagenomic Profiling
+date: "2026-04-17"
+description: Whole-metagenome taxonomic and functional profiling with MetaPhlAn and Kraken
+categories:
+  - Bioinformatics
+  - metagenomics
+  - metaphlan
+  - kraken
+---
+
+## Introduction
+
+Shotgun metagenomics sequences all DNA in a sample rather than a marker gene, enabling species-level taxonomic and functional profiling. Two dominant approaches: MetaPhlAn (marker-gene alignment to species-specific genes) and Kraken (k-mer matching against a reference database).
+
+## Prerequisites
+
+Shotgun sequencing basics; read QC; familiarity with amplicon methods.
+
+## Theory
+
+**MetaPhlAn** maps reads to ~1M clade-specific markers; species abundances are inferred as relative marker coverage. Output is a per-species relative abundance table.
+
+**Kraken2** classifies reads via k-mer matches to a database (e.g., RefSeq Bacteria). Fast and comprehensive but prone to false positives for low-abundance species; pair with **Bracken** for abundance re-estimation.
+
+**Functional profiling**: HUMAnN3 for pathway-level abundances (MetaCyc); eggNOG-mapper for gene-function annotation.
+
+## Assumptions
+
+Reads are adapter-trimmed and host-decontaminated; reference database covers the expected taxa; relative abundances are interpretable only within a sample.
+
+## R Implementation
+
+MetaPhlAn and Kraken run on the command line; R ingests the results for downstream diversity and DA analysis:
+
+```r
+library(phyloseq)
+
+set.seed(2026)
+# Simulated MetaPhlAn-style output
+species <- paste0("s__Species_", 1:50)
+samples <- paste0("S", 1:20)
+abund <- matrix(rgamma(length(species) * length(samples), 0.5, 2),
+                length(species), length(samples))
+abund <- sweep(abund, 2, colSums(abund), "/")   # relative abundances
+rownames(abund) <- species; colnames(abund) <- samples
+
+# Coerce to a phyloseq object for diversity analyses
+tax_tab <- matrix(species, length(species), 1,
+                  dimnames = list(species, "Species"))
+ps <- phyloseq(otu_table(round(abund * 1e6), taxa_are_rows = TRUE),
+               tax_table(tax_tab))
+ps
+
+# Top species by mean abundance
+head(sort(rowMeans(abund), decreasing = TRUE), 5)
+```
+
+Example command-line steps (not run here):
+
+```
+metaphlan sample.fastq --input_type fastq --bowtie2db metaphlan_db \
+          -o sample_profile.txt
+kraken2 --db kraken_db --paired R1.fq R2.fq --report sample.kreport
+```
+
+## Output & Results
+
+A species-by-sample abundance table; in phyloseq, all standard diversity and DA methods apply.
+
+## Interpretation
+
+"MetaPhlAn profiling revealed 420 species; top differentially abundant species between gut inflammation cases and controls included Faecalibacterium prausnitzii (depleted) and Escherichia coli (enriched)."
+
+## Practical Tips
+
+- Host-read removal (Bowtie2 vs the host genome) is essential; residual host DNA biases classification.
+- Kraken2 + Bracken gives per-species quantification with reduced false positives vs Kraken alone.
+- For functional analysis, HUMAnN3 provides pathway abundances suitable for differential pathway analysis with MaAsLin2 or LEfSe.
+- ONT long reads enable better species resolution in complex communities.
+- Do not mix relative and absolute abundances across analyses; compositional data require log-ratio transforms (CLR) or specific methods (ANCOM-BC).

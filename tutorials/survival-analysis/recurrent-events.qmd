@@ -1,0 +1,72 @@
+---
+title: Recurrent Events
+date: "2026-04-17"
+description: "Modelling repeated events per subject: Andersen-Gill, PWP, and frailty approaches"
+categories:
+  - Survival Analysis
+  - recurrent-events
+  - andersen-gill
+  - pwp
+---
+
+## Introduction
+
+Recurrent-event analysis applies whenever a single subject can experience the event of interest multiple times during follow-up — hospital admissions, seizures, infections, asthma exacerbations, recurrent tumours. Treating only the first event collapses information and wastes power; treating all events as independent inflates effective sample size and produces invalid standard errors. Several modelling frameworks balance these extremes, each suited to a different scientific question.
+
+## Prerequisites
+
+A working understanding of Cox regression, counting-process data formats, and within-subject correlation as a source of dependent observations.
+
+## Theory
+
+The main approaches:
+
+- **Andersen-Gill (AG)**: a counting-process Cox model that treats all events equally and uses cluster-robust standard errors to account for within-subject dependence. Estimates a single baseline hazard for the recurrent process.
+- **Prentice-Williams-Peterson (PWP)**: stratifies by event number, allowing separate baseline hazards for the first, second, third, etc. event. Two flavours: total time (gap from study start) and gap time (gap from previous event). Use when the hazard structure changes with event order.
+- **Wei-Lin-Weissfeld (WLW)**: fits a separate marginal Cox model for each event order, using only the first event for $K=1$, the first two for $K=2$, etc. Conceptually cleaner but increasingly out of favour because it conditions on having survived enough events to be at risk.
+- **Shared-frailty**: a Cox model with a subject-level random effect $u_i$ that captures unmeasured individual heterogeneity. Combine with AG when frailty is the natural interpretation of within-subject correlation.
+
+## Assumptions
+
+The chosen correlation structure matches the data, the hazard specification (PH within strata or marginally) is appropriate, and counting-process intervals are correctly constructed (no overlaps, no gaps).
+
+## R Implementation
+
+```r
+library(survival)
+
+# Counting-process data: id, tstart, tstop, status (1 = event)
+data(cgd, package = "survival")
+
+# Andersen-Gill
+ag <- coxph(Surv(tstart, tstop, status) ~ treat + inherit,
+            data = cgd, cluster = id)
+summary(ag)
+
+# PWP stratified by event number
+cgd$event.num <- ave(cgd$status, cgd$id, FUN = cumsum) + 1
+pwp <- coxph(Surv(tstart, tstop, status) ~ treat + inherit + strata(event.num),
+             data = cgd, cluster = id)
+summary(pwp)
+```
+
+## Output & Results
+
+Both fits return hazard-ratio estimates with cluster-robust standard errors. AG produces a single HR per covariate covering the full recurrent-event process; PWP produces strata-specific baselines while sharing covariate effects across strata, allowing different baseline hazards per event order.
+
+## Interpretation
+
+A reporting sentence: "An Andersen-Gill counting-process Cox model estimated that prophylactic treatment reduced the recurrent-infection hazard by 60 % (HR 0.40, 95 % CI 0.25 to 0.63), with cluster-robust SEs accounting for within-subject correlation; the PWP model stratified by event order produced a consistent estimate (HR 0.43, 95 % CI 0.26 to 0.70), suggesting the treatment effect does not vary materially across event order." Compare AG and PWP whenever the data structure permits.
+
+## Practical Tips
+
+- AG is the default starting point for most applications and the easiest to interpret.
+- PWP (gap-time) is appropriate when the hazard depends on time since the previous event; PWP (total time) when it depends on time since study start.
+- WLW has fallen out of favour because it conditions on event order in a way that produces awkward causal interpretations.
+- For unmeasured individual heterogeneity not captured by covariates, add a shared frailty term to the AG model (`+ frailty(id)`).
+- Always use cluster-robust SEs (`cluster = id`); ignoring within-subject correlation produces SEs that are too small and Type I error inflated.
+- Pair hazard ratios with absolute counts of events, expected rates, and cumulative mean functions; recurrent-event audiences typically reason in absolute frequencies rather than hazard ratios.
+
+## R Packages Used
+
+`survival` for `coxph()` with `cluster()` and `strata()`; `frailtypack` for joint frailty models with terminal events and recurrent events fitted simultaneously; `reReg` for additional recurrent-event methods including marginal mean models; `mets` for clustered survival data with flexible dependence structures.

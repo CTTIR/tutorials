@@ -1,0 +1,90 @@
+---
+title: Spearman Rank Correlation Test
+date: "2026-04-17"
+description: Non-parametric correlation test for monotonic association between two variables
+categories:
+  - Inferential Statistics
+  - spearman
+  - rank-correlation
+  - monotonic
+  - non-parametric
+---
+
+## Introduction
+
+Spearman's $\rho$ (rho) is the Pearson correlation of the ranks of two variables. It detects monotonic associations that need not be linear, and is robust to outliers and heavy tails. It is the default correlation measure for ordinal data or strongly skewed continuous data.
+
+## Prerequisites
+
+Pearson correlation, ranks.
+
+## Theory
+
+Replace each $X_i$ by its rank $R_i$, and each $Y_i$ by its rank $S_i$. Spearman's $\rho$ is
+
+$$\rho = 1 - \frac{6 \sum d_i^2}{n (n^2 - 1)}, \qquad d_i = R_i - S_i,$$
+
+when there are no ties. With ties, the general form
+
+$$\rho = \frac{\sum (R_i - \bar{R})(S_i - \bar{S})}{\sqrt{\sum (R_i - \bar{R})^2 \sum (S_i - \bar{S})^2}}$$
+
+applies.
+
+Under $H_0: \rho = 0$, an asymptotic normal approximation holds; for small $n$ exact or permutation distributions are used. Confidence intervals for Spearman's $\rho$ can be obtained by Fisher's z applied to the ranks.
+
+## Assumptions
+
+- Ordinal or continuous data; the ranks must be well-defined.
+- Monotonic association (linear or non-linear).
+- Independent pairs.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+n <- 50
+x <- rgamma(n, shape = 2, rate = 0.5)     # skewed
+y <- x^2 + rnorm(n, sd = 4)               # non-linear monotonic
+
+# Pearson (fails for non-linear)
+cor.test(x, y, method = "pearson")
+
+# Spearman
+cor.test(x, y, method = "spearman", exact = FALSE)
+
+# Bootstrap 95% CI for Spearman's rho
+library(boot)
+rho_boot <- boot(data = data.frame(x, y),
+                 statistic = function(d, i) cor(d$x[i], d$y[i], method = "spearman"),
+                 R = 2000)
+boot.ci(rho_boot, type = "perc")
+```
+
+## Output & Results
+
+```
+        Pearson's product-moment correlation
+t = 11.45, df = 48, p < 0.001
+cor: 0.855
+
+        Spearman's rank correlation rho
+S = 100, p < 0.001
+rho: 0.995
+
+Bootstrap 95% CI (percentile): (0.988, 0.999)
+```
+
+Spearman recovers the strong monotonic relationship ($\rho \approx 1$) that Pearson underestimates because of the non-linearity.
+
+## Interpretation
+
+"There was a strong monotonic association between $x$ and $y$ (Spearman's $\rho = 0.99$, bootstrap 95 % CI 0.99 to 1.00; $p < 0.001$)."
+
+## Practical Tips
+
+- Use Spearman for ordinal data, heavy-tailed or skewed continuous data, or suspected non-linear monotonic relationships.
+- For very small $n$, use exact methods (`cor.test(..., exact = TRUE)`; only valid without ties).
+- With ties, the normal approximation is used; the warning is expected and safe.
+- Kendall's $\tau$ is an alternative for small samples or many ties.
+- Spearman captures monotonic, not linear, associations; for U-shaped relationships it can still miss dependence.

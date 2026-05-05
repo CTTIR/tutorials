@@ -1,0 +1,91 @@
+---
+title: Five-Number Summary
+date: "2026-04-17"
+description: "Min, Q1, median, Q3, max: the compact distribution summary that powers the boxplot"
+categories:
+  - Descriptive Statistics
+  - five-number-summary
+  - boxplot
+  - tukey
+  - quartile
+---
+
+## Introduction
+
+The five-number summary is a compact description of a univariate distribution in five values: minimum, first quartile, median, third quartile, and maximum. It was popularised by John Tukey in his exploratory data analysis tradition and is the numeric backbone of the boxplot. For skewed or non-normal data it conveys more than the mean and SD in the same space.
+
+## Prerequisites
+
+The reader should know what quantiles are and how to sort a vector in R.
+
+## Theory
+
+Given a sorted sample $x_{(1)} \leq \ldots \leq x_{(n)}$, the five-number summary is
+
+$$(x_{(1)}, Q_1, Q_2, Q_3, x_{(n)}),$$
+
+where $Q_1, Q_2, Q_3$ are the 0.25, 0.50, and 0.75 quantiles. Tukey's **hinges** are slightly different from the Type-7 quantiles R uses by default; the `fivenum()` function returns hinges, while `quantile(..., probs = c(0, 0.25, 0.5, 0.75, 1))` returns Type-7 quantiles.
+
+The **interquartile range** $\mathrm{IQR} = Q_3 - Q_1$ measures the width of the central 50% of the data. The **Tukey fences** at $Q_1 - 1.5 \cdot \mathrm{IQR}$ and $Q_3 + 1.5 \cdot \mathrm{IQR}$ define the whiskers of a boxplot; points beyond them are flagged as outliers.
+
+## Assumptions
+
+The five-number summary is purely descriptive and assumes nothing about the distribution.
+
+## R Implementation
+
+```r
+library(dplyr)
+
+set.seed(2026)
+x <- rnorm(80, mean = 70, sd = 12)
+
+fivenum(x)
+summary(x)
+
+iqr_x <- IQR(x)
+fences <- c(lower = quantile(x, 0.25) - 1.5 * iqr_x,
+            upper = quantile(x, 0.75) + 1.5 * iqr_x)
+fences
+sum(x < fences["lower"] | x > fences["upper"])
+
+boxplot(x, horizontal = TRUE,
+        main = "Five-number summary of x")
+```
+
+For grouped summaries:
+
+```r
+trial <- tibble::tibble(
+  arm = factor(rep(c("Placebo", "Active"), each = 40)),
+  fpg = c(rnorm(40, 8.1, 0.9), rnorm(40, 7.0, 1.0))
+)
+
+trial |>
+  group_by(arm) |>
+  summarise(min = min(fpg), q25 = quantile(fpg, 0.25),
+            med = median(fpg), q75 = quantile(fpg, 0.75),
+            max = max(fpg))
+```
+
+## Output & Results
+
+Typical output of `fivenum(x)`:
+
+```
+[1] 42.8 62.1 70.4 78.9 101.2
+```
+
+The boxplot displays each of these five numbers: the whiskers at min and max (or the Tukey fence if outliers are flagged), the hinges at Q1 and Q3, and the thick line at the median.
+
+## Interpretation
+
+Use the five-number summary for skewed or small-sample data. Reporting mean and SD for such data misrepresents typicality; the median and IQR are more informative.
+
+## Practical Tips
+
+- The boxplot is the default graphical display of the five-number summary; use it early in exploratory analysis.
+- When comparing groups, put boxplots side by side and notice whether the boxes overlap and how the medians align.
+- Many journals accept boxplots only with the underlying data overlaid (e.g., jittered points or raincloud plots); check the submission guidelines.
+- For small samples ($n < 10$), Tukey fences flag many normal observations as outliers; rely on the data, not the fence.
+- Report all five numbers in text or in a table alongside the figure, so readers have the exact values.

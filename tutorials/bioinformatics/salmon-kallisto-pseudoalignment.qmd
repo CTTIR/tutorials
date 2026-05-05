@@ -1,0 +1,66 @@
+---
+title: Pseudoalignment with Salmon and Kallisto
+date: "2026-04-17"
+description: Fast transcript quantification without full alignment
+categories:
+  - Bioinformatics
+  - salmon
+  - kallisto
+  - pseudoalignment
+  - transcript-quantification
+---
+
+## Introduction
+
+Pseudo-alignment tools — Salmon, Kallisto, and the related selective-alignment variant in newer Salmon versions — quantify transcript-level expression without producing full BAM-file alignments. They match read $k$-mers to transcript fingerprints in an indexed reference and resolve multi-mappers via expectation-maximisation. The result is a 10-to-100-fold speedup over STAR or HISAT2 with comparable accuracy at the gene level, making pseudo-alignment the standard fast-path for RNA-seq quantification when isoform-level alignment is not the goal.
+
+## Prerequisites
+
+A working understanding of RNA-seq, the difference between transcript-level and gene-level quantification, and basic familiarity with FASTQ inputs and gene-annotation formats.
+
+## Theory
+
+Pseudo-aligners build an index of all transcripts in the reference, splitting them into $k$-mers (typically $k = 31$). At quantification time, each read is broken into $k$-mers, the compatible transcripts are identified, and an expectation-maximisation algorithm distributes ambiguous reads across compatible transcripts in proportion to expected expression. The output is per-transcript counts and TPM; gene-level aggregation uses a transcript-to-gene map via `tximport` or `tximeta`.
+
+Salmon adds bias-correction flags (`--gcBias`, `--seqBias`, `--posBias`) that calibrate counts for GC content, hexamer priming bias, and positional sequencing bias. Decoy-aware indexing (using the genome as a decoy alongside the transcriptome) reduces spurious alignment to paralogues and improves accuracy for difficult regions.
+
+## Assumptions
+
+A transcript annotation matched to the genome; polyA-selected or otherwise enriched mRNA library; reads predominantly map to known transcripts (pseudo-alignment cannot detect novel transcripts or junctions).
+
+## R Implementation
+
+```r
+library(tximport); library(tximeta)
+
+# Salmon output: quant.sf files per sample
+# files <- c("s1/quant.sf", "s2/quant.sf")
+# tx_map <- read.table("tx2gene.tsv", header = TRUE)
+#
+# txi <- tximport(files, type = "salmon", tx2gene = tx_map)
+# dim(txi$counts)
+#
+# library(DESeq2)
+# dds <- DESeqDataSetFromTximport(txi, colData = coldata, design = ~ condition)
+```
+
+## Output & Results
+
+Salmon and Kallisto produce per-sample `quant.sf` (Salmon) or `abundance.tsv` (Kallisto) files containing transcript-level counts, TPM, and effective length. `tximport()` aggregates these to gene level with optional length-scaled TPM correction; the resulting matrix flows directly into DESeq2, edgeR, or limma-voom.
+
+## Interpretation
+
+A reporting sentence: "Salmon (v1.10) with selective alignment, decoy-aware indexing, and `--gcBias --seqBias` flags quantified 45{,}000 transcripts per sample in approximately 3 minutes per sample (vs. 30 minutes for STAR); tximport aggregation yielded 22{,}000 protein-coding genes for DESeq2 analysis." Always state the bias-correction flags and the decoy strategy.
+
+## Practical Tips
+
+- Use decoy-aware indexing (Salmon) by including the genome as a decoy alongside the transcriptome; this reduces spurious mapping to paralogous regions.
+- Enable bias-correction flags (`--gcBias`, `--seqBias`) routinely; they improve accuracy without meaningful runtime cost.
+- For transcript-level differential expression with uncertainty, use bootstrap replicates (Salmon's `--numBootstraps` or Kallisto's `bootstrap-samples`) and analyse with sleuth or swish (`fishpond`).
+- `tximeta` extends `tximport` with automatic transcript-to-gene mapping based on the Salmon index's metadata; use it to avoid annotation-mismatch errors.
+- Pseudo-alignment is unsuitable for variant calling, novel-junction detection, or splicing analysis; use STAR with the genome reference for these tasks.
+- For single-cell RNA-seq, use alevin (in Salmon) or kallisto-bustools; they extend pseudo-alignment to the cell-barcode and UMI structure of droplet-based single-cell data.
+
+## R Packages Used
+
+`tximport` for transcript-to-gene aggregation; `tximeta` for metadata-aware aggregation; `fishpond::swish()` for transcript-level DTE with bootstrap inferential replicates; `DRIMSeq` and `DEXSeq` for differential transcript usage. Salmon and Kallisto are command-line tools; their output integrates with all standard Bioconductor RNA-seq workflows.

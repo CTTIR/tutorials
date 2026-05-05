@@ -1,0 +1,102 @@
+---
+title: Random Variables
+date: "2026-04-17"
+description: "Measurable functions from sample space to real numbers: the mathematical object behind every statistic"
+categories:
+  - Probability Theory
+  - random-variable
+  - measurable-function
+  - distribution
+---
+
+## Introduction
+
+A **random variable** is a function that assigns a real number to each outcome of a random experiment. The concept packages probabilistic thinking into the language of numbers -- means, variances, correlations -- and is the abstraction on which every statistical method rests.
+
+## Prerequisites
+
+Sample spaces, events, and the probability measure.
+
+## Theory
+
+Given a probability space $(\Omega, \mathcal{F}, P)$, a **random variable** is a measurable function
+
+$$X: \Omega \to \mathbb{R}$$
+
+such that $\{X \leq x\} = \{\omega : X(\omega) \leq x\} \in \mathcal{F}$ for every $x \in \mathbb{R}$. Measurability ensures that we can assign probabilities to events defined in terms of $X$.
+
+The **distribution** of $X$ is the probability measure it induces on $\mathbb{R}$:
+
+$$P_X(A) = P(X \in A) = P(\{\omega : X(\omega) \in A\}).$$
+
+In practice, we rarely work with $\Omega$ directly; we work with the distribution $P_X$, summarised by its CDF $F_X(x) = P(X \leq x)$ and (when it exists) its PMF $p_X$ or density $f_X$.
+
+Random variables are classified as:
+
+- **Discrete**: takes values in a countable set. Described by a PMF.
+- **Continuous** (absolutely continuous): has a density. Described by a PDF.
+- **Mixed**: combines discrete atoms and a continuous part. Common for censored / thresholded data.
+
+Transformations of random variables give new random variables: if $X$ is a random variable and $g: \mathbb{R} \to \mathbb{R}$ is measurable, then $Y = g(X)$ is a random variable with distribution determined by $X$ and $g$.
+
+## Assumptions
+
+A random variable is well-defined provided the underlying probability space exists and the function is measurable. Measurability is automatic for every function that arises in practice (continuous or piecewise-continuous).
+
+## R Implementation
+
+In R, we usually work with random variables via their distributions.
+
+```r
+set.seed(2026)
+
+# Discrete random variable: binomial
+X_discrete <- rbinom(10000, size = 10, prob = 0.3)
+head(sort(unique(X_discrete)))
+prop.table(table(X_discrete))[1:5]     # empirical PMF
+
+# Continuous random variable: normal
+X_continuous <- rnorm(10000, mean = 0, sd = 1)
+quantile(X_continuous, c(0.025, 0.5, 0.975))
+
+# Transformation: Y = g(X) = X^2 of a standard normal
+Y <- X_continuous^2
+summary(Y)
+var(Y)     # theoretical variance is 2 (Y ~ chi-squared with 1 df, variance 2)
+
+# Mixed RV: censored at 0 (negative values truncated)
+X_mixed <- pmax(rnorm(10000), 0)
+mean(X_mixed == 0)
+mean(X_mixed)
+```
+
+## Output & Results
+
+```
+X_discrete       0       1       2       3       4
+empirical  0.0306  0.1195  0.2314  0.2643  0.2059
+
+         2.5%          50%         97.5%
+   -1.935       -0.0089      1.9689
+
+       Min.   1st Qu.    Median      Mean   3rd Qu.      Max.
+      0.000    0.128     0.455     1.008    1.319    17.59
+[1] 2.078                                               # var(X^2)
+
+[1] 0.499                                               # P(X = 0)
+[1] 0.399                                               # mean of censored
+```
+
+Each quantity (PMF, quantile, variance of a transformation, mixed distribution's atom) is a statistic of the corresponding random variable.
+
+## Interpretation
+
+Random variables let us move from "outcome space" thinking to "number space" thinking. A methods section typically declares the random variable implicitly: "Let $X$ be the systolic blood pressure of a randomly selected patient" specifies the random variable without bothering with the underlying $\Omega$.
+
+## Practical Tips
+
+- For most applied work, think of random variables as "generators of data" with a specified distribution; the measurability formalism is background.
+- A random variable is distinct from its realisation. "$X$" is the variable; "$x_i$" is the observed value for unit $i$.
+- Vector-valued random variables (**random vectors**) generalise the scalar case; their distribution is the joint distribution of the components.
+- Transformations preserve measurability; common operations (sums, products, functions) are always measurable in practice.
+- In R, `d*`, `p*`, `q*`, `r*` families of functions parameterise distributions; think of them as computing quantities of random variables with the specified distribution.

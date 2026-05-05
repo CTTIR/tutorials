@@ -1,0 +1,82 @@
+---
+title: Calibration Plots
+date: "2026-04-17"
+description: "Reliability diagrams: do predicted probabilities match observed frequencies?"
+categories:
+  - Machine Learning
+  - calibration
+  - reliability
+  - probabilities
+---
+
+## Introduction
+
+A calibration plot (reliability diagram) plots predicted probability against observed frequency. A well-calibrated classifier's curve lies on the diagonal: when it predicts 0.7, events occur 70 % of the time. Poor calibration means probabilities cannot be trusted for decision thresholds or risk communication.
+
+## Prerequisites
+
+Classification; predicted probabilities; binning.
+
+## Theory
+
+Bin predictions by predicted probability; compute the observed frequency in each bin. Plot bin midpoints vs observed frequencies. A perfect classifier follows $y = x$; curves below indicate over-confidence, curves above indicate under-confidence.
+
+Summary metrics: **Brier score** $= \mathbb{E}[(p - y)^2]$, **Expected Calibration Error (ECE)** $= \sum_k w_k |\text{acc}_k - \text{conf}_k|$.
+
+## Assumptions
+
+Predictions are valid probabilities in $[0, 1]$; sufficient data per bin (10-20 bins for $n > 1000$).
+
+## R Implementation
+
+```r
+library(probably); library(yardstick); library(dplyr); library(tibble); library(ggplot2)
+
+set.seed(2026)
+n <- 1000
+# Simulate mis-calibrated predictions
+true_y <- rbinom(n, 1, 0.4)
+raw_p  <- plogis(-1 + 2 * true_y + rnorm(n, 0, 1.5))
+# Inflate confidence to produce over-confident predictions
+p_overconf <- raw_p^0.6
+p_overconf <- pmin(pmax(p_overconf, 0.02), 0.98)
+
+df <- tibble(truth = factor(true_y, levels = c(1, 0)),
+             pred  = p_overconf)
+
+cal_df <- cal_plot_breaks(df, truth, pred, num_breaks = 10)
+
+# Manual reliability data + plot
+df$bin <- cut(df$pred, seq(0, 1, 0.1), include.lowest = TRUE)
+reliability <- df %>%
+  group_by(bin) %>%
+  summarise(mean_pred = mean(pred),
+            obs_freq  = mean(as.integer(truth == "1")),
+            n = n())
+
+ggplot(reliability, aes(mean_pred, obs_freq)) +
+  geom_point(size = 2, colour = "#2A9D8F") +
+  geom_line() +
+  geom_abline(linetype = 2) +
+  labs(x = "Predicted probability", y = "Observed frequency",
+       title = "Reliability diagram (simulated over-confident model)") +
+  theme_minimal()
+
+mean((df$pred - as.integer(df$truth == "1"))^2)   # Brier score
+```
+
+## Output & Results
+
+A reliability diagram (scatter of bin-means) and the Brier score. The simulated over-confident model lies above the diagonal at low predicted probabilities.
+
+## Interpretation
+
+"The classifier over-predicts at low probabilities and under-predicts at high probabilities; Brier score 0.22 indicates moderate calibration error. Platt or isotonic recalibration on a validation set would flatten the curve toward the diagonal."
+
+## Practical Tips
+
+- Tree ensembles (RF, XGBoost) are usually mis-calibrated; apply Platt scaling or isotonic regression on a validation set.
+- Neural networks with modern training (high-capacity, low label smoothing) often over-confident; temperature scaling fixes it.
+- Use stratified bins for reliable plots when probabilities concentrate near 0 or 1.
+- Report Brier score and ECE alongside ROC AUC; AUC is rank-based and does not reveal calibration.
+- For clinical applications, calibration matters more than discrimination; always verify on deployment-era data.

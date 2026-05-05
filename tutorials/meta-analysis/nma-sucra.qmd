@@ -1,0 +1,76 @@
+---
+title: SUCRA Rankings
+date: "2026-04-17"
+description: Surface Under the Cumulative Ranking curve for treatment comparisons
+categories:
+  - Meta-Analysis
+  - sucra
+  - ranking
+  - nma
+---
+
+## Introduction
+
+SUCRA — the Surface Under the Cumulative Ranking curve, introduced by Salanti and colleagues in 2011 — summarises a network meta-analysis's treatment ranking into a single interpretable number between 0 and 1. A SUCRA of 1 means the treatment is always ranked best across the posterior or simulation distribution; a SUCRA of 0 means it is always ranked worst. Because clinicians, guideline panels, and patients want to know "which treatment should I use?", and a triangular league table cannot answer that directly, SUCRA quickly became the most-cited summary in NMA papers. Its widespread use also brings risks: SUCRA is sensitive to the number of treatments included, can exaggerate small effect-size differences, and must always be interpreted alongside the absolute effect estimates and their uncertainty.
+
+## Prerequisites
+
+A working understanding of network meta-analysis, posterior or simulated rank distributions, and the conceptual difference between a treatment ranking and a treatment effect.
+
+## Theory
+
+For each treatment $j$ in a network of $T$ treatments, the rank distribution gives $P(\mathrm{rank}_j = k)$ for $k = 1, \dots, T$ — typically derived from a Bayesian posterior with MCMC or from frequentist parametric simulation. SUCRA is
+
+$$\mathrm{SUCRA}_j = \frac{1}{T-1} \sum_{k=1}^{T-1} P(\mathrm{rank}_j \leq k),$$
+
+the area under the cumulative rank curve scaled to $[0, 1]$. Rücker and Schwarzer's P-score (2015) is the frequentist analogue computed directly from NMA point estimates and standard errors; it does not require MCMC and reproduces SUCRA values closely in most networks.
+
+## Assumptions
+
+The underlying NMA is valid (transitivity across studies, consistency between direct and indirect evidence), and the network is connected so all rankings are estimable. The clinical interpretability of "best treatment" requires that the treatments are exchangeable in indication and that no contraindications make a high-ranked option unusable for some patient groups.
+
+## R Implementation
+
+```r
+library(netmeta)
+
+set.seed(2026)
+net_df <- data.frame(
+  study = c("S1", "S1", "S2", "S2", "S3", "S3", "S4", "S4",
+            "S5", "S5", "S6", "S6"),
+  treat = c("A", "B", "A", "C", "B", "C", "A", "D",
+            "B", "D", "C", "D"),
+  TE    = c(0, -0.3, 0, -0.5, 0.4, 0.2, 0, -0.2,
+            0.1, 0.3, 0, 0.4),
+  seTE  = rep(0.25, 12)
+)
+
+p_df <- pairwise(treat = treat, TE = TE, seTE = seTE,
+                 studlab = study, data = net_df)
+net  <- netmeta(p_df, common = FALSE, reference = "A",
+                small.values = "good")
+
+rankings <- netrank(net, method = "P-score", small.values = "good")
+rankings$ranking.random
+```
+
+## Output & Results
+
+`netrank()` returns a P-score per treatment (between 0 and 1) under both common-effect and random-effects models. Higher scores indicate better ranking on the chosen analysis scale. For Bayesian NMA, packages such as `gemtc` and `multinma` produce SUCRA values directly, along with rank probabilities $P(\mathrm{rank} = k)$ for each $k$.
+
+## Interpretation
+
+A reporting sentence: "Treatment C had the highest P-score (0.89) under the random-effects NMA, identifying it as most likely the best of the four candidates. However, the pairwise contrast C vs B (P-score 0.61) had a 95 % CI that crossed the null, so the ranking is uncertain and absolute differences between top-ranked options are small. Rankograms reporting the full distribution over ranks accompany the SUCRA summary in the supplement." Always report rankings together with absolute effect estimates and the surrounding uncertainty.
+
+## Practical Tips
+
+- Always report SUCRA or P-score alongside the pairwise effect estimates and their CIs; rankings alone can exaggerate small differences and obscure clinically irrelevant gaps.
+- Treatments with similar point estimates can show very different SUCRA values when uncertainty differs; the more precise treatment will rank higher even if its mean effect is no better. This is a feature, not a bug — but it must be interpreted carefully.
+- Use rankograms (bar plots of $P(\mathrm{rank} = k)$ for each $k$) to visualise the entire rank distribution; they convey the uncertainty that the single SUCRA number compresses.
+- Frequentist P-scores and Bayesian SUCRA values typically agree to within rounding error on connected networks; the choice between them is mainly methodological preference.
+- For regulatory and reimbursement decisions, the absolute pairwise effect and its CI matter more than the ranking; SUCRA is a clinical-communication tool, not a decision rule.
+- Check `small.values` carefully: misspecifying whether small effect sizes are "good" (e.g., for a harm outcome) or "bad" inverts the entire ranking and is one of the most common analytic errors in published NMAs.
+
+## R Packages Used
+
+`netmeta::netrank()` for P-scores in frequentist NMA; `gemtc::rank.probability()` and `multinma::posterior_rank_probs()` for Bayesian SUCRA and rank tables; `BUGSnet` for rankograms with built-in convergence diagnostics; `pcnetmeta` for component-NMA ranking when treatments are decomposable into pieces.

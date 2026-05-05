@@ -1,0 +1,433 @@
+---
+title: Bioinformatics
+description: "Computational analysis of biological data: sequence analysis, RNA-seq, variant calling, enrichment, phylogenetics, proteomics, and single-cell methods"
+---
+
+Modern biology generates data at scales that demand computational methods. Bioinformatics is the discipline that turns raw sequencing reads, mass spectra, or single-cell measurements into the biological knowledge a manuscript can claim. This area walks through the canonical analyses that a biostatistician or bioinformatician is asked to perform.
+
+Every tutorial assumes familiarity with R but not with the specific biology of each application; the underlying research question is explained at a level that makes the statistical choices transparent. Code examples use Bioconductor packages throughout, and where pipeline-level tools (e.g., STAR, salmon, GATK) are unavoidable, their place in the workflow is clearly indicated.
+
+## Topics covered
+
+- Sequence fundamentals: FASTA/FASTQ, quality scores, adapters, QC with `ShortRead`, `Rfastp`
+- Pairwise and multiple sequence alignment with `Biostrings` and `msa`
+- Read alignment strategies: spliced (STAR, HISAT2) vs. pseudo-alignment (salmon, kallisto)
+- Bulk RNA-seq differential expression with `DESeq2`, `edgeR`, and `limma-voom`
+- Multiple testing and shrinkage in high-dimensional contexts
+- Gene set enrichment analysis: over-representation, GSEA, GSVA
+- Variant calling, VCF manipulation, and variant annotation
+- Phylogenetic inference with `ape`, `phangorn`, and visualisation with `ggtree`
+- Proteomics quantification and differential abundance (`MSstats`, `limma`)
+- Single-cell RNA-seq with `Seurat` and `Bioconductor` (`SingleCellExperiment`, `scran`)
+- Cell-type annotation, trajectory inference, and differential composition
+- Microbiome analysis: amplicon sequencing (DADA2), metagenomics, diversity metrics
+
+Workflows are presented end-to-end, from raw counts to the manuscript figure.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [ATAC-Seq Analysis](atac-seq-analysis.qmd)
+Chromatin accessibility profiling via ATAC-seq peak calling and differential analysis
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Alignment with BWA and Bowtie](bwa-bowtie-alignment.qmd)
+Fast read alignment to a reference genome via Burrows-Wheeler Transform indexing
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Batch Correction with ComBat](batch-correction-combat.qmd)
+Removing known batch effects from expression data using empirical-Bayes methods
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bulk RNA-seq Differential Expression with DESeq2](bulk-rnaseq-differential-expression.qmd)
+A complete DESeq2 workflow: from count matrix through normalisation, dispersion estimation, Wald testing, and LFC shrinkage
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Cell-Type Annotation](scrna-cell-type-annotation.qmd)
+Assigning cell types to clusters using reference-based and manual methods
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [ChIP-Seq Analysis](chip-seq-analysis.qmd)
+TF binding and histone modification profiling from ChIP-seq data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Copy Number Variation Analysis](cnv-analysis.qmd)
+Inferring genomic copy-number changes from sequencing or array data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Counting Reads with featureCounts](counting-reads-feature-counts.qmd)
+Assigning reads to genes or genomic features from a BAM file
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [DNA Methylation Analysis](methylation-analysis.qmd)
+Differentially methylated positions and regions from bisulfite or array data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Differential Expression with edgeR](edger-differential-expression.qmd)
+NB GLM-based differential expression with exactTest and quasi-likelihood F-test
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Differential Expression with limma-voom](limma-voom.qmd)
+Transforming counts for linear modelling with precision weights
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Drug-Target Interaction Mining](drug-target-interaction.qmd)
+Integrating bioassay databases for drug-target identification
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [FASTQ Quality Control](fastq-quality-control.qmd)
+Inspecting sequencing read quality via Phred scores and FastQC-style reports
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Finding Marker Genes](scrna-marker-genes.qmd)
+Identifying cluster-specific genes for cell-type annotation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [GSEA Preranked Analysis](gsea-preranked.qmd)
+Enrichment of gene sets in a ranked list without a significance cutoff
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [GSVA Single-Sample Enrichment](gsva-single-sample.qmd)
+Per-sample pathway scores for downstream sample-level analysis
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Gene Annotation with biomaRt](biomart-annotation.qmd)
+Programmatic queries against Ensembl for IDs, coordinates, and annotations
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Gene Ontology Enrichment](gene-ontology-enrichment.qmd)
+Over-representation of GO terms in a differentially-expressed gene set
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Heatmaps for RNA-seq](heatmaps-rnaseq.qmd)
+Visualising expression patterns across genes and samples with clustering
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Integration with Harmony](scrna-integration-harmony.qmd)
+Removing batch effects in scRNA-seq while preserving biological variation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [KEGG Pathway Enrichment](pathway-enrichment-kegg.qmd)
+Over-representation and visualisation against KEGG metabolic/signalling pathways
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [MA Plots](ma-plots.qmd)
+Mean-average plots for differential expression diagnostics
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Metagenomic Profiling](metagenomic-profiling.qmd)
+Whole-metagenome taxonomic and functional profiling with MetaPhlAn and Kraken
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Microbiome Analysis with DADA2](microbiome-dada2.qmd)
+Amplicon sequence variant (ASV) inference from 16S/ITS amplicon data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Microbiome Diversity Metrics](microbiome-diversity.qmd)
+Alpha and beta diversity measures for community comparison
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Multi-Omics Integration](multiomics-integration.qmd)
+Joint analysis of transcriptomic, genomic, and epigenomic layers
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Multiple Sequence Alignment](msa-biostrings.qmd)
+Aligning multiple sequences via ClustalW, Muscle, or T-Coffee from R
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [PCA of RNA-seq Samples](pca-of-rnaseq.qmd)
+Using PCA on variance-stabilised counts to check sample structure and batches
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Phylogenetic Trees with ape](phylogenetic-trees-ape.qmd)
+Building and interpreting phylogenetic trees using distance-based and maximum-likelihood methods
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Population Genetics Basics](population-genetics-basics.qmd)
+Allele frequencies, Hardy-Weinberg equilibrium, and F-statistics
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Protein Structure Prediction](protein-structure-prediction.qmd)
+From sequence to 3-D structure with AlphaFold and RoseTTAFold
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Proteomics with MSstats](proteomics-msstats.qmd)
+Differential protein abundance from label-free or labelled mass-spectrometry data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Pseudoalignment with Salmon and Kallisto](salmon-kallisto-pseudoalignment.qmd)
+Fast transcript quantification without full alignment
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [RNA-seq Normalisation](rnaseq-normalization.qmd)
+TMM, RLE, upper-quartile, and CPM: making samples comparable
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Read Trimming and Adapter Removal](read-trimming-adapters.qmd)
+Removing low-quality bases and sequencing adapters before alignment
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [STAR: Spliced Alignment](star-spliced-alignment.qmd)
+Fast splice-aware RNA-seq aligner capable of detecting novel junctions
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Sequence Alignment: Overview](sequence-alignment-overview.qmd)
+Global vs local alignment, scoring matrices, and the core algorithms
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Single-Cell with Seurat](single-cell-seurat-intro.qmd)
+End-to-end workflow for single-cell RNA-seq analysis in Seurat
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Spatial Transcriptomics](spatial-transcriptomics.qmd)
+Spatially resolved expression analysis with Visium and related platforms
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Structural Variant Detection](structural-variant-detection.qmd)
+Detecting deletions, duplications, inversions, and translocations from WGS
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Surrogate Variable Analysis (SVA)](surrogate-variable-analysis-sva.qmd)
+Detecting and adjusting for unknown sources of heterogeneity in expression data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Trajectory Analysis](scrna-trajectory-analysis.qmd)
+Inferring developmental and activation trajectories from scRNA-seq
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Transcript-to-Gene Summarisation](tx-to-gene-summarization.qmd)
+Aggregating transcript-level estimates to gene level for standard differential expression
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [VCF Manipulation](vcf-manipulation.qmd)
+Reading, filtering, and subsetting VCF files in R and on the command line
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Variant Annotation with VEP](annotation-variant-vep.qmd)
+Predicting functional consequences of variants using Ensembl VEP
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Variant Calling with GATK](variant-calling-gatk.qmd)
+Short-variant detection from aligned BAMs via the GATK Best Practices pipeline
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Volcano Plots](volcano-plots.qmd)
+Visualising significance versus effect size across genes
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [scRNA Clustering](scrna-clustering.qmd)
+Graph-based clustering of cells via Louvain or Leiden community detection
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [scRNA Normalisation](scrna-normalization.qmd)
+Library-size normalisation and variance stabilisation for scRNA-seq
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [scRNA QC and Filtering](scrna-qc-filtering.qmd)
+Removing low-quality cells before downstream scRNA-seq analysis
+:::
+
+:::

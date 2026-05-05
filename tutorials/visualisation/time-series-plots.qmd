@@ -1,0 +1,76 @@
+---
+title: Time Series Plots
+date: "2026-04-17"
+description: Dated line plots with forecast bands and decomposition displays
+categories:
+  - Data Visualisation
+  - time-series
+  - dates
+  - forecasting
+---
+
+## Introduction
+
+Time-series plots are deceptively easy to make and surprisingly easy to ruin. The data are ordered, the x-axis is a date, and a single line is often the right geom — but the choice of tick spacing, transformation, and accompanying decomposition or forecast layer determines whether the plot communicates the underlying dynamics or hides them. Trend, seasonality, and forecast uncertainty are three distinct stories the same series can tell, and a good time-series figure usually shows at least two of them.
+
+## Prerequisites
+
+A working knowledge of `ggplot2`, an understanding of R's date and date-time classes (`Date`, `POSIXct`), and basic familiarity with classical time-series concepts (trend, seasonality, forecast intervals).
+
+## Theory
+
+Three structural elements appear in nearly every published time-series figure:
+
+- A continuous date axis with carefully chosen `date_breaks` and `date_labels`. Defaults often produce overcrowded or sparse ticks; choose explicitly.
+- A line geom for the observed series, optionally with a smooth or fitted-value overlay.
+- An uncertainty layer — typically a `geom_ribbon()` for forecast prediction intervals or a faint shaded region for seasonal subsamples.
+
+For multivariate decompositions, classical STL splits a series into trend, seasonal, and remainder components shown as a stacked panel. The `forecast::autoplot()` and `feasts::autoplot()` methods produce decomposition and forecast plots automatically; both are tidy-friendly and fit naturally into modern reporting workflows.
+
+## Assumptions
+
+Time variable is monotonically ordered, on a regular grid (or explicitly handled if irregular), and on a class that `scale_x_date()` or `scale_x_datetime()` understands.
+
+## R Implementation
+
+```r
+library(ggplot2); library(forecast); library(ggfortify)
+
+# Standard time series plot
+ggplot(economics, aes(date, unemploy / 1000)) +
+  geom_line(colour = "#2A9D8F", linewidth = 1) +
+  scale_x_date(date_breaks = "10 years", date_labels = "%Y") +
+  labs(x = NULL, y = "Unemployment (thousands)") +
+  theme_minimal()
+
+# Forecast with prediction intervals
+fit <- auto.arima(AirPassengers)
+fc  <- forecast(fit, h = 24)
+autoplot(fc) +
+  theme_minimal()
+
+# STL decomposition
+decomp <- stl(AirPassengers, s.window = "periodic")
+autoplot(decomp) + theme_minimal()
+```
+
+## Output & Results
+
+Three figures: a long historical line plot of US unemployment with decade ticks, an ARIMA forecast with 80 % and 95 % prediction ribbons attached to the end of the historical series, and a four-panel STL decomposition of monthly air-passenger counts showing the rising trend, twelve-month seasonal cycle, and remaining residual variation.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Top: unemployment series 1967–2015 (thousands of persons). Middle: ARIMA(2,1,1)(0,1,0)\[12\] forecast for 24 months ahead with 80 % and 95 % prediction intervals. Bottom: STL decomposition (`s.window = "periodic"`) of monthly air-passenger counts." Always show forecast intervals; a forecast line without uncertainty is misleading.
+
+## Practical Tips
+
+- Convert text dates to `Date` or `POSIXct` before plotting; `lubridate::ymd()`, `dmy()`, and `as_datetime()` cover the common cases.
+- Choose `date_breaks` to match the publication width: ten-year ticks for a multi-decade series, one-year ticks for a five-year window, monthly ticks for a single year.
+- Log-transform the y-axis when the series exhibits multiplicative growth; the resulting plot reads percentage changes as constant slopes.
+- For multiple series, prefer faceting (`facet_wrap(vars(metric), scales = "free_y")`) when scales differ; reach for colour only when all series share comparable scale.
+- Use the modern `tsibble` + `feasts` + `fable` stack for tidy workflows; `forecast::autoplot()` remains useful for legacy `ts` objects and quick exploration.
+- Always annotate forecast plots with the model class and forecast horizon in the caption; a ribbon without context can be mistaken for a confidence band on observed data.
+
+## R Packages Used
+
+`ggplot2` for the underlying grammar, `forecast` for `auto.arima()` and `forecast()` plus `autoplot()` methods, `ggfortify` for `ts` and STL `autoplot()` extensions, and the modern `tsibble` / `feasts` / `fable` stack for tidy time-series workflows.

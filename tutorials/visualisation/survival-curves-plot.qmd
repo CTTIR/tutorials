@@ -1,0 +1,74 @@
+---
+title: Survival Curves
+date: "2026-04-17"
+description: Publication-quality Kaplan-Meier plots with risk tables and log-rank annotation
+categories:
+  - Data Visualisation
+  - survival
+  - kaplan-meier
+  - survminer
+---
+
+## Introduction
+
+A Kaplan-Meier survival curve is the most recognisable figure in clinical biostatistics. It estimates the probability of surviving (or remaining event-free) past each time point and displays the result as a step function dropping at every observed event. A publication-grade KM plot is rarely just the curve, however — it carries a risk table beneath the panel showing how many subjects remain at each landmark time, a log-rank $p$-value annotating the between-group comparison, and 95 % confidence bands shaded behind the curve. The `survminer` package combines all of these into a single `ggsurvplot()` call that works directly on `survfit` objects from the `survival` package.
+
+## Prerequisites
+
+A working understanding of survival analysis, the Kaplan-Meier estimator, censoring, and the log-rank test. Familiarity with `ggplot2` helps when customising the resulting object.
+
+## Theory
+
+The KM estimator is
+
+$$\hat S(t) = \prod_{t_i \le t} \!\left(1 - \frac{d_i}{n_i}\right),$$
+
+where $d_i$ is the number of events and $n_i$ the number at risk just before time $t_i$. The plot displays $\hat S(t)$ on the y-axis, time on the x-axis, with steps at each event and tick-marks (or shorter steps) at censoring times. Multiple groups are overlaid in different colours, and the risk-table below the panel shows $n_i$ at chosen landmark times for each group. The log-rank $p$-value summarises the between-group difference under proportional hazards.
+
+## Assumptions
+
+Right-censored survival data, non-informative censoring (the censoring mechanism does not depend on prognosis), and — for the log-rank annotation — approximately proportional hazards across groups. Severely non-proportional hazards make the log-rank test underpowered and a restricted-mean comparison may be more appropriate.
+
+## R Implementation
+
+```r
+library(survival); library(survminer)
+
+fit <- survfit(Surv(time, status) ~ sex, data = lung)
+
+ggsurvplot(fit,
+  data = lung,
+  conf.int = TRUE,
+  pval = TRUE,
+  risk.table = TRUE,
+  legend.labs = c("Male", "Female"),
+  palette = c("#2A9D8F", "#F4A261"),
+  xlab = "Days",
+  ylab = "Survival probability",
+  risk.table.y.text.col = TRUE
+)
+
+# Cumulative event curve (1 - S)
+ggsurvplot(fit, data = lung, fun = "event")
+```
+
+## Output & Results
+
+A two-panel figure: the upper panel shows two survival curves (male and female) with shaded 95 % confidence bands and a log-rank $p$-value in the corner; the lower panel is a risk table tabulating the number at risk in each group at six evenly spaced time points. The cumulative-event variant (`fun = "event"`) inverts the y-axis to show $1 - \hat S(t)$, useful when the event rate is the more natural reporting scale.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Kaplan–Meier overall-survival curves by sex (`survival::survfit`); shaded bands are 95 % point-wise confidence intervals, the log-rank $p$-value compares the two groups, and the risk table reports the number of subjects at risk at each labelled time." Always state the time-zero anchor (date of randomisation, surgery, diagnosis) in the methods so the x-axis is unambiguous.
+
+## Practical Tips
+
+- Always include a risk table; without it, the curve at late time points is misleading because the estimate is based on a tiny remaining cohort.
+- Use `fun = "event"` for cumulative incidence framing when communicating to clinical audiences who think in event rates rather than survival probabilities.
+- For competing risks, switch to a cumulative incidence function (CIF) plot via `cmprsk::cuminc()` and `ggcompetingrisks()`; KM curves overestimate the event of interest when competing events are non-trivial.
+- Pair the log-rank $p$-value with a hazard-ratio estimate (e.g. from a univariate Cox model); the test alone gives no effect size.
+- For multi-arm trials, lay out subgroups in panels (`facet.by = "subgroup"`) rather than crowding many curves into one panel.
+- Export at 300 dpi (or higher for line art) and at the journal's column width so the risk-table text remains legible.
+
+## R Packages Used
+
+`survival` for `survfit()` and `Surv()`; `survminer` for `ggsurvplot()`, `ggsurvtable()`, and risk-table support; `ggplot2` for downstream customisation of the returned object; `cmprsk` for competing-risks extensions when KM is not appropriate.

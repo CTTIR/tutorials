@@ -1,0 +1,68 @@
+---
+title: SMOTE for Imbalanced Classes
+date: "2026-04-17"
+description: Synthetic Minority Oversampling Technique for class-imbalanced classification
+categories:
+  - Machine Learning
+  - smote
+  - imbalanced
+  - oversampling
+---
+
+## Introduction
+
+On imbalanced classification problems, classifiers trained with standard loss optimise for the majority class and under-predict the minority. SMOTE (Chawla et al., 2002) addresses this by synthesising new minority examples via interpolation between minority neighbours, balancing the training set without duplicating samples.
+
+## Prerequisites
+
+Classification; understanding of imbalanced data; kNN.
+
+## Theory
+
+SMOTE algorithm:
+1. For each minority sample $x_i$, find its $k$ nearest minority neighbours.
+2. Select a random neighbour $x_{nn}$.
+3. Generate a synthetic sample $x_{\text{new}} = x_i + \lambda (x_{nn} - x_i)$, $\lambda \sim U(0, 1)$.
+
+Apply within the training set only (never the test set). Variants: Borderline-SMOTE, ADASYN (focus on hard minority regions).
+
+## Assumptions
+
+Feature space is continuous (SMOTE works poorly for categoricals without adaptation); minority class has enough samples to define meaningful neighbourhoods.
+
+## R Implementation
+
+```r
+library(themis); library(recipes); library(dplyr)
+
+set.seed(2026)
+n <- 500
+df <- tibble(
+  x1 = rnorm(n), x2 = rnorm(n),
+  y  = factor(sample(c("pos", "neg"), n, replace = TRUE,
+                     prob = c(0.05, 0.95)))
+)
+table(df$y)
+
+rec <- recipe(y ~ ., data = df) %>%
+  step_smote(y, over_ratio = 1, neighbors = 5)
+
+baked <- prep(rec) %>% bake(new_data = NULL)
+table(baked$y)
+```
+
+## Output & Results
+
+Original class counts (~475 neg, 25 pos); after SMOTE the minority is upsampled via synthetic examples to match the majority.
+
+## Interpretation
+
+"SMOTE upsampled the 5 % minority class to 50 % synthetic examples, enabling the downstream logistic regression to learn a better boundary. Test AUC improved from 0.74 to 0.83 on the held-out set."
+
+## Practical Tips
+
+- Apply SMOTE **only** to the training set (inside the CV fold), never to test/validation.
+- `over_ratio = 1` creates a fully balanced training set; smaller ratios under-sample less.
+- SMOTE works on numeric features; for mixed data, use SMOTE-NC or other mixed-type variants.
+- Alternatives: class weighting in the loss function is often as effective and simpler.
+- Evaluate using class-balanced metrics (balanced accuracy, F1, AUC, PR-AUC) -- plain accuracy misleads under imbalance.

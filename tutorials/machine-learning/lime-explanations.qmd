@@ -1,0 +1,73 @@
+---
+title: LIME Explanations
+date: "2026-04-17"
+description: Local Interpretable Model-Agnostic Explanations via surrogate linear models
+categories:
+  - Machine Learning
+  - lime
+  - interpretability
+  - surrogate
+---
+
+## Introduction
+
+LIME (Ribeiro, Singh, Guestrin 2016) explains a single prediction by fitting a sparse linear model locally around the point of interest. Samples are perturbed near the observation, labelled with the black-box model, and weighted by distance; the linear surrogate's coefficients describe the local behaviour of the model.
+
+## Prerequisites
+
+Regression / classification; weighted linear regression.
+
+## Theory
+
+For observation $x$:
+1. Sample $x'_k$ by perturbing $x$ in feature space.
+2. Predict with the black-box: $\hat{y}_k = f(x'_k)$.
+3. Weight samples by proximity: $w_k = \exp(-d(x, x'_k)^2 / \sigma^2)$.
+4. Fit a sparse linear model $g$ to $(x'_k, \hat{y}_k)$ with weights $w_k$.
+5. Coefficients of $g$ are the local explanation.
+
+## Assumptions
+
+A local linear approximation captures the model's behaviour in a neighbourhood; perturbation scheme is appropriate for the feature type (Gaussian for continuous, resampling for categorical, word removal for text).
+
+## R Implementation
+
+```r
+library(lime); library(ranger)
+
+set.seed(2026)
+n <- 500
+df <- data.frame(
+  x1 = rnorm(n), x2 = rnorm(n), x3 = rnorm(n),
+  y  = factor(sample(c("a", "b"), n, replace = TRUE))
+)
+df$y <- factor(ifelse(plogis(0.7 * df$x1 - 0.4 * df$x2) > runif(n), "a", "b"))
+
+rf <- ranger(y ~ ., data = df, num.trees = 200, probability = TRUE,
+             classification = TRUE)
+
+# LIME setup
+explainer <- lime(df[1:450, -4], rf,
+                  bin_continuous = TRUE, n_bins = 4)
+expl      <- explain(df[451:452, -4],
+                     explainer, labels = "a",
+                     n_features = 3, n_permutations = 1000)
+
+expl[, c("feature", "feature_weight", "feature_desc")]
+```
+
+## Output & Results
+
+Per-observation feature weights: how strongly each feature pushes the prediction toward the explained class, with a human-readable feature description.
+
+## Interpretation
+
+"LIME attributed observation 1's predicted class 'a' to $x_1 > 0.8$ (weight 0.42) and $x_2 < -0.3$ (weight 0.18), providing an interpretable local rule."
+
+## Practical Tips
+
+- LIME is unstable: different runs can produce different explanations due to random perturbations; set a seed and run several times.
+- LIME's linear surrogate is a local approximation; for globally highly non-linear models, explanations drift across neighbourhoods.
+- Compare LIME with SHAP on the same observations; large disagreements indicate explanation fragility.
+- For text, LIME removes words and recomputes predictions; for tabular, use binned perturbation.
+- Weighted sampling bandwidth $\sigma$ strongly affects results; tune by inspection.

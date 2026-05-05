@@ -1,0 +1,66 @@
+---
+title: Cox Regression as Regression
+date: "2026-04-17"
+description: The Cox proportional-hazards model in the GLM-family perspective; pointer to the Survival section
+categories:
+  - "Regression & Modelling"
+  - cox
+  - proportional-hazards
+  - survival-regression
+---
+
+## Introduction
+
+Cox proportional-hazards regression models time-to-event outcomes with right censoring and is the de facto standard regression tool for survival analysis. This page gives a regression-modelling-focused summary; the Survival Analysis section contains a more detailed treatment with diagnostics, residuals, and stratification. The headline insight is that Cox is a regression in the same family as GLMs — coefficients, standard errors, confidence intervals, and likelihood-ratio tests all behave familiarly — but the response is a `Surv` object encoding both event time and censoring status.
+
+## Prerequisites
+
+A working understanding of survival analysis, the hazard function, censoring, and the partial-likelihood approach to inference.
+
+## Theory
+
+The Cox model writes the hazard as
+
+$$h(t \mid X) = h_0(t) \exp(X^\top \beta),$$
+
+with the baseline hazard $h_0(t)$ left unspecified and the partial likelihood providing $\hat\beta$ without estimating it. Exponentiated coefficients are hazard ratios; a $\hat\beta_j = 0.02$ for age corresponds to a 2 % multiplicative increase in hazard per year of age, $\exp(0.02) \approx 1.02$.
+
+The proportional-hazards assumption — that hazard ratios between any two covariate patterns are constant over time — is the model's defining restriction. When it fails, options include stratification, time-varying coefficients via `tt()` or `survSplit()`, or switching to AFT or RMST-based summaries.
+
+## Assumptions
+
+Proportional hazards across covariate levels (test via Schoenfeld residuals), independent non-informative censoring, no unmodelled time-varying covariate effects, and adequate events per variable for stable estimation (rule of thumb: 10–15 events per regression coefficient).
+
+## R Implementation
+
+```r
+library(survival); library(broom)
+
+data(lung)
+fit <- coxph(Surv(time, status) ~ age + sex + ph.ecog, data = lung)
+tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+
+# PH check
+cox.zph(fit)
+```
+
+## Output & Results
+
+`tidy()` from `broom` returns a tibble of hazard ratios, confidence intervals, and Wald $p$-values. `summary(fit)` adds the likelihood-ratio test, score test, and Wald test for the joint null. `cox.zph()` reports the proportional-hazards diagnostic for each covariate plus a global test.
+
+## Interpretation
+
+A reporting sentence: "A multivariable Cox model adjusted for age, sex, and ECOG performance status estimated that each additional year of age increased the hazard of death by 2 % (HR 1.02, 95 % CI 1.00 to 1.04, $p = 0.04$); female sex was associated with a 40 % lower hazard (HR 0.60, 95 % CI 0.42 to 0.85, $p = 0.004$). The proportional-hazards assumption was supported (global Schoenfeld $p = 0.55$)." Always pair coefficient reporting with PH diagnostics.
+
+## Practical Tips
+
+- Always run `cox.zph()` after fitting; reporting Cox HRs without PH diagnostics is no longer acceptable in clinical-trial publications.
+- Use Efron's tie-handling method (`ties = "efron"`) for tied event times; the default in older software is Breslow's, which is less accurate.
+- Report HRs with 95 % CIs alongside $p$-values; a CI that includes 1.0 is more informative than a marginal $p$-value alone.
+- For time-varying covariates, use counting-process format (`Surv(tstart, tstop, event)`) and cluster standard errors on subject id.
+- For continuous covariates with non-linear effects, add restricted cubic splines (`rms::rcs(x, 4)`) rather than dichotomising.
+- See the Survival Analysis section's dedicated Cox tutorial for extended coverage of residuals, stratification, and influence diagnostics.
+
+## R Packages Used
+
+`survival` for `coxph()`, `Surv()`, `cox.zph()`; `broom` for `tidy()` and `glance()` summaries; `survminer` for ggplot-style diagnostics; `rms::cph()` for an alternative interface with built-in spline and validation tools.

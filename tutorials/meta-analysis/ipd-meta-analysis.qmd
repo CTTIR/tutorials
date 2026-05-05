@@ -1,0 +1,84 @@
+---
+title: Individual Participant Data Meta-Analysis
+date: "2026-04-17"
+description: Two-stage vs one-stage analysis of raw data pooled across studies
+categories:
+  - Meta-Analysis
+  - ipd
+  - two-stage
+  - one-stage
+---
+
+## Introduction
+
+Individual participant data (IPD) meta-analysis pools raw participant-level data from multiple studies, enabling analyses that aggregate-data meta-analyses cannot -- time-to-event across studies, individual-level effect modification, and harmonised outcome definitions. It is the gold standard when feasible but requires data-sharing agreements.
+
+## Prerequisites
+
+Meta-analysis pooling; mixed-effects models.
+
+## Theory
+
+**Two-stage**: analyse each study separately to obtain effect and variance; pool with standard meta-analysis methods.
+
+**One-stage**: fit a single hierarchical model on the combined data with study as a random effect. Allows individual-participant-level interactions.
+
+Both approaches typically yield similar results for main effects; one-stage is preferred for individual-level moderator analyses.
+
+## Assumptions
+
+Data-sharing agreements in place; common outcome definitions across studies; correct handling of study-level heterogeneity.
+
+## R Implementation
+
+```r
+library(lme4)
+
+set.seed(2026)
+n_studies <- 5
+participants_per <- 100
+
+# Simulate IPD
+df <- do.call(rbind, lapply(1:n_studies, function(s) {
+  n <- participants_per
+  data.frame(
+    study = s,
+    arm = factor(sample(c("trt", "ctrl"), n, replace = TRUE)),
+    age = rnorm(n, 50, 10)
+  )
+}))
+df$arm_num <- as.integer(df$arm == "trt")
+df$y <- 0.4 * df$arm_num + 0.05 * df$age +
+        rnorm(nrow(df), 0, 1) +
+        rep(rnorm(n_studies, 0, 0.3), each = participants_per)
+
+# One-stage mixed-effects model
+one_stage <- lmer(y ~ arm + age + (1 | study), data = df)
+summary(one_stage)$coefficients
+
+# Two-stage: per-study effects, then pool
+per_study <- split(df, df$study) |> sapply(function(s) {
+  m <- lm(y ~ arm + age, data = s)
+  c(est = coef(m)["armtrt"], var = vcov(m)["armtrt", "armtrt"])
+})
+library(metafor)
+ma <- rma(yi = per_study["est.armtrt", ], vi = per_study["var", ],
+          method = "REML")
+ma$b
+```
+
+## Output & Results
+
+One-stage arm coefficient and the equivalent two-stage pooled estimate; typically close agreement for simple models.
+
+## Interpretation
+
+"IPD meta-analysis estimated the intervention effect at 0.42 (95 % CI 0.28-0.56, p < 0.001); two-stage and one-stage approaches agreed closely, supporting the finding's robustness to analytic framing."
+
+## Practical Tips
+
+- Prospective IPD consortium studies avoid selection bias from data-availability issues.
+- Harmonise outcomes before pooling; different outcome definitions across studies cause bias.
+- One-stage model allows individual-level interactions (effect modifiers); more valuable than ecological moderators.
+- For survival endpoints, IPD is required (aggregate hazard ratios are difficult to pool correctly).
+- Report PRISMA-IPD checklist for transparency.

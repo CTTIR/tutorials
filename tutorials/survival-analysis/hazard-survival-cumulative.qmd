@@ -1,0 +1,68 @@
+---
+title: "Hazard, Survival, and Cumulative Hazard"
+date: "2026-04-17"
+description: The three equivalent representations of a time-to-event distribution
+categories:
+  - Survival Analysis
+  - hazard
+  - survival-function
+  - cumulative-hazard
+---
+
+## Introduction
+
+A time-to-event distribution admits three mutually equivalent representations: the survival function $S(t)$, the hazard function $h(t)$, and the cumulative hazard $H(t)$. They contain the same information but emphasise different aspects of the process — surviving probability, instantaneous risk, and accumulated risk respectively. Switching freely among them is one of the foundational fluencies of survival analysis, because each form has natural plotting and inferential conventions and most software exposes all three.
+
+## Prerequisites
+
+A working understanding of survival analysis basics, the difference between probability and rate, and integration of non-negative functions.
+
+## Theory
+
+For a non-negative continuous time-to-event $T$ with density $f(t)$:
+
+- **Survival function**: $S(t) = \mathrm P(T > t)$. The probability of surviving past time $t$.
+- **Hazard function**: $h(t) = f(t) / S(t)$. The instantaneous event rate at time $t$ given survival up to $t$. Hazard is a rate (per unit time), not a probability.
+- **Cumulative hazard**: $H(t) = \int_0^t h(u) \, \mathrm d u = -\log S(t)$. Accumulated risk by time $t$.
+
+Any one of the three determines the other two: $S(t) = e^{-H(t)}$, $h(t) = -\mathrm d \log S(t) / \mathrm d t$. The Kaplan-Meier estimator targets $S(t)$ directly; the Nelson-Aalen estimator targets $H(t)$ and is preferable in the right tail where the KM step function is unstable. The hazard itself is never estimated directly without smoothing, because instantaneous rates require kernel methods or parametric assumptions.
+
+## Assumptions
+
+A non-negative, almost surely continuous time-to-event with proper density (or, for discrete time, a discrete analogue with the same mutual recoverability).
+
+## R Implementation
+
+```r
+library(survival)
+
+data(lung)
+fit <- survfit(Surv(time, status) ~ 1, data = lung)
+
+# Survival curve
+plot(fit, conf.int = TRUE, main = "S(t)")
+
+# Cumulative hazard
+plot(fit, fun = "cumhaz", main = "H(t)")
+```
+
+## Output & Results
+
+Two complementary curves: the Kaplan-Meier survival function with point-wise confidence bands, and the cumulative hazard estimated via $-\log \hat S(t)$ (which agrees with Nelson-Aalen up to small-sample corrections). Reading both together makes the underlying hazard pattern visible — a steep $S(t)$ corresponds to a rising $H(t)$, and the slope of $H(t)$ at any time is the local hazard rate.
+
+## Interpretation
+
+A reporting sentence: "Median survival was 310 days (95 % CI 280 to 360); cumulative hazard at one year was approximately 0.85, corresponding to $S(365) = \mathrm{exp}(-0.85) = 0.43$, consistent with the KM estimate of 42 % at one year." Quoting both representations communicates the same fact in two complementary forms readers may prefer.
+
+## Practical Tips
+
+- Hazard is a rate, not a probability; never describe a hazard ratio as "doubled probability" without converting through $S(t)$ or absolute differences.
+- Compare cumulative hazards across groups when discriminating risk over follow-up; the log-rank test is essentially a comparison of cumulative hazards.
+- Constant hazard implies exponential survival and a linear cumulative hazard; deviations from linearity in $H(t)$ are the easiest visual diagnostic for non-exponentiality.
+- Kaplan-Meier and Nelson-Aalen estimators agree closely; prefer Nelson-Aalen when you specifically need $\hat H(t)$ in the right tail.
+- Hazard ratios are interpretable only under proportional hazards; if the assumption fails, report cumulative incidence, restricted-mean survival time, or stratify the comparison.
+- For modelling a smooth hazard, use parametric (Weibull, log-normal) or flexible (Royston-Parmar splines) models; don't try to estimate $h(t)$ non-parametrically without bandwidth selection.
+
+## R Packages Used
+
+`survival` for `survfit()`, `Surv()`, and the standard estimators; `flexsurv` for parametric and Royston-Parmar spline-based models that yield smooth hazards; `muhaz` for kernel-smoothed hazard estimation; `survminer::ggsurvplot()` and `survminer::ggsurvplot_combine()` for ggplot-style display of the curves.

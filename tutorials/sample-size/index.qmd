@@ -1,0 +1,274 @@
+---
+title: "Sample Size & Power"
+description: "Power analysis and sample size planning for every common design: means, proportions, correlations, regression, survival, and equivalence/non-inferiority"
+---
+
+Nothing is more wasteful in applied research than a study that is too small to answer its question or too large to justify its cost. Power analysis is the discipline of planning study size so that the probability of detecting a real effect is acceptably high, given a realistic expectation of what that effect will be.
+
+This area walks through the four quantities that define every power calculation -- effect size, significance level, power, and sample size -- and shows how to compute any one of them given the other three, for every design a reader is likely to encounter. Practical guidance is given on choosing effect sizes from prior literature, pilot data, or minimum clinically important differences.
+
+## Designs covered
+
+- One-sample and two-sample tests of means (t-tests), with equal and unequal variances
+- Paired-sample tests and within-subject designs
+- One-way, factorial, and repeated-measures ANOVA
+- Tests of one and two proportions, with continuity correction and exact methods
+- Chi-squared tests of independence with arbitrary table dimensions
+- Tests for correlation coefficients
+- Sample size for linear, logistic, and Cox proportional hazards regression
+- Survival analysis: log-rank test, with accrual and follow-up separately specified
+- Equivalence and non-inferiority trials: TOST, symmetric and asymmetric margins
+- Cluster-randomised trials: design effect, ICC, and average cluster size
+- Diagnostic accuracy studies: sensitivity, specificity, ROC AUC
+
+## R packages
+
+Tutorials use `pwr`, `pwrss`, `WebPower`, `longpower`, `samplesize`, `Hmisc`, and `gsDesign` as appropriate. The G\*Power software is cross-referenced where it offers a useful visualisation or calculation.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Effect Size: Cohen's d](effect-size-cohens-d.qmd)
+Standardised mean difference: definition, variants, interpretation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Effect Size: Cohen's h](effect-size-cohens-h.qmd)
+Standardised effect size for comparisons between proportions via arcsine transformation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Effect Size: Eta-Squared](effect-size-eta-squared.qmd)
+Proportion of variance explained in ANOVA and its partial, generalised, and omega variants
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Minimum Detectable Effect](minimum-detectable-effect.qmd)
+Solving for the smallest effect that can be detected at a given sample size and power
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Post-Hoc Power: A Controversy](post-hoc-power-controversy.qmd)
+Why computing power from the observed effect is circular and uninformative
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power Analysis: Introduction](power-analysis-introduction.qmd)
+The four quantities of power analysis and how they trade against each other in study design
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Agreement (Kappa)](power-agreement-kappa.qmd)
+Sample size for Cohen's kappa as a precision-targeted or hypothesis-test planning quantity
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Bland-Altman Studies](power-bland-altman.qmd)
+Sample size for estimating limits of agreement with adequate precision
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Chi-Squared Tests](power-chi-squared.qmd)
+Sample size for goodness-of-fit and contingency chi-squared using Cohen's w
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Cluster-RCT](power-cluster-rct.qmd)
+Sample size for cluster-randomised trials: design effect from ICC and cluster size
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Correlation Tests](power-correlation.qmd)
+Sample size for Pearson and Spearman correlations via Fisher's z transformation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Cox Regression](power-cox-regression.qmd)
+Events-driven sample size: the number of events, not subjects, drives power
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Crossover Trials](power-crossover.qmd)
+Sample size for 2x2 crossover designs, exploiting within-subject comparison
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Diagnostic Accuracy](power-diagnostic-accuracy.qmd)
+Sample size for estimating sensitivity and specificity with adequate precision
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Equivalence (TOST)](power-equivalence-tost.qmd)
+Sample size for two-one-sided-tests equivalence testing within a pre-specified margin
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for ICC](power-icc.qmd)
+Sample size for the intraclass correlation coefficient in reliability studies
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Linear Regression](power-linear-regression.qmd)
+Sample size for overall regression F and for individual coefficients via Cohen's f^2
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Logistic Regression](power-logistic-regression.qmd)
+Sample size for logistic regression: events per variable, odds-ratio detection, and simulation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for McNemar's Test](power-mcnemar.qmd)
+Sample size for paired binary comparisons driven by the rate of discordant pairs
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Non-Inferiority Trials](power-non-inferiority.qmd)
+One-sided equivalence: is the new treatment no worse than the reference by more than the margin
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for One-Proportion Test](power-one-proportion.qmd)
+Sample size for testing a single proportion against a reference, with normal and exact methods
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for One-Sample t-Test](power-one-sample-t.qmd)
+Computing sample size and power for a test of one mean against a reference
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for One-Way ANOVA](power-anova.qmd)
+Sample size for detecting a difference among three or more group means
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Paired t-Test](power-paired-t.qmd)
+Sample size for paired designs, taking advantage of within-subject correlation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Repeated-Measures ANOVA](power-repeated-measures.qmd)
+Sample size for within-subjects designs with within-subject correlation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Stepped-Wedge Trials](power-stepped-wedge.qmd)
+Variance of the treatment effect in stepped-wedge cluster designs via the Hussey-Hughes formula
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for Two-Proportion Test](power-two-proportions.qmd)
+Sample size for comparing proportions between two independent groups
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power for the Log-Rank Test](power-logrank-test.qmd)
+Event-based sample size for Kaplan-Meier comparisons via the log-rank test
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Sample Size Sensitivity Analysis](sensitivity-analysis-sample-size.qmd)
+Reporting sample size across a range of assumed effect sizes, SDs, and dropout rates
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Sample Size for a Two-Sample t-Test](power-two-sample-t.qmd)
+Power analysis and sample size calculation for comparing two independent group means, with worked examples in R
+:::
+
+:::

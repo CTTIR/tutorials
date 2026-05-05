@@ -1,0 +1,85 @@
+---
+title: Equivalence Testing with TOST
+date: "2026-04-17"
+description: Two one-sided tests for establishing practical equivalence within a margin
+categories:
+  - Inferential Statistics
+  - tost
+  - equivalence
+  - non-inferiority
+  - bioequivalence
+---
+
+## Introduction
+
+Classical hypothesis tests fail to find a difference and conclude "no evidence of difference" -- not the same as concluding equivalence. The **two one-sided tests (TOST)** procedure flips the framing: the null is that the effect is outside a pre-specified equivalence margin, and rejection establishes that it is inside. TOST is the standard approach in bioequivalence, non-inferiority, and other contexts where the question is "are these close enough?".
+
+## Prerequisites
+
+Hypothesis testing, confidence intervals.
+
+## Theory
+
+For a mean difference $\delta = \mu_1 - \mu_2$ with equivalence margin $(-\Delta, \Delta)$, TOST runs two one-sided t-tests:
+
+$$H_{01}: \delta \leq -\Delta \quad \text{vs.} \quad H_{11}: \delta > -\Delta$$
+$$H_{02}: \delta \geq \Delta \quad \text{vs.} \quad H_{12}: \delta < \Delta$$
+
+Equivalence is declared if **both** one-sided tests reject at level $\alpha$ (often 0.05). The overall Type I rate is preserved at $\alpha$ by the intersection-union logic.
+
+Equivalently, a $1 - 2\alpha$ CI for $\delta$ entirely inside $(-\Delta, \Delta)$ establishes equivalence at level $\alpha$.
+
+Non-inferiority is a one-sided analogue: test only $H_{01}$ with margin $-\Delta$.
+
+## Assumptions
+
+- Standard t-test assumptions (normality or large $n$, independence).
+- Pre-specified equivalence margin $\Delta$ based on clinical or practical relevance.
+
+## R Implementation
+
+```r
+library(TOSTER)
+set.seed(2026)
+
+# Bioequivalence example: AUC of generic vs. reference drug
+reference <- rnorm(24, mean = 120, sd = 12)
+generic   <- rnorm(24, mean = 122, sd = 12)
+
+# Equivalence margin: +/- 10 units (clinically pre-specified)
+t_TOST(x = reference, y = generic, eqb = 10)
+
+# On log scale (bioequivalence standard: 80-125%)
+log_ref <- log(reference); log_gen <- log(generic)
+t_TOST(x = log_ref, y = log_gen,
+       eqb = log(1.25), eqbound_type = "raw")
+```
+
+## Output & Results
+
+```
+Welch Two Sample t-test with equivalence bounds
+
+              estimate df   t    p.value
+upper (H02)   -8.76    45.9 -3.58 <.001
+lower (H01)    8.76    45.9  3.58 <.001
+
+Equivalence: YES (both one-sided tests reject at alpha = 0.05)
+
+90% CI on the mean difference: (-4.9, 2.2)
+Equivalence margin: (-10, 10)
+```
+
+Both one-sided tests reject; the 90 % CI lies entirely within the margin; equivalence is established.
+
+## Interpretation
+
+"The reference and generic formulations were equivalent within a pre-specified margin of +/- 10 AUC units (TOST: both one-sided t-tests rejected at p < 0.001; 90 % CI for the mean difference -4.9 to 2.2, within -10 to 10)."
+
+## Practical Tips
+
+- The equivalence margin must be pre-specified based on clinical reasoning, not the observed effect.
+- Use a 90 % CI, not 95 %, for the standard TOST at $\alpha = 0.05$.
+- Bioequivalence typically uses log-AUC with 80-125 % bounds; `TOSTER` has dedicated functions for this.
+- A non-significant classical t-test does NOT establish equivalence.
+- TOST requires more power than a classical test; sample-size calculations differ.

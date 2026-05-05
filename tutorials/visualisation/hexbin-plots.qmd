@@ -1,0 +1,67 @@
+---
+title: Hexbin Plots
+date: "2026-04-17"
+description: "Binning the 2D plane into hexagons and colouring by count, for large bivariate data"
+categories:
+  - Data Visualisation
+  - hexbin
+  - geom_hex
+  - large-n
+---
+
+## Introduction
+
+A scatterplot of a few hundred points is informative; a scatterplot of a few hundred thousand points is mostly black ink. Once $n$ exceeds a few thousand, individual points overplot to the point of hiding density structure: ridges, modes, and non-linear boundaries vanish under the cloud. Hexbin plots solve this by dividing the plane into hexagonal cells, counting points per cell, and colour-encoding the count. The result preserves the joint distribution at any sample size and renders quickly even for millions of observations.
+
+## Prerequisites
+
+A working knowledge of scatterplots, basic 2D density estimation, and `ggplot2`'s aesthetic mappings.
+
+## Theory
+
+Hexagonal bins tile the plane more efficiently than squares because every hexagon has six equidistant neighbours; this isotropy reduces the visual aliasing that affects rectangular bins along diagonal density boundaries. `ggplot2::geom_hex()` calls the `hexbin` package internally to construct the bins and aggregate counts. The `bins` argument sets the resolution along each axis; `binwidth` is an alternative that fixes the cell size in data units. The colour scale should respect the count distribution: linear scales for roughly uniform counts, logarithmic scales (`scale_fill_viridis_c(trans = "log")`) for highly skewed counts that span orders of magnitude.
+
+## Assumptions
+
+Both x and y are continuous; categorical variables need a different geom (heatmap, mosaic, or jitter). The plot assumes the joint distribution is the inferential target, not individual points — for one-off outliers, overlay a labelled `geom_point()`.
+
+## R Implementation
+
+```r
+library(ggplot2); library(hexbin)
+
+# Diamonds dataset: 54 000 observations
+ggplot(diamonds, aes(carat, price)) +
+  geom_hex(bins = 40) +
+  scale_fill_viridis_c() +
+  theme_minimal()
+
+# Log-scale for skewed data
+ggplot(diamonds, aes(carat, price)) +
+  geom_hex(bins = 40) +
+  scale_x_log10() +
+  scale_y_log10() +
+  scale_fill_viridis_c(trans = "log") +
+  theme_minimal()
+```
+
+## Output & Results
+
+A 40-by-40 hexbin grid showing the joint distribution of carat and price across 54,000 diamonds. The linear-scale version emphasises the dense middle of the distribution; the log-log version with log-scaled fill reveals the sparse tails — small low-priced diamonds and large high-priced ones — that are invisible at the original scale.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Hexbin density of diamond carat versus price (n = 53,940), 40 bins per axis, fill on a log-count scale; both axes are log-transformed to expose the price-vs-carat relationship across the full range." Always state the bin count and any transformations, since both shape the visual conclusion.
+
+## Practical Tips
+
+- `bins = 30` to `bins = 60` is a sensible default for tens of thousands of observations; finer grids reveal more detail at the cost of noisier counts per cell.
+- Log-transform the fill scale when counts span orders of magnitude; otherwise the dense centre saturates the palette and the tails vanish.
+- For square bins, use `geom_bin2d()`; the choice between hex and square is largely aesthetic, but hex bins reduce diagonal-aliasing artefacts.
+- Overlay a smoother (`geom_smooth(method = "gam")`) on top of the hexbin for a model-based summary; the bin colour shows where the smoother is well-supported.
+- For extremely large $n$ (millions of points), hexbin remains fast and effective where individual scatter would crash the renderer; the underlying counts are stored as a small array regardless of input size.
+- Below a few thousand points, prefer alpha-blended scatter or 2D density contours; hexbin is overkill for small samples and reads as cluttered.
+
+## R Packages Used
+
+`ggplot2` for `geom_hex()` and `geom_bin2d()`, `hexbin` for the underlying hexagonal binning, `viridis` for perceptually uniform fill scales, and `ggdensity` if you want to combine binning with model-based density contours.

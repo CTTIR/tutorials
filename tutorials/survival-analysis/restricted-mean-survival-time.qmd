@@ -1,0 +1,62 @@
+---
+title: Restricted Mean Survival Time (RMST)
+date: "2026-04-17"
+description: Alternative summary robust to non-proportional hazards and censoring
+categories:
+  - Survival Analysis
+  - rmst
+  - mean-survival
+---
+
+## Introduction
+
+The restricted mean survival time (RMST) is the expected survival time truncated at a clinically meaningful horizon $\tau$. Where the hazard ratio from a Cox model summarises a relative effect that requires proportional hazards to be interpretable, RMST quantifies an absolute time difference (in days, months, or years) and remains valid even when the hazard ratio is not constant. It has become an increasingly standard endpoint in oncology trials and immunotherapy studies, where crossing or delayed survival curves are common and where regulators and clinicians want a number expressed on the natural time scale.
+
+## Prerequisites
+
+A working understanding of survival functions, the Kaplan-Meier estimator, and the issues with proportional-hazards assumptions in modern clinical trials.
+
+## Theory
+
+For a survival function $S(t)$ and a horizon $\tau$, the RMST is
+
+$$\mathrm{RMST}(\tau) = \mathbb E[\min(T, \tau)] = \int_0^\tau S(t) \, \mathrm d t.$$
+
+Geometrically it is the area under the KM curve from time zero to $\tau$. Group differences are summarised by the difference $\mathrm{RMST}_1(\tau) - \mathrm{RMST}_0(\tau)$ or by the ratio. Standard errors come from the asymptotic theory developed by Royston and Parmar; bootstrap confidence intervals are an alternative when the asymptotic approximation is suspect. Crucially, the construction makes no assumption about the relationship between hazards in the two groups — non-proportionality, treatment-effect waning, and crossing curves are all handled gracefully.
+
+## Assumptions
+
+Sufficient follow-up to estimate $S(t)$ reliably up to $\tau$; an explicit choice of $\tau$ that is clinically meaningful and within the support of the data; non-informative censoring up to $\tau$.
+
+## R Implementation
+
+```r
+library(survRM2)
+
+data(lung)
+
+# Truncation at 600 days
+rmst2(time = lung$time, status = lung$status,
+      arm = lung$sex - 1, tau = 600)
+```
+
+## Output & Results
+
+`rmst2()` returns the RMST for each arm, the difference and ratio between arms, and 95 % confidence intervals derived from the asymptotic theory. The output is structured for direct inclusion in clinical-trial reports.
+
+## Interpretation
+
+A reporting sentence: "Through 600 days of follow-up, female patients accumulated an average of 380 days alive vs 310 days for male patients; the RMST difference was 70 days (95 % CI 20 to 120, $p = 0.005$). Because the hazards were not proportional (Schoenfeld test $p = 0.04$), RMST is the preferred summary." Always state $\tau$ and justify it on clinical grounds; the same data can yield different RMST conclusions at different horizons.
+
+## Practical Tips
+
+- Choose $\tau$ based on clinical relevance *and* on data adequacy: $\tau$ should be smaller than the longest follow-up time across both arms so the KM estimate is stable.
+- RMST handles non-proportional hazards, treatment-effect waning, and crossing curves where Cox HR fails; for any trial with these features, RMST is preferable.
+- Report RMST on the absolute time scale (days, months, years); clinicians and patients reason about absolute survival, not log hazard ratios.
+- For multi-arm trials, run pairwise RMST comparisons with Bonferroni or Hochberg correction; `survRM2::rmst2()` handles two-arm comparisons natively.
+- Pair RMST with KM curves and a hazard-ratio sensitivity analysis; reviewers expect to see all three when proportional-hazards assumptions are in question.
+- For very small samples or sparse late-time data, switch to bootstrap confidence intervals via `bootRMST` or hand-coded `boot::boot()` resampling on the patient-level data.
+
+## R Packages Used
+
+`survRM2` for `rmst2()` and the canonical RMST workflow; `survival` for the underlying Kaplan-Meier estimation; `pseudo` for pseudo-observation-based RMST regression with covariates; `flexsurv` for parametric models that integrate analytically over $S(t)$; `survminer::ggsurvplot()` for KM curves that complement the RMST report.

@@ -1,0 +1,86 @@
+---
+title: Paired t-Test
+date: "2026-04-17"
+description: Comparing two dependent measurements by applying a one-sample t-test to their differences
+categories:
+  - Inferential Statistics
+  - paired-t-test
+  - dependent-samples
+  - within-subject
+---
+
+## Introduction
+
+When each unit contributes two measurements (pre and post, left and right, case and matched control), the observations are paired and the usual independent-samples t-test is not valid. The **paired t-test** analyses the within-unit differences, restoring the independence assumption and typically improving power by cancelling between-unit variability.
+
+## Prerequisites
+
+One-sample t-test, t-distribution.
+
+## Theory
+
+Let $X_i$ and $Y_i$ be paired measurements on unit $i$ for $i = 1, \ldots, n$. Define differences $D_i = X_i - Y_i$. Under the assumption that $D_i$ are iid from $\mathcal{N}(\mu_D, \sigma_D^2)$,
+
+$$T = \frac{\bar{D}}{s_D / \sqrt{n}} \sim t_{n - 1} \quad \text{under } H_0: \mu_D = 0.$$
+
+The paired t-test is the one-sample t-test on the differences. The $n$ is the number of **pairs**, not the total number of measurements.
+
+Effect size: Cohen's $d_z = \bar{D} / s_D$ (standardised mean difference on the difference scores). This is different from the two-group $d$ and should not be conflated.
+
+## Assumptions
+
+- The differences are approximately normal (via Shapiro-Wilk on $D_i$).
+- Pairs are independent of other pairs.
+
+The raw $X_i$ and $Y_i$ can be non-normal; only the differences need to be.
+
+## R Implementation
+
+```r
+library(effectsize); library(broom)
+set.seed(2026)
+
+# Simulated pre-post blood pressure after a 12-week intervention
+n <- 30
+pre  <- rnorm(n, mean = 138, sd = 12)
+post <- pre + rnorm(n, mean = -6, sd = 5)
+
+# Paired t-test
+t.test(pre, post, paired = TRUE) |> tidy()
+
+# Equivalent: one-sample t-test on the differences
+t.test(pre - post, mu = 0) |> tidy()
+
+# Effect size
+cohens_d(pre, post, paired = TRUE)
+
+# Assumption check on differences
+shapiro.test(pre - post)
+```
+
+## Output & Results
+
+```
+# A tibble: 1 x 8
+  estimate statistic p.value parameter conf.low conf.high method       alternative
+     <dbl>     <dbl>   <dbl>     <dbl>    <dbl>     <dbl> <chr>        <chr>
+1     6.04      6.88 <0.001        29     4.25      7.84 Paired t-... two.sided
+
+Cohen's d (paired) |         95% CI
+-------------------------------------
+1.26              | [0.78, 1.74]
+```
+
+The post-intervention measurement is 6.0 mmHg lower on average; $t(29) = 6.88$, $p < 0.001$, large paired effect.
+
+## Interpretation
+
+In a manuscript: "Blood pressure decreased by 6.0 mmHg on average from baseline to week 12 (paired t(29) = 6.88, p < 0.001, Cohen's d_z = 1.26, 95 % CI 4.3 to 7.8 mmHg)."
+
+## Practical Tips
+
+- Paired design usually has more power than independent-groups design at the same total sample size.
+- Check normality of the differences, not the raw measurements.
+- For non-normal differences, use Wilcoxon signed-rank.
+- Pair variables correctly: subjects must be in the same order in both vectors, or use a data frame.
+- Report Cohen's $d_z$, not pooled-SD two-group $d$, for paired designs.

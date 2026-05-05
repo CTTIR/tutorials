@@ -1,0 +1,110 @@
+---
+title: Sample Space and Events
+date: "2026-04-17"
+description: "The set of possible outcomes, events as subsets, and the algebra of set operations"
+categories:
+  - Probability Theory
+  - sample-space
+  - events
+  - set-operations
+  - de-morgan
+---
+
+## Introduction
+
+Before any probability can be assigned, we need to know what *could* happen. The **sample space** is the set of all possible outcomes of a random experiment; **events** are subsets of the sample space to which we assign probabilities. Clean reasoning about probability begins with clear identification of both.
+
+## Prerequisites
+
+Familiarity with basic set theory -- unions, intersections, complements -- is sufficient.
+
+## Theory
+
+The **sample space** $\Omega$ is the set of all possible outcomes. Examples:
+
+- Coin toss: $\Omega = \{H, T\}$.
+- Two dice: $\Omega = \{(i, j) : i, j \in \{1, \ldots, 6\}\}$, 36 outcomes.
+- Waiting time: $\Omega = [0, \infty)$.
+- DNA base at position $i$: $\Omega = \{A, C, G, T\}$.
+
+An **event** is a subset $A \subseteq \Omega$. We say event $A$ occurs if the realised outcome $\omega$ is in $A$. Key operations:
+
+- **Union** $A \cup B$: the event that $A$ or $B$ (or both) occurs.
+- **Intersection** $A \cap B$: the event that both $A$ and $B$ occur.
+- **Complement** $A^c$: the event that $A$ does not occur.
+- **Difference** $A \setminus B = A \cap B^c$: $A$ but not $B$.
+
+Two key identities -- **De Morgan's laws** -- relate complements and set operations:
+
+$$(A \cup B)^c = A^c \cap B^c, \qquad (A \cap B)^c = A^c \cup B^c.$$
+
+Events $A$ and $B$ are **disjoint** (mutually exclusive) if $A \cap B = \emptyset$. They are **independent** (under probability $P$) if $P(A \cap B) = P(A)P(B)$. Disjointness is about sets; independence is about probabilities -- the two concepts should not be confused.
+
+## Assumptions
+
+No assumptions beyond the underlying probability space being well-defined.
+
+## R Implementation
+
+We can enumerate finite sample spaces explicitly and manipulate events as logical vectors.
+
+```r
+# Two dice: enumerate the 36-element sample space
+omega <- expand.grid(die1 = 1:6, die2 = 1:6)
+head(omega, 3)
+
+# Define events as logical vectors indexing rows of omega
+A <- with(omega, die1 == 1)            # first die is 1
+B <- with(omega, die1 + die2 == 7)     # sum equals 7
+
+# Set operations
+A_union_B     <- A | B
+A_inter_B     <- A & B
+A_complement  <- !A
+A_minus_B     <- A & !B
+
+# Under a uniform probability on 36 outcomes:
+p <- function(E) mean(E)   # proportion of outcomes in E
+c(P_A         = p(A),
+  P_B         = p(B),
+  P_A_union_B = p(A_union_B),
+  P_A_and_B   = p(A_inter_B))
+
+# Verify inclusion-exclusion: P(A U B) = P(A) + P(B) - P(A n B)
+c(lhs = p(A_union_B),
+  rhs = p(A) + p(B) - p(A_inter_B))
+
+# Verify De Morgan: (A U B)^c = A^c n B^c
+all((!(A | B)) == (!A & !B))
+```
+
+## Output & Results
+
+```
+  die1 die2
+1    1    1
+2    2    1
+3    3    1
+
+       P_A        P_B P_A_union_B  P_A_and_B
+    0.1667     0.1667      0.3056     0.02778
+
+     lhs      rhs
+  0.3056   0.3056
+
+[1] TRUE
+```
+
+All identities are satisfied. $P(A \cup B) = 11/36$ because 11 outcomes satisfy "first die is 1 OR sum is 7", and the formula recovers the same value.
+
+## Interpretation
+
+When writing a methods section, the sample space is usually defined implicitly by the design ("patients were followed for 30 days and classified as event / no event"). Making this explicit -- "the sample space is $\{\text{event}, \text{no event}\}$" -- is rarely necessary except in pedagogical contexts.
+
+## Practical Tips
+
+- For continuous sample spaces ($\Omega = \mathbb{R}$ or higher-dimensional), not every subset is an event; measurability restrictions apply. In finite or countable sample spaces, every subset is an event.
+- Do not conflate *disjoint* with *independent*. Two disjoint events with positive probability are maximally dependent: if one occurs, the other cannot.
+- De Morgan's laws generalise to countable unions and intersections; they are indispensable when reasoning about complements of complex events.
+- Encoding finite sample spaces in R (via `expand.grid` or combinations) makes exploratory probability calculations explicit and checkable.
+- Inclusion-exclusion extends to many events: $P(\bigcup A_i) = \sum P(A_i) - \sum P(A_i \cap A_j) + \ldots$.

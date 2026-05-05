@@ -103,15 +103,3 @@ Typical methods-section phrasing:
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 00d1f04587644e70a6ca0518f83dd538 -->
-<img src="https://vg09.met.vgwort.de/na/00d1f04587644e70a6ca0518f83dd538"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

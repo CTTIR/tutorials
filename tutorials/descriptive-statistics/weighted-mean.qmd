@@ -1,0 +1,83 @@
+---
+title: The Weighted Mean
+date: "2026-04-17"
+description: "Averaging with unequal weights: survey inclusion probabilities, meta-analysis pooling, and more"
+categories:
+  - Descriptive Statistics
+  - weighted-mean
+  - survey
+  - pooling
+---
+
+## Introduction
+
+A weighted mean is a generalisation of the arithmetic mean in which each observation carries a positive weight that reflects its importance, reliability, or inclusion probability. Weighted means appear in survey sampling (weights are reciprocals of inclusion probabilities), in meta-analysis (weights are inverse-variance), and in weighted regression.
+
+## Prerequisites
+
+The reader should know the arithmetic mean and be comfortable with the R function `weighted.mean()`.
+
+## Theory
+
+Given observations $x_1, \ldots, x_n$ with positive weights $w_1, \ldots, w_n$, the weighted mean is
+
+$$\bar{x}_w = \frac{\sum w_i x_i}{\sum w_i}.$$
+
+When all weights are equal, this reduces to the arithmetic mean. The weights re-scale each observation's contribution. In inverse-variance weighting, $w_i = 1 / s_i^2$, which gives more precise observations more influence.
+
+The weighted variance is
+
+$$s^2_w = \frac{\sum w_i (x_i - \bar{x}_w)^2}{\sum w_i - 1}$$
+
+(using the frequency-weight convention). For survey weights, a different denominator is used.
+
+## Assumptions
+
+- Weights must be positive.
+- The choice of weight reflects a real asymmetry (inclusion probability, precision, repetition count); arbitrary weighting is meaningless.
+
+## R Implementation
+
+```r
+library(survey)
+
+# Meta-analysis: four studies with mean and SE
+studies <- data.frame(
+  mean = c(1.20, 0.95, 1.40, 1.10),
+  se   = c(0.15, 0.25, 0.10, 0.20)
+)
+studies$w <- 1 / studies$se^2
+
+pooled_mean <- weighted.mean(studies$mean, studies$w)
+pooled_se   <- sqrt(1 / sum(studies$w))
+c(pooled_mean = pooled_mean, pooled_se = pooled_se)
+
+# Survey weights: 200 respondents, sample weight = 1 / inclusion probability
+set.seed(2026)
+resp <- data.frame(
+  sbp = rnorm(200, 132, 15),
+  w   = sample(c(0.5, 1.0, 2.0), 200, replace = TRUE)
+)
+weighted.mean(resp$sbp, resp$w)
+```
+
+## Output & Results
+
+```
+pooled_mean    pooled_se
+      1.236        0.075
+```
+
+The inverse-variance weighted mean is 1.24 with SE 0.08 -- more precise than the simple average of 1.16 that would ignore the study-level precision.
+
+## Interpretation
+
+Meta-analytic pooling gives study-level weights that reflect how much each study contributes to the combined evidence. Survey weights make the computed mean estimate the population mean rather than the sample mean. Always report which weights were used.
+
+## Practical Tips
+
+- Negative or zero weights are invalid; check the input.
+- For survey data, use the `survey` package (`svymean`, `svydesign`) rather than `weighted.mean()` to get the correct SE accounting for design.
+- Inverse-variance weighting is optimal under random-effects meta-analysis only when $\tau^2$ is zero; otherwise weights should use $w_i = 1/(s_i^2 + \tau^2)$.
+- When weights are frequencies (integer counts), the weighted mean equals the ordinary mean of the expanded dataset.
+- Reporting "the weighted mean" without specifying the weights is ambiguous; include the weight definition in methods.

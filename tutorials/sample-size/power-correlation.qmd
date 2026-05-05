@@ -1,0 +1,69 @@
+---
+title: Power for Correlation Tests
+date: "2026-04-17"
+description: "Sample size for Pearson and Spearman correlations via Fisher's z transformation"
+categories:
+  - "Sample Size & Power"
+  - power
+  - correlation
+  - fisher-z
+---
+
+## Introduction
+
+Power analysis for correlation tests determines the sample size required to detect a specified population correlation $\rho$ different from zero (or different from a non-zero reference) with adequate probability. Correlation studies are pervasive in clinical research, psychometrics, behavioural science, biomarker validation, and any setting where the strength of association between two continuous variables is the central question. The standard analytical approach uses Fisher's $z$-transformation, which converts the sampling distribution of the Pearson correlation into an approximately Normal distribution with a simple variance formula, supporting clean closed-form sample-size calculations.
+
+## Prerequisites
+
+A working understanding of Pearson and Spearman correlation, the Fisher $z$-transformation, and the relationship between effect size and required sample size in inferential statistics.
+
+## Theory
+
+Fisher's $z$-transformation is
+
+$$z = \tfrac{1}{2} \log \frac{1 + r}{1 - r} = \mathrm{atanh}(r),$$
+
+with $\mathrm{SE}(z) \approx 1/\sqrt{n - 3}$. The required sample size to detect $\rho$ different from 0 at two-sided $\alpha$ with power $1 - \beta$ is
+
+$$n \approx \left(\frac{z_{1-\alpha/2} + z_{1-\beta}}{\mathrm{atanh}(\rho)}\right)^2 + 3.$$
+
+Cohen's effect-size benchmarks for $r$ are 0.10 (small), 0.30 (medium), and 0.50 (large). Spearman's rank correlation has slightly less efficient inference under bivariate Normality (asymptotic relative efficiency $9/\pi^2 \approx 0.91$), so a 9 % inflation in $n$ converts a Pearson sample-size calculation to its Spearman equivalent.
+
+## Assumptions
+
+The data are bivariate Normal for the Pearson test, the pairs are independent and identically distributed, and the population correlation is genuinely well-defined. Spearman correlation tolerates monotone non-linearity but its power calculation is approximate.
+
+## R Implementation
+
+```r
+library(pwr)
+
+pwr.r.test(r = 0.30, sig.level = 0.05, power = 0.80)
+
+pwr.r.test(r = 0.10, power = 0.80)
+
+r_grid <- seq(0.1, 0.6, by = 0.05)
+pw <- sapply(r_grid, function(r) pwr.r.test(r = r, n = 50)$power)
+data.frame(r = r_grid, power_n50 = round(pw, 2))
+```
+
+## Output & Results
+
+`pwr.r.test()` returns the required $n$ at specified $r$, $\alpha$, and power. For $r = 0.30$ at 80 % power and two-sided $\alpha = 0.05$, $n = 85$; for $r = 0.10$, $n = 782$ — illustrating how dramatically small correlations inflate the required sample size. The power-by-correlation table at fixed $n$ shows the achievable power across the range of plausible correlations and is a useful supplement to the single-point calculation.
+
+## Interpretation
+
+A reporting sentence: "To detect a medium correlation of $r = 0.30$ with 80 % power at two-sided $\alpha = 0.05$, a sample of 85 participants is required. With the planned $n = 50$, achievable power for the same effect is 56 %, leaving the study substantially under-powered. The protocol therefore enrols 90 participants to allow for 5 % attrition. Sensitivity analyses across $\rho \in [0.20, 0.40]$ show required $n$ ranging from 47 to 191." Always report sensitivity over a plausible $\rho$ range.
+
+## Practical Tips
+
+- Testing $\rho$ against a non-zero reference value requires a modified Fisher-$z$ formula that accounts for the difference between $\mathrm{atanh}(\rho_0)$ and $\mathrm{atanh}(\rho_1)$; use `pwrss::pwrss.z.corr()` or compute manually rather than relying on the standard `pwr.r.test()` which assumes $\rho_0 = 0$.
+- For Spearman correlations, inflate the Pearson-based $n$ by approximately 9 % to reflect the slight efficiency loss of the rank-based test under bivariate Normality; for non-Normal underlying data the rank-based test can actually be more efficient.
+- Correlations near $\pm 1$ have lower sampling variance than correlations near zero (a consequence of the bounded support); Fisher's $z$-transformation handles this automatically by mapping $r$ to a scale where the variance is approximately constant.
+- When many correlations are tested simultaneously (e.g., a correlation matrix of 10 variables yields 45 pairs), adjust $\alpha$ for multiplicity using Bonferroni or false-discovery-rate procedures, and recompute power against the adjusted threshold.
+- Sensitivity analysis across plausible $\rho$ is routine in correlational study planning; protocols with a single point $\rho$ are increasingly flagged by reviewers, who expect a range and a justification of the lower bound used for sample-size determination.
+- For paired or longitudinal correlation comparisons (e.g., comparing $\rho$ at two time points), use Steiger's modified Fisher-$z$ test and its dedicated power calculation; the standard formulas apply only to a single correlation against a fixed reference.
+
+## R Packages Used
+
+`pwr::pwr.r.test()` for the canonical Fisher-$z$-based power calculation; `pwrss::pwrss.z.corr()` for non-zero reference and other extensions; `WebPower::wp.correlation()` for an alternative interface; `simr` and `Superpower` for simulation-based correlation power across complex designs; `boot` for bootstrap-based power estimation when assumptions are uncertain.

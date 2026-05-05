@@ -1,0 +1,72 @@
+---
+title: "UMAP and t-SNE: Overview"
+date: "2026-04-17"
+description: "Modern non-linear dimensionality reduction for visualisation: UMAP, t-SNE, and their caveats"
+categories:
+  - Multivariate Statistics
+  - umap
+  - tsne
+  - embedding
+  - visualisation
+---
+
+## Introduction
+
+UMAP (uniform manifold approximation and projection) and t-SNE (t-distributed stochastic neighbour embedding) are the dominant non-linear dimensionality-reduction techniques for visualising very high-dimensional data — single-cell RNA sequencing, large image embeddings, language-model representations. They produce striking 2D or 3D scatter plots in which similar observations cluster together, and they are now near-default visualisations in many computational-biology and machine-learning pipelines. They also have well-documented pitfalls, and learning what they do *not* show is as important as learning to apply them.
+
+## Prerequisites
+
+A working understanding of principal components analysis, distance metrics, and the trade-off between preserving local and global structure in a low-dimensional embedding.
+
+## Theory
+
+Both methods optimise a 2D or 3D embedding such that pairwise similarities computed in the original high-dimensional space are preserved as well as possible.
+
+- **t-SNE** computes Gaussian-weighted neighbour probabilities in the high-dimensional space, t-distributed neighbour probabilities in the low-dimensional space, and minimises the KL divergence between them. The Student-$t$ distribution in low dimensions prevents the "crowding problem" (compressing many high-dimensional neighbours into a small low-dimensional area).
+- **UMAP** constructs a fuzzy topological representation of the high-dimensional data using local distance scaling, then optimises a similar fuzzy structure in low dimensions via a cross-entropy loss. UMAP is faster, scales better to large $n$, and is often considered to preserve global structure better than t-SNE.
+
+Both algorithms are stochastic; setting the random seed is required for reproducible figures.
+
+## Assumptions
+
+A similarity-preserving 2D / 3D embedding is informative for the inferential question. Both algorithms assume meaningful local structure exists in the data; they do not assume Gaussianity, linearity, or any specific distance metric (UMAP's metric is configurable).
+
+## R Implementation
+
+```r
+library(umap); library(Rtsne)
+
+set.seed(2026)
+X <- as.matrix(iris[, 1:4])
+
+# UMAP
+u <- umap(X)
+plot(u$layout, col = iris$Species, pch = 16,
+     main = "UMAP of iris")
+
+# t-SNE
+t <- Rtsne(X, perplexity = 15, check_duplicates = FALSE)
+plot(t$Y, col = iris$Species, pch = 16,
+     main = "t-SNE of iris")
+```
+
+## Output & Results
+
+Both methods produce 2D coordinates per observation. UMAP and t-SNE both separate the three iris species clearly; differences in the layout (relative cluster positions, cluster sizes) reflect algorithm-specific choices rather than data-driven structure.
+
+## Interpretation
+
+A reporting sentence: "UMAP and t-SNE embeddings of the four iris measurements both separate the three species, with setosa well-isolated and versicolor / virginica close but distinguishable; UMAP preserves the inter-cluster gap more faithfully than t-SNE, consistent with its better global-structure properties." Always describe the algorithm and key hyperparameters in the figure caption; readers should not have to guess.
+
+## Practical Tips
+
+- Treat distances in the embedding as relative neighbourhoods only; absolute distances and cluster *sizes* are not meaningful, despite how the visualisation looks.
+- t-SNE's `perplexity` parameter (typically 5–50) sets the effective neighbourhood scale; vary it across at least three values to confirm the structure is robust.
+- UMAP's `n_neighbors` and `min_dist` control the same trade-offs; defaults work for most data but should be tuned for very small or very large $n$.
+- For very high-dimensional input, run PCA first to reduce noise to the top 50 components, then UMAP/t-SNE on the PCA scores; this is the standard pipeline in single-cell analysis.
+- Cluster sizes in the embedding are meaningless; do not interpret a "small cluster" or "large cluster" as biologically real.
+- Reproducibility requires a fixed seed *and* fixed software versions; UMAP results in particular can shift between releases.
+
+## R Packages Used
+
+`umap` for the canonical UMAP implementation; `uwot` for a faster UMAP variant with more options; `Rtsne` for the standard t-SNE; `M3C` and `embed` for tidymodels-flavoured wrappers; `dimRed` for a unified interface across UMAP, t-SNE, Isomap, and other non-linear embeddings.

@@ -1,0 +1,70 @@
+---
+title: Coefficient of Variation
+date: "2026-04-17"
+description: "Scale-free dispersion: the ratio of the standard deviation to the mean"
+categories:
+  - Descriptive Statistics
+  - coefficient-of-variation
+  - cv
+  - relative-dispersion
+---
+
+## Introduction
+
+The coefficient of variation (CV) is the ratio of the standard deviation to the mean, usually expressed as a percentage. It provides a scale-free measure of dispersion, useful for comparing variability across variables measured on different units or at very different magnitudes. In laboratory medicine, the CV is the standard metric for assay precision; a CV below 5% is typical for a clinical chemistry assay.
+
+## Prerequisites
+
+The reader should know what the mean and SD are.
+
+## Theory
+
+For a positive-valued variable with mean $\mu$ and SD $\sigma$,
+
+$$\mathrm{CV} = \sigma / \mu \quad \text{(or } 100 \cdot \sigma/\mu \text{ as a percentage)}.$$
+
+The CV is unit-less: comparing CVs across weight-in-kg and weight-in-pounds gives the same value. It is meaningful only for variables on a ratio scale (true zero) and is unstable when the mean is close to zero.
+
+A related quantity is the **relative standard error (RSE)** = SE / mean. It measures the precision of the mean estimate itself rather than the dispersion of individuals.
+
+## Assumptions
+
+- The variable must be on a ratio scale (mass, concentration, time, count).
+- The mean must be comfortably far from zero; CV approaches infinity as the mean approaches zero.
+- For CV comparisons across groups to be meaningful, the variables must be of the same type.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+# Two assays with different concentration ranges
+low  <- rnorm(50, mean = 2.5, sd = 0.25)
+high <- rnorm(50, mean = 85.0, sd = 6.8)
+
+cv_pct <- function(x) 100 * sd(x) / mean(x)
+
+c(low_cv  = cv_pct(low),
+  high_cv = cv_pct(high))
+```
+
+## Output & Results
+
+```
+low_cv high_cv
+  10.0    8.0
+```
+
+The low-concentration assay has a slightly higher CV (10%) than the high-concentration one (8%); the absolute SD of low is only 0.25 vs. 6.8 for high, but after scaling by the mean the two are comparable.
+
+## Interpretation
+
+Report CV for inter-assay variability, instrument precision, or any context where comparing variability across scales matters. A CV of 10% is conventional for clinical-chemistry imprecision; a CV over 20% signals an assay in need of optimisation.
+
+## Practical Tips
+
+- CV is undefined or nonsensical for variables centred near zero; use absolute SD instead.
+- Do not report CV for interval-scale variables (temperature in Celsius).
+- Log-CV = SD of log-values is approximately equal to CV on the original scale for small CVs; for large CVs the approximation breaks down.
+- In intra-assay vs. inter-assay contexts, report both CVs separately.
+- The CV of a mean $\mathrm{CV}(\bar{x})$ is CV($x$) / $\sqrt{n}$; this connects precision to sample size.

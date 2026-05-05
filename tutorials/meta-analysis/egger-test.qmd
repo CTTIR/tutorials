@@ -1,0 +1,70 @@
+---
+title: "Egger's Test for Funnel Asymmetry"
+date: "2026-04-17"
+description: Formal regression test for small-study effects and publication bias
+categories:
+  - Meta-Analysis
+  - egger
+  - publication-bias
+  - asymmetry
+---
+
+## Introduction
+
+Egger's regression test, introduced by Egger and colleagues in 1997, provides a formal hypothesis test for funnel-plot asymmetry — the most commonly cited indirect symptom of publication bias and small-study effects. Where the funnel plot offers a visual diagnostic that depends on the eye of the beholder, Egger's test reduces the question to a regression intercept whose distribution under symmetry is known. A statistically significant intercept indicates that small studies systematically report effects of different magnitude than larger studies, which may reflect selective publication, methodological heterogeneity confounded with sample size, or genuine small-study heterogeneity. Although interpretation requires nuance, Egger's test remains the de facto standard quantitative complement to a funnel plot and is recommended by the Cochrane Handbook for meta-analyses with at least ten studies.
+
+## Prerequisites
+
+Familiarity with funnel plots, the small-study-effect concept, and ordinary least-squares regression with weighted variants.
+
+## Theory
+
+The test regresses the standardised effect $y_i / \mathrm{SE}(y_i)$ on the precision $1 / \mathrm{SE}(y_i)$. Under the null hypothesis of funnel symmetry the regression line passes through the origin; the intercept tests this directly. A non-zero intercept indicates that the standardised effect depends on precision — exactly the pattern produced when small, imprecise studies are over-represented at one tail of the funnel because of selective publication.
+
+Statistical power is low with fewer than ten studies, and inflated when between-study heterogeneity is large; $k \geq 10$ is the conventional minimum for interpretable use, and the test should never be the sole basis for declaring publication bias.
+
+## Assumptions
+
+Studies are independent; the effect estimate is approximately normally distributed on the analysis scale; the relationship between standardised effect and precision is linear under the null; and the meta-analysis contains enough studies that any asymmetry is detectable above the random-sampling noise. For binary outcomes the standard Egger test is biased — Harbord's and Peters's modifications are preferred.
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+k <- 20
+yi <- rnorm(k, 0.4, 0.2)
+vi <- 1 / sample(20:300, k, replace = TRUE)
+
+keep <- !(sqrt(vi) > 0.1 & abs(yi) < 0.2)
+yi_b <- yi[keep]; vi_b <- vi[keep]
+
+res <- rma(yi_b, vi_b, method = "REML")
+
+egger <- regtest(res, model = "lm")
+print(egger)
+
+fsn(yi_b, vi_b)
+```
+
+## Output & Results
+
+`regtest()` returns the regression intercept, its standard error, the test statistic, and the two-sided $p$-value for the null of funnel symmetry. The companion fail-safe-$N$ statistic from `fsn()` reports how many additional null-effect studies would be needed to drive the pooled estimate to non-significance — a complementary, intuitive sensitivity measure that helps readers gauge robustness.
+
+## Interpretation
+
+A reporting sentence: "Egger's regression suggested significant funnel asymmetry (intercept 1.28, 95 % CI 0.21 to 2.35, $p = 0.02$), consistent with small-study effects or publication bias. A fail-safe $N$ of 42 indicates the pooled conclusion would be diluted to non-significance only by 42 unpublished null studies, suggesting moderate but not unlimited robustness; trim-and-fill and PET-PEESE sensitivity analyses are reported in the supplement." Always pair the test result with at least one bias-adjusted sensitivity analysis.
+
+## Practical Tips
+
+- Egger's test has low power for $k < 10$; the Cochrane Handbook explicitly discourages its use below this threshold and recommends visual funnel inspection only.
+- For binary outcomes, prefer Harbord's modified test (continuous data) or Peters's test (rare events); the standard Egger test inflates the type-I error rate when the effect measure is a log-OR or log-RR.
+- A significant intercept is not synonymous with publication bias — true between-study heterogeneity correlated with study size (small studies systematically using different populations or methods) can produce the same signal.
+- Sensitivity-analyse with trim-and-fill and PET-PEESE; both adjust the pooled estimate for apparent asymmetry and should be reported alongside the unadjusted estimate when Egger's test is significant.
+- For low-prevalence binary outcomes, asymmetry can arise from continuity-correction artefacts rather than genuine bias; Mantel–Haenszel without correction is a useful diagnostic alternative.
+- Report the intercept estimate with its CI, not only its $p$-value; the magnitude of asymmetry conveys more than dichotomous significance.
+
+## R Packages Used
+
+`metafor::regtest()` for Egger's, Harbord's, Peters's, and the more general regression-based asymmetry tests; `metafor::fsn()` for fail-safe $N$ across multiple definitions (Rosenthal, Orwin, Rosenberg); `meta::metabias()` as the alternative interface with built-in plotting; `puniform` and `weightr` for selection-model-based bias adjustment; `metasens` for trim-and-fill and PET-PEESE workflows.

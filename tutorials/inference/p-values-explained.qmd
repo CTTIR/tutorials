@@ -1,0 +1,94 @@
+---
+title: P-Values Explained
+date: "2026-04-17"
+description: "Definition, correct interpretation, and the most common misinterpretations of the p-value"
+categories:
+  - Inferential Statistics
+  - p-value
+  - significance
+  - hypothesis-testing
+---
+
+## Introduction
+
+The p-value is the single most reported statistic in applied research, and the most frequently misinterpreted. Understanding what a p-value is -- and what it is not -- is essential for reading, writing, and reviewing quantitative studies. The American Statistical Association's 2016 statement on p-values laid out six principles that every user of statistics should internalise.
+
+## Prerequisites
+
+Basic hypothesis testing and sampling distributions.
+
+## Theory
+
+A **p-value** is the probability, assuming the null hypothesis is true, of observing data at least as extreme as what was actually observed. Formally,
+
+$$p = P(T \geq t_{\text{obs}} \mid H_0)$$
+
+for a one-sided test with test statistic $T$, or a two-sided analogue for two-sided alternatives.
+
+**Correct interpretation**: a small p-value means the observed data would be unusual under $H_0$. It does **not** mean that $H_0$ is unlikely to be true, nor that the alternative is probable.
+
+**Common misinterpretations**:
+
+1. "$p = 0.03$ means there's a 3% probability the null is true." Wrong: the p-value is a conditional probability of data given $H_0$, not of $H_0$ given data.
+2. "$p < 0.05$ means the result is meaningful." Wrong: small p-values can come from huge samples detecting trivial effects.
+3. "$p > 0.05$ means no effect." Wrong: failure to reject is not evidence of no effect; it is absence of evidence.
+4. "p-values from the same experiment are comparable." Wrong: p-values are discontinuous in the effect size; a p of 0.04 and 0.06 are nearly identical evidentially.
+
+Under $H_0$, the p-value has a uniform distribution on $[0, 1]$ (for continuous test statistics). This is a useful simulation check.
+
+## Assumptions
+
+- The null hypothesis and test statistic are pre-specified.
+- The sampling model under $H_0$ is correctly specified.
+- Multiple testing, optional stopping, and selective reporting are not present.
+
+## R Implementation
+
+```r
+library(ggplot2)
+set.seed(2026)
+
+# Simulate p-values under H0 (they should be uniform)
+n_sims <- 5000
+pvals_null <- replicate(n_sims, {
+  x <- rnorm(30, mean = 0, sd = 1)   # H0 true: mu = 0
+  t.test(x, mu = 0)$p.value
+})
+
+hist(pvals_null, breaks = 40, col = "#2A9D8F",
+     main = "p-values under H0 are uniform", xlab = "p-value")
+
+# Simulate under H1
+pvals_alt <- replicate(n_sims, {
+  x <- rnorm(30, mean = 0.5, sd = 1)
+  t.test(x, mu = 0)$p.value
+})
+
+hist(pvals_alt, breaks = 40, col = "#F4A261",
+     main = "p-values under H1 pile near zero", xlab = "p-value")
+
+# Empirical power at alpha = 0.05
+mean(pvals_alt < 0.05)
+power.t.test(n = 30, delta = 0.5, sd = 1)$power
+```
+
+## Output & Results
+
+```
+[1] 0.763    # empirical power
+[1] 0.752    # theoretical power
+```
+
+Under $H_0$, the histogram is flat. Under $H_1$, p-values pile near zero. The empirical rejection rate at $\alpha = 0.05$ matches the theoretical power.
+
+## Interpretation
+
+When reporting, pair p-values with effect sizes and confidence intervals. "The difference was 3.2 mmHg (95 % CI 0.6 to 5.8 mmHg, $p = 0.015$)" conveys both the magnitude and the statistical significance.
+
+## Practical Tips
+
+- Never report a p-value alone; always include the effect size and its CI.
+- Pre-specify one-sided vs. two-sided tests; switching after seeing data is fishing.
+- Large samples make tiny effects statistically significant; focus on practical significance when $n$ is large.
+- Multiple testing inflates false-positive rates; adjust with Bonferroni, Holm, or FDR.
+- "Nearly significant" ($0.05 < p < 0.10$) is not a meaningful category; report the exact value.

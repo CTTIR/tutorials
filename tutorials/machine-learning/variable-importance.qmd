@@ -1,0 +1,72 @@
+---
+title: Variable Importance
+date: "2026-04-17"
+description: Impurity-based and permutation importance for tree ensembles and beyond
+categories:
+  - Machine Learning
+  - importance
+  - permutation
+  - impurity
+---
+
+## Introduction
+
+Variable importance ranks features by contribution to model accuracy. It is the most common first-pass interpretability tool for black-box models. Tree ensembles offer two native measures: impurity-based (mean decrease in Gini or variance) and permutation-based (drop in accuracy when the feature is shuffled).
+
+## Prerequisites
+
+Decision trees; random forests; cross-validation.
+
+## Theory
+
+**Impurity importance**: sum the impurity decrease over all splits using feature $j$. Biased toward high-cardinality features and correlated features.
+
+**Permutation importance**: shuffle feature $j$ in held-out data; measure the drop in performance. Unbiased for correlated features as a group but can split importance between correlated pairs.
+
+**Conditional permutation** and SHAP values handle correlation more rigorously (at higher cost).
+
+## Assumptions
+
+Sufficient held-out data for permutation; features correctly treated as continuous or categorical.
+
+## R Implementation
+
+```r
+library(ranger); library(vip)
+
+set.seed(2026)
+n <- 500
+df <- data.frame(
+  x1 = rnorm(n), x2 = rnorm(n), x3 = rnorm(n),
+  x4 = rnorm(n), x5 = rnorm(n),
+  y  = sin(rnorm(n)) + 0.3 * rnorm(n)^2
+)
+
+rf <- ranger(y ~ ., data = df, num.trees = 500,
+             importance = "permutation")
+imp <- sort(rf$variable.importance, decreasing = TRUE)
+print(round(imp, 3))
+
+vip(rf, num_features = 5) +
+  ggplot2::labs(title = "Permutation importance (ranger RF)")
+```
+
+## Output & Results
+
+Sorted importance scores; the top feature dominates, others are close to zero on this mostly-noise data.
+
+## Interpretation
+
+"Permutation importance identified $x_1$ as the dominant predictor (12 % RMSE increase when shuffled); other features contributed negligibly, consistent with the data-generating process."
+
+## Practical Tips
+
+- Use permutation importance when correctness matters; impurity importance is cheap but biased.
+- Drop correlated features or use grouped importance if groups of correlated variables share the signal.
+- Importance alone does not reveal direction of effect; pair with partial dependence or SHAP.
+- Normalise importance by the baseline model error to express as a relative increase.
+- For deep learning, use integrated gradients or SHAP; RF-style permutation is not standard.
+
+## Reporting
+
+When reporting variable importance, always state which flavour was used (impurity, permutation, drop-column, or SHAP), the loss against which importance is measured, and whether the held-out test set or the training data drove the calculation. Permutation importance computed on training data overstates the apparent role of variables that the model overfits to, so the test-set version is the more defensible default. In a manuscript, include a small bar chart or table for the top features and note explicitly that importance is a measure of model reliance, not of causal effect or biological mechanism. Where features are correlated, mention that shared signal can split importance across columns and that grouped-permutation summaries may be more interpretable.

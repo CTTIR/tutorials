@@ -1,0 +1,103 @@
+---
+title: The Probability Density Function
+date: "2026-04-17"
+description: The function whose integral gives probability for a continuous random variable
+categories:
+  - Probability Theory
+  - pdf
+  - continuous
+  - density
+  - integration
+---
+
+## Introduction
+
+For a continuous random variable, probability is distributed smoothly across the support rather than concentrated on countable points. The **probability density function (PDF)** encodes this distribution: integrating the PDF over a set gives the probability that the variable lands in that set.
+
+## Prerequisites
+
+Calculus (integration) and the concept of a continuous random variable.
+
+## Theory
+
+A continuous random variable $X$ has a PDF $f_X$ if, for every measurable set $A$,
+
+$$P(X \in A) = \int_A f_X(x) \, dx.$$
+
+A valid PDF satisfies:
+
+1. $f_X(x) \geq 0$ for all $x$.
+2. $\int_{-\infty}^{\infty} f_X(x) \, dx = 1$.
+
+Crucially, $f_X(x)$ is **not** a probability. For continuous $X$, $P(X = x) = 0$ for every $x$. The density can exceed 1 at a given point, provided the integral is bounded. Density has units of inverse $x$: for $x$ in seconds, $f_X(x)$ has units of $1/\text{second}$.
+
+Useful relationships:
+
+- CDF: $F_X(x) = \int_{-\infty}^x f_X(u) \, du$.
+- PDF from CDF: $f_X(x) = F_X'(x)$ where $F_X$ is differentiable.
+- Expected value: $E[X] = \int x f_X(x) \, dx$.
+- Variance: $\mathrm{Var}(X) = \int (x - E[X])^2 f_X(x) \, dx$.
+
+In R, each standard continuous distribution has a `d*()` function returning its PDF.
+
+## Assumptions
+
+The variable is continuous (absolutely continuous with respect to Lebesgue measure). Mixed or discrete variables do not have ordinary PDFs (though the mixed case has a generalised density with respect to a mixed measure).
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+x_grid <- seq(-4, 4, length.out = 801)
+fx <- dnorm(x_grid, mean = 0, sd = 1)
+
+ggplot(data.frame(x = x_grid, f = fx), aes(x, f)) +
+  geom_line(colour = "#2A9D8F", linewidth = 1) +
+  geom_area(data = subset(data.frame(x = x_grid, f = fx),
+                          x >= -1.96 & x <= 1.96),
+            aes(y = f), fill = "#2A9D8F", alpha = 0.25) +
+  labs(x = "x", y = "f(x)",
+       title = "Standard normal PDF with central 95% shaded") +
+  theme_minimal()
+
+# Verify normalisation by numerical integration
+integrate(dnorm, -Inf, Inf)
+
+# Probability of an interval via integration
+integrate(dnorm, -1.96, 1.96)        # about 0.95
+
+# Equivalently via the CDF
+pnorm(1.96) - pnorm(-1.96)
+
+# Moments via integration
+integrate(function(x) x * dnorm(x), -Inf, Inf)        # E[X]
+integrate(function(x) x^2 * dnorm(x), -Inf, Inf)      # E[X^2]
+```
+
+## Output & Results
+
+```
+1 with absolute error < 9.4e-05
+
+0.9500042 with absolute error < 1e-11
+
+[1] 0.9500042
+
+-4.4e-11 with absolute error < ...   # E[X] ≈ 0
+1 with absolute error < ...          # E[X^2] = Var(X) for standard normal
+```
+
+Integrating the standard normal PDF over $[-1.96, 1.96]$ gives 0.95 -- the well-known central probability -- and the `pnorm` difference recovers the same value via the CDF.
+
+## Interpretation
+
+For applied purposes, a PDF is visualised by its curve; probabilities are computed via `p*()` functions in R rather than by explicit integration. When reporting a continuous distribution in a paper, the density plot, mean, SD, and median are the standard summaries.
+
+## Practical Tips
+
+- Density at a point is not probability; do not compare $f(x_1)$ to $f(x_2)$ as probabilities of outcomes 1 and 2. Compare $P(X \in (x_1 - h, x_1 + h))$ for small $h$ instead.
+- The density can be unbounded (e.g., Gamma with shape $< 1$ near $0$); integrability, not boundedness, is what matters.
+- Kernel density estimates (`density()`) approximate the PDF from a sample.
+- Log-densities (`dnorm(..., log = TRUE)`) avoid underflow when evaluating likelihoods with many observations.
+- The relationship $f = F'$ is the starting point for the inverse-CDF method: to generate $X$, apply $F^{-1}$ to a uniform random variable.

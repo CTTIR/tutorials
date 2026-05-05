@@ -1,0 +1,61 @@
+---
+title: "Log-Rank Test: Details"
+date: "2026-04-17"
+description: Weighted and stratified log-rank test for comparing survival across groups
+categories:
+  - Survival Analysis
+  - log-rank
+  - survival-comparison
+---
+
+## Introduction
+
+The log-rank test is the standard non-parametric test for comparing survival across two or more groups in randomised trials and observational studies. It accumulates differences between observed and expected event counts at each event time across the follow-up window and reports a chi-squared statistic. The test is most powerful under proportional hazards — the alternative for which it was designed — but variants (weighted log-rank, stratified log-rank) extend its applicability to non-proportional or covariate-adjusted settings.
+
+## Prerequisites
+
+A working understanding of Kaplan-Meier estimation, censoring, and the proportional-hazards alternative as the natural target for the log-rank test.
+
+## Theory
+
+At each unique event time $t_j$ across all groups, the test compares the observed number of events in group $k$ to the expected number under the null of equal hazards: $E_{kj} = d_j \cdot n_{kj} / n_j$, with $d_j$ the total events at $t_j$ and $n_{kj}, n_j$ the numbers at risk. The standardised cumulative deviation across all event times forms a chi-squared statistic with $k - 1$ degrees of freedom, where $k$ is the number of groups.
+
+Weighted variants (Wilcoxon, Tarone-Ware, Fleming-Harrington $G^{\rho, \gamma}$) give more weight to early or late differences and recover power when hazards are non-proportional. The stratified log-rank applies the test within strata defined by a categorical covariate and pools the contributions, controlling for that covariate while testing the main effect.
+
+## Assumptions
+
+Proportional hazards across groups (for the standard log-rank), independent and non-informative censoring, and accurate event-time recording.
+
+## R Implementation
+
+```r
+library(survival)
+
+data(lung)
+fit <- survdiff(Surv(time, status) ~ sex, data = lung)
+fit
+
+# Stratified log-rank
+survdiff(Surv(time, status) ~ sex + strata(ph.ecog), data = lung)
+```
+
+## Output & Results
+
+`survdiff()` returns observed and expected events per group, the chi-squared test statistic, degrees of freedom, and the asymptotic $p$-value. The stratified version partitions the comparison within levels of the strata variable, producing the same output structure but with the stratification controlled for.
+
+## Interpretation
+
+A reporting sentence: "The log-rank test rejected the null of equal survival between sexes ($\chi^2_1 = 10.3$, $p = 0.001$); the female arm had 53 observed events compared with 86 expected under the null, while the male arm had 112 observed compared with 79 expected." Always pair the test with a hazard-ratio estimate (from Cox) and Kaplan-Meier curves; the test alone gives no effect size.
+
+## Practical Tips
+
+- Use stratification (`+ strata(var)`) when controlling for a covariate without testing it; stratified log-rank tests within strata and pools.
+- When hazards cross, the standard log-rank can fail to detect a real difference; use the Fleming-Harrington $G^{1, 0}$ test for late differences or $G^{0, 1}$ for early ones.
+- For many groups, log-rank gives an omnibus test; for pairwise comparisons follow up with `pairwise_survdiff()` from `survminer` and apply Bonferroni or Hochberg correction.
+- Report Kaplan-Meier curves alongside the test result; a $p$-value without a curve is uninterpretable for clinical readers.
+- Non-informative censoring is the assumption that fails most often in observational studies; if censoring depends on prognosis, the log-rank test is biased.
+- For severely non-proportional hazards (clearly crossing curves), consider RMST as the primary summary instead of relying on the log-rank.
+
+## R Packages Used
+
+`survival` for `survdiff()` with stratification; `survminer::pairwise_survdiff()` for pairwise log-rank tests with multiple-comparison correction; `nph` and `coin` for weighted-log-rank variants and exact tests; `FHtest` for Fleming-Harrington $G^{\rho, \gamma}$ tests.

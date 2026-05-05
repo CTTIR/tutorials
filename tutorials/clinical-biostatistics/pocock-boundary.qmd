@@ -1,0 +1,78 @@
+---
+title: Pocock Boundary
+date: "2026-04-17"
+description: Constant nominal alpha across interim analyses
+categories:
+  - Clinical Biostatistics
+  - pocock
+  - boundary
+  - group-sequential
+---
+
+## Introduction
+
+The Pocock boundary, introduced by Stuart Pocock in 1977, was the first systematic group-sequential efficacy stopping rule for clinical trials. It uses the same nominal type-I error level at every interim and final analysis, distributing the type-I error budget approximately uniformly across looks. The result is a design that makes early stopping for efficacy comparatively easy — a constant relatively-low nominal threshold across all looks — at the cost of requiring an unusually stringent nominal $p$-value at the final analysis if no earlier look has stopped the trial. Pocock boundaries are conceptually simple, ethically attractive when early stopping is a priority, but somewhat costly in terms of maximum sample size compared with the more conservative O'Brien-Fleming alternative.
+
+## Prerequisites
+
+A working understanding of group-sequential trial designs, the alpha-spending framework, and the trade-off between early-stopping ease and final-analysis stringency in repeated-look hypothesis testing.
+
+## Theory
+
+With $K$ planned analyses and overall two-sided type-I error $\alpha$, the Pocock boundary uses a constant nominal alpha $\alpha^*$ at every look such that the probability of any rejection event under the null exactly equals $\alpha$. For $K = 5$ and $\alpha = 0.05$ (two-sided), $\alpha^* \approx 0.0158$ at every look — substantially below the unadjusted 0.05 because of the multiplicity correction. Compared with O'Brien-Fleming, Pocock rejects more easily at early interim analyses (where O'Brien-Fleming demands extreme test statistics) but less easily at the final analysis (where O'Brien-Fleming approaches the unadjusted threshold).
+
+## Assumptions
+
+Information accrues as planned (regular interim spacing or alpha-spending implementation that handles irregular timing), the test statistic is approximately Normal at each look, and the multiplicity correction is pre-specified before any data are unblinded.
+
+## R Implementation
+
+```r
+library(rpact)
+
+design <- getDesignGroupSequential(
+  sided = 1, alpha = 0.025, beta = 0.2,
+  typeOfDesign = "P",
+  informationRates = seq(0.2, 1, by = 0.2)
+)
+
+print(design$stageLevels)
+print(design$criticalValues)
+
+plot(design, type = 1)
+
+ss_pocock <- getSampleSizeMeans(design = design,
+                                alternative = 0.3, stDev = 1)
+
+design_of <- getDesignGroupSequential(
+  sided = 1, alpha = 0.025, beta = 0.2,
+  typeOfDesign = "OF",
+  informationRates = seq(0.2, 1, by = 0.2)
+)
+ss_of <- getSampleSizeMeans(design = design_of,
+                            alternative = 0.3, stDev = 1)
+
+c(pocock_max_n = ss_pocock$maxNumberOfSubjects,
+  of_max_n    = ss_of   $maxNumberOfSubjects)
+```
+
+## Output & Results
+
+`rpact` returns the constant nominal alpha at each stage, the corresponding critical values on the test-statistic scale, and the maximum sample size needed to maintain the targeted overall power. Comparing Pocock and O'Brien-Fleming sample-size calculations side by side quantifies the cost of the more aggressive early-stopping property.
+
+## Interpretation
+
+A reporting sentence: "The five-stage group-sequential design with Pocock boundaries required nominal $p < 0.0158$ at every interim and final analysis to maintain overall one-sided $\alpha = 0.025$. This design enables earlier efficacy stopping than the equivalent O'Brien-Fleming design, but requires approximately 15 % more maximum sample size if no early stop is triggered. The choice was justified by the ethical imperative to halt enrolment as soon as a clinically meaningful benefit is established, given the trial's seriously-ill population." Always justify the boundary choice ethically.
+
+## Practical Tips
+
+- Pocock boundaries favour early stopping for efficacy; O'Brien-Fleming favours late stopping with high final-analysis power. The choice should reflect whether the trial prioritises ethical termination of clearly beneficial interventions (Pocock) or efficient final-analysis confirmation (O'Brien-Fleming).
+- The maximum sample size is larger under Pocock than under O'Brien-Fleming for the same overall power; O'Brien-Fleming is usually preferred when a meaningful effect is expected only at the final analysis and ethics permit waiting.
+- Alpha-spending implementations (Lan-DeMets with the Pocock-shape spending function $\alpha t$ or related linear forms) approximate Pocock behaviour under irregular interim timing and are the modern default in regulatory submissions.
+- Pocock boundaries are now rarely the primary choice in confirmatory phase-3 trials; O'Brien-Fleming has become the regulatory default. Pocock remains useful in phase-2 trials and futility-stopping contexts where early termination is a stronger priority.
+- A hybrid Hwang-Shih-DeCani family interpolates between Pocock and O'Brien-Fleming behaviour via a single shape parameter $\gamma$, allowing trial designers to dial the trade-off explicitly.
+- Pre-specify the boundary type, the spending function, and any contingency for unscheduled interims in the protocol; ad hoc adjustments after data inspection inflate type-I error and are increasingly flagged by regulators.
+
+## R Packages Used
+
+`rpact` for canonical group-sequential design with Pocock, O'Brien-Fleming, Hwang-Shih-DeCani, and custom alpha-spending boundaries; `gsDesign` for an alternative comprehensive group-sequential framework; `ldbounds` for Lan-DeMets alpha-spending implementation; `gsbDesign` for Bayesian group-sequential alternatives; `Mediana` for trial-design simulation including Pocock and O'Brien-Fleming boundary comparisons.

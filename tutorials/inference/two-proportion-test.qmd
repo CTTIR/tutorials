@@ -1,0 +1,94 @@
+---
+title: Two-Proportion Test
+date: "2026-04-17"
+description: "Comparing two independent proportions; z-test and chi-squared equivalence, with risk difference and relative risk"
+categories:
+  - Inferential Statistics
+  - two-proportion
+  - z-test
+  - risk-difference
+  - relative-risk
+---
+
+## Introduction
+
+The two-proportion test compares success rates in two independent groups. Typical applications: treatment vs. control event rates, exposed vs. unexposed incidence, screen-positive rates across populations. The test comes in two algebraically equivalent forms -- a z-test on the difference and a 2x2 chi-squared -- and is typically reported together with a risk difference, relative risk, or odds ratio.
+
+## Prerequisites
+
+One-proportion test, chi-squared distribution.
+
+## Theory
+
+For $X_1 \sim \mathrm{Binomial}(n_1, p_1)$ and $X_2 \sim \mathrm{Binomial}(n_2, p_2)$ independent,
+
+$$H_0: p_1 = p_2 \quad \text{vs.} \quad H_1: p_1 \neq p_2.$$
+
+Pooled proportion under $H_0$: $\hat{p} = (x_1 + x_2) / (n_1 + n_2)$.
+
+**Z-test**:
+
+$$Z = \frac{\hat{p}_1 - \hat{p}_2}{\sqrt{\hat{p}(1 - \hat{p})(1/n_1 + 1/n_2)}}.$$
+
+$Z^2$ equals the chi-squared statistic on the 2x2 table. In R, `prop.test()` performs this test (using chi-squared form).
+
+**Effect-size summaries**:
+
+- Risk difference (RD): $\hat{p}_1 - \hat{p}_2$.
+- Relative risk (RR): $\hat{p}_1 / \hat{p}_2$.
+- Odds ratio (OR): $\hat{p}_1 (1 - \hat{p}_2) / [\hat{p}_2 (1 - \hat{p}_1)]$.
+
+Each has a standard-error formula for constructing Wald CIs; score-based and exact alternatives exist.
+
+## Assumptions
+
+- Independent Bernoulli trials within and between groups.
+- Expected counts $\geq 5$ in every cell (else use Fisher's exact test).
+
+## R Implementation
+
+```r
+library(epitools)
+
+x1 <- 48; n1 <- 200       # treatment
+x2 <- 32; n2 <- 200       # control
+
+prop.test(c(x1, x2), c(n1, n2), correct = FALSE)
+
+# Risk difference with 95% CI via prop.test
+prop.test(c(x1, x2), c(n1, n2), correct = FALSE)$conf.int
+
+# Relative risk and odds ratio
+riskratio(c(n2 - x2, n1 - x1, x2, x1), rev = "both")$measure
+oddsratio(c(n2 - x2, n1 - x1, x2, x1), rev = "both")$measure
+
+# Fisher's exact test (small-cell alternative)
+fisher.test(matrix(c(x1, n1 - x1, x2, n2 - x2), nrow = 2, byrow = TRUE))
+```
+
+## Output & Results
+
+```
+     2-sample test for equality of proportions without continuity correction
+X-squared = 3.66, df = 1, p-value = 0.0557
+95% CI for (p1 - p2): (-0.0014, 0.1614)
+sample estimates: prop 1 = 0.24, prop 2 = 0.16
+
+           estimate lower    upper
+Exposed        1.50 0.994     2.265
+              (relative risk 1.50)
+```
+
+Treatment success rate 24 %, control 16 %. Risk difference 8 % (95 % CI -0.1 % to 16.1 %); p = 0.056 (borderline). Relative risk 1.50 (95 % CI 0.99 to 2.27).
+
+## Interpretation
+
+Report counts, proportions, the effect-size estimate with its CI, and the test statistic. "In the treatment arm, 48/200 (24.0 %) experienced the event, compared to 32/200 (16.0 %) in control (risk difference 8.0 %, 95 % CI -0.1 % to 16.1 %; $\chi^2(1) = 3.66$, p = 0.056)."
+
+## Practical Tips
+
+- Report at least one of RD, RR, or OR as an effect size; significance alone is unhelpful.
+- Use Fisher's exact test when expected counts are below 5.
+- For matched/paired binary data, use McNemar's test, not the two-proportion test.
+- The chi-squared test and the two-proportion z-test give identical two-sided p-values when `correct = FALSE`.
+- Be aware that RR and OR differ in magnitude when outcomes are common ($p > 0.10$); choose the scale that fits the clinical question.

@@ -1,0 +1,66 @@
+---
+title: Granger Causality
+date: "2026-04-17"
+description: Testing whether one time series improves prediction of another beyond its own history
+categories:
+  - Time Series Analysis
+  - granger
+  - causality
+  - predictive
+---
+
+## Introduction
+
+Granger causality tests whether past values of one time series improve the prediction of another, beyond what is already explained by the latter's own history. It is a *statistical* concept, not a *causal* one in the philosophical sense: a series Granger-causes another if including its lags reduces the residual variance of the predicted series, which is a useful but limited notion. Two series can Granger-cause each other without any direct causal link if both are driven by a common unobserved factor.
+
+## Prerequisites
+
+A working understanding of vector autoregressive (VAR) models, F-tests on joint coefficient hypotheses, and the difference between predictive and causal claims.
+
+## Theory
+
+Series $X$ Granger-causes series $Y$ at lag $p$ if the lagged values $X_{t-1}, \dots, X_{t-p}$ significantly improve the regression of $Y_t$ on its own lags $Y_{t-1}, \dots, Y_{t-p}$. The test is an F-test on the joint hypothesis that all coefficients on lagged $X$ are zero. Within a VAR system with $K$ series, Granger causality from one series to another (or to all others) is computed similarly with the residuals jointly estimated.
+
+A non-trivial extension is "instantaneous" causality: $X$ and $Y$ contemporaneously correlated after conditioning on lagged values of both. This is included by some implementations (e.g., `vars::causality`).
+
+## Assumptions
+
+Stationary series — the test is invalid for unit-root processes. No unmeasured common cause that drives both series; otherwise the Granger-causal direction is uninterpretable.
+
+## R Implementation
+
+```r
+library(lmtest); library(vars)
+
+data(ChickEgg)   # eggs / chickens
+
+# Does egg production Granger-cause chicken population?
+grangertest(chicken ~ egg, order = 3, data = ChickEgg)
+grangertest(egg ~ chicken, order = 3, data = ChickEgg)
+
+# Within a VAR
+fit <- VAR(ChickEgg, p = 3)
+causality(fit, cause = "egg")$Granger
+causality(fit, cause = "chicken")$Granger
+```
+
+## Output & Results
+
+`grangertest()` returns the F-statistic, degrees of freedom, and $p$-value for the joint hypothesis of zero coefficients on the cause's lags. `vars::causality()` extends this within a VAR framework, handling the multivariate residual structure correctly and adding the instantaneous-causality test.
+
+## Interpretation
+
+A reporting sentence: "Egg production Granger-caused chicken population at lag 3 ($F(3, 48) = 4.9$, $p = 0.005$); the reverse test was not significant ($p = 0.39$). This suggests egg counts contain predictive information about future chicken populations beyond past chicken counts, but does not establish a direct causal mechanism." Always frame Granger results as predictive, not causal.
+
+## Practical Tips
+
+- Granger causality requires stationarity; difference or detrend first using KPSS / ADF guidance.
+- Results are sensitive to lag order; try several plausible lags and report the chosen value with justification.
+- Granger causality does not imply causation; a common confounder produces apparent bidirectional Granger causality between two effects.
+- For more than two series, use the VAR-based `vars::causality()` rather than pairwise `grangertest()`; the joint estimation handles cross-series correlations.
+- Non-linear Granger causality exists (`bootGran`, `NlinTS`); the standard tests are linear and miss non-linear predictive relationships.
+- For frequency-domain Granger causality, the `vars::fevd()` and Geweke decomposition tools partition predictive contribution by frequency band.
+
+## R Packages Used
+
+`lmtest::grangertest()` for the bivariate test; `vars::VAR()` and `causality()` for VAR-based multivariate Granger causality; `tsDyn` for non-linear extensions; `NlinTS` for non-linear and information-theoretic causality measures.

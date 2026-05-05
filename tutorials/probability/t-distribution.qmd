@@ -1,0 +1,97 @@
+---
+title: "Student's t-Distribution"
+date: "2026-04-17"
+description: "Heavier-tailed relative of the normal, used for small-sample inference on means"
+categories:
+  - Probability Theory
+  - t-distribution
+  - degrees-of-freedom
+  - small-sample
+---
+
+## Introduction
+
+The t-distribution (also called Student's t, after W. S. Gosset's pseudonym) arises as the ratio of a standard normal to the scaled square root of an independent chi-squared. It is the reference distribution for t-tests and for small-sample confidence intervals for a normal mean with unknown variance.
+
+## Prerequisites
+
+Normal distribution, chi-squared distribution.
+
+## Theory
+
+If $Z \sim \mathcal{N}(0, 1)$ and $V \sim \chi^2_\nu$ are independent, then
+
+$$T = \frac{Z}{\sqrt{V / \nu}} \sim t_\nu,$$
+
+the t-distribution with $\nu$ **degrees of freedom**.
+
+PDF:
+
+$$f(t) = \frac{\Gamma((\nu+1)/2)}{\sqrt{\nu \pi} \, \Gamma(\nu/2)} \left(1 + \frac{t^2}{\nu}\right)^{-(\nu+1)/2}.$$
+
+Properties:
+
+- Symmetric about 0.
+- $E[T] = 0$ for $\nu > 1$; $\mathrm{Var}(T) = \nu/(\nu - 2)$ for $\nu > 2$.
+- Heavier tails than normal; excess kurtosis $6/(\nu - 4)$ for $\nu > 4$.
+- As $\nu \to \infty$, $t_\nu \to \mathcal{N}(0, 1)$.
+
+**Pivotal quantity**: for iid normal $X_1, \ldots, X_n$,
+
+$$\frac{\bar{X} - \mu}{s / \sqrt{n}} \sim t_{n-1}.$$
+
+This is the basis of the one-sample t-test and its confidence interval.
+
+## Assumptions
+
+Normal underlying data (or large enough $n$ for CLT to make the approximation reasonable).
+
+## R Implementation
+
+```r
+# PDF comparison
+x <- seq(-5, 5, length.out = 400)
+plot(x, dnorm(x), type = "l", col = "black", lwd = 2,
+     main = "t with 3, 10, 30 df vs N(0,1)", ylab = "f(x)")
+lines(x, dt(x, df = 3),  col = "#F4A261", lwd = 2)
+lines(x, dt(x, df = 10), col = "#6A4C93", lwd = 2)
+lines(x, dt(x, df = 30), col = "#2A9D8F", lwd = 2)
+legend("topright", c("normal", "t(3)", "t(10)", "t(30)"),
+       col = c("black", "#F4A261", "#6A4C93", "#2A9D8F"), lwd = 2)
+
+# Verify construction
+n <- 1e5; nu <- 5
+Z <- rnorm(n); V <- rchisq(n, df = nu)
+T_sim <- Z / sqrt(V / nu)
+c(emp_mean = mean(T_sim), theoretical = 0,
+  emp_var  = var(T_sim),  theoretical_var = nu / (nu - 2))
+
+# Small-sample CI for a mean
+set.seed(2026)
+X <- rnorm(15, mean = 10, sd = 3)
+t_crit <- qt(0.975, df = length(X) - 1)
+mean(X) + c(-1, 1) * t_crit * sd(X) / sqrt(length(X))
+```
+
+## Output & Results
+
+```
+emp_mean theoretical  emp_var theoretical_var
+  -0.003           0    1.665           1.667
+
+[1]  8.76  12.06     # 95% CI using t_14
+```
+
+Empirical moments match theoretical at $\nu = 5$, and the small-sample CI properly uses $t_{14}$ critical values.
+
+## Interpretation
+
+Reporting a t-interval or t-test with "$t(n-1) = \ldots$" in a manuscript is reporting a t-distribution-based inference. The df equals $n - 1$ for the one-sample t-test; Welch's two-sample t-test uses Satterthwaite df that may be fractional.
+
+## Practical Tips
+
+- For $\nu \geq 30$ the t is nearly indistinguishable from the normal; for $\nu \leq 10$ the tail differences are substantial.
+- The t-distribution is the one-parameter generalisation of the normal that allows heavier tails.
+- Robust regression models sometimes use a t-likelihood to achieve outlier resistance.
+- Non-central t (with non-centrality $\mu$) governs power calculations for t-tests.
+- For very heavy tails ($\nu \leq 2$), variance is infinite; mean exists only for $\nu > 1$.

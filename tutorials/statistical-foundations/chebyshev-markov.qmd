@@ -1,0 +1,95 @@
+---
+title: Markov and Chebyshev Inequalities
+date: "2026-04-17"
+description: "Tail bounds derived from moments, with the LLN as a simple consequence"
+categories:
+  - Statistical Foundations
+  - markov
+  - chebyshev
+  - tail-bound
+  - inequality
+---
+
+## Introduction
+
+Markov's and Chebyshev's inequalities are the most basic *tail bounds* in probability theory. They give universal (distribution-free) upper bounds on the probability that a random variable exceeds some value, using only the first moment (Markov) or first two moments (Chebyshev). They are rarely the tightest bounds in any given problem, but their generality makes them a reliable first step in every probabilistic argument.
+
+## Prerequisites
+
+The reader should know what an expectation is and elementary probability manipulation.
+
+## Theory
+
+**Markov's inequality.** For a non-negative random variable $X$ and any $t > 0$,
+
+$$P(X \geq t) \leq \frac{E[X]}{t}.$$
+
+Proof: $E[X] \geq t \cdot P(X \geq t)$ because $X$ is non-negative. Rearranging gives the inequality. The bound is tight for two-point distributions supported on $\{0, t\}$.
+
+**Chebyshev's inequality.** For any random variable $X$ with finite variance $\sigma^2$ and mean $\mu$,
+
+$$P(|X - \mu| \geq k\sigma) \leq \frac{1}{k^2}.$$
+
+Proof: apply Markov to the non-negative random variable $(X - \mu)^2$ with threshold $k^2 \sigma^2$.
+
+**Consequences.**
+
+- **Weak LLN from Chebyshev.** If $X_1, \ldots, X_n$ are iid with variance $\sigma^2$, then $\mathrm{Var}(\bar{X}_n) = \sigma^2/n$, so by Chebyshev,
+  $$P(|\bar{X}_n - \mu| \geq \varepsilon) \leq \frac{\sigma^2}{n \varepsilon^2} \to 0.$$
+  This is the simplest proof of the WLLN.
+
+- **Chernoff's bound.** Applying Markov to $e^{tX}$ gives $P(X \geq a) \leq e^{-ta} E[e^{tX}]$, yielding the Chernoff bound when optimised over $t$. This is typically far tighter than Markov or Chebyshev for light-tailed $X$.
+
+Markov and Chebyshev bounds are generally *loose*: for normally distributed $X$, the true $P(|X - \mu| > 3\sigma) \approx 0.003$, while Chebyshev only guarantees $\leq 1/9 \approx 0.111$. Their power comes from requiring no distributional assumptions.
+
+## Assumptions
+
+Markov requires non-negativity of $X$ and a finite first moment. Chebyshev requires a finite variance. Neither requires any specific distributional form -- their beauty is exactly this generality.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+x <- rnorm(1e6, mean = 0, sd = 1)
+
+k_values <- c(1, 2, 3, 4)
+
+empirical  <- sapply(k_values, function(k) mean(abs(x) >= k))
+chebyshev  <- 1 / k_values^2
+normal_true <- 2 * (1 - pnorm(k_values))
+
+comparison <- cbind(
+  k        = k_values,
+  empirical = empirical,
+  chebyshev = chebyshev,
+  normal_exact = normal_true
+)
+comparison
+```
+
+We compare the empirical tail probability, the Chebyshev bound $1/k^2$, and the true normal tail probability for several $k$.
+
+## Output & Results
+
+```
+     k  empirical  chebyshev  normal_exact
+[1,] 1   0.3176    1.0000      0.3173
+[2,] 2   0.0459    0.2500      0.0455
+[3,] 3   0.0026    0.1111      0.0027
+[4,] 4   0.0001    0.0625      0.0001
+```
+
+Chebyshev's bound holds universally but is a gross overstatement for normal data, where the true tail probability at 4 SDs is one ten-thousandth, vs. Chebyshev's guarantee of one sixteenth.
+
+## Interpretation
+
+Markov and Chebyshev bounds are the shortest proofs in probability theory. They rarely give sharp answers, but they are reliable first-pass sanity checks: "at most 1/9 of observations can be more than 3 SDs from the mean, regardless of distribution". This can be surprisingly useful as a universal statement.
+
+## Practical Tips
+
+- When a better (distribution-specific) bound is available, use it. Markov/Chebyshev are the last resort when nothing else applies.
+- For tail bounds on sums of independent variables, use Chernoff, Hoeffding, Bernstein, or similar concentration inequalities -- all much tighter than Chebyshev.
+- Chebyshev's inequality can be turned into a universal CI: "any $1 - 1/k^2$ confidence interval for a quantity with finite variance is $\hat{\theta} \pm k \hat{\sigma}$"; wider than normal-based CIs but valid without normality.
+- Markov's inequality is the simplest form; higher-moment versions (e.g., using $E[|X|^p]$) give tighter bounds when higher moments exist.
+- In worst-case theoretical analyses (algorithm runtime, statistical learning), Markov/Chebyshev are often exactly what is needed, because adversarial distributions rule out any distribution-specific argument.

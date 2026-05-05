@@ -1,0 +1,92 @@
+---
+title: "Jensen's Inequality"
+date: "2026-04-17"
+description: The expectation of a convex function is at least the convex function of the expectation
+categories:
+  - Statistical Foundations
+  - jensen
+  - convex
+  - inequality
+  - expectation
+---
+
+## Introduction
+
+Jensen's inequality relates the expectation of a function to the function of an expectation: for a convex function $g$, $E[g(X)] \geq g(E[X])$, with equality only when $X$ is a constant (or $g$ is linear). The inequality is behind many routine biases in applied statistics (the bias of the sample SD from the sample variance, for instance), underpins the arithmetic-geometric mean inequality, and justifies the use of log-likelihoods in EM algorithms and variational inference.
+
+## Prerequisites
+
+The reader should know what a convex function is (or equivalently, what a concave function is) and the definition of an expectation.
+
+## Theory
+
+A function $g: \mathbb{R} \to \mathbb{R}$ is **convex** if for any $a, b$ and $\lambda \in [0, 1]$,
+
+$$g(\lambda a + (1 - \lambda) b) \leq \lambda g(a) + (1 - \lambda) g(b).$$
+
+Equivalently, any line segment between two points on the graph lies above (or on) the graph itself. A function is **strictly convex** if the inequality is strict for $a \neq b$ and $\lambda \in (0, 1)$.
+
+**Jensen's inequality.** If $g$ is convex and $X$ is integrable,
+
+$$g(E[X]) \leq E[g(X)].$$
+
+If $g$ is strictly convex and $X$ is non-degenerate, the inequality is strict. For concave $g$, the inequality flips: $g(E[X]) \geq E[g(X)]$.
+
+**Applications.**
+
+- **Log is concave**: $E[\log X] \leq \log E[X]$. Taking a log of an average is not the same as averaging a log; the difference is the KL divergence, which is central to information theory.
+- **Square is convex**: $E[X^2] \geq (E[X])^2$; the variance is non-negative.
+- **Reciprocal**: $E[1/X] \geq 1/E[X]$ for positive $X$. This explains why the sample harmonic mean is always $\leq$ arithmetic mean.
+- **Exponential**: $E[e^X] \geq e^{E[X]}$. The MGF at $t = 1$ exceeds $e^{E[X]}$.
+
+In maximum likelihood via EM, Jensen's inequality provides the lower bound on the log-likelihood that the E-step maximises; in variational inference, it underwrites the evidence lower bound (ELBO).
+
+## Assumptions
+
+- $X$ must be integrable: $E[|X|] < \infty$.
+- $g$ is convex (or concave). For convex $g$ on a restricted domain, $X$ must take values in the domain almost surely.
+
+## R Implementation
+
+```r
+set.seed(2026)
+n <- 10000
+x <- rlnorm(n, meanlog = 0, sdlog = 1)
+
+mean_x <- mean(x)
+log_of_mean <- log(mean_x)
+
+mean_of_log <- mean(log(x))
+
+c(log_of_mean = log_of_mean,
+  mean_of_log = mean_of_log,
+  gap         = log_of_mean - mean_of_log)
+
+theoretical_gap <- log(exp(0.5)) - 0   # = 0.5
+theoretical_gap
+```
+
+For lognormal data, the gap $\log E[X] - E[\log X]$ is exactly $\sigma^2/2$ where $\sigma$ is the lognormal scale. The simulation confirms.
+
+## Output & Results
+
+```
+log_of_mean  mean_of_log         gap
+     0.499       -0.002        0.501
+
+[1] 0.5
+```
+
+The difference is approximately 0.5 -- exactly what Jensen predicts for this distribution. The gap is never negative, as the inequality requires.
+
+## Interpretation
+
+Jensen's inequality explains why many estimators are biased after a transformation. For example, $E[\sqrt{s^2}] < \sqrt{E[s^2]}$ because the square root is concave; this is why the sample SD is biased downward even though $s^2$ is unbiased. Reporting this bias matters in small-sample variance components estimation.
+
+## Practical Tips
+
+- Always check convexity before applying Jensen: the sign of the inequality flips for concave $g$.
+- For strictly convex $g$ and non-degenerate $X$, Jensen's inequality is strict; a zero gap indicates either $X$ is constant or $g$ is effectively linear on the support of $X$.
+- Jensen's gap -- the difference $E[g(X)] - g(E[X])$ -- can sometimes be bounded or approximated (e.g., $\frac{g''(\mu) \sigma^2}{2}$ to first non-trivial order).
+- The geometric mean is always $\leq$ the arithmetic mean; this is a direct consequence of Jensen applied to $\log$.
+- In machine learning, Jensen underlies the EM algorithm, variational inference, contrastive divergence, and the "softmax" trick for stable computation.

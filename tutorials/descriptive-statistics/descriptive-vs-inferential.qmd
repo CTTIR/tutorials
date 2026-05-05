@@ -1,0 +1,83 @@
+---
+title: Descriptive vs Inferential Statistics
+date: "2026-04-17"
+description: The distinction between summarising the sample and making claims about the population
+categories:
+  - Descriptive Statistics
+  - descriptive
+  - inferential
+  - sample
+  - population
+---
+
+## Introduction
+
+Every applied statistics course opens with a distinction that sounds obvious but is routinely blurred in papers: **descriptive** statistics summarise the sample at hand; **inferential** statistics make claims about the population from which the sample was drawn. Confusing them is the single most common reporting error in published research.
+
+## Prerequisites
+
+The reader should know what a sample and a population are, and have encountered at least one summary statistic (mean, proportion).
+
+## Theory
+
+A **descriptive statistic** is a numerical summary computed from the sample: mean, SD, median, IQR, counts, percentages. It is deterministic given the data; the same dataset always produces the same descriptive summary.
+
+An **inferential statistic** uses the sample to say something about the population: a confidence interval, a hypothesis test, a regression coefficient with a standard error, a Bayesian credible interval. It carries an explicit or implicit uncertainty quantification.
+
+The distinction maps cleanly onto notation: descriptive statistics (Latin letters $\bar{x}$, $s$, $\hat{p}$) versus population parameters (Greek letters $\mu$, $\sigma$, $\pi$) that inferential procedures estimate.
+
+Both play complementary roles in a paper:
+
+- **Descriptive**: Table 1 characterising the sample; figures showing distributions.
+- **Inferential**: Primary analysis results; p-values and confidence intervals for effect sizes.
+
+## Assumptions
+
+Descriptive statistics require only that the data be correctly transcribed. Inferential statistics require a sampling-model assumption: that the sample reasonably represents the population (random sampling, randomised assignment, or a defensible non-random scheme).
+
+## R Implementation
+
+```r
+library(broom)
+set.seed(2026)
+
+trial <- data.frame(
+  arm    = factor(rep(c("Placebo", "Active"), each = 60)),
+  sbp    = c(rnorm(60, 138, 14), rnorm(60, 130, 14))
+)
+
+# Descriptive: summarise the sample
+aggregate(sbp ~ arm, data = trial,
+          FUN = function(x) c(n = length(x), mean = mean(x), sd = sd(x)))
+
+# Inferential: make a claim about the population
+fit <- t.test(sbp ~ arm, data = trial)
+tidy(fit)
+```
+
+## Output & Results
+
+```
+      arm n    mean    sd
+ Placebo 60  137.82 14.05
+  Active 60  130.39 13.28
+
+# A tibble: 1 x 10
+  estimate estimate1 estimate2 statistic p.value parameter conf.low conf.high
+     <dbl>     <dbl>     <dbl>     <dbl>   <dbl>     <dbl>    <dbl>     <dbl>
+1     7.43      138.      130.      2.99 0.00333      118.     2.52      12.3
+```
+
+Descriptive: placebo arm had a mean SBP of 137.8 mmHg (SD 14.1); active arm 130.4 (SD 13.3). Inferential: the difference is 7.4 mmHg with a 95 % CI of 2.5 to 12.3 mmHg, $p = 0.003$.
+
+## Interpretation
+
+A paper's **Results** section typically progresses from descriptive to inferential: first describe the sample (Table 1), then test the pre-specified hypotheses. Mislabelling the two -- treating a confidence interval as if it described the sample, or treating a sample mean as a population parameter -- is a common reviewer complaint.
+
+## Practical Tips
+
+- When you write "mean SBP was 137.8 mmHg" you have made a descriptive statement; when you write "SBP is 137.8 mmHg in the population" you have made an inferential statement (and should include a CI).
+- Inferential statistics depend on a well-defined sampling frame; when the sample is a convenience sample, the inference is about the sample itself, not a broader population.
+- Use distinct notation in equations: $\bar{x}$ for the sample mean, $\mu$ for the population mean.
+- Every p-value and every confidence interval should be accompanied by a descriptive summary (counts, means, proportions) so the reader has both the effect and its context.
+- A purely descriptive paper (audit, registry summary) is legitimate; pretending it is inferential is not.

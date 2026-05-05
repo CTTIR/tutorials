@@ -1,0 +1,74 @@
+---
+title: NMA League Tables
+date: "2026-04-17"
+description: Pairwise treatment contrasts in a compact triangular grid
+categories:
+  - Meta-Analysis
+  - league-table
+  - nma
+  - pairwise
+---
+
+## Introduction
+
+The league table is the standard summary display for a network meta-analysis (NMA). It packs every pairwise treatment contrast — direct, indirect, and mixed — into a single triangular or square grid, making the relative ranking of all interventions visible at a glance. Each diagonal cell labels a treatment; each off-diagonal cell reports the pooled contrast between row and column with its 95 % confidence (or credible) interval. League tables are now a standard reporting requirement in the PRISMA-NMA extension because they communicate the entire network's information in a way that no single forest plot can.
+
+## Prerequisites
+
+A working understanding of network meta-analysis (transitivity, consistency), how mixed treatment-comparison estimates combine direct and indirect evidence, and the conventions of pairwise effect sizes (OR, RR, SMD).
+
+## Theory
+
+For $T$ treatments the league table is a $T \times T$ matrix. The convention used by `netmeta` and most software places the random- or common-effect mixed estimates in the upper triangle and direct-only pooled estimates in the lower triangle, with the same treatment ordering on both axes. Each off-diagonal cell reports the pooled contrast (row-vs-column or column-vs-row, with the convention noted in the caption) and its uncertainty.
+
+Ordering treatments by their rank (e.g., SUCRA, P-score, or median ranking from a Bayesian NMA) groups the best-performing treatments in one corner, making the table substantially easier to interpret than alphabetical ordering.
+
+## Assumptions
+
+The underlying NMA is valid: transitivity holds across studies that compare different treatment subsets, consistency holds between direct and indirect evidence, and all pairwise contrasts are estimable from the connected network. Reporting league tables for a disconnected network is meaningless.
+
+## R Implementation
+
+```r
+library(netmeta)
+
+set.seed(2026)
+net_df <- data.frame(
+  study = c("S1", "S1", "S2", "S2", "S3", "S3", "S4", "S4",
+            "S5", "S5", "S6", "S6"),
+  treat = c("A", "B", "A", "C", "B", "C", "A", "D",
+            "B", "D", "C", "D"),
+  TE    = c(0, -0.3, 0, -0.5, 0.4, 0.2, 0, -0.2,
+            0.1, 0.3, 0, 0.4),
+  seTE  = rep(0.25, 12)
+)
+
+p_df <- pairwise(treat = treat, TE = TE, seTE = seTE,
+                 studlab = study, data = net_df)
+net  <- netmeta(p_df, common = FALSE, reference = "A")
+
+league <- netleague(net, bracket = "(",
+                    separator = " to ", digits = 2)
+league$random
+```
+
+## Output & Results
+
+`netleague()` returns a structured matrix of pairwise contrast estimates with their confidence intervals, separately for the common-effect and random-effects models. The diagonal carries treatment labels; off-diagonal cells contain the pooled contrast and its CI in a formatted string. Exporting the table to LaTeX or HTML for publication uses standard formatting tools.
+
+## Interpretation
+
+A reporting sentence: "The league table summarises all six pairwise contrasts in the network of four treatments. Treatment C was consistently the most effective: C vs A had a pooled effect of $-0.55$ (95 % CI $-0.88$ to $-0.22$) and C vs B was $-0.34$ (95 % CI $-0.67$ to $-0.01$); both contrasts excluded the null. The lower-triangle direct-only estimates were qualitatively concordant, suggesting consistency of direct and indirect evidence." Always pair league-table reading with a node-splitting consistency check.
+
+## Practical Tips
+
+- Order treatments by their NMA-derived ranking (e.g., SUCRA from highest to lowest); the best-vs-worst contrast then sits in one corner and visual scanning becomes intuitive.
+- Report both the point estimate and the CI; a significant contrast is one whose CI excludes the null on the analysis scale, but readers benefit from seeing the magnitude as well.
+- For binary outcomes, exponentiate to OR or RR for clinical interpretation; on the multiplicative scale, a CI excluding 1 is the significance criterion.
+- Complement the league table with a forest plot of contrasts versus a clinically meaningful reference treatment; the two views together communicate more than either alone.
+- For networks with more than ten treatments, a full league table becomes unwieldy; consider a heatmap visualisation or restrict the table to clinically relevant pairs.
+- Always cite the consistency assumption in the caption and report a node-splitting or design-by-treatment interaction check elsewhere in the manuscript.
+
+## R Packages Used
+
+`netmeta::netleague()` for the canonical league-table output and `netmeta()` for the underlying frequentist NMA; `gemtc` and `multinma` for Bayesian NMA league-table equivalents using rank tables; `pcnetmeta` for component network meta-analysis with extended league-table summaries; `dmetar` for combined NMA workflow and reporting helpers.

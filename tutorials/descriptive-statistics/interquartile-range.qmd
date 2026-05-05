@@ -1,0 +1,85 @@
+---
+title: The Interquartile Range
+date: "2026-04-17"
+description: "Width of the central 50% of the distribution: robust, interpretable, and the basis of Tukey fences"
+categories:
+  - Descriptive Statistics
+  - iqr
+  - quartile
+  - boxplot
+  - robust
+---
+
+## Introduction
+
+The interquartile range (IQR) is the distance between the first and third quartiles, $Q_3 - Q_1$. It measures the width of the central 50% of the distribution and is robust to outliers, since extreme values do not affect the quartiles themselves. The IQR appears in boxplots, Tukey fences, and the median-IQR convention for reporting skewed biomedical variables.
+
+## Prerequisites
+
+The reader should know what quantiles and quartiles are, and be comfortable with R's `quantile()` function.
+
+## Theory
+
+For a sample, $Q_1$ and $Q_3$ are the 0.25 and 0.75 quantiles of the empirical CDF. The IQR is
+
+$$\mathrm{IQR} = Q_3 - Q_1.$$
+
+Tukey's hinges differ slightly from R's default quantiles; `fivenum()` returns the hinges and `IQR()` uses `quantile()` with `type = 7`.
+
+For a normal distribution with SD $\sigma$, the IQR equals $2 \cdot 0.6745 \cdot \sigma \approx 1.349 \sigma$. Equivalently, dividing the IQR by 1.349 gives a rough, robust estimate of the SD.
+
+The **Tukey fences** at $Q_1 - 1.5 \cdot \mathrm{IQR}$ and $Q_3 + 1.5 \cdot \mathrm{IQR}$ define the whiskers of a standard boxplot; points beyond are flagged as outliers.
+
+## Assumptions
+
+The IQR is purely descriptive and requires no distributional assumption.
+
+## R Implementation
+
+```r
+set.seed(2026)
+x <- rnorm(80, mean = 75, sd = 12)
+
+quantile(x, probs = c(0.25, 0.75))
+IQR(x)
+
+# Tukey fences
+q1 <- quantile(x, 0.25); q3 <- quantile(x, 0.75)
+fences <- c(lower = q1 - 1.5 * IQR(x),
+            upper = q3 + 1.5 * IQR(x))
+fences
+sum(x < fences[1] | x > fences[2])
+
+# Robust SD from IQR (approximately)
+IQR(x) / 1.349
+sd(x)
+```
+
+## Output & Results
+
+```
+   25%      75%
+ 66.4     83.1
+
+[1] 16.7       # IQR
+
+lower  upper
+ 41.4  108.1
+
+[1] 12.4       # SD from IQR (robust)
+[1] 11.9       # sample SD
+```
+
+The two SD estimates agree closely for approximately normal data; divergence signals heavy tails or outliers.
+
+## Interpretation
+
+Report the IQR alongside the median for skewed data. A typical biomedical manuscript uses "median 6.8 days (IQR 4.2-10.1 days)" to summarise length-of-stay or similar variables.
+
+## Practical Tips
+
+- The boxplot visually displays the IQR as the box; whiskers extend to the Tukey fences or to the nearest non-outlier data point.
+- For very small samples ($n < 10$), the IQR is unstable; report the order statistics directly.
+- The IQR is the scale estimator implicit in the Tukey boxplot; it is one of the most interpretable dispersion measures for audiences less familiar with SDs.
+- In grouped summaries, compare IQRs across groups alongside medians; equal medians with different IQRs indicate different spreads at the same centre.
+- Do not confuse IQR (dispersion) with inter-quartile ratio ($Q_3 / Q_1$) occasionally used in log-skewed contexts.

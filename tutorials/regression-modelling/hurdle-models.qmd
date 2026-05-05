@@ -1,0 +1,71 @@
+---
+title: Hurdle Models
+date: "2026-04-17"
+description: "Two-part count models: binary decision for zero vs. non-zero, plus truncated count for positives"
+categories:
+  - "Regression & Modelling"
+  - hurdle
+  - truncated
+  - two-part
+---
+
+## Introduction
+
+Hurdle models split count outcomes into two distinct processes: a Bernoulli decision for zero versus non-zero, and a zero-truncated count distribution for the positive counts. They are appropriate when the question of "did anything happen?" is conceptually different from "given that something happened, how much?" — for example, healthcare visits (decided to see a doctor at all, then number of visits), insurance claims, hospital admissions for a rare condition.
+
+## Prerequisites
+
+A working understanding of Poisson and negative binomial regression, the zero-inflated alternative, and the conceptual distinction between two-part and mixture models for zero-heavy counts.
+
+## Theory
+
+The hurdle model is
+
+$$\mathrm P(Y = 0) = 1 - \pi, \qquad \mathrm P(Y = y) = \pi \cdot \frac{f(y)}{1 - f(0)}, \quad y \ge 1,$$
+
+with $\pi$ the probability of clearing the hurdle (logistic regression on covariates) and $f(y)$ a count distribution (Poisson or NB) truncated at zero. The two parts are estimated jointly by maximum likelihood; covariates can differ between the zero and count submodels.
+
+The contrast with zero-inflated models is conceptual: hurdle treats *all* zeros as arising from one Bernoulli process, while zero-inflated treats some zeros as "structural" (always zero) and others as "sampling" (could have been positive but happened to be zero). Choose based on the scientific story.
+
+## Assumptions
+
+A count outcome with a meaningful two-stage data-generating process; the chosen count distribution (Poisson or NB) is appropriate for the positive counts.
+
+## R Implementation
+
+```r
+library(pscl)
+
+set.seed(2026)
+d <- data.frame(x = rnorm(300))
+d$y <- ifelse(rbinom(300, 1, plogis(0 + 0.4 * d$x)) == 0, 0,
+              rpois(300, lambda = exp(1 + 0.5 * d$x)))
+
+fit_hurdle <- hurdle(y ~ x | x, data = d)
+summary(fit_hurdle)
+
+# Zero-inflated for comparison
+fit_zi <- zeroinfl(y ~ x | x, data = d)
+AIC(fit_hurdle, fit_zi)
+```
+
+## Output & Results
+
+`summary(fit_hurdle)` returns two coefficient tables: the count part (zero-truncated Poisson or NB) and the zero hurdle (binomial). Each part has its own intercept and slope estimates with Wald $z$-tests. The AIC comparison against `zeroinfl` quantifies which framework better matches the data.
+
+## Interpretation
+
+A reporting sentence: "A hurdle model decomposed the data into a binomial hurdle (each unit increase in $x$ raised the log-odds of any positive count by 0.40, $p < 0.001$) and a zero-truncated Poisson count model (rate ratio 1.65 per unit increase in $x$ among positive counts, 95 % CI 1.40 to 1.95). Hurdle was favoured over zero-inflated by AIC ($\Delta = 4$)." Always describe both parts and use the AIC comparison to justify the framework choice.
+
+## Practical Tips
+
+- Hurdle is cleaner than zero-inflated when the scientific story has a clear two-stage interpretation; mixing the two approaches without justification confuses readers.
+- For overdispersed positive counts, use `dist = "negbin"` in the count part; this is essential for most real count data.
+- Different covariates can drive the two parts; use `y ~ x_count | x_zero` to specify them separately.
+- Zero-inflated assumes some zeros are structural and could not have been any other value; hurdle assumes all zeros come from one decision process.
+- AIC and BIC compare hurdle and zero-inflated objectively when both are well-fitted; do not rely on visual inspection alone.
+- For hierarchical hurdle models, `glmmTMB(family = truncated_nbinom2(), ziformula = ~ ...)` provides random-effect extensions.
+
+## R Packages Used
+
+`pscl::hurdle()` for canonical hurdle models with Poisson, NB, or geometric count parts; `glmmTMB` for hurdle and zero-inflated mixed-effects extensions; `countreg` for additional count-model variants and rootogram diagnostics; `DHARMa` for residual diagnostics across hurdle and zero-inflated families.

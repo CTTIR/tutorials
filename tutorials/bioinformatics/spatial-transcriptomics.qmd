@@ -1,0 +1,76 @@
+---
+title: Spatial Transcriptomics
+date: "2026-04-17"
+description: Spatially resolved expression analysis with Visium and related platforms
+categories:
+  - Bioinformatics
+  - spatial
+  - visium
+  - transcriptomics
+---
+
+## Introduction
+
+Spatial transcriptomics assays (10x Visium, Slide-seq, Stereo-seq, MERFISH) measure gene expression with spatial coordinates. They bridge histology and scRNA-seq: the tissue architecture is preserved, so analyses like spatial domain detection, neighbourhood effects, and tumour-immune interface mapping become possible.
+
+## Prerequisites
+
+scRNA-seq analysis basics; familiarity with tissue histology.
+
+## Theory
+
+Visium spots contain ~10-100 cells each, giving spot-resolution (not single-cell) expression. Analysis proceeds like scRNA-seq but with two additions: (i) spatial variable-gene detection (Moran's I), and (ii) spatial domain inference (BayesSpace, Giotto, or spatial-aware clustering).
+
+Deconvolution (cell2location, RCTD, SpatialExperiment) decomposes each spot into cell-type proportions using a matched scRNA-seq reference.
+
+## Assumptions
+
+Spatial coordinates are correctly registered to H&E; spot-level expression is a linear combination of underlying cell types; tissue processing preserves mRNA integrity.
+
+## R Implementation
+
+```r
+library(Seurat)
+
+set.seed(2026)
+# Minimal spatial-like object: spots on a grid
+n_spots <- 100
+coords <- expand.grid(x = 1:10, y = 1:10)
+counts <- matrix(rpois(200 * n_spots, lambda = 3), 200, n_spots)
+rownames(counts) <- paste0("g", 1:200)
+colnames(counts) <- paste0("spot_", 1:n_spots)
+
+# Inject spatial pattern: top-left vs bottom-right
+region <- ifelse(coords$x + coords$y < 10, "A", "B")
+counts[1:20, region == "A"] <- counts[1:20, region == "A"] + 8
+
+so <- CreateSeuratObject(counts)
+so$x <- coords$x; so$y <- coords$y; so$region <- region
+
+so <- NormalizeData(so, verbose = FALSE)
+so <- FindVariableFeatures(so, nfeatures = 100, verbose = FALSE)
+so <- ScaleData(so, verbose = FALSE)
+so <- RunPCA(so, npcs = 10, verbose = FALSE)
+so <- FindNeighbors(so, dims = 1:10, verbose = FALSE)
+so <- FindClusters(so, resolution = 0.5, verbose = FALSE)
+
+plot(coords, col = factor(Idents(so)), pch = 15, cex = 2,
+     main = "Spot clusters on tissue coordinates",
+     xlab = "x", ylab = "y")
+```
+
+## Output & Results
+
+A clustered spatial object; the 2-D scatter shows clusters aligning with spatial regions, recapitulating tissue architecture.
+
+## Interpretation
+
+"Spatial clustering of the Visium section identified six domains corresponding to tumour core, tumour edge, stroma, and three immune niches; interface enrichment analysis revealed T-cell accumulation at the tumour-stroma boundary."
+
+## Practical Tips
+
+- Always overlay clusters on H&E to validate biological interpretation.
+- Moran's I (`SpatialExperiment::spatialCorrelation` or `Seurat::FindSpatiallyVariableFeatures`) finds spatially variable genes.
+- Deconvolution is essential when Visium spots cover multiple cell types; use a matched scRNA-seq reference.
+- BayesSpace and SpaGCN integrate spatial structure into clustering, giving smoother domain boundaries.
+- Stereo-seq and MERFISH offer sub-cellular resolution; analysis pipelines differ slightly from spot-based Visium.

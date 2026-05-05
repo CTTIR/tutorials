@@ -177,15 +177,3 @@ flowchart TD
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 005df2fd6d374f5cadc53c29b5bd62c5 -->
-<img src="https://vg09.met.vgwort.de/na/005df2fd6d374f5cadc53c29b5bd62c5"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

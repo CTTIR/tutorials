@@ -1,0 +1,70 @@
+---
+title: Non-Metric Multidimensional Scaling
+date: "2026-04-17"
+description: "MDS using only the ranks of distances, minimising Kruskal stress"
+categories:
+  - Multivariate Statistics
+  - nmds
+  - kruskal-stress
+  - ordinal
+---
+
+## Introduction
+
+Non-metric multidimensional scaling (NMDS) preserves the *rank order* of pairwise dissimilarities rather than their absolute magnitudes. This robustness makes it the standard ordination method for ecological community data, where Bray-Curtis and Jaccard dissimilarities are not Euclidean and where distance values themselves carry less meaning than the ordering of similarities. Where classical MDS works on the squared distances directly, NMDS minimises a stress function that depends only on whether the configuration's distances respect the input ranking.
+
+## Prerequisites
+
+A working understanding of metric MDS (classical / PCoA), rank-based statistics, and the distinction between metric and ordinal distance information.
+
+## Theory
+
+NMDS finds a configuration $Y$ in $k$ dimensions whose pairwise Euclidean distances $d(Y_i, Y_j)$ are monotonically related to the input dissimilarities $\delta_{ij}$. The optimisation minimises Kruskal stress:
+
+$$\mathrm{Stress} = \sqrt{\frac{\sum_{i < j} (d_{ij} - \hat d_{ij})^2}{\sum_{i < j} d_{ij}^2}},$$
+
+where $\hat d_{ij}$ are *disparities* — values fitted via isotonic regression to be a non-decreasing function of $\delta_{ij}$. The Shepard diagram plots $\delta_{ij}$ against $d_{ij}$ with the isotonic fit overlaid; tight scatter around a smooth monotone curve indicates good ordination.
+
+Stress interpretation (Kruskal): below 0.05 is excellent, 0.05–0.10 good, 0.10–0.20 fair, above 0.20 poor and the configuration should not be trusted.
+
+## Assumptions
+
+Dissimilarity ranks are meaningful; sufficient observations for a stable configuration; the chosen number of dimensions ($k$) is large enough to accommodate the rank structure.
+
+## R Implementation
+
+```r
+library(MASS); library(vegan)
+
+# Non-metric MDS on UScities
+data(UScitiesD)
+iso <- isoMDS(UScitiesD, k = 2)
+iso$stress
+
+# ecology example with vegan
+data(varespec)
+nmds <- metaMDS(varespec, distance = "bray", k = 2, trymax = 50)
+nmds$stress
+plot(nmds, type = "t")
+```
+
+## Output & Results
+
+`isoMDS()` and `metaMDS()` return a 2D configuration plus the stress value. `metaMDS()` also runs multiple random starts (`trymax`) and returns the best solution; this is essential because NMDS is non-convex and prone to local minima.
+
+## Interpretation
+
+A reporting sentence: "NMDS of the vegetation community (Bray-Curtis dissimilarity, two dimensions, 50 random starts) achieved a stress of 0.18 — fair fit — and the configuration revealed two dominant environmental gradients corresponding to moisture and nutrient availability when site-level covariates were overlaid via `envfit()`." Always report the stress value and the number of starts; a single-start fit can land in a poor local minimum.
+
+## Practical Tips
+
+- Always check stress; values above 0.2 indicate the configuration is unreliable and a higher-dimensional solution may be needed.
+- Use multiple random starts (`trymax = 50` or more in `metaMDS`); NMDS is non-convex and a single start often lands in a local minimum.
+- NMDS is the standard for non-Euclidean ecological dissimilarities; metric MDS forces a Euclidean embedding that may not respect the underlying geometry.
+- Procrustes-align configurations across related datasets (`vegan::procrustes`); NMDS solutions are defined up to rotation, reflection, and uniform scaling.
+- Pair NMDS with `vegan::envfit()` or `ordisurf()` to overlay environmental covariates as arrows or contours, exposing the gradients the ordination has captured.
+- Interpret relative positions only; absolute distances in the NMDS plot do not have a single fixed scale.
+
+## R Packages Used
+
+`MASS::isoMDS()` for the classical Kruskal NMDS implementation; `vegan::metaMDS()` for the ecology-flavoured workflow with multiple starts and stress reporting; `smacof::smacofSym()` for advanced NMDS variants with weights and constraints; `ade4::nmds` for an alternative interface integrated with the dudi family of multivariate methods.

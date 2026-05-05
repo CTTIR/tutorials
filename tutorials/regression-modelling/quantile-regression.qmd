@@ -1,0 +1,70 @@
+---
+title: Quantile Regression
+date: "2026-04-17"
+description: "Modelling conditional quantiles (median, upper/lower percentiles) rather than the mean"
+categories:
+  - "Regression & Modelling"
+  - quantile
+  - median-regression
+  - rq
+---
+
+## Introduction
+
+Quantile regression estimates a chosen conditional quantile of the outcome (median, lower percentile, upper percentile) rather than the conditional mean. The result is a richer description of how covariates affect the outcome distribution: the same covariate may have a different effect at the 10th percentile (where it shifts the lower tail) than at the 90th (where it shifts the upper tail). Median regression is the L1 alternative to OLS and robust to outliers; multi-quantile fits expose heteroscedasticity and asymmetric effects that mean regression hides.
+
+## Prerequisites
+
+A working understanding of linear regression, conditional quantiles, and the difference between modelling the mean versus the median or other percentiles of a distribution.
+
+## Theory
+
+Mean regression minimises squared residuals; quantile regression minimises an asymmetric absolute-value loss:
+
+$$\sum_i \rho_\tau(y_i - x_i^\top \beta), \qquad \rho_\tau(u) = u(\tau - \mathbf 1\{u < 0\}).$$
+
+Setting $\tau = 0.5$ gives median regression. The objective is convex but non-differentiable; standard solvers use linear programming. Standard errors come from rank-based or bootstrap methods. Inference at multiple $\tau$ values produces a quantile process — the trajectory of each coefficient as $\tau$ varies — which is the most informative summary of how covariates shift the conditional distribution.
+
+## Assumptions
+
+Fewer than OLS: independence and correct specification at the chosen quantile. No Normality, no homoscedasticity, no constant variance assumption. The robustness comes from the bounded influence of any single observation.
+
+## R Implementation
+
+```r
+library(quantreg)
+
+fit_median <- rq(mpg ~ wt + hp, data = mtcars, tau = 0.5)
+summary(fit_median)
+
+# Multiple quantiles
+fit_q <- rq(mpg ~ wt, data = mtcars, tau = c(0.1, 0.25, 0.5, 0.75, 0.9))
+summary(fit_q)
+plot(summary(fit_q))
+
+# Comparison to OLS
+fit_lm <- lm(mpg ~ wt, data = mtcars)
+coef(fit_lm)
+coef(rq(mpg ~ wt, data = mtcars, tau = 0.5))
+```
+
+## Output & Results
+
+`rq()` returns coefficient estimates per requested $\tau$ with rank-based standard errors. The `plot(summary())` method shows each coefficient as a function of $\tau$, with confidence bands — the canonical visualisation of how covariate effects shift across the conditional distribution.
+
+## Interpretation
+
+A reporting sentence: "Quantile regression of mpg on weight at five quantiles ($\tau \in \{0.1, 0.25, 0.5, 0.75, 0.9\}$) showed that each 1000-lb increase in weight reduced mpg by 6.8 at the 10th percentile, 5.7 at the median, and 4.2 at the 90th percentile (all $p < 0.001$); the gradient indicates heteroscedasticity that ordinary mean regression would obscure." Always plot the quantile process when reporting multi-$\tau$ results; it communicates more than a coefficient table.
+
+## Practical Tips
+
+- Median regression ($\tau = 0.5$) is the L1 alternative to OLS and robust to outliers; reach for it when residual diagnostics show heavy tails.
+- Multi-quantile fits expose heteroscedasticity and distributional shape changes; report at least three quantiles ($\tau \in \{0.25, 0.5, 0.75\}$) to characterise the conditional distribution.
+- Bootstrap standard errors (`se = "boot"`) are more reliable than rank-based in small samples; specify `R = 999` resamples.
+- For non-linear effects, `quantreg::nlrq()` and `quantreg::rqss()` add non-linear and smoothing-spline extensions.
+- For longitudinal or clustered data, `lqmm::lqmm()` or `qrLMM::QRLMM()` extend quantile regression to mixed-effects.
+- Quantile regression does not require homoscedasticity and is often more informative than OLS plus robust SEs for heteroscedastic data.
+
+## R Packages Used
+
+`quantreg` for `rq()`, `rqss()`, and bootstrap SEs; `lqmm` for linear quantile mixed-effects models; `qrLMM` for quantile regression in linear mixed models with random intercepts; `quantregForest` for random-forest extensions to quantile prediction.

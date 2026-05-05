@@ -1,0 +1,107 @@
+---
+title: The Survival Function
+date: "2026-04-17"
+description: Probability of surviving past time t; the complement of the CDF for positive random variables
+categories:
+  - Probability Theory
+  - survival-function
+  - complement-cdf
+  - kaplan-meier
+---
+
+## Introduction
+
+For a time-to-event random variable $T \geq 0$, the **survival function** $S(t) = P(T > t)$ is the probability of not having experienced the event by time $t$. It is the complement of the CDF and the single most important descriptive quantity in survival analysis.
+
+## Prerequisites
+
+Random variables, CDF, basic survival-analysis concepts.
+
+## Theory
+
+For a non-negative random variable $T$,
+
+$$S(t) = P(T > t) = 1 - F(t).$$
+
+Properties:
+
+- $S(0) = 1$, $\lim_{t \to \infty} S(t) = 0$.
+- Non-increasing.
+- Right-continuous (by convention).
+
+Related quantities:
+
+- PDF: $f(t) = -S'(t)$.
+- Hazard: $h(t) = f(t)/S(t)$.
+- Cumulative hazard: $H(t) = -\log S(t)$.
+
+Classical forms:
+
+- Exponential: $S(t) = e^{-\lambda t}$.
+- Weibull: $S(t) = \exp\!\big[-(t/\lambda)^k\big]$.
+- Log-normal: $S(t) = 1 - \Phi\!\big((\log t - \mu)/\sigma\big)$.
+
+**Kaplan-Meier** is the non-parametric MLE of $S$ from right-censored data: a step function that drops at each observed event time by a factor reflecting the fraction of the at-risk set that experiences the event.
+
+## Assumptions
+
+Non-negative random variable representing a time to an event. For Kaplan-Meier: independent censoring.
+
+## R Implementation
+
+```r
+library(survival)
+set.seed(2026)
+
+# Theoretical survival functions
+t_grid <- seq(0, 10, length.out = 400)
+S_exp     <- exp(-0.3 * t_grid)
+S_weibull <- exp(-(t_grid / 3)^2)
+S_lnorm   <- 1 - plnorm(t_grid, meanlog = log(3), sdlog = 0.5)
+
+plot(t_grid, S_exp, type = "l", col = "#6A4C93", lwd = 2,
+     main = "Theoretical survival functions", xlab = "t", ylab = "S(t)")
+lines(t_grid, S_weibull, col = "#2A9D8F", lwd = 2)
+lines(t_grid, S_lnorm,   col = "#F4A261", lwd = 2)
+legend("topright", c("exponential", "Weibull k=2", "log-normal"),
+       col = c("#6A4C93", "#2A9D8F", "#F4A261"), lwd = 2)
+
+# Empirical Kaplan-Meier from censored data
+n <- 80
+T_true <- rweibull(n, shape = 2, scale = 3)
+C      <- runif(n, 0, 10)
+T_obs  <- pmin(T_true, C)
+delta  <- as.integer(T_true <= C)
+
+km <- survfit(Surv(T_obs, delta) ~ 1)
+plot(km, conf.int = TRUE, main = "Kaplan-Meier estimate",
+     xlab = "t", ylab = "S(t)", col = "#2A9D8F")
+lines(t_grid, exp(-(t_grid / 3)^2), col = "#F4A261", lwd = 2)
+
+# Median survival
+summary(km)$table["median"]
+qweibull(0.5, shape = 2, scale = 3)
+```
+
+## Output & Results
+
+```
+   median
+    2.499
+
+[1] 2.498
+```
+
+Empirical and theoretical median survival times agree. The Kaplan-Meier step function closely tracks the true Weibull survival curve.
+
+## Interpretation
+
+Reporting a median survival with its 95 % CI from a Kaplan-Meier estimate is the standard headline statistic of survival studies. Survival functions are typically compared across groups via log-rank tests and visualised together on the same axes.
+
+## Practical Tips
+
+- Report medians with CIs when survival drops below 0.5; report specific-time survival (1-year, 5-year) when the study ends before the median is reached.
+- Kaplan-Meier is distribution-free; parametric survival models (Weibull, log-normal) give smooth curves but commit to a shape.
+- Include a risk table below Kaplan-Meier plots (`survminer::ggsurvplot(..., risk.table = TRUE)`).
+- Under heavy censoring, the tail of the survival curve is poorly estimated; avoid over-interpreting late-follow-up differences.
+- Survival functions never take values above 1 or below 0; if your empirical estimator returns such values, there is a bug.

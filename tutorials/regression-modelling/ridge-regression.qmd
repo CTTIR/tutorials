@@ -1,0 +1,70 @@
+---
+title: Ridge Regression
+date: "2026-04-17"
+description: L2 penalty for coefficient shrinkage; stable fits under collinearity
+categories:
+  - "Regression & Modelling"
+  - ridge
+  - l2-penalty
+  - shrinkage
+  - glmnet
+---
+
+## Introduction
+
+Ridge regression adds an L2 penalty $\lambda \sum_j \beta_j^2$ to the residual sum of squares. It shrinks coefficients toward zero — but never exactly to zero — reducing variance at the cost of a small bias and producing stable fits even when predictors are highly correlated. The classical motivation was multicollinearity: when $X^\top X$ is near-singular, OLS estimates are extremely variable, and the ridge penalty regularises the inverse and yields a well-defined estimator. Modern uses extend to high-dimensional regression where $p > n$ makes OLS undefined.
+
+## Prerequisites
+
+A working understanding of linear regression, the bias-variance trade-off, multicollinearity, and the role of cross-validation in tuning regularisation parameters.
+
+## Theory
+
+The ridge estimator minimises
+
+$$\|y - X\beta\|^2 + \lambda \|\beta\|_2^2,$$
+
+with closed-form solution $\hat\beta_{\text{ridge}} = (X^\top X + \lambda I)^{-1} X^\top y$. Larger $\lambda$ shrinks coefficients more aggressively; $\lambda = 0$ recovers OLS. The coefficient paths — coefficient values as $\lambda$ varies on a log scale — show how each predictor contributes; coefficients shrink continuously rather than dropping out abruptly as in lasso.
+
+Cross-validation (typically $k = 10$ folds) selects $\lambda$. Two common rules: $\lambda_{\min}$ minimises CV error, $\lambda_{1\mathrm{se}}$ takes the largest $\lambda$ within one standard error of the minimum (more parsimonious shrinkage).
+
+## Assumptions
+
+Standard linear-model assumptions on residuals; predictors should be standardised (`glmnet` does this internally and back-transforms). For statistical inference on shrunken coefficients, the bias from regularisation must be considered; bootstrap or debiased lasso/ridge methods provide adjusted intervals.
+
+## R Implementation
+
+```r
+library(glmnet)
+
+X <- as.matrix(mtcars[, -1])
+y <- mtcars$mpg
+
+set.seed(2026)
+cvfit <- cv.glmnet(X, y, alpha = 0)   # alpha = 0 -> ridge
+
+plot(cvfit)
+coef(cvfit, s = "lambda.min")
+coef(cvfit, s = "lambda.1se")
+```
+
+## Output & Results
+
+`cv.glmnet()` with `alpha = 0` fits ridge regression with cross-validated $\lambda$. The plot shows mean CV error against log $\lambda$ with the two selection lines. `coef()` returns shrunken coefficients at the chosen $\lambda$; all are non-zero, in contrast to lasso.
+
+## Interpretation
+
+A reporting sentence: "Ridge regression with CV-optimal $\lambda_{1\mathrm{se}} = 0.5$ produced shrunken coefficient estimates that remained stable despite the strong correlations between displacement, weight, and horsepower; the cross-validated mean squared error was 7.2 mpg² versus 9.8 mpg² for OLS, reflecting the variance reduction." Always report the chosen $\lambda$ and the cross-validated error.
+
+## Practical Tips
+
+- Always standardise predictors before ridge; `glmnet` does this internally with `standardize = TRUE` (default).
+- Use $\lambda_{1\mathrm{se}}$ for more shrinkage than $\lambda_{\min}$; the parsimonious choice typically generalises better.
+- For variable selection rather than pure shrinkage, switch to lasso (`alpha = 1`) or elastic net (`0 < alpha < 1`); ridge keeps every predictor.
+- For non-Gaussian outcomes, set `family = "binomial"`, `"poisson"`, etc.; the ridge penalty extends naturally.
+- Set the random seed before `cv.glmnet()` to ensure reproducible $\lambda$ selection.
+- Compare ridge against lasso and elastic net on the same cross-validation folds when the right level of sparsity is unclear; modern penalised regression workflows benchmark all three.
+
+## R Packages Used
+
+`glmnet` for canonical ridge, lasso, and elastic-net implementations with cross-validated tuning; `MASS::lm.ridge()` for an alternative ridge implementation; `hdi` for high-dimensional inference including debiased ridge; `caret` and `tidymodels` for unified cross-validated comparison across penalised methods.

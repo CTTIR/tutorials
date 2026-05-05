@@ -1,0 +1,79 @@
+---
+title: Zero-Inflated Models
+date: "2026-04-17"
+description: Mixture models for count data with more zeros than Poisson or negative binomial predicts
+categories:
+  - "Regression & Modelling"
+  - zero-inflation
+  - zip
+  - zinb
+  - mixture
+---
+
+## Introduction
+
+Zero-inflated models handle count data that contain more zeros than a Poisson or negative binomial distribution would predict — often called "structural zeros" because they arise from a process distinct from the count-generating process. The model is a mixture: one component decides whether each observation is a structural zero (always zero) or a sampling unit (could have been any non-negative count); the other component generates the count for the sampling units. Insurance claims, healthcare-utilisation counts, ecological abundance with absent species — all share this structure.
+
+## Prerequisites
+
+A working understanding of Poisson and negative-binomial regression, logistic regression, and the conceptual distinction between mixture models and two-part hurdle models.
+
+## Theory
+
+The zero-inflated mixture density is
+
+$$\mathrm P(Y = 0) = \pi + (1 - \pi) f(0), \qquad \mathrm P(Y = y) = (1 - \pi) f(y) \text{ for } y > 0,$$
+
+where $\pi$ is the structural-zero probability (logistic regression on covariates) and $f$ is the count distribution (Poisson or NB). The two sub-models have their own linear predictors and can use different covariate sets; observed zeros come from both the structural-zero process *and* the count-process zero.
+
+The contrast with hurdle models is conceptual: zero-inflated treats some zeros as structurally always-zero, while hurdle treats *all* zeros as arising from one Bernoulli decision and the count distribution is truncated to be strictly positive.
+
+## Assumptions
+
+Count outcome, two distinct processes generating zeros and non-zero counts, independent observations, and the chosen count distribution (Poisson or NB) appropriate for the non-structural component.
+
+## R Implementation
+
+```r
+library(pscl); library(glmmTMB)
+
+set.seed(2026)
+d <- data.frame(x = rnorm(300))
+# Simulate with 40% structural zeros
+pi_zero <- 0.4
+d$y <- ifelse(rbinom(300, 1, pi_zero) == 1, 0,
+              rpois(300, lambda = exp(0.5 + 0.6 * d$x)))
+
+# Zero-inflated Poisson
+fit_zip <- zeroinfl(y ~ x | x, data = d)
+summary(fit_zip)
+
+# Zero-inflated negative binomial
+fit_zinb <- zeroinfl(y ~ x | x, data = d, dist = "negbin")
+
+AIC(fit_zip, fit_zinb)
+
+# glmmTMB version
+fit_tmb <- glmmTMB(y ~ x, ziformula = ~ x, data = d, family = poisson)
+```
+
+## Output & Results
+
+`summary(fit_zip)` returns two coefficient blocks: the count-component coefficients on the log-rate scale and the zero-inflation coefficients on the logit scale. `AIC()` compares ZIP against ZINB; substantially overdispersed counts favour ZINB strongly.
+
+## Interpretation
+
+A reporting sentence: "A zero-inflated negative binomial model decomposed the observed zeros into structural and sampling sources: the count component estimated a rate ratio of 1.75 per unit increase in $x$ (95 % CI 1.40 to 2.18, $p < 0.001$); the zero-inflation component estimated that a 1-unit increase in $x$ reduced the odds of being a structural zero by 45 % (OR 0.55, 95 % CI 0.36 to 0.84, $p = 0.005$). ZINB was favoured over ZIP by AIC ($\Delta = 12$)." Always report both components and the framework rationale.
+
+## Practical Tips
+
+- The Vuong test (`pscl::vuong`) compares zero-inflated to regular Poisson/NB but is often inconclusive; AIC and BIC are more reliable.
+- Different covariates can drive the count and zero-inflation components; use `y ~ x_count | x_zero` to specify them separately.
+- Hurdle models (`pscl::hurdle`) are an alternative when the scientific story is "did anything happen, and if so how much"; ZIP/ZINB fits "are some zeros structural while others are sampling".
+- Overdispersed counts plus excess zeros typically warrant ZINB; pure overdispersion without structural zeros is just NB.
+- Interpretation is cleaner in hurdle models when the two-stage scientific story is clear; ZIP/ZINB is preferable when zeros come from a genuine mixture.
+- For random-effects extensions, `glmmTMB(..., ziformula = ~ ...)` adds clustered or hierarchical structure to either component.
+
+## R Packages Used
+
+`pscl::zeroinfl()` and `hurdle()` for canonical implementations; `glmmTMB` for mixed-effects zero-inflated and hurdle models with cleaner overdispersion handling; `countreg` for additional count-model variants and rootogram diagnostics; `DHARMa` for residual diagnostics across zero-inflated families.

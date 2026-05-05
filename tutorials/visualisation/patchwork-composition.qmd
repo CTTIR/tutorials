@@ -1,0 +1,79 @@
+---
+title: "Patchwork: Multi-Plot Composition"
+date: "2026-04-17"
+description: Composing multiple ggplot objects into a single figure with the patchwork package
+categories:
+  - Data Visualisation
+  - patchwork
+  - composition
+  - multi-panel
+---
+
+## Introduction
+
+Almost every journal-worthy figure is a composition: two or more panels arranged with shared legends, alphabetical tags, a unifying title, and aligned axes. Building such figures by hand with `gridExtra` or `cowplot` is verbose and brittle to layout changes. The `patchwork` package replaces that workflow with arithmetic-like operators that mirror the way the figure is read: `+` for "next to", `/` for "below", `|` for "in a row". Combined with `plot_layout()` for relative sizes and `plot_annotation()` for shared titles and tags, it is now the standard tool for assembling multi-panel `ggplot2` figures.
+
+## Prerequisites
+
+A working knowledge of `ggplot2` — geoms, scales, themes — and an idea of which combinations of plots actually communicate (rather than merely fill space).
+
+## Theory
+
+`patchwork` treats each `ggplot` as an object that supports a small algebra:
+
+- `p1 + p2` places two plots side by side at equal width.
+- `p1 / p2` stacks them vertically.
+- Parentheses control nesting: `(p1 | p2) / p3` puts `p1` and `p2` horizontally with `p3` spanning below.
+- `plot_layout(guides = "collect")` deduplicates shared legends, moving a single copy to the figure margin.
+- `plot_annotation(title = ..., tag_levels = "A")` adds a global title and panel tags (A, B, C, …) automatically.
+- `& theme_minimal()` applies a theme to every panel in the composition simultaneously, useful when individual panels were built without a consistent theme.
+
+The package handles axis alignment automatically when plots share axis ranges, which avoids the tiny horizontal offsets that bedevil hand-aligned multi-panel figures.
+
+## Assumptions
+
+No statistical assumptions; the only practical constraint is that combined panels must remain legible at the final printed size, which usually means three to four panels per row at most.
+
+## R Implementation
+
+```r
+library(ggplot2); library(patchwork)
+
+p1 <- ggplot(mtcars, aes(wt, mpg))       + geom_point() + theme_minimal()
+p2 <- ggplot(mtcars, aes(factor(cyl)))   + geom_bar()   + theme_minimal()
+p3 <- ggplot(mtcars, aes(hp))             + geom_histogram(bins = 15) + theme_minimal()
+
+# Two side by side
+p1 + p2
+
+# Stacked
+p1 / p2
+
+# Complex layout
+(p1 | p2) / p3 +
+  plot_annotation(title = "mtcars overview", tag_levels = "A")
+
+# Collect shared legends
+p1 + p2 + plot_layout(guides = "collect")
+```
+
+## Output & Results
+
+Four progressively more complex layouts: two horizontal panels, two vertical panels, a 2-up-1-down arrangement with global title and panel tags A, B, C, and a side-by-side composition with one shared legend collected into the right margin. Saving any of these with `ggsave()` produces a single file at the specified dimensions, ready for journal submission.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Figure 2 (assembled with `patchwork`): A) weight vs miles-per-gallon, B) cylinder distribution, C) horsepower distribution; panels share a common minimal theme and a single legend." Caption-level credit to the composition tool is unnecessary, but tags and a one-line description of each panel are essential for any multi-panel figure.
+
+## Practical Tips
+
+- Use `plot_layout(widths = c(2, 1))` to give one panel twice the horizontal space of another; `heights` does the same vertically.
+- `tag_levels = "A"` produces A, B, C tags; `"1"` produces 1, 2, 3; `"i"` produces lowercase Roman numerals.
+- `& theme_minimal()` (note the `&`) applies a theme globally to every panel; `+` only applies to the most recently added plot.
+- For many small panels with the same structure, prefer `facet_wrap()` inside a single `ggplot` rather than composing dozens of plots; faceting is more efficient and produces aligned axes by default.
+- Always save the composed plot as a single file via `ggsave()`; assembling separate exports in a vector editor produces fragile artwork.
+- When a shared legend has many entries, place it on the right via `plot_layout(guides = "collect") & theme(legend.position = "right")` rather than letting it stack vertically inside one panel.
+
+## R Packages Used
+
+`patchwork` for composition, `ggplot2` for the underlying plots, and `cowplot` for the alternative `plot_grid()` API and the `draw_image()` helper when embedding bitmap insets is required.

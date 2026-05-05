@@ -1,0 +1,66 @@
+---
+title: Power for Linear Regression
+date: "2026-04-17"
+description: "Sample size for overall regression F and for individual coefficients via Cohen's f^2"
+categories:
+  - "Sample Size & Power"
+  - power
+  - linear-regression
+  - f-squared
+  - r-squared
+---
+
+## Introduction
+
+Power analysis for linear regression determines the sample size required to detect either an overall non-zero $R^2$ (via the omnibus $F$-test of the regression) or the incremental $R^2$ contributed by adding one or more predictors to a baseline model. Both questions are central to the design of observational and experimental studies that use multiple regression for inference: the omnibus power calculation tells you whether the model as a whole has a chance to be detected, and the incremental power calculation tells you whether a specific block of predictors of scientific interest will be detectable above and beyond control variables. Cohen's $f^2$ effect size unifies these calculations into a single non-central $F$-distribution framework.
+
+## Prerequisites
+
+A working understanding of multiple linear regression, the relationship between $R^2$ and the omnibus $F$-statistic, and Cohen's $f^2$ as the standardised effect-size measure for regression.
+
+## Theory
+
+Cohen's $f^2$ for the omnibus regression test is
+
+$$f^2 = \frac{R^2}{1 - R^2},$$
+
+and for the incremental contribution of a new block of predictors,
+
+$$f^2 = \frac{R^2_{\text{full}} - R^2_{\text{reduced}}}{1 - R^2_{\text{full}}}.$$
+
+Conventional benchmarks are 0.02 (small), 0.15 (medium), and 0.35 (large). The omnibus or partial $F$-test follows a non-central $F$-distribution under $H_1$ with non-centrality $\lambda = f^2 (u + v + 1)$, where $u$ is the numerator df (number of predictors tested) and $v$ is the residual df. Power is the probability that this non-central $F$ exceeds the critical value at $\alpha$.
+
+## Assumptions
+
+The standard linear-regression assumptions (linearity, homoscedasticity, Normal residuals, independent observations), the number of predictors in the full model and the incremental block are pre-specified, and the effect size $f^2$ is chosen on the basis of the smallest scientifically meaningful incremental $R^2$.
+
+## R Implementation
+
+```r
+library(pwr)
+
+pwr.f2.test(u = 5, v = NULL, f2 = 0.15, sig.level = 0.05, power = 0.80)
+
+pwr.f2.test(u = 2, v = NULL, f2 = 0.02, power = 0.80)
+```
+
+## Output & Results
+
+`pwr.f2.test()` returns the residual degrees of freedom $v$ required to achieve target power; the total sample size is $n = v + u + 1$. For a 5-predictor model at medium effect $f^2 = 0.15$, $v = 85$ and $n = 91$; for a small incremental effect $f^2 = 0.02$ with 2 added predictors after 5 baseline predictors, $v = 489$ and $n = 497$ — illustrating how dramatically small incremental effects increase sample-size requirements.
+
+## Interpretation
+
+A reporting sentence: "With 5 predictors in the regression and an anticipated $f^2 = 0.15$ (medium-effect convention; equivalent to $R^2 = 0.13$), a total sample of $n = 91$ is required to achieve 80 % power for the omnibus $F$-test at $\alpha = 0.05$. To detect an incremental $f^2 = 0.02$ from 2 additional predictors of primary interest after adjusting for the 5 baseline covariates, the protocol requires $n = 497$. The trial therefore enrols 550 participants to allow for 10 % attrition." Always state $u$, $f^2$, and the inflation factor.
+
+## Practical Tips
+
+- Convert anticipated $R^2$ expectations to $f^2$ using the formulas above; the conversion is non-linear and a "small $R^2$" of 0.05 corresponds to $f^2 \approx 0.053$, while a "medium $R^2$" of 0.13 corresponds to $f^2 \approx 0.15$.
+- Small incremental effects ($f^2 < 0.05$) require very large samples to detect; weigh the cost-benefit honestly and consider whether a smaller incremental effect is genuinely scientifically interesting.
+- Interactions, polynomial terms, and dummy-coded categorical variables each add to the predictor count $u$ and inflate the standard errors of individual coefficients; the sample-size calculation must reflect the actual model structure.
+- Pre-specify the minimum detectable incremental effect of interest in the protocol; avoid post-hoc rationalisation of the chosen $f^2$ to match the achieved power, which is a form of HARKing.
+- Include a 15–20 % buffer above the calculated $n$ for residual non-Normality, minor violations of homoscedasticity, and missing data; the calculated $n$ is the minimum, not a target.
+- For prediction-focused studies (rather than inferential studies), consider using a learning-curve or repeated-cross-validation framework to determine the sample size required for stable out-of-sample $R^2$, which is a different question than power for the omnibus test.
+
+## R Packages Used
+
+`pwr::pwr.f2.test()` for canonical $f^2$-based linear-regression power calculation; `WebPower::wp.regression()` for an alternative interface mirroring popular online calculators; `pwrss::pwrss.f.reg()` for extended regression-power tools; `Superpower` for ANOVA and factorial-design power simulation; `simr` for simulation-based power on regression with complex covariance structures.

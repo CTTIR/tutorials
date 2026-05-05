@@ -1,0 +1,92 @@
+---
+title: Kruskal-Wallis Test
+date: "2026-04-17"
+description: Non-parametric one-way ANOVA based on ranks across three or more groups
+categories:
+  - Inferential Statistics
+  - kruskal-wallis
+  - non-parametric
+  - ranks
+  - dunn
+---
+
+## Introduction
+
+The Kruskal-Wallis test extends the Mann-Whitney U to three or more independent groups. It tests whether the distributions differ across groups, without assuming normality or equal variances. Post-hoc pairwise comparisons use Dunn's test with a multiple-testing correction.
+
+## Prerequisites
+
+Mann-Whitney U, ranks.
+
+## Theory
+
+Pool all observations and rank them across groups. Let $R_i$ be the sum of ranks in group $i$ with size $n_i$, and $N = \sum n_i$. The Kruskal-Wallis statistic is
+
+$$H = \frac{12}{N(N + 1)} \sum_i \frac{R_i^2}{n_i} - 3(N + 1) \sim \chi^2_{k - 1}.$$
+
+Under $H_0$ of equal distributions, $H$ has an approximate chi-squared distribution with $k - 1$ df for moderate sample sizes.
+
+Effect size: $\varepsilon^2 = H / (N - 1)$ or $\eta^2_H = (H - k + 1)/(N - k)$.
+
+Post-hoc: Dunn's test compares each pair of groups using z-statistics with Bonferroni or Benjamini-Hochberg correction.
+
+## Assumptions
+
+- Independent observations within and across groups.
+- Observations at least ordinal.
+- Similar distribution shapes (for a median-difference interpretation); otherwise tests distributional equality.
+
+## R Implementation
+
+```r
+library(rstatix); library(dunn.test)
+set.seed(2026)
+
+df <- data.frame(
+  group = factor(rep(c("A", "B", "C", "D"), each = 25)),
+  y     = c(rnorm(25, 50, 8),
+            rnorm(25, 55, 8),
+            rnorm(25, 60, 12),
+            rnorm(25, 52, 8))
+)
+
+kruskal.test(y ~ group, data = df)
+
+# Effect size
+df |> kruskal_effsize(y ~ group)
+
+# Dunn's post-hoc with BH correction
+dunn.test(df$y, df$group, method = "bh")
+```
+
+## Output & Results
+
+```
+        Kruskal-Wallis rank sum test
+Kruskal-Wallis chi-squared = 15.22, df = 3, p-value = 0.0016
+
+Cohen's eta2 | 95% CI
+------------------------
+0.14          | [0.02, 1.00]
+
+Dunn's test with Benjamini-Hochberg adjustment:
+     Comparison    p.adj
+     A - B         0.086
+     A - C         0.003
+     A - D         0.302
+     B - C         0.136
+     B - D         0.302
+     C - D         0.015
+```
+
+## Interpretation
+
+"Group differed significantly across the four groups (Kruskal-Wallis $H(3) = 15.22$, $p = 0.002$, $\eta^2_H = 0.14$). Dunn post-hoc tests identified group C as significantly higher than groups A and D (BH-adjusted $p < 0.05$)."
+
+## Practical Tips
+
+- Report medians and IQRs per group.
+- Dunn's test is the standard post-hoc procedure; pairwise Wilcoxon with adjustment is an alternative.
+- For within-subjects designs, use Friedman.
+- When the only question is whether any groups differ, skipping the omnibus test and doing pairwise Wilcoxons with adjustment is statistically valid but loses interpretability.
+- For heavy tails or strong shape differences, the test compares distributions more broadly than medians.

@@ -1,0 +1,91 @@
+---
+title: Post-Hoc Tests with Tukey HSD
+date: "2026-04-17"
+description: Pairwise comparisons after ANOVA with family-wise error control
+categories:
+  - Inferential Statistics
+  - post-hoc
+  - tukey-hsd
+  - pairwise
+  - family-wise-error
+---
+
+## Introduction
+
+When a one-way ANOVA rejects equality of means across groups, post-hoc tests identify which specific pairs differ. Tukey's HSD (honestly significant difference) is the default pairwise comparison test after ANOVA with equal sample sizes, controlling the family-wise error rate at the nominal $\alpha$.
+
+## Prerequisites
+
+One-way ANOVA, multiple-comparisons problem.
+
+## Theory
+
+For $k$ groups with sample size $n$ each and common residual MS = MSE, the Tukey critical value for pairwise differences is
+
+$$q_{\alpha, k, n_{\text{total}} - k} \cdot \sqrt{\text{MSE} / n},$$
+
+where $q$ is the Studentised range quantile. Pairs whose observed mean difference exceeds this are declared significantly different at family-wise $\alpha$.
+
+Tukey's HSD is equivalent to a simultaneous test based on the maximum pairwise $t$ statistic. Alternatives:
+
+- **Dunnett**: comparing each treatment to a single control; more powerful than Tukey when this is the question.
+- **Bonferroni**: simple but conservative; often over-adjusts.
+- **Holm**: sequential, uniformly more powerful than Bonferroni.
+- **Scheffe**: most conservative; valid for arbitrary contrasts, not just pairwise.
+
+## Assumptions
+
+Same as ANOVA: independence, normal residuals, homogeneous variances. For unequal sample sizes, the Tukey-Kramer variant is used.
+
+## R Implementation
+
+```r
+library(emmeans); library(multcomp)
+set.seed(2026)
+
+df <- data.frame(
+  group = factor(rep(c("A", "B", "C", "D"), each = 30)),
+  y     = c(rnorm(30, 50, 8),
+            rnorm(30, 58, 8),
+            rnorm(30, 60, 8),
+            rnorm(30, 55, 8))
+)
+
+fit <- aov(y ~ group, data = df)
+
+# Built-in Tukey HSD
+TukeyHSD(fit)
+
+# emmeans equivalent (more flexible, handles unbalanced designs)
+emm <- emmeans(fit, ~ group)
+pairs(emm, adjust = "tukey")
+
+# Dunnett (comparing to A as control)
+summary(glht(fit, linfct = mcp(group = "Dunnett")))
+```
+
+## Output & Results
+
+```
+            diff    lwr    upr   p adj
+B-A     8.421     3.02  13.82    0.0006
+C-A     9.897     4.50  15.30    0.00005
+D-A     4.975    -0.43  10.38    0.086
+C-B     1.476    -3.92   6.88    0.892
+D-B    -3.446    -8.85   1.96    0.353
+D-C    -4.922   -10.32   0.48    0.090
+```
+
+Three of six pairwise comparisons are significant at family-wise $\alpha = 0.05$.
+
+## Interpretation
+
+Report adjusted p-values and family-wise confidence intervals. "Tukey HSD post-hoc comparisons following a significant one-way ANOVA indicated that groups B and C each differed significantly from group A (both adjusted p < 0.01), while D did not differ significantly from A (adjusted p = 0.09)."
+
+## Practical Tips
+
+- Only perform post-hoc tests after a significant omnibus F; otherwise you are fishing.
+- For unequal sample sizes use Tukey-Kramer (R's `TukeyHSD` and `emmeans` handle this automatically).
+- Dunnett is more powerful than Tukey when all comparisons are to one control.
+- For complex (non-pairwise) contrasts, use `emmeans` or `glht` with user-defined linear combinations.
+- Conservative alternatives (Bonferroni, Holm) work regardless of equal variances; they are safer in heterogeneous-variance settings.

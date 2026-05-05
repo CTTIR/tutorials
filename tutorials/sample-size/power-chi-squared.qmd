@@ -1,0 +1,68 @@
+---
+title: Power for Chi-Squared Tests
+date: "2026-04-17"
+description: "Sample size for goodness-of-fit and contingency chi-squared using Cohen's w"
+categories:
+  - "Sample Size & Power"
+  - power
+  - chi-squared
+  - cohen-w
+  - contingency
+---
+
+## Introduction
+
+Power analysis for chi-squared tests — goodness-of-fit against a hypothesised distribution and independence in a two-way contingency table — uses the non-central chi-squared distribution under the alternative hypothesis. The standardised effect size for these tests is Cohen's $w$, which combines the difference between hypothesised and expected cell proportions into a single number that maps directly to the non-centrality parameter of the test statistic. Power calculations are essential in the design of survey research, epidemiological category-association studies, market-segmentation analyses, and any setting where the central question is whether categorical proportions differ from a reference or vary across rows of a contingency table.
+
+## Prerequisites
+
+A working understanding of chi-squared goodness-of-fit and contingency-table tests, the chi-squared distribution and its non-central generalisation, and Cohen's $w$ as the standardised effect-size measure.
+
+## Theory
+
+Cohen's $w$ is
+
+$$w = \sqrt{\sum_i \frac{(p_{1i} - p_{0i})^2}{p_{0i}}},$$
+
+where $p_{0i}$ are the cell proportions expected under the null hypothesis and $p_{1i}$ under the alternative. Equivalently, $w = \sqrt{\chi^2 / n}$ at the expected effect. Under the alternative, the test statistic follows a non-central chi-squared with the test's standard degrees of freedom and non-centrality parameter $\lambda = n w^2$. Conventional benchmarks for $w$ are 0.10 (small), 0.30 (medium), and 0.50 (large).
+
+## Assumptions
+
+Observations are independent, expected cell counts are large enough that the chi-squared approximation is valid (typically $\geq 5$ per cell, though stricter thresholds apply for small tables), and the cell proportions under the alternative hypothesis are pre-specified.
+
+## R Implementation
+
+```r
+library(pwr)
+
+pwr.chisq.test(w = 0.3, df = 3, sig.level = 0.05, power = 0.80)
+
+pwr.chisq.test(w = 0.3, df = 4, sig.level = 0.05, power = 0.80)
+
+p0 <- c(0.25, 0.25, 0.25, 0.25)
+p1 <- c(0.40, 0.30, 0.20, 0.10)
+w  <- sqrt(sum((p1 - p0)^2 / p0))
+w
+pwr.chisq.test(w = w, df = 3, power = 0.80)
+```
+
+## Output & Results
+
+`pwr.chisq.test()` returns the required sample size to achieve target power against a specified $w$, $\alpha$, and df. For a medium effect $w = 0.3$ with 3 df (4-category goodness-of-fit), $n = 122$; with 4 df (a 3×3 contingency table), $n = 133$. Computing $w$ directly from hypothesised cell proportions is the recommended workflow because it ties the calculation to substantive distributional assumptions.
+
+## Interpretation
+
+A reporting sentence: "To detect a deviation from equal proportions across four categories of medium magnitude (Cohen's $w = 0.30$, equivalent to expected proportions $(0.40, 0.30, 0.20, 0.10)$ vs. uniform null) at 80 % power and $\alpha = 0.05$, $n = 122$ observations are required. With 5 % attrition, the protocol enrols 130 participants. Sensitivity analyses across $w \in [0.20, 0.40]$ are reported in the supplement to bracket uncertainty about the true effect size." Always state both $w$ and the underlying proportional hypothesis.
+
+## Practical Tips
+
+- Convert real-world quantities — relative risks, odds ratios, differences in proportions — to Cohen's $w$ via the contingency-table formula rather than guessing; using a generic "medium" benchmark when the underlying scientific question implies a different magnitude is a recurring source of mis-powered studies.
+- Required sample size grows roughly linearly with degrees of freedom at fixed $w$; spreading effects across more cells (e.g., 5×5 vs 2×2) reduces the per-cell signal and inflates the sample-size requirement.
+- For small expected cell counts that would invalidate the chi-squared approximation, plan to use Fisher's exact test and estimate power by Monte Carlo simulation; the asymptotic chi-squared power calculation is unreliable in the small-sample regime where exact tests are needed.
+- If the alternative-hypothesis cell proportions are themselves uncertain, pre-specify a sensitivity range and report power across the range; this is increasingly expected by reviewers and protects against under-powering when the assumed proportions turn out to be optimistic.
+- Chi-squared power calculations are approximate (the non-central chi-squared assumes large samples); simulation-based power is safer for complex designs, sparse-data scenarios, or when the test statistic deviates from the standard Pearson form.
+- For one-way exact-binomial tests of a single proportion, use specialised tools like `pwr.p.test()` or `binom::power.binom()` rather than the chi-squared approximation; the exact methods are more accurate at small samples.
+
+## R Packages Used
+
+`pwr::pwr.chisq.test()` for the canonical Cohen's $w$ chi-squared power calculation; `WebPower::wp.chisq()` for an alternative interface; `MESS::power_prop_test()` for two-proportion specific power; `binom` for exact-binomial sample-size tools; `Mediana` for trial-design simulation including chi-squared-test power across more complex designs.

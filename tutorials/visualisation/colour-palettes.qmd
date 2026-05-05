@@ -1,0 +1,82 @@
+---
+title: Colour Palettes
+date: "2026-04-17"
+description: "Discrete, continuous, perceptually uniform, and diverging palettes for ggplot2"
+categories:
+  - Data Visualisation
+  - colour
+  - palette
+  - viridis
+  - brewer
+---
+
+## Introduction
+
+Colour in a data visualisation is not decoration — it encodes information. The right palette makes ordered values read as ordered, signed values read as signed, and categorical values read as distinct without implying a ranking. The wrong palette (the infamous rainbow) creates false visual hotspots where the hue cycle bends and obscures structure that a perceptually uniform palette would reveal. Mastering the three palette families and choosing among them deliberately is one of the highest-payoff skills in figure design.
+
+## Prerequisites
+
+A working knowledge of `ggplot2`'s colour and fill scales, and an awareness of colour-vision deficiencies that affect roughly 8 % of male readers.
+
+## Theory
+
+Three palette families serve three different data types:
+
+- **Sequential**: monotone hue or saturation gradient from low to high (`viridis`, `plasma`, `magma`, `YlOrRd`, `Blues`); for ordered data without a meaningful zero or centre.
+- **Diverging**: two hues meeting at a neutral midpoint (`RdBu`, `PuOr`, `BrBG`); for signed data where positive and negative deviations from a centre are both meaningful.
+- **Qualitative**: distinct, equally salient hues (`Set1`, `Set2`, `Dark2`, `Okabe-Ito`); for unordered categorical groups, ideally limited to eight or fewer.
+
+`viridis` is the modern default for continuous scales because it is perceptually uniform (equal data steps look like equal visual steps), colour-blind safe under deuteranopia and protanopia, and degrades gracefully to greyscale. ColorBrewer palettes label colour-blind-friendly variants explicitly (`display.brewer.all(colorblindFriendly = TRUE)`), and the Okabe-Ito eight-colour palette was designed specifically for accessibility.
+
+## Assumptions
+
+The data type matches the palette family — sequential for ordered values, diverging for signed, qualitative for nominal.
+
+## R Implementation
+
+```r
+library(ggplot2); library(viridis); library(RColorBrewer)
+
+# Continuous: viridis
+ggplot(faithfuld, aes(waiting, eruptions, fill = density)) +
+  geom_tile() +
+  scale_fill_viridis_c(option = "plasma") +
+  theme_minimal()
+
+# Continuous: diverging
+ggplot(mtcars, aes(wt, mpg, colour = hp - mean(hp))) +
+  geom_point(size = 3) +
+  scale_colour_gradient2(low = "blue", mid = "grey80", high = "red",
+                         midpoint = 0) +
+  theme_minimal()
+
+# Qualitative: Brewer Set2
+ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+  geom_point(size = 3) +
+  scale_colour_brewer(palette = "Set2") +
+  theme_minimal()
+
+# Show colour-blind-safe palettes
+display.brewer.all(colorblindFriendly = TRUE)
+```
+
+## Output & Results
+
+Four illustrative figures: a 2D density tile plot using `plasma` for sequential encoding, a centred-at-zero scatter using `gradient2` for signed deviations, a categorical scatter using Brewer `Set2` for cylinder counts, and a panel of all colour-blind-friendly Brewer palettes for reference.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Cell colour encodes 2D kernel density on the `viridis::plasma` perceptually uniform palette; positive and negative horsepower deviations from the mean use a red-blue diverging scale centred at zero." Always state the palette by name when it is non-default; readers should not have to guess.
+
+## Practical Tips
+
+- Use `viridis` (or its variants `magma`, `plasma`, `inferno`, `cividis`) as the default for continuous scales; all are perceptually uniform and colour-blind safe.
+- Limit qualitative palettes to 8 colours or fewer; beyond that, switch to shapes, linetypes, or facets to disambiguate groups.
+- Use `scale_colour_gradient2()` (or `scale_fill_gradient2()`) for any signed quantity; the centred palette communicates symmetry that one-sided sequentials cannot.
+- For greyscale fallback (photocopying, monochrome printing), `viridis` translates almost losslessly; rainbow hues collapse into similar greys and become unreadable.
+- Verify colour-blind accessibility on every figure with `colorBlindness::cvdPlot()`; simulating deuteranopia and protanopia takes seconds and prevents costly resubmissions.
+- For heatmaps, perceptual uniformity is non-negotiable — a non-uniform palette creates apparent hotspots wherever the hue cycle bends.
+
+## R Packages Used
+
+`viridis` for `viridis`, `magma`, `plasma`, `inferno`, `cividis` continuous scales; `RColorBrewer` for the Brewer family of qualitative, sequential, and diverging palettes; `colorspace` for HCL-based custom palettes; `paletteer` for unified access to dozens of curated palettes from across the R ecosystem.

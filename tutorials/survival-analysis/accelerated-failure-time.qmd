@@ -1,0 +1,77 @@
+---
+title: Accelerated Failure Time Models
+date: "2026-04-17"
+description: Parametric survival regression on the log-time scale with acceleration-factor interpretation
+categories:
+  - Survival Analysis
+  - aft
+  - parametric-survival
+---
+
+## Introduction
+
+Accelerated failure time (AFT) models express covariate effects directly on the *time scale*: each covariate scales the expected survival time by a multiplicative factor. The model is $\log T = x^\top \beta + \sigma W$ with $W$ a standardised noise (extreme-value, Normal, or logistic, depending on the family). The exponentiated coefficient $\exp(-\beta_j)$ is an "acceleration factor" — the multiplier on the time scale per unit increase in $x_j$. AFT is the natural framework when communicating effects to clinical audiences who reason in survival times rather than hazards, and it remains valid under non-proportional hazards where Cox regression fails.
+
+## Prerequisites
+
+A working understanding of parametric survival distributions (Weibull, log-Normal, log-logistic) and the difference between hazard-ratio and acceleration-factor interpretations.
+
+## Theory
+
+Common AFT families:
+
+- **Weibull**: log-time errors are extreme-value distributed; this is the unique family with both PH and AFT interpretations, with $\beta_{\mathrm{PH}} = -k \beta_{\mathrm{AFT}}$ where $k$ is the Weibull shape.
+- **Log-Normal**: errors are Normal on the log-time scale; produces non-monotone hazards.
+- **Log-logistic**: errors are logistic on the log-time scale; produces non-monotone hazards with heavier tails than log-Normal and a closed-form quantile function.
+- **Generalised Gamma**: a three-parameter family that nests Weibull, log-Normal, and exponential; useful for selecting among nested AFT alternatives via likelihood-ratio tests.
+
+The acceleration-factor interpretation is direct: $\exp(\beta_j) = 0.7$ means survival times are 30 % shorter for each unit increase in $x_j$; $\exp(\beta_j) = 1.3$ means 30 % longer.
+
+## Assumptions
+
+The chosen parametric family is correct (verifiable through residual diagnostics and AIC comparisons), independent non-informative censoring, and the absence of unmodelled time-varying covariate effects.
+
+## R Implementation
+
+```r
+library(survival); library(flexsurv)
+
+data(lung)
+
+# Weibull AFT
+aft_w <- survreg(Surv(time, status) ~ age + sex, data = lung,
+                 dist = "weibull")
+summary(aft_w)
+
+# Log-normal AFT
+aft_ln <- survreg(Surv(time, status) ~ age + sex, data = lung,
+                  dist = "lognormal")
+
+# flexsurv alternative
+flex_w <- flexsurvreg(Surv(time, status) ~ age + sex, data = lung, dist = "weibull")
+flex_w
+
+# AFT interpretation
+exp(coef(aft_w)[-1])   # acceleration factors (time ratio)
+```
+
+## Output & Results
+
+`survreg()` returns AFT coefficients on the log-time scale plus the scale parameter; `flexsurvreg()` provides equivalent estimates with cleaner prediction interfaces. Exponentiating the slope coefficients gives acceleration factors interpretable as time ratios.
+
+## Interpretation
+
+A reporting sentence: "A Weibull AFT model estimated that each additional year of age accelerated the event by a factor of 0.98 (95 % CI 0.97 to 1.00) — equivalently, a 2 % shorter expected time per year — and females had 30 % longer expected survival than males (acceleration factor 1.30, 95 % CI 1.06 to 1.59)." Choose the AFT-vs-PH framing based on the audience: clinicians who think in survival times prefer acceleration factors, while those used to hazard ratios prefer PH.
+
+## Practical Tips
+
+- Weibull AFT is equivalent to Weibull PH up to a fixed transformation; choose the parameterisation that matches the audience.
+- Use AIC across distributions (exponential, Weibull, log-Normal, log-logistic, generalised gamma) to select the family; AICs differ substantially when the hazard shape varies.
+- Check goodness of fit with Cox-Snell residuals (`flexsurv::resid()`) — a Cox-Snell residual against $\exp(1)$ should follow the unit exponential.
+- The log–log survival plot is the standard diagnostic for Weibull suitability; clear non-linearity rules it out and motivates a different family.
+- For non-monotone hazards (log-Normal, log-logistic), AFT is mandatory — there is no PH analogue without a time-varying coefficient.
+- For very small samples, AFT models are more efficient than Cox because the parametric structure adds information; for large samples with PH, Cox is competitive without distributional assumptions.
+
+## R Packages Used
+
+`survival` for `survreg()` with multiple AFT families; `flexsurv` for `flexsurvreg()` with cleaner prediction and richer family support including generalised gamma; `eha` for additional parametric extensions; `rstpm2` for spline-based parametric models that bridge AFT and Royston-Parmar.

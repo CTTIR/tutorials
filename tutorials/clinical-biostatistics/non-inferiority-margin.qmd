@@ -1,0 +1,63 @@
+---
+title: Non-Inferiority Margin Selection
+date: "2026-04-17"
+description: Defining the clinically acceptable maximum inferiority
+categories:
+  - Clinical Biostatistics
+  - non-inferiority
+  - margin
+  - synthesis
+---
+
+## Introduction
+
+Non-inferiority (NI) trials test whether a new treatment is not worse than an active comparator by more than a pre-specified margin $\Delta$. Margin selection is the most consequential and scrutinised part of NI trial design: too loose and a genuinely inferior treatment is approved; too tight and the study is infeasible.
+
+## Prerequisites
+
+Hypothesis testing; active-controlled trials; historical-control data.
+
+## Theory
+
+Two common approaches:
+- **Fixed-margin (synthesis) method**: margin $\Delta$ is chosen based on the historical effect of the active comparator vs placebo, typically preserving 50-75 % of that effect. Example: if active reduces mortality by 10 % vs placebo, $\Delta$ might be set at 5 %.
+- **Clinical margin**: a clinically judged threshold of practical importance, independent of historical data.
+
+Both require regulatory justification; FDA and EMA typically require the synthesis approach with supporting clinical judgement.
+
+## Assumptions
+
+Historical active-vs-placebo effect is consistent and generalisable to the current trial population; assay sensitivity (ability to detect a difference if truly present) is preserved.
+
+## R Implementation
+
+```r
+# Synthesis-method margin calculation
+# Historical effect: placebo-controlled active gives risk reduction 10% (95% CI 7%-13%)
+# Conservative estimate: lower bound 7%
+preservation <- 0.5                    # preserve at least 50% of effect
+margin_synthesis <- 0.07 * (1 - preservation)
+cat("Synthesis-based NI margin:", margin_synthesis, "\n")
+
+# Sample size for an NI trial with continuous outcome
+# Expected true difference 0; margin 0.25 SD; alpha=0.025; power=0.80
+library(pwr)
+pwr.t.test(d = 0.25, sig.level = 0.025, power = 0.80,
+           type = "two.sample", alternative = "greater")
+```
+
+## Output & Results
+
+Synthesis-based margin (0.035 = 3.5 % preserving 50 % of historical effect); sample-size calculation gives ~252/arm for a 0.25 SD margin.
+
+## Interpretation
+
+"The non-inferiority margin was prospectively set at 3.5 percentage points, preserving at least 50 % of the historical benefit of the active comparator (7 % lower bound of historical effect). Sample size was 504 based on 80 % power to rule out a margin with one-sided alpha 0.025."
+
+## Practical Tips
+
+- Margin selection must be pre-specified, regulator-reviewed, and clinically justified.
+- Run both ITT and per-protocol analyses; NI requires consistency.
+- Beware "biocreep": repeated non-inferiority approvals without placebo anchoring drift from effective therapy.
+- Assay sensitivity is hard to demonstrate without a placebo arm; three-arm trials (NI + placebo) are ideal but often unethical.
+- Non-inferiority claims should report the effect estimate and CI, not just "p < 0.025".

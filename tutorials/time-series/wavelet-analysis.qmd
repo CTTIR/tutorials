@@ -1,0 +1,71 @@
+---
+title: Wavelet Analysis
+date: "2026-04-17"
+description: Time-frequency decomposition capturing localised periodicities that change over time
+categories:
+  - Time Series Analysis
+  - wavelet
+  - time-frequency
+  - cwt
+---
+
+## Introduction
+
+Wavelet analysis decomposes a time series into components localised in both time and frequency simultaneously. Unlike the Fourier transform, which assumes stationarity and produces a single spectrum for the entire series, wavelets capture cyclic components that appear, shift, or disappear over time — essential for non-stationary signals such as EEG recordings, climate proxies, or any series whose periodic content evolves. The output is a scalogram, a 2D map of power across time and frequency that reveals the time-varying structure that Fourier methods miss.
+
+## Prerequisites
+
+A working understanding of spectral analysis and Fourier transforms, the concept of time-frequency localisation, and basic familiarity with the trade-off between time and frequency resolution.
+
+## Theory
+
+The continuous wavelet transform (CWT) convolves the signal with scaled and shifted copies of a mother wavelet $\psi$:
+
+$$W(a, b) = \int y(t) \, \bar\psi\!\left(\frac{t - b}{a}\right) \frac{\mathrm d t}{\sqrt{|a|}}.$$
+
+The scale $a$ controls the wavelet's "width" and corresponds inversely to frequency; $b$ is the time shift. The squared magnitude $|W(a, b)|^2$ is the wavelet power at time $b$ and scale $a$. Common mother wavelets include Morlet (oscillatory, good time-frequency localisation), Haar (step-function), Daubechies (orthogonal, used in compression). The scalogram visualises $|W|^2$ as a heatmap over the time-frequency plane.
+
+The cone of influence delimits regions of the scalogram free of edge artefacts; power within the cone is reliable, power outside should be discounted.
+
+## Assumptions
+
+Depends on the wavelet choice; minimal beyond a sufficiently long series. The discrete wavelet transform (DWT) requires series length to be a power of 2; the CWT does not.
+
+## R Implementation
+
+```r
+library(WaveletComp)
+
+set.seed(2026)
+t <- 1:500
+y <- sin(2 * pi * t / 50) * (t < 250) + sin(2 * pi * t / 20) * (t >= 250) +
+     rnorm(500, 0, 0.3)
+
+df <- data.frame(date = t, x = y)
+wt <- analyze.wavelet(df, "x", loess.span = 0, dt = 1,
+                      dj = 1/50, lowerPeriod = 8,
+                      upperPeriod = 128, make.pval = FALSE, verbose = FALSE)
+
+wt.image(wt, main = "Wavelet power spectrum")
+```
+
+## Output & Results
+
+`analyze.wavelet()` returns a list containing the wavelet power, phase, and statistical-significance information. `wt.image()` plots the scalogram as a 2D heatmap with the cone of influence overlaid.
+
+## Interpretation
+
+A reporting sentence: "The wavelet power spectrum revealed a 50-time-step cycle in the first half of the series and a 20-time-step cycle in the second half — a non-stationary feature invisible to a global Fourier analysis. The cone of influence excluded the first and last 30 time points from interpretation due to edge effects." Always describe the time-frequency structure visible and acknowledge the cone of influence.
+
+## Practical Tips
+
+- Choose the wavelet to suit the signal: Morlet for oscillatory components, Mexican-hat for localised peaks, Daubechies for compression and denoising.
+- Power outside the cone of influence is unreliable; mask it or interpret with caution.
+- Statistical significance via red-noise surrogates (`make.pval = TRUE` in `WaveletComp`) tests power against an AR(1) null at each scale and time.
+- The discrete wavelet transform (DWT, in `wavethresh`) supports compression and denoising; CWT is for visualisation and analysis.
+- For EEG, fMRI, and other neurophysiological data, wavelets are the standard time-frequency tool; specialised packages (`eegkit`, `fmri.wavelets`) extend the framework.
+- For multi-channel time-frequency analysis, cross-wavelet coherence and wavelet phase quantify time-varying co-movements between series.
+
+## R Packages Used
+
+`WaveletComp` for `analyze.wavelet()`, `wt.image()`, and biwavelet coherence; `wavelets` and `wavethresh` for discrete wavelet transforms and threshold-based denoising; `dplR` for tree-ring-style wavelet analysis; `Rwave` for additional wavelet families and inversion.

@@ -1,0 +1,88 @@
+---
+title: Proteomics with MSstats
+date: "2026-04-17"
+description: Differential protein abundance from label-free or labelled mass-spectrometry data
+categories:
+  - Bioinformatics
+  - proteomics
+  - MSstats
+  - LFQ
+---
+
+## Introduction
+
+MSstats is the standard Bioconductor package for statistical analysis of bottom-up mass-spectrometry proteomics. It ingests peptide-level intensity from any search engine (MaxQuant, Skyline, OpenMS, Spectronaut) and fits mixed-effects models with protein-level contrasts for label-free (LFQ), TMT, and SRM/PRM workflows.
+
+## Prerequisites
+
+Peptide-level MS data; experimental-design matrix (condition, bioreplicate, run).
+
+## Theory
+
+For each protein, MSstats fits a linear mixed-effects model with run/feature random effects and condition fixed effects; the contrast produces a log-fold change and a moderated t-test analogue. Missing-value handling uses accelerated failure-time imputation or censoring (AFT). LOG2 intensity is the response scale.
+
+## Assumptions
+
+Peptide intensity is a valid surrogate for protein abundance; missingness is either completely at random (MCAR) or left-censored at a detection limit (MNAR).
+
+## R Implementation
+
+```r
+library(MSstats)
+
+# Simulated MSstats-format table: peptide intensity x run x condition
+set.seed(2026)
+proteins <- paste0("P", 1:20)
+pep_per_prot <- 3
+runs <- paste0("R", 1:6)
+conditions <- rep(c("ctrl", "trt"), each = 3)
+
+df <- expand.grid(Protein = proteins,
+                  Feature = 1:pep_per_prot,
+                  Run = runs,
+                  stringsAsFactors = FALSE)
+df$Condition    <- conditions[match(df$Run, runs)]
+df$BioReplicate <- df$Run
+df$Intensity    <- 2^(rnorm(nrow(df), mean = 20, sd = 1))
+
+# Inject DE in first 5 proteins
+trt_rows <- df$Condition == "trt" & df$Protein %in% proteins[1:5]
+df$Intensity[trt_rows] <- df$Intensity[trt_rows] * 2
+
+# Mock up the MSstats-required column names and minimum columns
+msdf <- data.frame(
+  ProteinName = df$Protein,
+  PeptideSequence = paste0("PEP", df$Feature),
+  PrecursorCharge = 2,
+  FragmentIon = NA, ProductCharge = NA,
+  IsotopeLabelType = "L",
+  Condition = df$Condition,
+  BioReplicate = df$BioReplicate,
+  Run = df$Run,
+  Intensity = df$Intensity
+)
+
+# MSstats workflow: processing + protein-level model + contrast
+# processed <- dataProcess(msdf)
+# comparison <- matrix(c(-1, 1), nrow = 1,
+#                      dimnames = list("trt_vs_ctrl", c("ctrl", "trt")))
+# results <- groupComparison(contrast.matrix = comparison, data = processed)
+# head(results$ComparisonResult)
+head(msdf, 3)
+```
+
+## Output & Results
+
+Per-protein log-fold change, standard error, p-value, and adjusted p-value; MSstats also outputs processed data diagnostic plots (profile plots, condition plots) for QC.
+
+## Interpretation
+
+"MSstats identified 142 proteins differentially abundant at BH-FDR < 0.05 between treatment and control; the top hit (log2FC = 3.2) corresponds to the direct drug target."
+
+## Practical Tips
+
+- Provide replicate structure via `BioReplicate`; technical replicates must be distinct from biological replicates.
+- Normalise within MSstats (`dataProcess(normalization = "equalizeMedians")`) rather than pre-normalising, to keep the pipeline single-entry.
+- For TMT, use `MSstatsTMT`; the mixed-effects model differs due to isobaric design structure.
+- Filter peptides to unique-to-protein before modelling; shared peptides inflate between-protein correlation.
+- Report both LFC and adjusted p-value; very high LFC with wide CI (few peptides) is weak evidence.

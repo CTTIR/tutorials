@@ -1,0 +1,93 @@
+---
+title: The Delta Method
+date: "2026-04-17"
+description: "Asymptotic distributions of smooth functions of estimators, via a first-order Taylor expansion"
+categories:
+  - Statistical Foundations
+  - delta-method
+  - asymptotic
+  - variance
+  - transformation
+---
+
+## Introduction
+
+The delta method is how standard errors propagate through smooth transformations. Given an asymptotically normal estimator $\hat{\theta}$ of $\theta$, the delta method gives the asymptotic distribution of $g(\hat{\theta})$ for a differentiable $g$. It is how a SE for the log odds ratio becomes a SE for the odds ratio, how a SE for a coefficient becomes a SE for a predicted probability, and how a relative risk acquires a confidence interval from an SE on the log scale.
+
+## Prerequisites
+
+The reader should understand asymptotic normality and first-order Taylor expansions.
+
+## Theory
+
+Suppose $\sqrt{n}(\hat{\theta} - \theta) \xrightarrow{d} \mathcal{N}(0, \sigma^2)$ and $g$ is differentiable at $\theta$ with $g'(\theta) \neq 0$. The delta method states
+
+$$\sqrt{n}(g(\hat{\theta}) - g(\theta)) \xrightarrow{d} \mathcal{N}\!\left(0, \sigma^2 [g'(\theta)]^2\right).$$
+
+Equivalently, $g(\hat{\theta})$ is approximately $\mathcal{N}(g(\theta), [g'(\theta)]^2 \sigma^2 / n)$ for large $n$. The estimated standard error of $g(\hat{\theta})$ is thus
+
+$$\widehat{\mathrm{SE}}[g(\hat{\theta})] = |g'(\hat{\theta})| \cdot \widehat{\mathrm{SE}}(\hat{\theta}).$$
+
+The multivariate version: if $\sqrt{n}(\hat{\boldsymbol{\theta}} - \boldsymbol{\theta}) \xrightarrow{d} \mathcal{N}(0, \Sigma)$ and $g: \mathbb{R}^p \to \mathbb{R}$ is differentiable with gradient $\nabla g(\theta)$, then
+
+$$\sqrt{n}(g(\hat{\boldsymbol{\theta}}) - g(\boldsymbol{\theta})) \xrightarrow{d} \mathcal{N}\!\left(0, \nabla g(\boldsymbol{\theta})^\top \Sigma \nabla g(\boldsymbol{\theta})\right).$$
+
+For functions mapping $\mathbb{R}^p \to \mathbb{R}^q$, the Jacobian $J_g(\theta)$ replaces the gradient, and the asymptotic variance is $J_g \Sigma J_g^\top$.
+
+**Common applications.**
+
+- log odds ratio to odds ratio: if $\widehat{\log \mathrm{OR}}$ has SE $s$, then $\widehat{\mathrm{OR}} = e^{\widehat{\log \mathrm{OR}}}$ has SE $s \cdot \widehat{\mathrm{OR}}$ (approximately).
+- rate ratio from regression coefficients on the log scale.
+- relative risk from predicted probabilities in a logistic regression.
+- coefficient of variation $\sigma / \mu$ from $\hat{\sigma}$ and $\hat{\mu}$.
+
+## Assumptions
+
+- $g$ differentiable at $\theta$ with non-zero derivative (first-order delta method). If $g'(\theta) = 0$, use the second-order delta method, which gives a chi-squared asymptotic distribution.
+- $\hat{\theta}$ is asymptotically normal. Without this, the delta method does not apply.
+
+## R Implementation
+
+```r
+library(msm)
+
+set.seed(2026)
+n <- 200
+x <- rnorm(n, mean = 5, sd = 2)
+theta_hat <- mean(x)
+se_theta  <- sd(x) / sqrt(n)
+
+g  <- function(t) t^2
+gp <- function(t) 2 * t
+
+g_hat <- g(theta_hat)
+se_g  <- abs(gp(theta_hat)) * se_theta
+c(estimate = g_hat, se = se_g)
+
+deltamethod(~ x1^2, mean = theta_hat, cov = se_theta^2)
+```
+
+The `msm::deltamethod()` function computes the delta-method SE symbolically from a formula.
+
+## Output & Results
+
+```
+estimate       se
+ 24.84     1.408
+
+[1] 1.408
+```
+
+The two approaches agree: the SE of $\hat{\theta}^2$ is about 1.41, computed either by hand or by `deltamethod()`.
+
+## Interpretation
+
+In practice, most regression outputs report coefficients on a scale where an SE is available (log odds, log rate), and researchers need effects on the original scale. Delta method is the standard tool for this translation. A 95% CI for the odds ratio is usually constructed as $\exp(\hat{\beta} \pm 1.96 \widehat{\mathrm{SE}}(\hat{\beta}))$, which is the delta method on the log scale combined with back-transformation -- often more accurate than applying delta method directly to the OR.
+
+## Practical Tips
+
+- When the transformation is non-linear (exp, inverse, square), back-transformation of a symmetric CI on the transformed scale is usually preferred over delta-method CIs on the original scale.
+- Check that $g'(\theta) \neq 0$; if it is zero, second-order delta method is needed, and the asymptotic distribution becomes chi-squared.
+- `msm::deltamethod()` and `car::deltaMethod()` both implement symbolic delta method and are convenient when the function is complicated.
+- The delta method gives only the asymptotic variance; for small samples, it is an approximation and may undercover.
+- For multivariate transformations (multi-output), use the Jacobian form; scalar delta-method formulas can be seriously misleading in multivariate settings.

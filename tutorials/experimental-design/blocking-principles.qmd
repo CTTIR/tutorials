@@ -1,0 +1,71 @@
+---
+title: Principles of Blocking
+date: "2026-04-17"
+description: Local control of nuisance variability for precision gains
+categories:
+  - Experimental Design
+  - blocking
+  - nuisance
+  - precision
+---
+
+## Introduction
+
+Blocking is the experimental-design technique that groups experimental units by a known source of nuisance variation — batch of raw material, day of measurement, operator, animal litter, plot location — and then randomises treatment assignments within each block. The result is a design that systematically removes block-to-block variation from the error term, thereby shrinking the residual variance and substantially improving the power to detect genuine treatment effects. Fisher's classical mantra — "block what you can, randomise what you cannot" — captures the principle: when a nuisance source of variation is known and identifiable, controlling it through design is far more efficient than relying on randomisation alone to average it out.
+
+## Prerequisites
+
+A working understanding of randomisation as the basis of comparative inference, the partition of total variability into systematic and residual components in ANOVA, and the distinction between fixed and random effects in mixed-effects models.
+
+## Theory
+
+In its simplest form — the randomised complete block design (RCBD) — the model is
+
+$$y_{ij} = \mu + \rho_i + \tau_j + \varepsilon_{ij}, \qquad \varepsilon_{ij} \sim N(0, \sigma^2),$$
+
+with block effect $\rho_i$ and treatment effect $\tau_j$. Within-block variance is typically much smaller than between-block variance, so absorbing the latter into the design removes a large component from the residual error. The relative efficiency of an RCBD versus a CRD is roughly the ratio of the residual variances; gains of an order of magnitude are not unusual when blocking is well chosen.
+
+## Assumptions
+
+Blocks represent exchangeable groupings of units, no block-by-treatment interaction is present (or, if it is, the interaction is modelled — typically as a random effect), and within-block residual variance is homogeneous. Violations of additivity invalidate the standard analysis but can be detected with a Tukey one-degree-of-freedom test for non-additivity.
+
+## R Implementation
+
+```r
+set.seed(2026)
+block <- factor(rep(1:4, each = 3))
+trt <- factor(rep(c("A", "B", "C"), 4))
+
+block_re <- rnorm(4, 0, 2)[as.integer(block)]
+trt_eff  <- c(0, 1.5, 2.5)[as.integer(trt)]
+y <- 10 + block_re + trt_eff + rnorm(12, 0, 0.5)
+
+df <- data.frame(block, trt, y)
+
+fit_b <- aov(y ~ block + trt, data = df)
+fit_nb <- aov(y ~ trt, data = df)
+
+c(with_block_MSE = summary(fit_b)[[1]]["Residuals", "Mean Sq"],
+  without_block_MSE = summary(fit_nb)[[1]]["Residuals", "Mean Sq"])
+```
+
+## Output & Results
+
+The script reports residual mean-square error with and without blocking. When the block-to-block standard deviation is comparable to or larger than the within-block standard deviation, blocking produces dramatic reductions in residual MSE and correspondingly large increases in the $F$-statistic for the treatment effect. The same point can be visualised by comparing residual diagnostic plots from the two fits.
+
+## Interpretation
+
+A reporting sentence: "Blocking on production batch reduced residual mean-square error from 3.8 to 0.24, a 16-fold reduction. The treatment $F$-ratio increased from $F_{2, 9} = 1.1$ ($p = 0.37$) without blocking to $F_{2, 6} = 17.3$ ($p = 0.003$) with blocking, demonstrating that batch was the dominant nuisance source and that blocking restored the detection power lost to batch-level drift." Always report residual MSE before and after blocking when justifying the design choice.
+
+## Practical Tips
+
+- Block first on the largest known source of unwanted variation: temporal (day, week, batch), spatial (plot, shelf, freezer), or operator-related (technician, machine, lot). Unblocked sources contribute to the residual; blocked sources are absorbed into the design.
+- One block per replicate is the standard RCBD; multiple blocking factors call for Latin square (two factors) or Graeco-Latin square (three factors) layouts that retain orthogonality.
+- Incomplete blocks (block size smaller than the number of treatments) require balanced incomplete block designs (BIBD) or partially balanced incomplete blocks (PBIBD); the analysis is more involved but the principle is the same.
+- Treat blocks as random effects (`(1|block)` in `lme4`) when blocks are sampled from a larger population of possible blocks, as is typical for batches, animals, or experimental days; this also recovers inter-block information that the fixed-effect analysis discards.
+- Do not block on a variable you actually want to study: if the nuisance factor is itself of interest, treat it as a fixed treatment factor in a factorial design instead. Blocking removes inferential interest in the blocked factor.
+- Incomplete or unbalanced block sizes are increasingly common in clinical trials (centre-stratified randomisation) and call for mixed-effects models rather than classical fixed-effect ANOVA.
+
+## R Packages Used
+
+Base R `aov()` for fixed-effect RCBD analysis; `lme4` and `lmerTest` for random-block mixed-effects models with Satterthwaite or Kenward–Roger denominator df; `agricolae` for `design.rcbd()`, `BIB.test()`, and related agricultural design tools; `emmeans` for marginal means and contrasts under blocking; `crossdes` for systematic construction of incomplete-block layouts.

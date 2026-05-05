@@ -1,0 +1,111 @@
+---
+title: One-Way ANOVA
+date: "2026-04-17"
+description: Comparing means across three or more independent groups via the F-test
+categories:
+  - Inferential Statistics
+  - anova
+  - one-way
+  - f-test
+  - between-groups
+---
+
+## Introduction
+
+One-way ANOVA tests whether the means of three or more independent groups are equal. It generalises the two-sample t-test to multiple groups while controlling overall Type I error. The omnibus F-test tells us whether *any* means differ; post-hoc tests (Tukey HSD, Dunnett) identify which pairs.
+
+## Prerequisites
+
+Two-sample t-test, F distribution.
+
+## Theory
+
+For $k$ groups with $n_i$ observations each, total $n = \sum n_i$, define:
+
+- **Sum of squares between** (SSB): $\sum_i n_i (\bar{X}_i - \bar{X})^2$ with $k - 1$ df.
+- **Sum of squares within** (SSW): $\sum_i \sum_j (X_{ij} - \bar{X}_i)^2$ with $n - k$ df.
+- **Mean squares**: MSB = SSB / (k - 1), MSW = SSW / (n - k).
+
+Under $H_0: \mu_1 = \ldots = \mu_k$,
+
+$$F = \frac{\text{MSB}}{\text{MSW}} \sim F_{k - 1, n - k}.$$
+
+Large F implies between-group variation exceeds within-group variation, rejecting equality of means.
+
+Effect size: $\eta^2 = \text{SSB} / \text{SST}$, the proportion of variance explained by the group factor.
+
+## Assumptions
+
+- Independent observations within and across groups.
+- Normal residuals (or large enough $n_i$).
+- Homogeneous variances across groups (Welch ANOVA relaxes this).
+
+## R Implementation
+
+```r
+library(effectsize); library(broom); library(car)
+set.seed(2026)
+
+df <- data.frame(
+  group = factor(rep(c("A", "B", "C", "D"), each = 30)),
+  y     = c(rnorm(30, 50, 8),
+            rnorm(30, 55, 8),
+            rnorm(30, 58, 8),
+            rnorm(30, 54, 8))
+)
+
+# Omnibus ANOVA
+fit <- aov(y ~ group, data = df)
+summary(fit)
+tidy(fit)
+
+# Assumption checks
+leveneTest(y ~ group, data = df)
+shapiro.test(residuals(fit))
+
+# Effect size
+eta_squared(fit)
+omega_squared(fit)
+
+# Welch ANOVA (unequal variances)
+oneway.test(y ~ group, data = df)
+
+# Tukey HSD post-hoc
+TukeyHSD(fit)
+```
+
+## Output & Results
+
+```
+            Df Sum Sq Mean Sq F value  Pr(>F)
+group        3    891   297.0    4.83 0.00317 **
+Residuals  116   7135    61.5
+
+Eta2 (partial) | 95% CI
+--------------------------
+0.11          | [0.02, 1.00]
+
+        Tukey multiple comparisons of means 95% family-wise confidence level
+
+         diff    lwr    upr  p adj
+B-A   5.421   -0.58  11.42 0.097
+C-A   8.215    2.21  14.22 0.003
+D-A   4.129   -1.87  10.13 0.287
+C-B   2.794   -3.21   8.79 0.627
+D-B  -1.292   -7.29   4.71 0.943
+D-C  -4.086  -10.09   1.92 0.297
+```
+
+F(3, 116) = 4.83, p = 0.003, rejects equal means. Tukey identifies C vs. A as the significant pair.
+
+## Interpretation
+
+Report: "A one-way ANOVA showed a significant group effect (F(3, 116) = 4.83, p = 0.003, $\eta^2 = 0.11$). Tukey HSD comparisons indicated that group C differed significantly from group A (mean difference 8.2, 95 % CI 2.2 to 14.2, adjusted p = 0.003)."
+
+## Practical Tips
+
+- Always check homogeneity of variances; if violated, use Welch ANOVA.
+- Always report an effect size; F alone is not enough.
+- For many post-hoc comparisons, Tukey is the standard; Dunnett is for comparing treatments to a control; Bonferroni or Holm for pre-specified families.
+- Non-parametric alternative: Kruskal-Wallis.
+- For within-subjects data, use repeated-measures ANOVA or a linear mixed model.

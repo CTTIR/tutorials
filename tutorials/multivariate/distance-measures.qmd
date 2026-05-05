@@ -1,0 +1,73 @@
+---
+title: Distance and Dissimilarity Measures
+date: "2026-04-17"
+description: "Euclidean, Manhattan, Minkowski, Canberra, and their use in clustering / MDS"
+categories:
+  - Multivariate Statistics
+  - distance
+  - metric
+  - dissimilarity
+---
+
+## Introduction
+
+The choice of distance or dissimilarity is the foundation of most multivariate methods: clustering algorithms (k-means, hierarchical, PAM, DBSCAN) consume a distance, multidimensional scaling and PCoA produce coordinates that approximate one, and $k$-nearest neighbours computes them at every prediction. Different metrics capture different notions of proximity, and the right choice depends on the data type — continuous vs. categorical, abundances vs. presence/absence, magnitudes vs. directions — and on the inferential question. Mismatched metrics produce results that look correct but answer the wrong question.
+
+## Prerequisites
+
+A working understanding of vectors, the difference between distance and dissimilarity (metric vs. semi-metric), and the most common multivariate methods that consume distance matrices.
+
+## Theory
+
+Standard continuous distances between $p$-dimensional vectors:
+
+- **Euclidean**: $\sqrt{\sum_i (x_i - y_i)^2}$ — straight-line distance, the default for most uses.
+- **Manhattan ($L_1$)**: $\sum_i |x_i - y_i|$ — robust to outliers, appropriate for grid-like geometry.
+- **Minkowski ($L_p$)**: $(\sum_i |x_i - y_i|^p)^{1/p}$ — generalises Euclidean ($p=2$) and Manhattan ($p=1$).
+- **Canberra**: $\sum_i |x_i - y_i| / (|x_i| + |y_i|)$ — sensitive to small values; useful for compositional data.
+- **Cosine**: $1 - (x \cdot y) / (\|x\| \|y\|)$ — measures direction, not magnitude; standard in text and gene-expression contexts.
+- **Mahalanobis**: scale- and correlation-aware, weights the deviation by the inverse covariance matrix.
+
+For categorical or mixed data: Gower distance handles mixed types via per-variable scaling; Jaccard and Bray-Curtis suit presence-absence and abundance data respectively.
+
+## Assumptions
+
+Metrics satisfy the triangle inequality and symmetry; dissimilarities may relax these. Some downstream methods (classical MDS, $k$-means) implicitly assume metric distances; others (NMDS, hierarchical clustering with non-Euclidean distances) handle dissimilarities gracefully.
+
+## R Implementation
+
+```r
+library(cluster)
+
+x <- rbind(c(1, 2, 3), c(2, 4, 5), c(5, 0, 1))
+
+dist(x, method = "euclidean")
+dist(x, method = "manhattan")
+dist(x, method = "minkowski", p = 3)
+dist(x, method = "canberra")
+
+# Gower for mixed data
+d <- data.frame(num = 1:3, cat = c("A", "B", "A"))
+daisy(d, metric = "gower")
+```
+
+## Output & Results
+
+`dist()` returns a `dist` object containing the lower-triangular pairwise distance matrix. Different methods produce numerically different matrices that emphasise different features of the geometry. `cluster::daisy()` extends this to mixed numeric-categorical data via Gower distance.
+
+## Interpretation
+
+A reporting sentence: "Euclidean distances of 3.0 between rows 1 and 2 and 5.7 between rows 1 and 3 reflect continuous-valued separation; the Gower distance on mixed data scaled each variable to $[0, 1]$ before combining and produced a unitless dissimilarity in the same range." Always state the metric used; clustering or ordination output is uninterpretable without it.
+
+## Practical Tips
+
+- Standardise variables (`scale()`) before Euclidean distance whenever scales differ across columns; otherwise large-variance variables dominate the distance and bias every downstream method.
+- For mixed numeric and categorical data, Gower is the standard; it scales each variable to $[0, 1]$ via type-specific rules and combines them as a weighted average.
+- For binary presence/absence, prefer Jaccard or Sørensen-Dice (which ignore joint absences) over Hamming (which counts all matches).
+- For sparse high-dimensional data (text, gene expression), cosine distance is often more meaningful than Euclidean because magnitudes vary widely while direction encodes the signal.
+- Mahalanobis is essential when predictor correlations matter; it underlies the discriminant function in LDA and Hotelling's $T^2$.
+- Always match the metric to the data type and downstream method; Euclidean on mixed scales or on presence/absence data is a frequent mistake that invalidates clustering results.
+
+## R Packages Used
+
+Base R `dist()` for the standard continuous metrics; `cluster::daisy()` for Gower distance; `vegan::vegdist()` for ecological distances (Bray-Curtis, Jaccard, Hellinger, Canberra); `philentropy::distance()` for an extensive catalogue of distance and divergence functions; `proxy::dist()` and `parallelDist::parDist()` for multi-core distance computation on large matrices.

@@ -1,0 +1,110 @@
+---
+title: Variance and Covariance
+date: "2026-04-17"
+description: "Second moments of one and two random variables: dispersion and joint variation"
+categories:
+  - Probability Theory
+  - variance
+  - covariance
+  - second-moment
+---
+
+## Introduction
+
+Variance measures how far a single random variable ranges around its mean; covariance measures how two random variables move together around their means. Together they populate the covariance matrix of a random vector, which is the central object in multivariate statistics, regression, and portfolio theory.
+
+## Prerequisites
+
+Expectation and basic properties of random variables.
+
+## Theory
+
+**Variance** of $X$:
+
+$$\mathrm{Var}(X) = E[(X - E[X])^2] = E[X^2] - (E[X])^2.$$
+
+**Covariance** of $X$ and $Y$:
+
+$$\mathrm{Cov}(X, Y) = E[(X - E[X])(Y - E[Y])] = E[XY] - E[X] E[Y].$$
+
+Variance is a special case: $\mathrm{Cov}(X, X) = \mathrm{Var}(X)$.
+
+Properties:
+
+- Non-negativity: $\mathrm{Var}(X) \geq 0$, with equality iff $X$ is constant almost surely.
+- Scale: $\mathrm{Var}(aX + b) = a^2 \mathrm{Var}(X)$.
+- Symmetry: $\mathrm{Cov}(X, Y) = \mathrm{Cov}(Y, X)$.
+- Bilinearity: $\mathrm{Cov}(aX + b, cY + d) = ac \, \mathrm{Cov}(X, Y)$.
+- Sum: $\mathrm{Var}(X + Y) = \mathrm{Var}(X) + \mathrm{Var}(Y) + 2 \mathrm{Cov}(X, Y)$.
+- Independence implies zero covariance: $X \perp Y \Rightarrow \mathrm{Cov}(X, Y) = 0$. The converse is false.
+
+The **covariance matrix** of a random vector $\mathbf{X} = (X_1, \ldots, X_p)$ is the $p \times p$ matrix $\Sigma$ with entries $\Sigma_{ij} = \mathrm{Cov}(X_i, X_j)$. $\Sigma$ is symmetric positive semi-definite.
+
+## Assumptions
+
+$E[X^2] < \infty$ and $E[Y^2] < \infty$ for variance and covariance to be defined.
+
+## R Implementation
+
+```r
+library(mvtnorm)
+set.seed(2026)
+
+# Univariate variance
+X <- rnorm(1e5, mean = 10, sd = 3)
+c(theoretical = 9, empirical = var(X))
+
+# Covariance from bivariate normal with known Sigma
+Sigma <- matrix(c(4, 1.8,
+                  1.8, 9), nrow = 2)
+n <- 1e5
+XY <- rmvnorm(n, mean = c(0, 0), sigma = Sigma)
+cov(XY)
+cov(XY) / (sqrt(Sigma[1, 1] * Sigma[2, 2]))   # correlation = 0.3
+
+# Variance of a sum verifies the formula
+X <- XY[, 1]; Y <- XY[, 2]
+c(var_sum = var(X + Y),
+  formula = var(X) + var(Y) + 2 * cov(X, Y))
+
+# Zero covariance does not imply independence
+X <- rnorm(1e5)
+Y <- X^2
+c(cov = cov(X, Y),
+  correlation = cor(X, Y))
+```
+
+## Output & Results
+
+```
+theoretical   empirical
+      9.0         9.04
+
+          [,1]      [,2]
+[1,]   3.998     1.791
+[2,]   1.791     8.984
+
+          [,1]      [,2]
+[1,]   0.999     0.299
+[2,]   0.299     0.998
+
+ var_sum formula
+  16.56   16.56
+
+       cov   correlation
+     0.003        0.002
+```
+
+Empirical variance and covariance match the theoretical values within Monte Carlo error. $X$ and $X^2$ have zero covariance but are clearly dependent -- covariance detects only linear association.
+
+## Interpretation
+
+Reporting a mean and a variance (or SD) gives a rough summary of a distribution's location and spread; reporting a covariance matrix gives the joint structure of several variables. Most multivariate methods (PCA, MANOVA, linear discriminant analysis) work with sample covariance matrices.
+
+## Practical Tips
+
+- Sample variance uses divisor $n - 1$ for unbiasedness; R's `var()` uses $n - 1$ by default.
+- $\mathrm{Cov}(X, Y) = 0$ does not imply independence except in the Gaussian case.
+- The covariance matrix must be positive semi-definite; estimation from small samples can produce near-singular matrices.
+- Linearly transforming a random vector by matrix $A$ changes the covariance matrix to $A \Sigma A^\top$.
+- For robust multivariate covariance estimation in contaminated data, `robustbase::covMcd` is the standard MCD estimator.

@@ -1,0 +1,76 @@
+---
+title: "Effect Size: Cohen's d"
+date: "2026-04-17"
+description: "Standardised mean difference: definition, variants, interpretation"
+categories:
+  - "Sample Size & Power"
+  - effect-size
+  - cohen-d
+  - standardised-difference
+---
+
+## Introduction
+
+Cohen's $d$ is the ratio of a mean difference to a standard deviation. It standardises effects for cross-study comparison and power analysis. Although simple in idea, several variants differ in which SD is used as the denominator.
+
+## Prerequisites
+
+Means and standard deviations, two-sample t-test.
+
+## Theory
+
+Classical definitions:
+
+- **Cohen's $d$** (two independent groups): $d = (\bar{x}_1 - \bar{x}_2) / s_{\text{pooled}}$, where $s_{\text{pooled}}^2 = [(n_1 - 1)s_1^2 + (n_2 - 1)s_2^2]/(n_1 + n_2 - 2)$.
+- **Hedges' $g$**: Cohen's $d$ multiplied by a small-sample bias correction factor.
+- **Glass's $\Delta$**: $d$ using only the control group's SD (for unequal variances).
+- **Cohen's $d_z$** (paired): mean paired difference / SD of differences.
+- **Cohen's $d_{\text{rm}}$** (repeated measures): uses a specific variance of the mean difference.
+
+Cohen's thresholds: 0.20 / 0.50 / 0.80 small / medium / large. These are starting points; clinical context should override conventions.
+
+## Assumptions
+
+- Approximately normal data (for the SD to be meaningful).
+- Equal variances for classical Cohen's $d$; use Glass or Welch-style for unequal.
+
+## R Implementation
+
+```r
+library(effectsize)
+set.seed(2026)
+
+g1 <- rnorm(50, 50, 10)
+g2 <- rnorm(50, 55, 10)
+
+cohens_d(g1, g2)
+hedges_g(g1, g2)
+glass_delta(g1, g2)
+
+# Paired
+pre  <- rnorm(30, 50, 10)
+post <- pre + rnorm(30, -5, 5)
+cohens_d(pre, post, paired = TRUE)
+
+# Unequal variances -> Glass' Delta
+g1_big <- rnorm(50, 50, 5)
+g2_big <- rnorm(50, 55, 15)
+cohens_d(g1_big, g2_big)
+glass_delta(g1_big, g2_big)
+```
+
+## Output & Results
+
+For two-sample example: Cohen's $d \approx -0.47$, Hedges' $g \approx -0.47$, Glass's $\Delta \approx -0.50$.
+
+## Interpretation
+
+"The intervention reduced anxiety by 5.1 points (SE 2.0, Cohen's $d = 0.51$, 95 % CI 0.11 to 0.90), a medium-sized effect."
+
+## Practical Tips
+
+- Use Hedges' $g$ in meta-analysis; it's the small-sample-corrected version that combines across studies fairly.
+- Paired designs should use $d_z$, not two-sample $d$; the two are not interchangeable.
+- Report both the standardised effect and the raw effect in units that matter clinically.
+- Cohen's thresholds vary across fields; cite a field-appropriate reference.
+- Confidence intervals for $d$ (e.g., from `effectsize`) are asymmetric; do not assume symmetric.

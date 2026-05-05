@@ -1,0 +1,72 @@
+---
+title: Missing Data in RCTs
+date: "2026-04-17"
+description: "MCAR, MAR, MNAR and their implications for primary analysis"
+categories:
+  - Clinical Biostatistics
+  - missing-data
+  - mcar
+  - mar
+  - mnar
+---
+
+## Introduction
+
+Missing data are ubiquitous in RCTs and can invalidate inference if not handled carefully. Three missingness mechanisms characterise the problem: **MCAR** (missingness is random), **MAR** (missingness depends on observed variables), and **MNAR** (missingness depends on the unobserved value). Valid analyses require assumptions on the mechanism.
+
+## Prerequisites
+
+Basic probability; estimands framework (ICH E9 R1).
+
+## Theory
+
+- **MCAR**: $P(\text{missing}) = P(\text{missing} \mid X, Y)$. Complete-case analysis is unbiased but inefficient.
+- **MAR**: $P(\text{missing} \mid X, Y) = P(\text{missing} \mid X)$. Multiple imputation, ML, or weighting is unbiased.
+- **MNAR**: $P(\text{missing})$ depends on unobserved $Y$. Sensitivity analyses with assumed MNAR mechanisms are needed.
+
+Missingness is rarely MCAR in practice; MAR is the default operating assumption, with MNAR as sensitivity.
+
+## Assumptions
+
+Missingness pattern is characterised by the analyst; auxiliary variables are included in the imputation model; the mechanism assumption matches the method.
+
+## R Implementation
+
+```r
+library(mice); library(naniar)
+
+set.seed(2026)
+n <- 300
+baseline <- rnorm(n, 5, 1)
+arm <- rep(c("ctrl", "trt"), each = n/2)
+outcome <- baseline + ifelse(arm == "trt", 1, 0) + rnorm(n, 0, 1)
+
+# MAR: missingness depends on baseline
+prob_missing <- plogis(-2 + 0.3 * baseline)
+outcome[rbinom(n, 1, prob_missing) == 1] <- NA
+
+df <- data.frame(arm = factor(arm), baseline, outcome)
+
+# Missing-data summary
+miss_var_summary(df)
+
+# Multiple imputation
+imp <- mice(df, m = 10, method = "pmm", printFlag = FALSE)
+pool(with(imp, lm(outcome ~ arm + baseline))) %>% summary()
+```
+
+## Output & Results
+
+Missing-data summary (outcome has ~20 % missingness); pooled MI estimate for treatment effect after adjusting for baseline.
+
+## Interpretation
+
+"Under MAR, multiple imputation with 10 imputations gave a treatment effect of 0.94 (95 % CI 0.62-1.26, p < 0.001); complete-case analysis gave a similar estimate, consistent with MAR assumption."
+
+## Practical Tips
+
+- Prevent missing data by design (pre-specified follow-up, low attrition) before analysis tricks.
+- Distinguish missing at random from missing-completely-at-random; CCA needs the stronger MCAR.
+- Always report the missingness rate and pattern by arm; differential missingness is a red flag.
+- Pre-specify primary analysis under MAR; sensitivity analyses under MNAR (tipping-point).
+- ICH E9 R1 estimands framework formalises how missing data interacts with the estimand; align analysis to the estimand, not vice versa.

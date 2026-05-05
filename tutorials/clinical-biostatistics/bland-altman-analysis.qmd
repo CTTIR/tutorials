@@ -1,0 +1,76 @@
+---
+title: Bland-Altman Limits of Agreement
+date: "2026-04-17"
+description: Graphical comparison of two measurement methods on the same subjects
+categories:
+  - Clinical Biostatistics
+  - bland-altman
+  - agreement
+  - method-comparison
+---
+
+## Introduction
+
+The Bland-Altman plot (1986) compares two measurement methods by plotting their difference against their mean. It exposes systematic bias, proportional bias, and the 95 % limits of agreement within which most differences fall. It is the standard graphical summary for method-comparison studies and has largely replaced correlation-based summaries.
+
+## Prerequisites
+
+Paired measurements; method-comparison basics.
+
+## Theory
+
+For paired measurements $(A_i, B_i)$:
+- **Bias**: mean difference $\bar{d} = \overline{A_i - B_i}$.
+- **Limits of agreement**: $\bar{d} \pm 1.96 \cdot s_d$.
+
+If 95 % of differences lie within the limits and the limits are clinically acceptable, the two methods can be used interchangeably. Proportional bias shows as a trend in the scatter.
+
+## Assumptions
+
+Differences are approximately normal; differences do not systematically depend on the mean (check with regression); replicates are handled appropriately if present.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+set.seed(2026)
+n <- 100
+truth <- rnorm(n, 10, 2)
+A <- truth + rnorm(n, 0, 0.5)            # method A
+B <- truth + 0.3 + rnorm(n, 0, 0.5)      # method B (small bias)
+
+df <- data.frame(A, B,
+                 mean = (A + B) / 2,
+                 diff = A - B)
+
+bias <- mean(df$diff)
+sd_d <- sd(df$diff)
+loa  <- c(bias - 1.96 * sd_d, bias + 1.96 * sd_d)
+
+ggplot(df, aes(mean, diff)) +
+  geom_point(colour = "#2A9D8F") +
+  geom_hline(yintercept = bias, linetype = 1) +
+  geom_hline(yintercept = loa, linetype = 2) +
+  labs(x = "Mean of A and B", y = "A - B",
+       title = "Bland-Altman plot",
+       subtitle = sprintf("Bias %.2f; 95%% LoA [%.2f, %.2f]",
+                          bias, loa[1], loa[2])) +
+  theme_minimal()
+```
+
+## Output & Results
+
+A scatter of differences vs means with solid bias line and dashed LoA; the simulated systematic bias of -0.3 is recovered.
+
+## Interpretation
+
+"Bland-Altman analysis revealed a bias of -0.3 units with 95 % limits of agreement (-1.7, 1.1). If the clinically acceptable limit is +-2 units, the methods are interchangeable for most practical purposes."
+
+## Practical Tips
+
+- Always show both bias and LoA; correlation alone does not reveal systematic bias.
+- Check for proportional bias by regressing differences on means; a non-zero slope indicates non-constant bias.
+- For replicated measurements per subject, adjust the LoA calculation (Bland-Altman 1999 extension).
+- Report the clinical acceptance criterion **before** calculating LoA; otherwise post-hoc thresholding biases conclusions.
+- Paired with ICC, Bland-Altman gives both a quantitative and visual summary of agreement.

@@ -1,0 +1,76 @@
+---
+title: Sample Size Sensitivity Analysis
+date: "2026-04-17"
+description: "Reporting sample size across a range of assumed effect sizes, SDs, and dropout rates"
+categories:
+  - "Sample Size & Power"
+  - sensitivity
+  - sample-size
+  - assumptions
+---
+
+## Introduction
+
+Every power calculation rests on assumptions that the investigator cannot know exactly in advance: the true effect size, the outcome SD, the dropout rate, the ICC in a cluster design. Sensitivity analysis reports sample size across a realistic range of these assumptions, rather than a single point estimate.
+
+## Prerequisites
+
+Power analysis.
+
+## Theory
+
+A sensitivity analysis is a two-dimensional (or higher) grid of required sample sizes, varying one or two assumptions while holding others fixed. Tabular or graphical (contour / heatmap) presentation lets readers see the robustness of the chosen $n$.
+
+## Assumptions
+
+The chosen assumption grid covers the plausible parameter space. Too-narrow grids miss important regions; too-wide grids are unfocused.
+
+## R Implementation
+
+```r
+library(pwr); library(ggplot2)
+
+# 2D sensitivity: n per group vs d and power
+d_grid <- seq(0.2, 0.8, by = 0.05)
+power_grid <- c(0.70, 0.80, 0.90)
+
+res <- expand.grid(d = d_grid, power = power_grid)
+res$n <- mapply(function(d, p)
+  pwr.t.test(d = d, power = p, sig.level = 0.05, type = "two.sample")$n,
+  res$d, res$power)
+
+ggplot(res, aes(d, n, colour = factor(power))) +
+  geom_line(linewidth = 1) +
+  scale_y_log10() +
+  scale_colour_manual(values = c("#F4A261", "#6A4C93", "#2A9D8F")) +
+  labs(x = "Cohen's d", y = "n per group (log scale)",
+       colour = "Power",
+       title = "Sample size sensitivity: d x power") +
+  theme_minimal()
+
+# Inflation for dropout
+n_base <- 64
+dropout_rates <- c(0, 0.05, 0.10, 0.15, 0.20)
+n_inflated <- round(n_base / (1 - dropout_rates))
+data.frame(dropout = dropout_rates, n_enrol = n_inflated)
+```
+
+## Output & Results
+
+For $d = 0.5$: $n$ ranges from 51 at power 0.70 to 86 at power 0.90. For $d = 0.3$: from 138 to 234. Dropout inflation at 15 % pushes $n$ from 64 to 76 per group.
+
+## Interpretation
+
+"Sensitivity analysis shows that for plausible effect sizes (Cohen's $d$ between 0.35 and 0.55), the required sample size ranges from 72 to 164 per arm at 80 % power. We plan to enrol 180 per arm, accommodating the upper end of this range and allowing for 10 % attrition."
+
+## Practical Tips
+
+- Always report sensitivity analysis alongside the headline sample-size calculation in grant proposals.
+- Present the calculation that underpins your chosen $n$ in bold; show neighbouring values for context.
+- Two-dimensional grids (effect size vs. power, effect size vs. variance) are typical; higher dimensions confuse readers.
+- Include a dropout inflation factor explicitly; reviewers frequently check.
+- For adaptive or sequential designs, sensitivity to interim analyses and alpha spending deserves separate reporting.
+
+## Reporting
+
+A useful sensitivity table is small enough that a reviewer can read every row and large enough that the chosen design point is clearly bracketed by less and more conservative alternatives. State which inputs were varied and which were held fixed, justify the ranges in terms of pilot data or published evidence, and identify the row that drives the final enrolment target so the audit trail from assumption to commitment is explicit. When dropout inflation is applied, write the formula and the assumed completion proportion in the protocol, because reviewers and ethics committees rely on that line to confirm the analysis sample is consistent with the powered effect.

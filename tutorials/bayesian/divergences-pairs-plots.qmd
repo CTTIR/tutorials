@@ -1,0 +1,67 @@
+---
+title: Divergences and Pairs Plots
+date: "2026-04-17"
+description: Diagnosing HMC sampling problems via divergent transitions and pair-plot visualisations
+categories:
+  - Bayesian Statistics
+  - divergence
+  - hmc
+  - pairs-plot
+  - funnel
+---
+
+## Introduction
+
+A divergent transition is HMC's most informative warning: it tells you that the leapfrog integrator could not navigate a region of the posterior accurately, and the chain therefore did *not* explore that region. Unlike a high $\hat R$, which can sometimes be cured by running longer chains, a divergent transition signals a structural problem with the posterior geometry that no amount of additional sampling will fix. Diagnosing where divergences occur — typically through pairs plots that colour divergent draws — is the path to a reparameterisation that lets the sampler do its job.
+
+## Prerequisites
+
+A working understanding of Hamiltonian Monte Carlo, leapfrog integration, and the geometric origins of divergent transitions; familiarity with `bayesplot::mcmc_pairs()` for visualising joint posteriors.
+
+## Theory
+
+The leapfrog integrator approximates Hamiltonian dynamics with finite step size $\epsilon$. In regions of high curvature (typically funnels in hierarchical models, where a small variance parameter shrinks all dependent effects), even a moderate $\epsilon$ produces a Hamiltonian error large enough that the proposal is biased. Stan flags such proposals as divergent and refuses to use them, so the chain effectively avoids the problem region instead of exploring it. The classical remedy is a *non-centred* reparameterisation: replacing $\beta_i \sim \mathcal N(\mu, \sigma^2)$ with $\tilde z_i \sim \mathcal N(0, 1)$ and $\beta_i = \mu + \sigma \tilde z_i$ decouples the funnel geometry and makes the posterior easier to sample.
+
+## Assumptions
+
+HMC or NUTS sampling; the divergent-transition flag is specific to these algorithms. Random-walk samplers do not produce divergences but suffer different pathologies (slow mixing, mode-trapping) that need separate diagnostics.
+
+## R Implementation
+
+```r
+library(brms); library(bayesplot)
+
+data(sleepstudy, package = "lme4")
+
+fit <- brm(Reaction ~ Days + (Days | Subject), data = sleepstudy,
+           chains = 4, iter = 2000, refresh = 0,
+           control = list(adapt_delta = 0.99))
+
+# Divergence diagnostics
+rstan::check_hmc_diagnostics(fit$fit)
+
+# Pairs plot of parameters with divergences coloured
+np <- nuts_params(fit)
+mcmc_pairs(as.array(fit), pars = c("b_Days", "sd_Subject__Days"),
+           np = np, np_style = pairs_style_np(div_color = "red"))
+```
+
+## Output & Results
+
+`check_hmc_diagnostics()` reports the count of divergent transitions, tree-depth saturation events, and the energy Bayesian fraction of missing information (E-BFMI). `mcmc_pairs()` overlays the joint draws of two parameters with red points marking divergences; clustering of red points along the boundary of the parameter space pinpoints the geometry that broke.
+
+## Interpretation
+
+A reporting sentence: "An initial fit produced 12 divergent transitions concentrated near small values of the random-slope standard deviation; switching to a non-centred parameterisation and increasing `adapt_delta` to 0.99 eliminated all divergences and yielded $\hat R = 1.00$ for every parameter." Report the diagnostic and the fix together; a published Bayesian analysis with unmentioned divergences is not a credible analysis.
+
+## Practical Tips
+
+- Any divergence is worth investigating; even a single one signals a region of the posterior the sampler did not explore correctly.
+- The classic funnel — variance parameter near zero with correlated dependent effects — is the most common offender; non-centred parameterisation is almost always the right fix.
+- Increasing `adapt_delta` to 0.95 or 0.99 reduces step size and eliminates marginal divergences, but it is a band-aid: if the geometry is genuinely difficult, reparameterise.
+- `bayesplot::mcmc_parcoord()` complements pairs plots by showing divergent transitions across many parameters simultaneously, which is helpful in models with dozens of variance components.
+- When divergences persist after non-centred parameterisation and high `adapt_delta`, examine the prior — improperly tight priors can pinch the posterior into geometry that no sampler can navigate.
+
+## R Packages Used
+
+`bayesplot` for `mcmc_pairs()`, `mcmc_parcoord()`, and `nuts_params()`; `rstan` and `cmdstanr` for the underlying diagnostic outputs (`check_hmc_diagnostics()`, `get_sampler_params()`); `posterior` for tidy access to NUTS metadata when building custom diagnostic summaries.

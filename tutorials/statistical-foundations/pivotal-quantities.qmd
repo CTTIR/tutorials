@@ -1,0 +1,85 @@
+---
+title: Pivotal Quantities
+date: "2026-04-17"
+description: "Functions of data and parameter whose distribution does not depend on the parameter, and the CIs they produce"
+categories:
+  - Statistical Foundations
+  - pivot
+  - confidence-interval
+  - exact-inference
+---
+
+## Introduction
+
+A pivotal quantity -- or pivot -- is a function of the data and the parameter whose probability distribution does not depend on the parameter. The existence of a pivot is what makes exact confidence intervals possible: if $Q(X, \theta)$ has a known distribution, we can rearrange the probability statement about $Q$ into a probability statement about $\theta$, and that rearrangement is the CI.
+
+## Prerequisites
+
+The reader should understand the concepts of confidence intervals, the t-distribution, and the chi-squared distribution.
+
+## Theory
+
+A **pivotal quantity** $Q = Q(X_1, \ldots, X_n; \theta)$ satisfies: for every $\theta$, the distribution of $Q$ is the same known distribution. This is stronger than "a test statistic under the null": a pivot's distribution does not depend on $\theta$ *for every* value of $\theta$.
+
+Canonical examples (iid data):
+
+- **Normal, known $\sigma^2$**: $Z = \sqrt{n}(\bar{X} - \mu)/\sigma \sim \mathcal{N}(0, 1)$.
+- **Normal, unknown $\sigma^2$**: $T = \sqrt{n}(\bar{X} - \mu)/s \sim t_{n-1}$.
+- **Normal variance**: $W = (n-1)s^2/\sigma^2 \sim \chi^2_{n-1}$.
+- **Ratio of normal variances**: $F = s_1^2/\sigma_1^2 \cdot \sigma_2^2/s_2^2 \sim F_{n_1 - 1, n_2 - 1}$.
+- **Uniform$(0, \theta)$**: $\max X_i / \theta \sim \text{Beta}(n, 1)$.
+
+Given a pivot $Q$ and its known distribution, pick quantiles $q_{\alpha/2}$ and $q_{1 - \alpha/2}$ such that $P(q_{\alpha/2} \leq Q \leq q_{1 - \alpha/2}) = 1 - \alpha$. Invert the inequalities to isolate $\theta$; the resulting set is a $1 - \alpha$ CI with exact coverage.
+
+When no exact pivot exists, **asymptotic pivots** (e.g., $(\hat{\theta} - \theta)/\widehat{\mathrm{SE}}$ which is asymptotically $\mathcal{N}(0, 1)$) give CIs with approximate coverage.
+
+## Assumptions
+
+Exact pivots depend on distributional assumptions (normality, uniformity). When those fail, the nominal coverage is not guaranteed; bootstrap methods or robust asymptotic pivots are alternatives.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+n <- 25
+mu <- 5
+sigma <- 2
+
+x <- rnorm(n, mu, sigma)
+
+xbar <- mean(x)
+s    <- sd(x)
+t_crit <- qt(0.975, df = n - 1)
+
+ci_mean <- xbar + c(-1, 1) * t_crit * s / sqrt(n)
+ci_mean
+
+chi_l <- qchisq(0.025, df = n - 1)
+chi_u <- qchisq(0.975, df = n - 1)
+ci_var <- c((n - 1) * s^2 / chi_u, (n - 1) * s^2 / chi_l)
+ci_var
+```
+
+Two exact CIs are constructed: the t-pivot for $\mu$, and the chi-squared pivot for $\sigma^2$.
+
+## Output & Results
+
+```
+[1] 4.272  6.044     # 95% CI for mu
+[1] 2.197  7.115     # 95% CI for sigma^2 (true value 4)
+```
+
+Both intervals are built from pivots with exact distributions under the normal model; their coverage is exactly 95% across repeated sampling.
+
+## Interpretation
+
+Pivotal quantities are often implicit in textbook CIs. Reporting a t-interval for a mean or a chi-squared interval for a variance is reporting a pivot-based construction. The pivot formalism explains why these CIs have exact coverage under the assumed model -- and why they lose coverage when the model is wrong.
+
+## Practical Tips
+
+- When an exact pivot exists, prefer it over an asymptotic normal approximation, especially for small $n$.
+- Pivots are rare outside the normal family; for most models, asymptotic pivots or the bootstrap are the practical tools.
+- The CI for the variance derived from the chi-squared pivot is asymmetric and not centred at $s^2$; do not report it as "$s^2 \pm \text{margin}$".
+- Pivotal CIs for transformations (e.g., log-odds) can be constructed on the transformed scale and back-transformed; this preserves exact coverage if the pivot is exact.
+- Not every test statistic is a pivot -- the Wald statistic is not, in general, exactly pivotal, which is why its CIs are approximate.

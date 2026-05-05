@@ -1,0 +1,77 @@
+---
+title: Leverage and Influence
+date: "2026-04-17"
+description: "Hat values, DFBETAs, and Cook's distance for identifying influential observations"
+categories:
+  - "Regression & Modelling"
+  - leverage
+  - influence
+  - hat-values
+  - dfbeta
+---
+
+## Introduction
+
+Leverage and influence diagnostics identify observations whose removal would substantially change a regression fit. The two concepts are distinct: leverage measures how unusual an observation is in the predictor space, influence measures how much it actually affects the fitted coefficients. High leverage without a large residual is harmless; high residual without leverage produces a poor fit but not influential coefficients; only the combination of both produces an observation that disproportionately drives the regression.
+
+## Prerequisites
+
+A working understanding of residual diagnostics, the hat matrix, and the leave-one-out perspective on regression.
+
+## Theory
+
+**Hat values** $h_{ii}$ are the diagonal of the projection matrix $H = X(X^\top X)^{-1} X^\top$. They measure each observation's leverage in the predictor space; the trace $\sum h_{ii} = p + 1$ (number of parameters), so the average is $(p+1)/n$. Conventional threshold: $h_{ii} > 2(p+1)/n$ is high leverage.
+
+**DFBETA** for coefficient $j$ and observation $i$: standardised change in $\hat\beta_j$ when observation $i$ is removed. Threshold: $|\mathrm{DFBETA}_{ij}| > 2/\sqrt n$.
+
+**Cook's distance**: combines residual and leverage into a single influence summary; thresholds $D_i > 4/n$ or $D_i > 1$.
+
+**DFFITS**: standardised change in fitted value at observation $i$; analogous to DFBETA but for predictions rather than coefficients.
+
+## Assumptions
+
+Classical OLS assumptions; the diagnostics above are linear-regression-specific. For GLMs, `influence.measures()` provides analogues based on one-step approximations.
+
+## R Implementation
+
+```r
+library(car)
+
+fit <- lm(mpg ~ wt + hp, data = mtcars)
+
+# Hat values
+h <- hatvalues(fit)
+which(h > 2 * (length(coef(fit))) / nrow(mtcars))
+
+# DFBETAs
+dfb <- dfbetas(fit)
+which(apply(abs(dfb), 1, max) > 2 / sqrt(nrow(mtcars)))
+
+# Cook's distance
+cooks <- cooks.distance(fit)
+which(cooks > 4 / nrow(mtcars))
+
+# Influence plot
+influencePlot(fit)
+```
+
+## Output & Results
+
+Each diagnostic flags candidate observations. `car::influencePlot()` produces a single integrated plot with leverage on the x-axis, studentised residual on the y-axis, and point size proportional to Cook's distance — the canonical three-way diagnostic.
+
+## Interpretation
+
+A reporting sentence: "Influence diagnostics flagged three observations as candidates for further inspection (Maserati Bora: high leverage and large residual; Cadillac Fleetwood, Lincoln Continental: high leverage with moderate residuals); refitting without these observations changed the coefficient on weight by less than 0.3 SE units, with substantive conclusions unchanged." Sensitivity analyses are the right way to report influence diagnostics; pointing out flagged observations without consequence checks adds noise rather than signal.
+
+## Practical Tips
+
+- Leverage is determined by the predictor matrix alone; outliers in the response are residual problems, not leverage.
+- Only the combination of leverage and large residual produces influence; investigate flagged points before removing them.
+- Never delete influential observations without investigating their cause — they may be the most informative data points or signal genuine measurement errors.
+- Report sensitivity analyses with influential points removed; transparency about robustness builds reader confidence.
+- For GLMs, `influence.measures(fit)` returns DFBETAs, hat values, and Cook's-distance equivalents based on one-step approximations.
+- Robust regression (`MASS::rlm`, `robustbase::lmrob`) automatically downweights influential observations; useful when influential points are genuine and should be retained but should not dominate the fit.
+
+## R Packages Used
+
+Base R `hatvalues()`, `dfbetas()`, `dffits()`, `cooks.distance()`, `influence.measures()`; `car::influencePlot()` for the three-way diagnostic visualisation; `performance::check_outliers()` for tidy diagnostics; `MASS::rlm()` and `robustbase::lmrob()` for robust regression alternatives.

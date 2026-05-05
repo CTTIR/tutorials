@@ -1,0 +1,69 @@
+---
+title: Power for Cox Regression
+date: "2026-04-17"
+description: "Events-driven sample size: the number of events, not subjects, drives power"
+categories:
+  - "Sample Size & Power"
+  - power
+  - cox-regression
+  - events
+  - hazard-ratio
+---
+
+## Introduction
+
+In survival analysis, statistical power is driven by the number of **events**, not by the number of enrolled subjects. A Cox regression power calculation determines the required events and, from assumed accrual and follow-up, the number of subjects.
+
+## Prerequisites
+
+Cox proportional hazards, survival analysis.
+
+## Theory
+
+For a continuous predictor with standardised-coefficient effect, the required number of events for Wald test power at $1 - \beta$ and two-sided $\alpha$ is
+
+$$D = \frac{(z_{1-\alpha/2} + z_{1-\beta})^2}{\sigma_X^2 \log^2(HR)}.$$
+
+For a binary predictor with allocation $\pi$ (fraction in one group):
+
+$$D = \frac{(z_{1-\alpha/2} + z_{1-\beta})^2}{\pi(1 - \pi) \log^2(HR)}.$$
+
+Required subjects $N = D / p_{\text{event}}$, where $p_{\text{event}}$ is the probability of observing the event during follow-up; depends on survival, accrual, and censoring.
+
+## Assumptions
+
+- Proportional hazards.
+- Independent censoring.
+- Known baseline event rate or survival function.
+
+## R Implementation
+
+```r
+library(powerSurvEpi)
+
+# Two-arm trial: equal allocation, HR = 0.7, 1-year survival = 0.80 in control
+ssizeCT.default(power = 0.80, k = 1,
+                pE = 1 - 0.70, pC = 1 - 0.80,
+                RR = 0.70, alpha = 0.05)
+
+# Number of events for a continuous predictor
+# HR per 1-SD increase of 1.4
+D <- (qnorm(0.975) + qnorm(0.80))^2 / log(1.4)^2
+D
+```
+
+## Output & Results
+
+For HR = 0.70 with equal allocation and event rates of 20 % (treatment) and 30 % (control), about 500 events and 1000 subjects are required.
+
+## Interpretation
+
+"The study requires approximately 500 events to detect a hazard ratio of 0.70 with 80 % power. Assuming the expected event probabilities during follow-up, we need to enrol 1000 patients."
+
+## Practical Tips
+
+- Events, not subjects, are the currency of power in survival; count accumulated events, not randomised subjects.
+- Report both target events and target $N$; specify the assumed accrual period and follow-up.
+- For interim analyses, use group-sequential boundaries (O'Brien-Fleming, Pocock) to inflate the final sample accordingly.
+- Non-proportional hazards reduce power; use restricted mean survival time or weighted log-rank alternatives.
+- For competing risks, use Fine-Gray or cause-specific power calculations.

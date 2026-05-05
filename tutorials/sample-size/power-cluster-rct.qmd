@@ -1,0 +1,75 @@
+---
+title: Power for Cluster-RCT
+date: "2026-04-17"
+description: "Sample size for cluster-randomised trials: design effect from ICC and cluster size"
+categories:
+  - "Sample Size & Power"
+  - power
+  - cluster-rct
+  - icc
+  - design-effect
+---
+
+## Introduction
+
+In cluster-randomised trials (CRTs), treatment is assigned at the cluster (clinic, school, village) rather than individual level. Within-cluster correlation inflates variance, reducing effective sample size and requiring more individuals than an individually randomised trial.
+
+## Prerequisites
+
+Intraclass correlation, CRT design.
+
+## Theory
+
+The **design effect** (DE) converts individual-level sample size to cluster-RCT sample size:
+
+$$\mathrm{DE} = 1 + (\bar{m} - 1) \rho_{ICC},$$
+
+where $\bar{m}$ is the average cluster size and $\rho_{ICC}$ is the intraclass correlation.
+
+Required individual-level $n$ for an individually-randomised design, multiplied by DE, gives the cluster-RCT total. Required clusters = total / $\bar{m}$.
+
+## Assumptions
+
+- Balanced or nearly balanced cluster sizes.
+- Pre-specified ICC (from pilot or literature).
+- Analysis adjusts for clustering (mixed models or GEE).
+
+## R Implementation
+
+```r
+library(clusterPower)
+
+# Continuous outcome: detect a 5-unit mean difference, sigma = 15
+# ICC = 0.02, 30 subjects per cluster
+# Individual n for same power:
+n_ind <- 2 * 15^2 * (qnorm(0.975) + qnorm(0.80))^2 / 5^2
+n_ind
+
+rho <- 0.02
+m_bar <- 30
+DE <- 1 + (m_bar - 1) * rho
+c(design_effect = DE,
+  cluster_total_n = n_ind * DE,
+  clusters_per_arm = ceiling(n_ind * DE / m_bar / 2))
+
+# Direct calculation via clusterPower
+cpa.normal(alpha = 0.05, power = 0.80, nclusters = NA,
+           nsubjects = 30, d = 5 / 15,   # d = delta / sigma
+           ICC = 0.02)
+```
+
+## Output & Results
+
+Individual $n \approx 143$ per arm; DE = 1.58 at ICC 0.02 and cluster size 30, giving 226 per arm (about 8 clusters of 30 per arm).
+
+## Interpretation
+
+"With an assumed ICC of 0.02 and 30 subjects per cluster, the design effect is 1.58. To detect a standardised difference of 0.33 (5 units / 15 SD) at 80 % power and two-sided $\alpha = 0.05$, 8 clusters per arm are required (total 480 subjects)."
+
+## Practical Tips
+
+- ICC estimates vary widely; use pilot data, literature, or sensitivity ranges (0.001 to 0.1).
+- Unequal cluster sizes reduce power; inflate $n$ by 10-20 % as buffer.
+- Large $m$ increases DE linearly in ICC; adding clusters is more efficient than more per-cluster recruitment.
+- Stratified or matched CRTs (pairs of clusters) reduce DE.
+- Analysis model: linear mixed model with random cluster effects; GEE with exchangeable correlation; cluster-level summary.

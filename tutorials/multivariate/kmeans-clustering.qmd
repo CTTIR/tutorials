@@ -1,0 +1,78 @@
+---
+title: k-Means Clustering
+date: "2026-04-17"
+description: Partitioning observations into k clusters by minimising within-cluster sum of squares
+categories:
+  - Multivariate Statistics
+  - kmeans
+  - clustering
+  - partitioning
+---
+
+## Introduction
+
+$k$-means is the workhorse of partitioning cluster analysis: assign each of $n$ observations to one of $k$ clusters, with the cluster centres as multivariate means and the objective being to minimise the total within-cluster sum of squared distances. It scales to large datasets, is conceptually simple, and produces interpretable centres in the original feature space. Its limitations — sensitivity to outliers, dependence on Euclidean geometry, the need to pre-specify $k$, and the assumption of approximately spherical equal-size clusters — are equally well known and motivate the alternatives (PAM, DBSCAN, Gaussian mixtures) in this category.
+
+## Prerequisites
+
+A working understanding of distance metrics, multivariate means, and the trade-off between within-cluster compactness and between-cluster separation.
+
+## Theory
+
+Lloyd's algorithm alternates two steps until convergence:
+
+1. **Initialise** $k$ centres, either randomly or via the $k$-means++ heuristic which spreads initial centres apart for better convergence.
+2. **Assign** each observation to the cluster of its nearest centre.
+3. **Update** each centre to the mean of its assigned observations.
+4. **Repeat** until cluster assignments no longer change.
+
+The objective is
+
+$$\mathrm{WSS} = \sum_{j=1}^k \sum_{x \in C_j} \|x - \bar x_j\|^2,$$
+
+monotonically decreasing across iterations. The algorithm converges to a local optimum, so multiple random starts (`nstart >= 25`) are needed to find a good solution. Choice of $k$ uses the elbow method, silhouette analysis, gap statistic, or composite tools like `NbClust`.
+
+## Assumptions
+
+Continuous variables on comparable scales (standardise first); roughly spherical clusters of similar size; Euclidean distance is meaningful. Outliers can drag means and produce unbalanced clusters; PAM is preferable when outliers are present.
+
+## R Implementation
+
+```r
+library(factoextra)
+
+X <- scale(iris[, 1:4])
+
+# 3 clusters
+set.seed(2026)
+km <- kmeans(X, centers = 3, nstart = 25)
+km$size
+km$centers
+
+fviz_cluster(km, data = X, palette = "Set2", ggtheme = theme_minimal())
+
+# Elbow and silhouette
+fviz_nbclust(X, kmeans, method = "wss")
+fviz_nbclust(X, kmeans, method = "silhouette")
+```
+
+## Output & Results
+
+`kmeans()` returns cluster assignments, cluster centres in the standardised feature space, total within-cluster sum of squares, between-cluster sum of squares, and convergence diagnostics. `fviz_cluster()` plots the clusters on the first two principal components with cluster ellipses; `fviz_nbclust()` automates elbow and silhouette diagnostics.
+
+## Interpretation
+
+A reporting sentence: "$k$-means with $k = 3$ and 25 random starts partitioned the standardised iris data with total within-cluster sum of squares 140; the resulting clusters closely matched the three species (overall accuracy 89 %, with versicolor and virginica contributing the misclassifications)." Always state $k$, the number of starts, and a quality metric (silhouette or WSS).
+
+## Practical Tips
+
+- Always standardise predictors before $k$-means; variables with larger variance dominate Euclidean distance and bias the partition.
+- Use `nstart = 25` or higher to avoid poor local optima; the algorithm is non-convex and a single random start can converge to a sub-optimal solution.
+- For non-spherical clusters, switch to hierarchical clustering, DBSCAN (density-based), or Gaussian mixture models (model-based with elliptical clusters).
+- For categorical data, $k$-means does not apply directly; use $k$-modes (`klaR::kmodes`) or PAM with Gower distance.
+- Cross-validate the chosen $k$ via stability measures (`fpc::clusterboot`); clusters that recur under bootstrapping are more trustworthy than those that change with each resample.
+- Outliers can drag means; for outlier-contaminated data, prefer PAM (`cluster::pam`), trimmed $k$-means (`tclust::tkmeans`), or robust mixture models.
+
+## R Packages Used
+
+Base R `kmeans()` for the standard algorithm; `factoextra` for `fviz_cluster()`, `fviz_nbclust()`, and ggplot-style diagnostics; `cluster` for related partitioning algorithms; `klaR::kmodes()` for categorical data; `fpc::clusterboot()` for stability-based cluster validation.

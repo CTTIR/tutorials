@@ -1,0 +1,100 @@
+---
+title: Discrete vs Continuous Variables
+date: "2026-04-17"
+description: Two fundamental kinds of random variable and the mixed case in between
+categories:
+  - Probability Theory
+  - discrete
+  - continuous
+  - mixed
+  - support
+---
+
+## Introduction
+
+Random variables come in two canonical kinds -- **discrete** (countable support) and **continuous** (uncountable support with a density). Most textbook distributions belong to one or the other. A subtler third category, **mixed**, combines discrete atoms with continuous parts and arises naturally in censored, truncated, or zero-inflated data.
+
+## Prerequisites
+
+Random variables, PMF, and PDF.
+
+## Theory
+
+A random variable $X$ is:
+
+- **Discrete** if it takes values in a countable set $\{x_1, x_2, \ldots\}$. Its distribution is described by the **probability mass function** $p(x_i) = P(X = x_i)$, with $\sum_i p(x_i) = 1$.
+- **Continuous** (absolutely continuous) if there exists a **probability density function** $f$ such that $P(X \in A) = \int_A f(x) \, dx$ for every measurable set $A$. For continuous $X$, $P(X = x) = 0$ for every single point $x$.
+- **Mixed** if its distribution has both discrete atoms (points with positive probability mass) and a continuous part. Examples: censored survival times (mass at the censoring time, density elsewhere); zero-inflated counts (mass at 0, positive distribution above).
+
+The CDF $F_X(x) = P(X \leq x)$ is defined for all three. For discrete $X$, $F$ is a step function; for continuous $X$, $F$ is smooth; for mixed $X$, $F$ is piecewise smooth with jumps at the atoms.
+
+The mean and variance are defined the same way (as $E[X]$ and $E[(X - E[X])^2]$) across the three cases, computed via sums for discrete and integrals for continuous.
+
+## Assumptions
+
+The classification is mathematical rather than empirical; *any* random variable falls into one of the three categories.
+
+## R Implementation
+
+```r
+library(ggplot2)
+set.seed(2026)
+
+# Discrete: Poisson counts
+dis <- rpois(5000, lambda = 3)
+table(dis)[1:7]
+
+# Continuous: exponential waiting times
+con <- rexp(5000, rate = 0.5)
+quantile(con, c(0.25, 0.5, 0.75))
+
+# Mixed: censored normal (values below 0 set to exactly 0)
+mix <- pmax(rnorm(5000, mean = 1.0, sd = 1.5), 0)
+c(mass_at_zero = mean(mix == 0),
+  mean_overall = mean(mix))
+
+# Plot all three
+df <- rbind(
+  data.frame(x = dis,    kind = "discrete (Poisson)"),
+  data.frame(x = con,    kind = "continuous (exponential)"),
+  data.frame(x = mix,    kind = "mixed (censored normal)")
+)
+
+ggplot(df, aes(x = x)) +
+  geom_histogram(bins = 40, fill = "#2A9D8F") +
+  facet_wrap(~ kind, scales = "free", ncol = 1) +
+  theme_minimal()
+```
+
+## Output & Results
+
+```
+dis       0      1      2      3      4      5      6
+count   243    746   1124   1128    835    505    275
+
+      25%       50%       75%
+ 0.5675    1.3735    2.7711
+
+mass_at_zero  mean_overall
+      0.2526        1.1342
+```
+
+The Poisson histogram has bars at integer values (discrete), the exponential has a smooth decaying curve (continuous), and the censored-normal has a spike at zero plus a continuous upper tail (mixed).
+
+## Interpretation
+
+In reporting, the kind of random variable determines appropriate summaries:
+
+- Discrete: report counts, proportions, mode, or a PMF table.
+- Continuous: report mean, SD, quantiles, or a histogram/density.
+- Mixed: report the atom probability separately from the continuous-part summary.
+
+A paper analysing a zero-inflated outcome should acknowledge the mixed distribution explicitly rather than forcing it into a continuous or discrete mould.
+
+## Practical Tips
+
+- Count data that "cap out" at a large value are often mixed; report the probability of the cap and analyse the remainder conditionally.
+- Censored survival times are mixed; classical survival methods (Kaplan-Meier, Cox) handle the mixture natively.
+- Continuous variables that are rounded to, say, integer values are still "almost continuous" in practice; treat as continuous for inference.
+- Zero-inflated Poisson (`pscl::zeroinfl`) is the canonical regression model for mixed count data.
+- When in doubt, plot a histogram (or ECDF) and inspect for atoms; the presence of a spike at a specific value signals a mixed distribution.

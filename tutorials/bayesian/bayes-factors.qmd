@@ -1,0 +1,66 @@
+---
+title: Bayes Factors
+date: "2026-04-17"
+description: "Ratio of marginal likelihoods under two models, the Bayesian analogue of a likelihood-ratio test"
+categories:
+  - Bayesian Statistics
+  - bayes-factor
+  - model-comparison
+  - marginal-likelihood
+---
+
+## Introduction
+
+A Bayes factor compares two models by the ratio of how plausible the observed data are under each, after integrating over the parameters of each model with respect to its prior. It is the Bayesian counterpart of a likelihood-ratio test, but it carries a richer interpretation: rather than rejecting or failing to reject a null, it returns a continuous strength-of-evidence measure that can equally support the null model when the data are inconsistent with the alternative. This symmetry — quantifying support for either side — is one of the main reasons Bayes factors recur in applied work where "no effect" is itself a substantively interesting conclusion.
+
+## Prerequisites
+
+A working understanding of Bayes' theorem, the role of the marginal likelihood (evidence) in Bayesian inference, and the difference between point-null and composite hypotheses.
+
+## Theory
+
+For two models $M_0$ and $M_1$ with parameter vectors $\theta_0$ and $\theta_1$ and priors $p(\theta_0 \mid M_0)$ and $p(\theta_1 \mid M_1)$, the Bayes factor in favour of $M_1$ is
+
+$$\mathrm{BF}_{10} = \frac{p(y \mid M_1)}{p(y \mid M_0)} = \frac{\int p(y \mid \theta_1, M_1) p(\theta_1 \mid M_1) \, \mathrm d \theta_1}{\int p(y \mid \theta_0, M_0) p(\theta_0 \mid M_0) \, \mathrm d \theta_0}.$$
+
+Posterior odds equal the Bayes factor times the prior odds; under equal prior odds, the posterior probability of $M_1$ is $\mathrm{BF}_{10} / (\mathrm{BF}_{10} + 1)$. Jeffreys' interpretive scale calls $\mathrm{BF} > 3$ substantial, $> 10$ strong, $> 30$ very strong, and $> 100$ decisive evidence; the same thresholds apply, mirrored, for evidence in favour of $M_0$.
+
+## Assumptions
+
+Both models are well-specified and proper priors are assigned to all parameters that differ between the two; improper priors leave the marginal likelihoods undefined up to an arbitrary constant and the Bayes factor inherits that indeterminacy. Numerical estimation must be stable — bridge sampling, Chib's method, or Savage-Dickey ratios for nested models.
+
+## R Implementation
+
+```r
+library(BayesFactor)
+
+# Simple example: one-sample t-test equivalent
+x <- rnorm(40, mean = 0.5, sd = 1)
+ttestBF(x)
+
+# Regression
+data(mtcars)
+full <- lmBF(mpg ~ wt + hp, data = mtcars)
+reduced <- lmBF(mpg ~ wt, data = mtcars)
+full / reduced
+```
+
+## Output & Results
+
+The `BayesFactor` package returns a Bayes factor with an estimated error percentage. For regression-type models the output also includes the implied posterior model probabilities; ratios of `BFBayesFactor` objects deliver pairwise comparisons directly.
+
+## Interpretation
+
+A reporting sentence: "A default-prior $t$-test Bayes factor was $\mathrm{BF}_{10} = 4.7$ ($\pm 0.001 \%$), interpreted as substantial evidence that the population mean differs from zero." When reporting, always include the prior and (for `BayesFactor`) the prior scale parameter `rscale`; readers cannot otherwise judge how much of the evidence is data-driven versus prior-driven.
+
+## Practical Tips
+
+- Wider priors mechanically shift Bayes factors toward the null (Lindley–Bartlett paradox); a sensitivity analysis across at least two prior scales is mandatory for any Bayes-factor conclusion.
+- `bridgesampling::bridge_sampler()` works directly with `brms` and Stan fits; it is the most general way to compute marginal likelihoods for non-trivial models.
+- For nested null hypotheses, the Savage-Dickey density ratio is faster, more stable, and avoids marginal-likelihood estimation entirely.
+- Bayes factors near 1 are genuinely inconclusive; resist the temptation to declare evidence with $\mathrm{BF} = 1.5$ in either direction.
+- Bayes factors are not a substitute for predictive performance; pair them with `loo()` when comparing models for prediction, since the two answer different questions.
+
+## R Packages Used
+
+`BayesFactor` for default-prior tests and ANOVA / regression Bayes factors, `bridgesampling` for general marginal-likelihood estimation, `bayestestR` for tidy summaries that work with `brms` and `rstanarm` fits, and `polspline` for Savage-Dickey density estimation when the null is nested.

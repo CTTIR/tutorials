@@ -1,0 +1,68 @@
+---
+title: X-13ARIMA-SEATS Decomposition
+date: "2026-04-17"
+description: The seasonal adjustment tool used by US Census Bureau and statistical agencies
+categories:
+  - Time Series Analysis
+  - x13
+  - census
+  - seasonal-adjustment
+---
+
+## Introduction
+
+X-13ARIMA-SEATS is the seasonal-adjustment workhorse of official statistics. It is the Census Bureau standard, used by Eurostat, the Bank of England, and most national statistical agencies for producing officially published seasonally adjusted economic time series. The combination of RegARIMA-based pre-adjustment (handling outliers, trading-day effects, Easter effects) with either X-11 filter-based or SEATS model-based decomposition makes it the most sophisticated decomposition tool routinely available — and the standard against which simpler methods (STL, classical decomposition) are benchmarked.
+
+## Prerequisites
+
+A working understanding of seasonal decomposition, SARIMA models, and the role of calendar effects (trading days, leap years, moving holidays) in economic time series.
+
+## Theory
+
+X-13 has two main computational stages:
+
+1. **RegARIMA pre-adjustment**: fit a regression-with-ARIMA-errors model that absorbs outliers (additive, level shift, temporary change), trading-day effects, leap-year effects, and Easter effects. The pre-adjustment removes these from the original series.
+
+2. **Decomposition**: either X-11-style iterative moving averages or SEATS (Signal Extraction in ARIMA Time Series), a model-based decomposition derived from the RegARIMA spectral structure. SEATS is preferred for series with stable seasonal patterns; X-11 is more robust to deviations from the fitted ARIMA.
+
+The output includes the seasonally adjusted series, the trend-cycle, the seasonal component, and the irregular component, plus diagnostics for stability, residual autocorrelation, and seasonal-adjustment quality.
+
+## Assumptions
+
+Monthly or quarterly data with several years of history (typically at least 3–5 years for stable seasonal-factor estimation); the RegARIMA pre-adjustment captures the calendar effects that matter for the series.
+
+## R Implementation
+
+```r
+library(seasonal)
+
+x <- AirPassengers
+m <- seas(x)
+summary(m)
+
+plot(m)
+series(m, "s10")   # seasonal factors
+series(m, "s12")   # seasonally adjusted
+series(m, "s11")   # trend-cycle
+```
+
+## Output & Results
+
+`seas()` runs the X-13 binary in the background and returns a `seas` object with the RegARIMA model summary, the various decomposed series accessible via `series()`, and a panel of diagnostics. `view(m)` (or `inspect(m)`) opens an interactive dashboard for diagnostic exploration.
+
+## Interpretation
+
+A reporting sentence: "X-13ARIMA-SEATS seasonal adjustment of monthly air-passenger counts identified a $(0,1,1)(0,1,1)_{12}$ RegARIMA structure with no significant outliers; the SEATS-based decomposition produced a smooth seasonally adjusted trend with stable seasonal factors that gradually amplified across the series, consistent with the multiplicative seasonality." Always state the chosen ARIMA structure and the decomposition method (SEATS or X-11).
+
+## Practical Tips
+
+- The `seasonal` package automatically installs the X-13 binary on first use; verify with `seasonal::checkX13()`.
+- X-13 is the official standard for seasonal adjustment of economic series; required by some regulators and statistical agencies.
+- `view(m)` opens an interactive HTML dashboard with all diagnostics — extremely useful for exploring complex decompositions.
+- Trading-day, Easter, and outlier regressors are added automatically in default mode but can be customised; well-chosen regressors substantially improve fit for retail and financial series.
+- For non-economic series or series with non-standard seasonal periods, STL (`stl()` or `mstl()`) is a simpler alternative without the calendar-effect machinery.
+- Compare X-13 against STL and classical decomposition; large discrepancies signal calendar or outlier effects that one method handles better than another.
+
+## R Packages Used
+
+`seasonal` for `seas()`, `series()`, and the X-13 interface; `seasonalview` for the interactive HTML dashboard; `forecast::stl()` and `mstl()` for simpler decomposition alternatives; `feasts::X_13ARIMA_SEATS()` for the modern tidyverts wrapper.

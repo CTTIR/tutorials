@@ -1,0 +1,69 @@
+---
+title: "GAMMs: Additive Mixed Models"
+date: "2026-04-17"
+description: "Combining smooth effects (GAM) with random effects (LMM) via mgcv::gam"
+categories:
+  - "Regression & Modelling"
+  - gamm
+  - additive
+  - smooth
+  - mixed
+---
+
+## Introduction
+
+Generalised additive mixed models (GAMMs) bring together two powerful regression frameworks: smooth non-linear effects from generalised additive models (GAMs) and random effects from linear / generalised linear mixed models. The `mgcv::gam()` interface handles both in a single unified framework by treating random effects as a specific type of penalised smooth, making the combined model no harder to fit than a plain GAM. The result is the natural choice when clustered data also exhibit non-linear effects of continuous covariates — longitudinal trajectories, growth curves, ecological time series with site-level structure.
+
+## Prerequisites
+
+A working understanding of generalised additive models (smooth effects, basis functions, penalised regression splines), linear mixed models, and the role of random effects in clustered data.
+
+## Theory
+
+In `mgcv`, random effects are smooths with the basis specification `bs = "re"`. A smooth of a grouping factor with this basis is mathematically equivalent to a random intercept; the smoothing penalty plays the role of the random-effect variance, and REML estimation of the smoothing parameter recovers the variance estimate. More complex random structures — random slopes, factor-by-smooth interactions — are constructed via tensor-product smooths or `s(group, bs = "re")` combined with appropriate factor coding.
+
+For non-Gaussian outcomes, change the `family` argument; the random-effect basis trick generalises to GLMM territory automatically.
+
+## Assumptions
+
+Smooth-function assumptions (the true relationship is reasonably represented by penalised splines), random-effect Normality, conditional independence given random effects, and the appropriate family for the outcome.
+
+## R Implementation
+
+```r
+library(mgcv)
+
+set.seed(2026)
+d <- data.frame(
+  subject = factor(rep(1:20, each = 30)),
+  time    = rep(seq(0, 10, length.out = 30), 20)
+)
+d$y <- rnorm(nrow(d)) + sin(d$time) * 2 +
+       rep(rnorm(20, 0, 1.5), each = 30) +
+       0.3 * d$time
+
+fit <- gam(y ~ s(time) + s(subject, bs = "re"), data = d)
+summary(fit)
+plot(fit, pages = 1)
+```
+
+## Output & Results
+
+`summary(fit)` reports the effective degrees of freedom (edf) for each smooth, parametric coefficients, and an approximate $F$-test for each smooth term. The random-effect smooth contributes a single variance component summarised in the model summary; `plot(fit, pages = 1)` displays each smooth on a single page.
+
+## Interpretation
+
+A reporting sentence: "A GAMM with a smooth of time (edf 7.2, $F = 24.5$, $p < 0.001$) and a subject-level random intercept (variance 2.18) explained 72 % of the deviance; the smooth recovered the simulated sine-plus-linear trend faithfully and the random-intercept SD matched the simulation parameter to within Monte Carlo error." Always report edf for smooths and the random-effect variance.
+
+## Practical Tips
+
+- `bs = "re"` turns a smooth into a random effect; `s(group, bs = "re")` is a random intercept; `s(group, x, bs = "re")` is a random slope on $x$.
+- Tensor product smooths (`te(x, z)`) model smooth interactions between two continuous predictors; `ti(x, z)` builds the pure interaction without the main effects, useful for ANOVA-like decomposition.
+- For GLMM-type responses (binomial, Poisson, beta), specify `family = binomial(link = "logit")` (etc.) and the same random-effect smooth syntax works.
+- Use `mgcv::gam.check(fit)` for diagnostic plots of residuals and basis-dimension adequacy; raise `k` when basis dimensions are too small.
+- `gratia::draw(fit)` produces ggplot-style visualisations of all model components, far cleaner than base `plot.gam()` for publications.
+- For very large datasets ($n > 10{,}000$), use `mgcv::bam()` with `discrete = TRUE` for substantial speed-ups; the API is otherwise identical.
+
+## R Packages Used
+
+`mgcv` for `gam()`, `bam()`, smooth bases, and REML smoothing-parameter selection; `gratia` for ggplot-style GAM diagnostics and component plots; `lme4` for comparative LMM fits; `gamm4` for GAMMs implemented via `lme4` for very large random-effect structures.

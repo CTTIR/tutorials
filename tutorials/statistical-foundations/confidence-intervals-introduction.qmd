@@ -1,0 +1,89 @@
+---
+title: "Confidence Intervals: Introduction"
+date: "2026-04-17"
+description: "Interval estimates with a coverage guarantee, and how they differ from credible intervals"
+categories:
+  - Statistical Foundations
+  - confidence-interval
+  - coverage
+  - interval-estimate
+---
+
+## Introduction
+
+A point estimate without an interval is an answer without error bars -- nearly useless for decision-making. A **confidence interval** is a range of values, computed from data, that would contain the true parameter in a specified fraction of hypothetical repeated samples. This "coverage" interpretation is precise and useful but different from what most readers casually assume.
+
+## Prerequisites
+
+The reader should understand the concept of a sampling distribution and of a standard error.
+
+## Theory
+
+A $1 - \alpha$ confidence interval for a parameter $\theta$ is a pair of statistics $(L, U)$ depending on the data such that
+
+$$P\{L \leq \theta \leq U\} \geq 1 - \alpha \quad \text{for every } \theta,$$
+
+where the probability is over repeated sampling. The conventional choice is $\alpha = 0.05$, giving 95% CIs.
+
+**Interpretation.** A 95% CI is a realisation of a random procedure that captures the true parameter 95% of the time across hypothetical repetitions. A specific computed interval either contains $\theta$ or does not; the "95%" refers to the procedure, not to the single interval. This is often misstated as "there is a 95% probability that $\theta$ lies in the interval" -- correct only in a Bayesian sense, where the object is a **credible interval** computed from a posterior distribution.
+
+**Construction techniques.**
+
+1. **Pivotal quantities**: if $Q(X, \theta)$ has a distribution not depending on $\theta$, then $P\{a \leq Q \leq b\} = 1 - \alpha$ for known $a, b$, and inversion gives a CI for $\theta$. The classic example: for iid normal data, $(\bar{X} - \mu)/(s/\sqrt{n}) \sim t_{n-1}$, giving the t-interval.
+
+2. **Normal approximation**: for asymptotically normal estimators, $\hat{\theta} \pm z_{1-\alpha/2} \widehat{\mathrm{SE}}(\hat{\theta})$. Simple and widely used; coverage depends on how close the sampling distribution is to normal.
+
+3. **Likelihood-ratio intervals**: invert the LRT at each candidate value; the set where it is not rejected is a CI. Better coverage than Wald in many cases; symmetric on the log-likelihood scale, not the parameter scale.
+
+4. **Bootstrap intervals**: resample the data, compute the statistic, and use quantiles (percentile method) or bias-corrected variants for the interval. Works when an analytical SE is unavailable.
+
+## Assumptions
+
+Each construction has its own assumptions. The t-interval requires normal data or a large enough sample for CLT. Wald intervals require asymptotic normality of $\hat{\theta}$ and a well-estimated SE. Bootstrap intervals require exchangeable observations and inherit the sampling design.
+
+## R Implementation
+
+```r
+library(boot)
+
+set.seed(2026)
+x <- rnorm(40, mean = 75, sd = 12)
+
+t.test(x)$conf.int
+
+n <- length(x)
+xbar <- mean(x); s <- sd(x)
+xbar + c(-1, 1) * qnorm(0.975) * s / sqrt(n)
+
+boot_mean <- function(d, i) mean(d[i])
+b <- boot(x, boot_mean, R = 5000)
+boot.ci(b, type = c("perc", "bca"))
+```
+
+We compute a t-interval, a Wald (normal-approximation) interval, and two bootstrap intervals for the same sample mean.
+
+## Output & Results
+
+```
+95 percent confidence interval:
+ 71.34  78.68     # t-interval
+
+[1] 71.51 78.51   # Wald
+
+Percentile: (71.52, 78.53)
+BCa:        (71.59, 78.60)
+```
+
+The four intervals agree closely in this well-behaved example; they differ more for heavily skewed statistics or small samples.
+
+## Interpretation
+
+For a manuscript: "The mean was 75.0 (95% CI 71.3 to 78.7, t-interval)." The CI is interpreted as the range of parameter values consistent with the data under the t-sampling model; values outside the interval would be rejected by a 5% level two-sided test.
+
+## Practical Tips
+
+- Prefer CIs over p-values when reporting an effect; they convey both the effect size and its uncertainty.
+- For small samples or skewed distributions, bootstrap BCa intervals usually have better coverage than Wald.
+- For proportions near 0 or 1, use Wilson or Clopper-Pearson, not Wald; the latter can extend outside $[0, 1]$.
+- The level $1 - \alpha$ is a choice, not a universal truth; pre-specify it and justify it in the methods.
+- Do not interpret a specific 95% CI as "95% probability the parameter is inside" unless you are doing Bayesian analysis.

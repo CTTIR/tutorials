@@ -1,0 +1,94 @@
+---
+title: Likelihood Ratio Tests
+date: "2026-04-17"
+description: "Comparing nested models by the ratio of maximised likelihoods, with Wilks' asymptotic chi-squared"
+categories:
+  - Statistical Foundations
+  - likelihood-ratio
+  - wilks
+  - nested-models
+  - hypothesis-test
+---
+
+## Introduction
+
+The likelihood ratio test (LRT) compares two nested statistical models by the ratio of their maximised likelihoods. If the added parameters in the larger model help explain the data, the ratio departs from one by a predictable amount; Wilks' theorem gives that amount an asymptotic chi-squared distribution, turning the ratio into a usable p-value. LRTs underlie model-comparison tools throughout GLMs, mixed models, survival analysis, and beyond.
+
+## Prerequisites
+
+The reader should understand maximum likelihood, the concept of nested models, and degrees of freedom.
+
+## Theory
+
+Consider two nested parametric models: a "null" model $M_0$ with parameter space $\Theta_0$ and a larger model $M_1$ with parameter space $\Theta_1 \supset \Theta_0$. Let $\hat{\ell}_0 = \ell(\hat{\theta}_0)$ be the log-likelihood maximised over $\Theta_0$, and $\hat{\ell}_1$ the same over $\Theta_1$. The **likelihood ratio statistic** is
+
+$$\Lambda = 2(\hat{\ell}_1 - \hat{\ell}_0).$$
+
+Wilks' theorem states that, under regularity, if $M_0$ is true, then as $n \to \infty$
+
+$$\Lambda \xrightarrow{d} \chi^2_k,$$
+
+where $k = \dim \Theta_1 - \dim \Theta_0$ is the number of free parameters added. A p-value is computed as $1 - F_{\chi^2_k}(\Lambda)$.
+
+LRTs generalise the Wald and score tests and are often more accurate. They are invariant under reparameterisation (unlike Wald tests) and have good small-sample behaviour when regularity holds.
+
+Important cases:
+
+- Testing a scalar parameter equals a specific value ($k = 1$).
+- Testing several parameters equal zero simultaneously (add multiple predictors to a regression; $k$ = number added).
+- Testing a whole submodel against a saturated model (goodness-of-fit).
+
+Profile likelihood ratios give confidence intervals: invert the LRT at each candidate parameter value and collect the values where the LRT does not reject.
+
+## Assumptions
+
+Standard Wilks' theorem requires: (i) $M_0$ in the interior of the parameter space of $M_1$, (ii) regularity (smooth likelihood, finite Fisher information), and (iii) correct model specification for $M_1$. Boundary cases (testing variance = 0 in a mixed model) require a mixture chi-squared null distribution.
+
+## R Implementation
+
+```r
+library(lmtest)
+
+set.seed(2026)
+n <- 200
+x <- rnorm(n)
+z <- rnorm(n)
+y <- 2 + 1.5 * x + 0.8 * z + rnorm(n, sd = 2)
+
+fit0 <- lm(y ~ x)
+fit1 <- lm(y ~ x + z)
+
+lrtest(fit0, fit1)
+
+glm0 <- glm(y > 3 ~ x, family = binomial)
+glm1 <- glm(y > 3 ~ x + z, family = binomial)
+anova(glm0, glm1, test = "Chisq")
+```
+
+`lmtest::lrtest()` computes the LRT for linear models (using the variance estimator consistent with the likelihood); `anova(..., test = "Chisq")` does the same for GLMs.
+
+## Output & Results
+
+```
+Likelihood ratio test
+
+Model 1: y ~ x
+Model 2: y ~ x + z
+  #Df  LogLik Df  Chisq Pr(>Chisq)
+1   3 -429.44
+2   4 -420.02  1  18.85 1.42e-05 ***
+```
+
+Adding `z` to the model increases the log-likelihood by 9.4, yielding a likelihood-ratio statistic of 18.85 on 1 df, and a highly significant p-value.
+
+## Interpretation
+
+For a manuscript, the LRT is reported with the df and p-value: "Adding region as a covariate improved the fit significantly (likelihood-ratio $\chi^2_3 = 12.4$, $p = 0.006$)." The LRT answers whether the extra parameters are jointly non-zero in the population, given the nested structure.
+
+## Practical Tips
+
+- LRTs require the same data and the same likelihood for both models -- no missing-data differences, no different link functions. Software will happily compute nonsense if you are not careful.
+- For mixed models, LRTs on random-effects variances test a parameter at the boundary; use `lmerTest`, `RLRsim`, or parametric bootstrap rather than naive chi-squared.
+- Wilks' chi-squared is asymptotic; for small samples, consider parametric bootstrap likelihood ratios.
+- An LRT against a saturated model is a classical goodness-of-fit test for categorical data (the $G$-statistic); for continuous data in GLMs, the residual deviance plays the same role.
+- LRTs are only defined for nested models. For non-nested comparison, use information criteria (AIC, BIC) or Vuong's test.

@@ -1,0 +1,80 @@
+---
+title: scRNA QC and Filtering
+date: "2026-04-17"
+description: Removing low-quality cells before downstream scRNA-seq analysis
+categories:
+  - Bioinformatics
+  - scrnaseq
+  - qc
+  - filtering
+---
+
+## Introduction
+
+Single-cell RNA-seq experiments routinely contain empty droplets, stressed or apoptotic cells, doublets (two cells captured in one droplet), and various technical artefacts that should not enter downstream clustering or differential-expression analysis. Per-cell QC filtering by library size, detected-gene count, and mitochondrial-read percentage removes the worst offenders. The trade-off is delicate: over-filtering excludes real biology (e.g. plasma cells with naturally low gene counts), while under-filtering produces clusters of damaged cells that mimic real cell types.
+
+## Prerequisites
+
+A working understanding of scRNA-seq counts, the structure of droplet-based experiments, and the role of mitochondrial reads as a cell-health indicator.
+
+## Theory
+
+Three canonical per-cell metrics dominate QC:
+
+- **nCount_RNA** (total UMI count per cell): very low values indicate empty droplets or debris; very high values often indicate doublets.
+- **nFeature_RNA** (number of detected genes): the lowest quantile typically corresponds to broken or empty droplets.
+- **percent.mt** (percentage of reads mapping to mitochondrial genes): elevated values indicate apoptotic or stressed cells whose cytoplasmic mRNA has been degraded preferentially.
+
+Thresholds are dataset-specific; fixed cutoffs (`percent.mt < 15` for 10x human samples) work for typical experiments, but adaptive thresholds based on the median absolute deviation (`scater::isOutlier`) generalise better across datasets.
+
+For doublet detection, dedicated tools (`scDblFinder`, `DoubletFinder`) provide more reliable identification than naive UMI-based heuristics.
+
+## Assumptions
+
+Mitochondrial percentage is a valid proxy for cell health (fails in some tissue types — cardiomyocytes naturally have very high mitochondrial content); doublets show abnormally high UMI counts on average; the chosen filtering thresholds preserve biological diversity.
+
+## R Implementation
+
+```r
+library(Seurat)
+
+set.seed(2026)
+counts <- matrix(rpois(300 * 200, lambda = 2), 200, 300)
+rownames(counts) <- c(paste0("MT-", 1:10),
+                       paste0("gene_", 11:200))
+colnames(counts) <- paste0("cell_", 1:300)
+counts[1:10, 1:30] <- counts[1:10, 1:30] + 20   # 30 cells with high MT
+
+so <- CreateSeuratObject(counts)
+so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^MT-")
+
+VlnPlot(so, c("nFeature_RNA", "nCount_RNA", "percent.mt"),
+        ncol = 3, pt.size = 0.1)
+
+so_f <- subset(so,
+               subset = nFeature_RNA > 50 &
+                        nFeature_RNA < 180 &
+                        percent.mt   < 15)
+dim(so_f)       # cells x genes after QC
+```
+
+## Output & Results
+
+`PercentageFeatureSet()` adds the mitochondrial percentage to per-cell metadata; `VlnPlot()` shows the distribution of QC metrics across cells. `subset()` applies thresholds and returns a filtered Seurat object. Inspecting the violin plots before and after filtering confirms that the chosen thresholds remove the tails without truncating the bulk of the distribution.
+
+## Interpretation
+
+A reporting sentence: "Per-cell QC removed 4{,}166 of 12{,}400 cells (33.6 %) that fell outside the chosen thresholds (nFeature < 500, nFeature > 6{,}000, percent.mt > 15); doublet detection with `scDblFinder` flagged an additional 312 cells (3.8 %), yielding 7{,}922 high-quality cells for clustering. Thresholds were chosen by inspecting violin plots per sample." Always state thresholds and the rationale.
+
+## Practical Tips
+
+- Inspect QC metrics per sample or batch separately before pooling; differing distributions reflect technical variation that should inform sample-specific thresholds.
+- Use median-absolute-deviation-based thresholds (`scater::isOutlier(metric, nmads = 3)`) for reproducibility across datasets; fixed cutoffs are sample-specific.
+- Run doublet detection (`scDblFinder` is the modern recommendation, `DoubletFinder` is the older popular alternative) separately from count-based QC; doublets often pass naïve UMI thresholds.
+- Remove cells failing on multiple metrics (low UMI *and* low gene count *and* high mitochondrial percentage) rather than aggressively filtering on any single metric; combinations are more reliable than thresholds on individual metrics.
+- Document QC parameters in the methods section; results are highly sensitive to filter choice and reproducibility requires explicit thresholds.
+- For tissues where mitochondrial percentage is biologically meaningful (heart, skeletal muscle), adjust thresholds accordingly or use alternative QC metrics.
+
+## R Packages Used
+
+`Seurat::PercentageFeatureSet()`, `VlnPlot()`, `subset()` for the standard QC workflow; `scater::isOutlier()` for adaptive MAD-based thresholds; `scDblFinder` and `DoubletFinder` for doublet detection; `emptyDrops` (in `DropletUtils`) for distinguishing real cells from empty droplets at the upstream step.

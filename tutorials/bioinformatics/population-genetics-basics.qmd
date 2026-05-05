@@ -1,0 +1,74 @@
+---
+title: Population Genetics Basics
+date: "2026-04-17"
+description: "Allele frequencies, Hardy-Weinberg equilibrium, and F-statistics"
+categories:
+  - Bioinformatics
+  - population-genetics
+  - hwe
+  - fst
+---
+
+## Introduction
+
+Population genetics quantifies genetic variation within and between populations. Allele frequencies, Hardy-Weinberg equilibrium (HWE), and F-statistics form the foundational toolkit for diagnosing genotyping errors, detecting population structure, and assessing selection or drift.
+
+## Prerequisites
+
+Mendelian inheritance; genotype coding (0/1/2 for minor-allele dosage).
+
+## Theory
+
+**Allele frequency**. For a biallelic SNP with minor-allele counts $n_{AA}, n_{Aa}, n_{aa}$, $p = (2 n_{AA} + n_{Aa}) / (2 n)$.
+
+**Hardy-Weinberg equilibrium (HWE)**. Under random mating and no selection, expected genotype frequencies are $p^2, 2pq, q^2$. Exact HWE tests (`HWExact`) are preferred over the chi-square for rare variants.
+
+**F-statistics**. $F_{ST} = (H_T - H_S) / H_T$ partitions heterozygosity between and within populations, quantifying structure (Wright, 1951). Typical human $F_{ST}$ between continents $\approx 0.1$.
+
+## Assumptions
+
+Random mating, no selection, no mutation, no migration, infinite population size; genotyping is unbiased.
+
+## R Implementation
+
+```r
+library(HardyWeinberg)
+
+set.seed(2026)
+# Simulate HWE: p = 0.3, n = 200 diploid individuals
+p <- 0.3
+n_AA <- rbinom(1, 200, p^2)
+n_aa <- rbinom(1, 200, (1 - p)^2)
+n_Aa <- 200 - n_AA - n_aa
+
+gt <- c(AA = n_AA, AB = n_Aa, BB = n_aa)
+HWExact(gt, verbose = TRUE)
+
+# Simulate HWE violation (excess heterozygotes)
+gt_violate <- c(AA = 20, AB = 160, BB = 20)
+HWExact(gt_violate, verbose = TRUE)
+
+# F_ST between two populations (manual calculation)
+p1 <- 0.2; p2 <- 0.5
+p_bar <- mean(c(p1, p2))
+H_T <- 2 * p_bar * (1 - p_bar)
+H_S <- mean(c(2 * p1 * (1 - p1), 2 * p2 * (1 - p2)))
+Fst <- (H_T - H_S) / H_T
+Fst
+```
+
+## Output & Results
+
+HWE exact test p-value (large for the simulated HWE case; ~0 for the violated case). $F_{ST} \approx 0.1$ for the two-population toy example.
+
+## Interpretation
+
+"HWE exact tests excluded 1,240 variants (p < 1e-6) from association analysis as likely genotyping artefacts. Between-cohort $F_{ST} = 0.012$ indicates minimal population stratification after ancestry matching."
+
+## Practical Tips
+
+- Always HWE-filter variants in GWAS pre-processing; strong HWE violations usually indicate genotyping errors.
+- Test HWE in controls only (not cases) because true disease associations can cause HWE departures in cases.
+- For low-MAF variants (<5%), asymptotic chi-square is unreliable; use the exact test.
+- `adegenet` and `hierfstat` provide comprehensive F-statistics and population-structure utilities.
+- $F_{ST}$ between samples can be inflated by small sample size; apply Weir-Cockerham estimator and bootstrap CIs.

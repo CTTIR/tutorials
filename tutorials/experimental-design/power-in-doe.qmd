@@ -1,0 +1,73 @@
+---
+title: Power Analysis for DOE
+date: "2026-04-17"
+description: Calculating power for detecting main effects and interactions in designed experiments
+categories:
+  - Experimental Design
+  - power
+  - sample-size
+  - doe
+---
+
+## Introduction
+
+Power analysis for designed experiments determines the run count required to detect specified main effects and interactions with adequate probability. It bridges experimental-design choice and statistical inference: a design is only useful if its run count gives sensible power for the smallest effect that would be scientifically actionable. Skimping on power means under-powered experiments that fail to detect real effects and waste resources on inconclusive results; over-powering an experiment beyond what is needed wastes resources differently and exposes the design to detecting irrelevantly small effects. A pre-specified power calculation is therefore now standard in any DoE protocol — industrial, agricultural, or clinical — and is increasingly required by regulators and journal reviewers.
+
+## Prerequisites
+
+A working understanding of effect sizes (Cohen's $d$, $f$, $f^2$), the structure of ANOVA $F$-tests, the non-central $F$-distribution, and the concepts of significance level and statistical power.
+
+## Theory
+
+For a $2^k$ factorial design, the main-effect $F$-test on a single factor has non-centrality parameter
+
+$$\lambda = \frac{n \Delta^2}{4 \sigma^2},$$
+
+where $n$ is the total number of runs, $\Delta$ is the effect (difference between high- and low-level means), and $\sigma^2$ is the residual variance. Power is computed as $P(F > F_{\alpha, 1, \mathrm{df}} \mid \lambda)$ under the non-central $F$-distribution. Interactions typically have effect sizes 30–50 % of the corresponding main effects, so designs powered adequately for main effects routinely lack power for two-factor interactions and for higher-order terms.
+
+## Assumptions
+
+The residual variance is known or pre-specified, the effect size of interest is fixed in advance, the design and analysis model are pre-specified, and the residuals satisfy the standard ANOVA assumptions of independence, Normality, and constant variance.
+
+## R Implementation
+
+```r
+library(pwr)
+
+pwr.t.test(d = 1, n = 8, sig.level = 0.05,
+           type = "two.sample", alternative = "two.sided")
+
+set.seed(2026)
+n_sim <- 500
+reps <- 2
+power_sim <- mean(replicate(n_sim, {
+  A <- rep(c(-1, 1), each = 4 * reps)
+  B <- rep(rep(c(-1, 1), each = 2 * reps), 2)
+  C <- rep(c(-1, 1), times = 4 * reps)
+  y <- 1 * A + 0.5 * B + rnorm(8 * reps, 0, 1.5)
+  pA <- summary(lm(y ~ A + B + C))$coefficients["A", "Pr(>|t|)"]
+  pA < 0.05
+}))
+power_sim
+```
+
+## Output & Results
+
+The analytical power calculation for a two-sample $t$-test reports power for a single main effect under classical Cohen's $d$ assumptions; the simulation loop reports empirical power under the actual analysis model and noise structure. The two should agree to within Monte Carlo error when assumptions match, and they often do not — the simulation approach generalises naturally to mixed-effects models, generalised linear models, and non-Normal residuals where no analytical formula exists.
+
+## Interpretation
+
+A reporting sentence: "Pre-specified power analysis for the $2^3$ factorial with two replicates ($n = 16$ total runs) achieved 82 % power to detect a 1.0 SD main effect at $\alpha = 0.05$, exceeding the 80 % minimum target. Power for a 0.5 SD two-factor interaction was only 28 %, so the experiment was not powered for interaction detection; if interactions are scientifically important, a third replicate ($n = 24$) raises interaction power to roughly 50 %, and a $2^4$ design with one replicate would achieve 70 %." Always report power separately for main effects and interactions.
+
+## Practical Tips
+
+- Always power the experiment for the smallest effect of scientific interest, not the largest expected effect; under-powering for small effects is the most common DoE error in published industrial work.
+- Two-factor interactions typically have effect sizes 30–50 % of main effects; if interactions are part of the inferential question, scale up replication or run count accordingly. Designs powered for main effects routinely have very poor interaction power.
+- Replicate the design (rather than expanding the factor space) to increase power for fixed factor structure; centre points add pure-error df without expanding the design region.
+- Use simulation rather than analytical formulas when the analysis model deviates from classical ANOVA — mixed-effects models, generalised linear models, non-Normal residuals, and complex covariance structures are all best handled by Monte Carlo as above.
+- Pre-specify the power calculation in the experimental protocol with explicit assumed values for $\sigma$, the smallest meaningful effect, and the analysis model; post-hoc power calculations after the experiment are statistically invalid and methodologically frowned upon.
+- When prior data on $\sigma$ are unavailable, conduct a pilot experiment first; treating an arbitrary or wishful $\sigma$ as known invalidates the whole calculation.
+
+## R Packages Used
+
+`pwr` for analytical power on $t$-tests, $F$-tests, ANOVA, and correlations; `Superpower` for ANOVA power simulation across complex factorial designs; `simr` for power analysis of mixed-effects models via simulation; `WebPower` for web-style power tools and complex designs; `daewr` for textbook DoE power examples.

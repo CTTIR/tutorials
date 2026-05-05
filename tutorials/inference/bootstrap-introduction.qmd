@@ -1,0 +1,94 @@
+---
+title: "The Bootstrap: Introduction"
+date: "2026-04-17"
+description: Resampling with replacement to estimate standard errors and sampling distributions
+categories:
+  - Inferential Statistics
+  - bootstrap
+  - resampling
+  - standard-error
+  - non-parametric
+---
+
+## Introduction
+
+The **bootstrap** approximates the sampling distribution of a statistic by repeatedly resampling from the observed data with replacement and recomputing the statistic each time. Introduced by Efron in 1979, it is a general-purpose tool for standard errors, bias estimates, and confidence intervals when analytical formulas are absent or unreliable.
+
+## Prerequisites
+
+Sampling distributions, standard errors.
+
+## Theory
+
+Given a sample $\mathbf{X} = (X_1, \ldots, X_n)$ and a statistic $\hat{\theta} = T(\mathbf{X})$, the bootstrap:
+
+1. Draws $B$ bootstrap samples $\mathbf{X}^{*(b)}$ of size $n$ with replacement from $\mathbf{X}$.
+2. Computes $\hat{\theta}^{*(b)} = T(\mathbf{X}^{*(b)})$ for each.
+3. Uses the empirical distribution of $\{\hat{\theta}^{*(b)}\}$ as an estimate of the sampling distribution of $\hat{\theta}$.
+
+From this distribution: SE, bias, percentile or BCa confidence intervals, hypothesis tests.
+
+**Validity** rests on the bootstrap-principle analogy: the relationship between $\hat{\theta}$ and the true $\theta$ is well-approximated by the relationship between $\hat{\theta}^*$ and $\hat{\theta}$.
+
+## Assumptions
+
+- iid observations (or an extension for dependent data).
+- The statistic is a smooth function of the empirical distribution.
+
+Bootstrap fails for extreme quantiles (e.g., the sample maximum) and for heavy-tailed distributions without finite variance.
+
+## R Implementation
+
+```r
+library(boot)
+set.seed(2026)
+
+x <- rgamma(50, shape = 2, rate = 0.5)
+
+# Statistic of interest: the coefficient of variation
+cv_stat <- function(data, indices) {
+  d <- data[indices]
+  sd(d) / mean(d)
+}
+
+boot_out <- boot(x, cv_stat, R = 5000)
+boot_out
+
+# 95% percentile and BCa CIs
+boot.ci(boot_out, type = c("perc", "bca"))
+
+# Bootstrap SE and bias
+c(estimate = boot_out$t0,
+  SE       = sd(boot_out$t),
+  bias     = mean(boot_out$t) - boot_out$t0)
+```
+
+## Output & Results
+
+```
+ORDINARY NONPARAMETRIC BOOTSTRAP
+
+Call:
+boot(data = x, statistic = cv_stat, R = 5000)
+
+Bootstrap Statistics :
+    original    bias      std. error
+t1*    0.766    -0.0084     0.0823
+
+Level     Percentile                   BCa
+95%     ( 0.612, 0.929 )   ( 0.624, 0.942 )
+```
+
+Observed CV = 0.77 with bootstrap SE 0.08. The BCa CI (0.62, 0.94) accounts for skew and bias in the bootstrap distribution.
+
+## Interpretation
+
+"The coefficient of variation was 0.77 (bootstrap SE = 0.08; 95 % BCa CI 0.62 to 0.94 based on 5000 bootstrap resamples)."
+
+## Practical Tips
+
+- Use BCa intervals by default; they correct for skewness and bias in the bootstrap distribution.
+- $B = 1000$ suffices for SEs; $B \geq 10000$ is recommended for accurate BCa CIs.
+- For regression, bootstrap cases (rows), residuals, or use the "wild" bootstrap for heteroscedasticity.
+- For time-series data, use block bootstrap (`tsboot`).
+- The bootstrap can fail: very small samples, heavy tails, or statistics near boundaries (quantiles at 0 or 1).

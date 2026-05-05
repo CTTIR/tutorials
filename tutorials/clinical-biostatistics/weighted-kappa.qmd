@@ -1,0 +1,71 @@
+---
+title: Weighted Kappa
+date: "2026-04-17"
+description: Ordinal inter-rater agreement with linear or quadratic weights
+categories:
+  - Clinical Biostatistics
+  - weighted-kappa
+  - ordinal
+  - agreement
+---
+
+## Introduction
+
+Weighted kappa extends Cohen's kappa to ordinal data by crediting partial agreement: near-miss disagreements (mild vs moderate) weigh less than dramatic disagreements (mild vs severe). It is the standard inter-rater agreement statistic for Likert-type scales, radiology grading, and symptom-severity ratings.
+
+## Prerequisites
+
+Cohen's kappa; ordinal measurement.
+
+## Theory
+
+$$\kappa_w = 1 - \frac{\sum_{ij} w_{ij} f_{ij}}{\sum_{ij} w_{ij} e_{ij}},$$
+where $w_{ij}$ is the disagreement weight between category $i$ and $j$, $f_{ij}$ observed cell frequency, $e_{ij}$ expected under chance.
+
+**Weight schemes**:
+- **Linear** $w_{ij} = |i - j| / (k - 1)$ for $k$ categories.
+- **Quadratic** $w_{ij} = (i - j)^2 / (k - 1)^2$ -- more forgiving of near-miss disagreements.
+
+Quadratic is most common for multi-category ordinal scales.
+
+## Assumptions
+
+Category ordering is meaningful and equally spaced; two raters; independent ratings.
+
+## R Implementation
+
+```r
+library(psych)
+
+set.seed(2026)
+n <- 100
+# Two raters on a 5-point ordinal scale
+rater1 <- sample(1:5, n, replace = TRUE,
+                 prob = c(0.1, 0.2, 0.4, 0.2, 0.1))
+# Rater 2 agrees within +-1 with prob 0.8, otherwise random
+rater2 <- ifelse(rbinom(n, 1, 0.8) == 1,
+                 pmax(1, pmin(5, rater1 + sample(-1:1, n, replace = TRUE))),
+                 sample(1:5, n, replace = TRUE))
+
+cohen.kappa(cbind(rater1, rater2))$kappa    # unweighted
+cohen.kappa(cbind(rater1, rater2),
+            w = "squared")$weighted.kappa
+cohen.kappa(cbind(rater1, rater2),
+            w = "linear")$weighted.kappa
+```
+
+## Output & Results
+
+Unweighted kappa (~0.35), linear-weighted (~0.55), quadratic-weighted (~0.70); quadratic weights reward near-miss agreement more heavily.
+
+## Interpretation
+
+"Weighted kappa with quadratic weights was 0.72 (95 % CI 0.62-0.82), consistent with substantial agreement; unweighted kappa of 0.35 understates agreement by not crediting near-miss ratings."
+
+## Practical Tips
+
+- Use quadratic weights for most clinical ordinal scales; they reflect that 1-step disagreements matter far less than 3-step.
+- Linear weights are appropriate when category spacing is more uniform-linear.
+- Always specify the weight scheme when reporting weighted kappa.
+- For continuous data with measurement error, use the intraclass correlation coefficient (ICC) instead.
+- Quadratic-weighted kappa equals ICC(3, 1) under certain assumptions -- the two methods converge for ordinal Likert scales.

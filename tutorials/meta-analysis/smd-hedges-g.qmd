@@ -1,0 +1,76 @@
+---
+title: "Standardised Mean Difference: Hedges' g"
+date: "2026-04-17"
+description: Small-sample-corrected standardised effect size for continuous outcomes
+categories:
+  - Meta-Analysis
+  - hedges-g
+  - smd
+  - effect-size
+---
+
+## Introduction
+
+Hedges' $g$ is the small-sample-corrected standardised mean difference (SMD), the preferred effect-size metric for meta-analysis of continuous outcomes. Cohen's $d$ — the unstandardised SMD — over-estimates the population effect in small samples; Hedges' correction factor $J$ de-biases it. The two are nearly identical for studies with combined sample size above 20 or so, but $g$ should be used routinely whenever any included study is small.
+
+## Prerequisites
+
+A working understanding of standardised effect sizes (Cohen's $d$), pooled standard deviation, and the bias of $d$ in small samples.
+
+## Theory
+
+Cohen's $d$ is
+
+$$d = \frac{\bar X_1 - \bar X_2}{s_{\mathrm{pool}}}, \qquad s_{\mathrm{pool}} = \sqrt{\frac{(n_1 - 1) s_1^2 + (n_2 - 1) s_2^2}{n_1 + n_2 - 2}}.$$
+
+Hedges' correction is $J = 1 - 3 / (4 \, \mathrm{df} - 1)$ (with $\mathrm{df} = n_1 + n_2 - 2$), and $g = J d$. The correction is close to 1 for $\mathrm{df} > 20$ but can be substantially below 1 for very small studies. The variance of $g$ is
+
+$$\mathrm{Var}(g) = J^2 \!\left[\frac{n_1 + n_2}{n_1 n_2} + \frac{d^2}{2(n_1 + n_2)}\right].$$
+
+## Assumptions
+
+Outcomes are approximately Normal within groups; group variances are approximately equal (use `SMDH` for unequal-variance variants); independent observations.
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+n <- 10                  # small study
+x1 <- rnorm(n, mean = 1, sd = 1)
+x2 <- rnorm(n, mean = 0, sd = 1)
+
+# Compute g and its variance via metafor
+es <- escalc(measure = "SMD",
+             m1i = mean(x1), sd1i = sd(x1), n1i = n,
+             m2i = mean(x2), sd2i = sd(x2), n2i = n)
+es
+
+# Manual computation
+s_pool <- sqrt(((n - 1) * var(x1) + (n - 1) * var(x2)) / (2 * n - 2))
+d <- (mean(x1) - mean(x2)) / s_pool
+J <- 1 - 3 / (4 * (2 * n - 2) - 1)
+c(d = d, g = d * J)
+```
+
+## Output & Results
+
+`escalc(measure = "SMD")` returns Hedges' $g$ (in the `yi` column) and its variance (`vi`) per study, ready for inverse-variance meta-analysis. The manual calculation confirms the $J$-correction; for $n_1 = n_2 = 10$, $J \approx 0.92$, reducing $d \approx 1.04$ to $g \approx 0.96$.
+
+## Interpretation
+
+A reporting sentence: "Hedges' $g$ for the simulated small study was 0.92 (95 % CI 0.01 to 1.83), corresponding to a large effect by Cohen's benchmarks ($d = 0.5$ medium, $d = 0.8$ large); the small-sample correction reduced the raw SMD from 1.04 to 0.92, reflecting the upward bias inherent in $d$ for small studies." Always state the use of $g$ vs $d$, especially when sample sizes are small.
+
+## Practical Tips
+
+- Always use Hedges' $g$ rather than Cohen's $d$ for meta-analysis when any included study has $n_1 + n_2 < 20$; the bias correction is meaningful in that range.
+- `metafor::escalc(measure = "SMD")` computes $g$ and its variance in a single call; this is the standard workflow.
+- For unequal variances (Levene's test rejects), use `measure = "SMDH"` which computes $g$ using a pooled SD based on the separate group SDs.
+- Report 95 % CIs alongside $g$; the effect size alone does not convey precision, and meta-analysis weighting depends on the precision.
+- For pre-post or within-subject designs, use SMCR or SMCC variants in `metafor::escalc()`; they account for the within-subject correlation that ordinary SMD ignores.
+- For binary outcomes, switch to log-odds ratio or risk ratio; SMD is for continuous outcomes only.
+
+## R Packages Used
+
+`metafor::escalc()` and `rma()` for the canonical effect-size and meta-analysis workflow; `meta::metacont()` for an alternative interface with continuous-outcome conventions; `metan` for a tidymodels-flavoured wrapper; `dmetar` for additional meta-analysis tools and visualisations.

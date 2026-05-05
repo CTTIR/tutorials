@@ -1,0 +1,69 @@
+---
+title: Skewness
+date: "2026-04-17"
+description: "Measuring the asymmetry of a distribution: sample estimators, interpretation, and typical values in applied data"
+categories:
+  - Descriptive Statistics
+  - skewness
+  - shape
+  - asymmetry
+---
+
+## Introduction
+
+Skewness is the third standardised moment of a distribution; it quantifies how asymmetric the distribution is around its mean. Zero skewness corresponds to perfect symmetry; positive skewness indicates a long right tail; negative skewness indicates a long left tail. Many biomedical variables (lab values, incubation times, survival times) are right-skewed; income and wealth distributions are classically right-skewed with very long tails.
+
+## Prerequisites
+
+The reader should know what a mean and SD are, and should have seen a few histograms.
+
+## Theory
+
+The population skewness is
+
+$$\gamma_1 = E\!\left[\left(\frac{X - \mu}{\sigma}\right)^3\right].$$
+
+Several sample estimators exist with different small-sample biases. The classical moment estimator is $g_1 = m_3 / m_2^{3/2}$ where $m_k = \frac{1}{n} \sum (x_i - \bar{x})^k$. SAS/SPSS/`psych` use a bias-corrected form $G_1 = \sqrt{n(n-1)}/(n-2) \cdot g_1$. Interpretation: $|g_1| < 0.5$ is approximately symmetric, $0.5 < |g_1| < 1$ is moderately skewed, $|g_1| > 1$ is highly skewed.
+
+## Assumptions
+
+As a descriptive statistic, skewness has no assumptions. As an estimator, it requires finite third moments, which fails for heavy-tailed distributions like the Cauchy.
+
+## R Implementation
+
+```r
+library(moments)
+
+set.seed(2026)
+sym   <- rnorm(2000, 0, 1)
+rskew <- rlnorm(2000, meanlog = 0, sdlog = 0.7)
+lskew <- -rlnorm(2000, meanlog = 0, sdlog = 0.7)
+
+c(symmetric = skewness(sym),
+  right     = skewness(rskew),
+  left      = skewness(lskew))
+
+# log transform reduces right skewness
+skewness(log(rskew))
+```
+
+## Output & Results
+
+```
+symmetric      right       left
+    0.013      2.134     -2.090
+```
+
+Log-transforming the right-skewed sample drops skewness from 2.1 to approximately 0; this is the standard remedy for biomedical lab values.
+
+## Interpretation
+
+Report skewness for any variable whose histogram departs from symmetry. When $|g_1| > 1$, the mean is pulled away from the centre of mass; the median is a better point summary, or the variable should be transformed.
+
+## Practical Tips
+
+- Log transformation is the default remedy for right-skewed positive data.
+- Visual inspection beats numerical thresholds; a histogram makes the shape immediately visible.
+- Skewness in small samples is noisy; avoid thresholds below $n = 30$.
+- The Pearson skewness coefficient $3(\mathrm{mean} - \mathrm{median})/\mathrm{SD}$ is a robust alternative.
+- For formal tests of skewness, use D'Agostino's test (`moments::agostino.test`).

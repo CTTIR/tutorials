@@ -1,0 +1,73 @@
+---
+title: Cell-Type Annotation
+date: "2026-04-17"
+description: Assigning cell types to clusters using reference-based and manual methods
+categories:
+  - Bioinformatics
+  - scrnaseq
+  - annotation
+  - SingleR
+---
+
+## Introduction
+
+After clustering, each cluster must be labelled with a biological identity: T cell, B cell, macrophage, tumour epithelial cell, neuron subtype. Cell-type annotation is the bridge between unsupervised clustering and biological interpretation. Two main approaches compete: reference-based methods (SingleR, Azimuth, scType) that score each cell or cluster against curated reference profiles, and manual annotation that inspects marker genes against literature and reference atlases.
+
+## Prerequisites
+
+A working understanding of clustered scRNA-seq output, marker-gene analysis, and the available cell-type reference atlases (Human Cell Atlas, Tabula Muris, Monaco Immune, ENCODE).
+
+## Theory
+
+**SingleR** computes per-cell Spearman correlations against each reference profile over reference-defined marker genes; cells are labelled with the highest-scoring reference label. A pruning step removes calls below a confidence threshold. The method is fast, automated, and produces both per-cell and per-cluster summaries.
+
+**Azimuth** uses a transfer-learning approach: it projects query cells into the reference's latent space (typically a PCA + harmony-corrected representation) and transfers labels via nearest-neighbour matching. It is the modern Seurat-team-recommended approach when a curated reference atlas exists for the tissue.
+
+**Manual annotation** inspects each cluster's top marker genes against curated marker lists (canonical T-cell markers: CD3D, CD3E; B cells: CD19, MS4A1; macrophages: CD68, CD163). Cluster-by-cluster manual annotation is essential when references are missing or the tissue is non-standard.
+
+## Assumptions
+
+The reference atlas matches the tissue and species of interest; cell types present in the data are represented in the reference (rare or unusual states may be absent and require manual annotation).
+
+## R Implementation
+
+```r
+library(SingleR); library(celldex)
+
+# Reference: built-in Monaco immune cells
+ref <- MonacoImmuneData()
+
+# Toy query: simulate a cell-by-gene expression matrix
+set.seed(2026)
+query <- matrix(rpois(200 * 100, lambda = 2), 200, 100)
+rownames(query) <- sample(rownames(ref), 200)   # match gene names
+colnames(query) <- paste0("c", 1:100)
+
+pred <- SingleR(test = query, ref = ref,
+                labels = ref$label.main,
+                de.method = "wilcox")
+
+table(pred$labels)
+head(pred[, c("labels", "pruned.labels")])
+```
+
+## Output & Results
+
+`SingleR()` returns per-cell predicted labels, pruned labels (high-confidence subset), and the underlying per-reference-label scores. Summary tables show predicted cell-type counts; `pruneScores()` allows fine-tuning of the confidence threshold.
+
+## Interpretation
+
+A reporting sentence: "SingleR with the Monaco Immune reference assigned 62 % of cells to canonical PBMC types (T cells, B cells, NK cells, monocytes, dendritic cells); pruning removed 8 % low-confidence calls. The remaining 30 % unannotated cells were tumour-associated stromal cells confirmed manually using ACTA2, COL1A1, and CD90 markers." Always report the reference, pruning rate, and manual validation of automated calls.
+
+## Practical Tips
+
+- Use a reference matching the tissue source — never annotate skin cells against a blood reference; the cell types simply do not match.
+- Report pruned labels rather than raw labels; pruned labels exclude low-confidence calls that often reflect intermediate or unusual states.
+- For novel tissues or rare states, manual annotation outperforms reference-based methods; the references cannot label what they have not seen.
+- Azimuth (`SeuratDisk::LoadH5Seurat` + `MapQuery`) is the modern Seurat alternative; it handles batch differences between query and reference more gracefully than SingleR.
+- Cross-validate automated cluster labels against marker gene expression; a cluster labelled "T cell" by SingleR but without CD3D/CD3E expression is suspect and warrants investigation.
+- For very granular reference atlases (Human Cell Atlas with 100+ cell types), use cluster-level SingleR rather than per-cell to reduce noise.
+
+## R Packages Used
+
+`SingleR` for the canonical reference-based annotation; `celldex` for built-in reference datasets (Monaco, Encode, Hematopoietic Cell Atlas, etc.); `Azimuth` for Seurat-flavoured transfer learning; `scType` for marker-database-based annotation; `clustifyr` for an alternative reference-based approach.

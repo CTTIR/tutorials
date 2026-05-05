@@ -1,0 +1,74 @@
+---
+title: Cluster-Randomised Trials
+date: "2026-04-17"
+description: "Randomisation of clusters (clinics, schools) rather than individuals"
+categories:
+  - Clinical Biostatistics
+  - cluster-rct
+  - icc
+  - design-effect
+---
+
+## Introduction
+
+Cluster-randomised trials (CRTs) randomise groups -- clinics, schools, villages -- rather than individuals. Used when an intervention must be delivered at cluster level (implementation, educational campaign) or when contamination between individuals would bias a standard RCT. Clustering inflates variance and must be accounted for in sample-size and analysis.
+
+## Prerequisites
+
+Intraclass correlation (ICC); mixed-effects models.
+
+## Theory
+
+**Design effect**: $DE = 1 + (m - 1) \rho$, where $m$ is average cluster size and $\rho$ is the ICC. Effective sample size = actual $N$ / $DE$. Sample-size calculations inflate by $DE$ relative to individually-randomised trials.
+
+Analysis accounts for clustering via mixed-effects models (random cluster intercept) or GEE with cluster-robust SE.
+
+## Assumptions
+
+Clusters are exchangeable; intervention is applied uniformly within cluster; ICC estimate from pilot / literature is approximately correct.
+
+## R Implementation
+
+```r
+library(lme4); library(lmerTest)
+
+set.seed(2026)
+# 20 clusters, avg 15 patients per cluster
+n_clusters <- 20
+m_per <- 15
+cluster <- factor(rep(1:n_clusters, each = m_per))
+arm     <- factor(rep(c("ctrl", "trt"), each = (n_clusters/2) * m_per))
+clust_re <- rep(rnorm(n_clusters, 0, 0.8), each = m_per)
+
+y <- clust_re + ifelse(arm == "trt", 0.5, 0) +
+     rnorm(n_clusters * m_per, 0, 1)
+
+df <- data.frame(cluster, arm, y)
+fit <- lmer(y ~ arm + (1 | cluster), data = df)
+summary(fit)$coefficients
+
+# Empirical ICC
+vc <- as.data.frame(VarCorr(fit))
+icc <- vc$vcov[1] / sum(vc$vcov)
+cat("Estimated ICC:", round(icc, 3), "\n")
+```
+
+## Output & Results
+
+Cluster-random-effect-adjusted treatment effect (~0.5) with SE accounting for clustering; ICC estimate ~0.4.
+
+## Interpretation
+
+"Cluster-randomised analysis estimated a 0.49 SD improvement (95 % CI 0.21-0.77, p = 0.001), accounting for the intra-cluster correlation of 0.42 via a random-cluster intercept."
+
+## Practical Tips
+
+- Even a small ICC (0.01) inflates required sample size substantially; budget accordingly.
+- Pilot data or literature usually provides ICC; report both the planning value and the observed value.
+- For few clusters ($< 30$), mixed-effects SE underestimates; use Kenward-Roger or Satterthwaite DF.
+- Report per CONSORT extension for cluster trials; include number of clusters, cluster sizes, ICC.
+- Stratified or matched-pair cluster designs improve balance when cluster count is small.
+
+## Reporting
+
+A defensible cluster-trial report names the unit of randomisation, the unit of analysis, the planning ICC, and the achieved ICC, and explains how the analytical model handles their potential mismatch. Where the number of clusters is below thirty, state which small-sample correction was used for standard errors and degrees of freedom, since naive likelihood-based intervals are anti-conservative in this regime. If clusters varied substantially in size, mention whether weights were applied and how missing clusters or partial cluster dropout were handled, because differential cluster attrition can bias the estimated treatment effect even when individual-level missingness is modest.

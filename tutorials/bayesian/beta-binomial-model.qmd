@@ -1,0 +1,76 @@
+---
+title: The Beta-Binomial Model
+date: "2026-04-17"
+description: Conjugate Bayesian inference for a binomial proportion with a Beta prior
+categories:
+  - Bayesian Statistics
+  - beta-binomial
+  - conjugate
+  - proportion
+---
+
+## Introduction
+
+The beta-binomial conjugate pair is the textbook entry point to Bayesian inference: a Beta prior on a probability combined with a binomial likelihood yields a Beta posterior whose parameters are obtained by adding successes to one shape parameter and failures to the other. The closed form makes the entire workflow — prior elicitation, posterior, credible interval, posterior predictive — tractable on a calculator. It is also the conceptual backbone for hierarchical models of proportions, which use a Beta prior at the population level to share strength across many groups.
+
+## Prerequisites
+
+Familiarity with the Beta distribution as a flexible density on $[0, 1]$, the binomial likelihood for independent Bernoulli trials, and the basic mechanics of Bayesian updating.
+
+## Theory
+
+With prior $\theta \sim \mathrm{Beta}(a, b)$ and likelihood $X \sim \mathrm{Binomial}(n, \theta)$, the posterior is
+
+$$\theta \mid x \sim \mathrm{Beta}(a + x, b + n - x).$$
+
+The shape parameters of the prior have a direct interpretation as pseudo-counts: $a$ pseudo-successes and $b$ pseudo-failures observed before the data arrived, so the prior effective sample size is $a + b$. The posterior mean is
+
+$$\mathbb E[\theta \mid x] = \frac{a + x}{a + b + n},$$
+
+a weighted average of the prior mean $a / (a+b)$ and the sample proportion $x / n$, with weights determined by the prior pseudo-count and the actual sample size. Conjugacy also gives closed-form expressions for the posterior variance, credible intervals, and the predictive distribution for future Bernoulli trials.
+
+## Assumptions
+
+Independent Bernoulli trials with a constant success probability $\theta$, a Beta prior plausible enough that its tails do not exclude reasonable values, and a sample size that is fixed in advance — informative censoring or stopping rules invalidate the binomial likelihood.
+
+## R Implementation
+
+```r
+# Prior Beta(2, 2) -- weakly informative around 0.5
+# Data: 15 successes in 25 trials
+a <- 2; b <- 2
+x <- 15; n <- 25
+
+post_a <- a + x
+post_b <- b + n - x
+
+c(prior_mean = a / (a + b),
+  sample_prop = x / n,
+  posterior_mean = post_a / (post_a + post_b),
+  ci95 = qbeta(c(0.025, 0.975), post_a, post_b))
+
+theta <- seq(0, 1, length.out = 400)
+plot(theta, dbeta(theta, a, b), type = "l", col = "grey",
+     ylab = "Density", main = "Beta-Binomial update")
+lines(theta, dbeta(theta, post_a, post_b), col = "steelblue", lwd = 2)
+```
+
+## Output & Results
+
+A short numeric vector with the prior mean (0.50), the sample proportion (0.60), the posterior mean (0.59), and the 95 % equal-tailed credible interval (0.40 to 0.76). The prior-versus-posterior plot makes the pull of the prior visible: with only 25 trials the posterior shifts noticeably toward the data but retains the curvature of the prior.
+
+## Interpretation
+
+A reporting sentence: "A Beta(2, 2) prior combined with 15 successes in 25 trials yielded a Beta(17, 12) posterior with mean 0.59 (95 % credible interval 0.40 to 0.76); the data have moved the posterior $0.09$ above the prior mean while excluding values below 0.40 with 97.5 % probability." Always disclose the prior in the methods section so that readers can see how much shrinkage it imposes.
+
+## Practical Tips
+
+- $\mathrm{Beta}(1, 1)$ is the uniform reference prior; $\mathrm{Beta}(0.5, 0.5)$ is Jeffreys; both keep posterior inference data-driven.
+- For genuinely informative priors, set $a + b$ equal to the prior effective sample size you can defend (e.g. results from a prior trial of size 20 with proportion 0.7 give $\mathrm{Beta}(14, 6)$).
+- Use `qbeta()` for credible intervals and `pbeta()` for posterior tail probabilities; HPD intervals come from `HDInterval::hdi(qbeta(p, post_a, post_b))` evaluated on a grid.
+- For multi-category outcomes, generalise to the Dirichlet–multinomial, which inherits the conjugate structure on a probability simplex.
+- When the prior is contested, report a sensitivity analysis across at least $\mathrm{Beta}(1, 1)$, $\mathrm{Beta}(2, 2)$, and one informative pair; if the conclusion holds across all three, the result is robust to prior choice.
+
+## R Packages Used
+
+Base R suffices for the conjugate update (`dbeta`, `pbeta`, `qbeta`, `rbeta`); `bayestestR::point_estimate()` and `HDInterval::hdi()` add tidy summaries and HPD intervals when a more polished workflow is needed.

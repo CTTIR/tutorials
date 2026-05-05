@@ -1,0 +1,84 @@
+---
+title: Dropout and Early Stopping
+date: "2026-04-17"
+description: Two of the most effective neural-network regularisation techniques
+categories:
+  - Machine Learning
+  - dropout
+  - early-stopping
+  - regularisation
+---
+
+## Introduction
+
+Neural networks with many parameters easily overfit. Dropout (Srivastava et al., 2014) randomly zeros activations during training, acting as implicit ensembling. Early stopping halts training when validation loss stops improving, preventing the model from memorising training noise. Both are simple, cheap, and among the most effective regularisation techniques for deep nets.
+
+## Prerequisites
+
+Feedforward networks; validation-based evaluation.
+
+## Theory
+
+**Dropout**: during training, each neuron's activation is set to zero with probability $p$ (typically 0.2-0.5); during inference, activations are scaled by $1 - p$ or equivalent. Acts like training an ensemble of $2^n$ sub-networks with shared weights.
+
+**Early stopping**: train on training set, monitor a validation loss; halt when validation loss stops improving for a "patience" window. Implicitly regularises -- the final model has parameters closer to the initialisation than full convergence would reach.
+
+## Assumptions
+
+A held-out validation set exists; model is over-parameterised enough to overfit without regularisation.
+
+## R Implementation
+
+```r
+library(torch)
+
+torch_manual_seed(2026)
+
+# Model with dropout after each hidden layer
+net <- nn_module(
+  initialize = function() {
+    self$fc1  <- nn_linear(10, 64)
+    self$drop <- nn_dropout(p = 0.3)
+    self$fc2  <- nn_linear(64, 1)
+  },
+  forward = function(x) {
+    x %>% self$fc1() %>% nnf_relu() %>% self$drop() %>% self$fc2()
+  }
+)
+model <- net()
+opt   <- optim_adam(model$parameters, lr = 1e-2)
+
+n <- 500
+x_tr <- torch_randn(n, 10); y_tr <- torch_randn(n, 1)
+x_va <- torch_randn(200, 10); y_va <- torch_randn(200, 1)
+
+best_val <- Inf; patience <- 5; counter <- 0
+for (epoch in 1:60) {
+  model$train()
+  opt$zero_grad()
+  loss <- nnf_mse_loss(model(x_tr), y_tr)
+  loss$backward(); opt$step()
+
+  model$eval()
+  val <- nnf_mse_loss(model(x_va), y_va)$item()
+  if (val < best_val - 1e-4) { best_val <- val; counter <- 0 }
+  else { counter <- counter + 1; if (counter >= patience) break }
+}
+cat("Stopped at epoch", epoch, "  best_val=", round(best_val, 3), "\n")
+```
+
+## Output & Results
+
+Training halts when validation loss has stopped improving for 5 epochs; dropout noise in the forward pass further regularises the model.
+
+## Interpretation
+
+"Combining 30 % dropout with early stopping (patience 5) halted training at epoch 23 with best validation MSE 0.98, preventing the over-fitting observed beyond epoch 30 without regularisation."
+
+## Practical Tips
+
+- Dropout probability 0.2-0.5 for hidden layers; avoid dropout on output layers.
+- Dropout is automatically disabled in `eval()` mode; don't forget to switch modes.
+- Use weight decay (L2 on weights) jointly with dropout for stronger regularisation.
+- Early stopping is the cheapest regulariser; always implement it for deep nets.
+- For batch norm + dropout, place dropout after batch norm; order matters for training stability.

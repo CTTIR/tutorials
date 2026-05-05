@@ -1,0 +1,68 @@
+---
+title: Tau-Squared Estimation
+date: "2026-04-17"
+description: "Estimators of between-study variance: DL, REML, PM, SJ, EB"
+categories:
+  - Meta-Analysis
+  - tau-squared
+  - REML
+  - DerSimonian-Laird
+---
+
+## Introduction
+
+The random-effects meta-analysis requires an estimate of $\tau^2$, the between-study variance. Several estimators exist with different bias-variance trade-offs; the choice affects pooled estimates, CIs, and downstream inference. REML is the modern default; DerSimonian-Laird (DL) the historical default.
+
+## Prerequisites
+
+Random-effects meta-analysis; method-of-moments vs maximum likelihood.
+
+## Theory
+
+Common estimators:
+- **DerSimonian-Laird (DL)**: method-of-moments; fastest, historically default.
+- **REML (Restricted Maximum Likelihood)**: likelihood-based, generally less biased than DL; modern default.
+- **Paule-Mandel (PM)**: iterative method-of-moments; often similar to REML.
+- **Sidik-Jonkman (SJ)**: analytic, robust to model misspecification.
+- **Empirical Bayes (EB)**: iterative Bayes-style estimator.
+
+DL systematically underestimates $\tau^2$ under moderate heterogeneity; REML is close to unbiased.
+
+## Assumptions
+
+True effects are drawn from a distribution (typically normal) with common variance $\tau^2$; within-study variances are known.
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+k <- 10
+n_per <- sample(30:200, k, replace = TRUE)
+true_theta <- rnorm(k, 0.3, 0.25)
+yi <- true_theta + rnorm(k, 0, sqrt(4 / n_per))
+vi <- 4 / n_per
+
+methods <- c("DL", "REML", "PM", "SJ", "EB")
+tau2_est <- sapply(methods, function(m) {
+  rma(yi, vi, method = m)$tau2
+})
+round(tau2_est, 3)
+```
+
+## Output & Results
+
+$\tau^2$ estimates under the five methods. DL typically gives the smallest value; REML, PM, SJ, EB are often close.
+
+## Interpretation
+
+"$\tau^2$ estimates ranged from 0.041 (DL) to 0.061 (SJ); we report REML ($\tau^2 = 0.055$, 95 % CI 0.012-0.142) as the primary estimator following modern meta-analysis recommendations."
+
+## Practical Tips
+
+- Use REML by default; it is less biased than DL under most conditions.
+- Hartung-Knapp adjustment (`test = "knha"` in metafor) improves CI coverage, especially with few studies.
+- Compare multiple estimators as sensitivity; if DL and REML disagree substantially, heterogeneity is likely real.
+- Report 95 % CI on $\tau^2$ (profile likelihood or Q-profile methods) alongside the point estimate.
+- For very few studies ($k < 5$), any $\tau^2$ estimate is unreliable; use Bayesian methods with informative priors.

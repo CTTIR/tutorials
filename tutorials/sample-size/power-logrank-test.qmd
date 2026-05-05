@@ -1,0 +1,68 @@
+---
+title: Power for the Log-Rank Test
+date: "2026-04-17"
+description: Event-based sample size for Kaplan-Meier comparisons via the log-rank test
+categories:
+  - "Sample Size & Power"
+  - power
+  - log-rank
+  - events
+  - accrual
+---
+
+## Introduction
+
+The log-rank test is the standard non-parametric test of equality of two (or more) survival functions and the most widely used inference tool in survival analysis. A central feature of its power calculation distinguishes it from sample-size analyses for $t$-tests, ANOVAs, or proportion comparisons: power depends on the total number of observed events across the two groups, not on the sample size directly. Event-based sample-size planning therefore separates the recruitment question (how many subjects to enrol) from the inferential question (how many events to observe), and links them through assumptions about event rates, accrual time, and follow-up duration. This decoupling is essential to realistic planning of survival trials.
+
+## Prerequisites
+
+A working understanding of the log-rank test, the Kaplan-Meier survival estimator, the proportional-hazards assumption, and the relationship between hazard ratio, event rate, and follow-up time.
+
+## Theory
+
+Under the alternative hypothesis $\mathrm{HR} = \theta$ with equal allocation, the required total number of events is
+
+$$D = \frac{4 (z_{1-\alpha/2} + z_{1-\beta})^2}{\log^2 \theta}.$$
+
+For unequal allocation with arm fractions $\pi_1, \pi_2$ summing to one, the multiplier 4 is replaced by $1/(\pi_1 \pi_2)$. The required sample size $n$ depends on the event probability over the trial duration, which in turn depends on the underlying hazard rates, the planned accrual period, and the post-accrual follow-up period. The relationship is captured in standard formulas (Schoenfeld, Freedman, or Lakatos) and implemented in dedicated power-analysis packages.
+
+## Assumptions
+
+The proportional-hazards assumption holds (approximately) over the trial duration, censoring is independent and non-informative, the accrual pattern and follow-up duration are pre-specified, and the underlying hazard rates are reasonably well-estimated from prior data.
+
+## R Implementation
+
+```r
+library(powerSurvEpi); library(gsDesign)
+
+D <- 4 * (qnorm(0.975) + qnorm(0.80))^2 / log(0.65)^2
+D
+
+ssizeCT.default(power = 0.80, k = 1,
+                pE = 0.40, pC = 0.55,
+                RR = 0.65, alpha = 0.05)
+
+gs <- gsDesign(k = 3, test.type = 2, alpha = 0.025, beta = 0.20)
+gsBoundSummary(gs)
+```
+
+## Output & Results
+
+The closed-form calculation gives roughly 88 events required to detect HR = 0.65 with 80 % power at two-sided $\alpha = 0.05$. With assumed event rates of 40 % in the experimental arm and 55 % in the control arm over the planned follow-up window, this corresponds to roughly 185 subjects (just under 100 per arm). The group-sequential design extends this with multiple looks and appropriate alpha-spending.
+
+## Interpretation
+
+A reporting sentence: "The trial requires 88 events to detect a hazard ratio of 0.65 with 80 % power at two-sided $\alpha = 0.05$ under the log-rank test. Assuming 24 months of uniform accrual and 12 months of additional follow-up, with expected event rates of 55 % (control) and 40 % (treatment) over the trial duration, the planned enrolment is 180 subjects (90 per arm). The protocol triggers the primary analysis when 88 events have been observed, regardless of calendar time, ensuring the planned power is achieved." Always state the event-driven analysis trigger.
+
+## Practical Tips
+
+- Power depends on the total number of events observed, not on the number of subjects enrolled; plan accrual and follow-up to deliver the required event count, and trigger the primary analysis when that count is reached rather than at a fixed calendar time. This is why survival trials report "event-driven" stopping rules.
+- Non-proportional hazards (delayed effects, crossing survival curves, time-varying treatment effects) reduce the log-rank test's power; Fleming-Harrington weighted log-rank tests improve detection of early or late differences and can be pre-specified for trials where non-proportionality is expected.
+- For interim monitoring, use alpha-spending group-sequential designs (`gsDesign`, `rpact`) with information-fraction-based analysis timing — typically every $D/4$ events for a four-stage design — rather than fixed calendar-time analyses.
+- Report the assumed accrual pattern and expected follow-up duration explicitly; they determine the event yield from a given enrolment target, and trial outcomes vary substantially when these assumptions are wrong.
+- For competing risks, the log-rank test is not the appropriate inferential tool; use the Fine-Gray subdistribution-hazard test and its corresponding power-analysis tools (`cmprsk`, `crrSC::power.crr()`).
+- Sensitivity analysis over a range of plausible hazard ratios is standard; protocols with a single point HR are increasingly flagged by reviewers, who expect a defensible bracket.
+
+## R Packages Used
+
+`powerSurvEpi::ssizeCT.default()` and `powerSurvEpi::powerCT.default()` for canonical log-rank sample-size and power calculations; `gsDesign` and `rpact` for group-sequential survival-trial design with alpha-spending; `nph` for non-proportional-hazards weighted log-rank power; `Hmisc::cpower()` for an alternative interface; `survival::survdiff()` for log-rank analysis after data collection.

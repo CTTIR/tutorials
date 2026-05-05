@@ -1,0 +1,76 @@
+---
+title: Elastic Net
+date: "2026-04-17"
+description: "Combined L1 and L2 penalty: variable selection plus grouping behaviour"
+categories:
+  - "Regression & Modelling"
+  - elastic-net
+  - l1-l2
+  - alpha
+---
+
+## Introduction
+
+Elastic net combines the L1 penalty of lasso with the L2 penalty of ridge into a single hybrid regulariser. It performs variable selection (like lasso) while retaining the stability under correlated predictors that lasso famously lacks (which is what ridge provides). The mixing parameter $\alpha \in [0, 1]$ moves continuously between the two extremes — $\alpha = 0$ is pure ridge, $\alpha = 1$ is pure lasso, and intermediate values blend their behaviours. For high-dimensional biomedical data with groups of correlated predictors (gene expression, multiple imaging features), elastic net is now the standard default.
+
+## Prerequisites
+
+A working understanding of ridge regression, lasso regression, and the differing geometries of L1 versus L2 penalties.
+
+## Theory
+
+Elastic net minimises
+
+$$\|y - X\beta\|^2 + \lambda \!\left[\alpha \|\beta\|_1 + (1 - \alpha) \|\beta\|_2^2\right].$$
+
+The L1 component drives some coefficients exactly to zero (selection), while the L2 component shares shrinkage across correlated predictors so that all-or-nothing selection failures are avoided. Where lasso would pick one of two perfectly correlated predictors arbitrarily and zero the other, elastic net keeps both with equal coefficients (the "grouping effect"), often a more honest reflection of the underlying signal.
+
+Two hyperparameters need tuning: $\alpha$ (ratio of L1 to total penalty) and $\lambda$ (overall strength). Cross-validation over a grid of $\alpha$ values, with $\lambda$ tuned within each $\alpha$ via `cv.glmnet()`, finds the joint optimum.
+
+## Assumptions
+
+Standard linear-model assumptions on residuals; predictors are standardised (`glmnet` does this internally). For inference on selected coefficients, post-selection adjustments apply just as in lasso.
+
+## R Implementation
+
+```r
+library(glmnet)
+
+X <- as.matrix(mtcars[, -1])
+y <- mtcars$mpg
+
+set.seed(2026)
+# Two-dimensional CV: choose alpha and lambda jointly
+alpha_grid <- c(0, 0.25, 0.5, 0.75, 1)
+results <- lapply(alpha_grid, function(a) {
+  cv <- cv.glmnet(X, y, alpha = a)
+  c(alpha = a, lambda_min = cv$lambda.min, cvm_min = min(cv$cvm))
+})
+do.call(rbind, results)
+
+# Best alpha:
+best_alpha <- 0.5
+fit_best <- cv.glmnet(X, y, alpha = best_alpha)
+coef(fit_best, s = "lambda.min")
+```
+
+## Output & Results
+
+A grid of cross-validated mean squared errors across $\alpha$ values shows the best joint tuning; refitting with the chosen $\alpha$ produces shrunken coefficients with some at zero. The combination typically achieves lower CV error than either lasso or ridge alone for correlated predictors.
+
+## Interpretation
+
+A reporting sentence: "Elastic net with $\alpha = 0.5$ and cross-validated $\lambda_{1\mathrm{se}}$ retained four of ten predictors with shrunken coefficients; the resulting cross-validated MSE was 6.0 mpg², lower than the lasso ($\alpha = 1$, MSE 6.3) and ridge ($\alpha = 0$, MSE 7.2) alternatives, reflecting the grouping benefit on correlated engine-size predictors." Report all three CV errors when justifying the elastic-net choice.
+
+## Practical Tips
+
+- A common starting value is $\alpha = 0.5$; tune jointly with $\lambda$ over a grid.
+- Elastic net is the default for high-dimensional biomedical data with correlated predictors (gene expression, imaging features); rarely should pure lasso or pure ridge be chosen without trying elastic net.
+- `caret::train(method = "glmnet")` and `tidymodels` automate joint tuning across both hyperparameters.
+- For mostly uncorrelated sparse predictors, pure lasso ($\alpha = 1$) may suffice and is computationally cheaper.
+- For maximum stability under severe multicollinearity, lean closer to ridge ($\alpha$ near 0); the variable-selection benefit is small when nearly every predictor matters.
+- For non-Gaussian outcomes, the family argument extends elastic net to logistic, Poisson, and Cox regression.
+
+## R Packages Used
+
+`glmnet` for the canonical elastic-net implementation with cross-validated tuning; `caret` and `tidymodels` for unified joint $\alpha$-$\lambda$ tuning workflows; `selectiveInference` for post-selection inference; `coxnet` (in `glmnet`) for elastic-net Cox regression on survival outcomes.

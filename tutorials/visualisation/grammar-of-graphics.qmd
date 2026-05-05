@@ -1,0 +1,85 @@
+---
+title: The Grammar of Graphics
+date: "2026-04-17"
+description: "Understanding ggplot2 as a layered grammar: data, mappings, geoms, stats, scales, coordinates, facets, and themes"
+categories:
+  - Data Visualisation
+  - ggplot2
+  - grammar-of-graphics
+  - visualisation
+  - layered-graphics
+---
+
+## Introduction
+
+`ggplot2` is the dominant plotting system in R because it is built on a principled grammar rather than an ad-hoc collection of plot types. Every plot is constructed from the same seven building blocks: data, aesthetic mappings, geometric objects (geoms), statistical transformations, scales, coordinate systems, and faceting. Once the grammar is internalised, the vast library of plot types reduces to a small set of decisions in a common vocabulary.
+
+## Prerequisites
+
+The reader should know R vectors, data frames, and the `%>%` or `|>` pipe. No prior `ggplot2` knowledge is assumed.
+
+## Theory
+
+The layered grammar expresses every plot as a stack of layers added to a base specification. Each layer may override or inherit data and mappings from the base. The seven components:
+
+- **Data**: a data frame whose rows are observations and whose columns are variables.
+- **Mappings**: assignments from variables in the data to visual aesthetics (x-position, y-position, colour, size, shape, alpha, etc.).
+- **Geoms**: the geometric objects drawn on the plot -- points, lines, bars, polygons, text.
+- **Stats**: statistical transformations applied to the data before drawing (identity, binning for histograms, smoothing for trend lines, summary for means with error bars).
+- **Scales**: the functions that translate data values into aesthetic values -- a continuous scale for a numeric x-axis, a discrete ordinal scale for a factor colour mapping.
+- **Coord**: the coordinate system, usually Cartesian but occasionally polar, map projections, or fixed aspect ratios.
+- **Facets**: subplots defined by one or more categorical variables, laid out in rows, columns, or a grid.
+
+A plot is rendered by evaluating the stats on the data, mapping the results through the scales to aesthetic values, drawing the geoms in the chosen coordinate system, and replicating the whole thing across facets.
+
+## R Implementation
+
+The `palmerpenguins` package provides a tidy biological dataset for demonstration:
+
+```r
+library(ggplot2)
+library(palmerpenguins)
+
+ggplot(data = penguins,
+       mapping = aes(x = flipper_length_mm,
+                     y = body_mass_g,
+                     colour = species)) +
+  geom_point(alpha = 0.7, size = 2) +
+  geom_smooth(method = "lm", se = TRUE) +
+  scale_colour_brewer(palette = "Set2") +
+  facet_wrap(~ sex, nrow = 1) +
+  labs(x = "Flipper length (mm)",
+       y = "Body mass (g)",
+       colour = "Species",
+       title = "Body mass vs. flipper length by species and sex") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom")
+```
+
+This single plot uses all seven grammar components: the data is `penguins`, the mappings send `flipper_length_mm` to x, `body_mass_g` to y, and `species` to colour; two geoms (point and smooth) are layered; the `lm` stat fits a linear trend within each species; the Brewer scale converts the species factor to colours; the Cartesian coordinate system is implicit; faceting by sex produces a panel per level.
+
+## Output & Results
+
+The plot shows three colour-coded point clouds in each of two panels (one per sex). Linear trends are drawn within each species, and the Brewer "Set2" palette is colour-blind-safe. Axis labels and a title provide context; the legend is placed at the bottom to give maximum plot area to the data.
+
+## Interpretation
+
+The layered-grammar view turns plot design into a checklist:
+
+1. What data?
+2. Which variables go to which aesthetics?
+3. What geoms best display the relationship?
+4. Are any statistical transformations needed?
+5. Which scales (colour palette, axis transformation) best carry the intended comparison?
+6. Coordinate system -- usually Cartesian, but check.
+7. Faceting -- does the story separate across a grouping variable?
+
+Going through these questions in order produces plots that are intentional rather than stumbled into.
+
+## Practical Tips
+
+- Start with `geom_point()` and add layers; do not try to build the final plot in one shot.
+- Map aesthetics inside `aes()` when they depend on data; set them outside `aes()` (e.g. `colour = "steelblue"`) when they are constant.
+- Use colour-blind-safe palettes by default: `scale_colour_viridis_d()`, `scale_colour_brewer()`, or the `colorblindr` package.
+- Export figures with `ggsave(filename, width = 7, height = 5, dpi = 300)` to get publication-grade output. Most journals accept PDF or TIFF at 300+ DPI.
+- Avoid dual-y-axis plots unless the two scales are genuinely comparable; they are almost always misleading.

@@ -1,0 +1,104 @@
+---
+title: Repeated-Measures ANOVA
+date: "2026-04-17"
+description: Within-subjects analysis of variance with sphericity checks and corrections
+categories:
+  - Inferential Statistics
+  - rmanova
+  - within-subjects
+  - sphericity
+  - mauchly
+---
+
+## Introduction
+
+Repeated-measures ANOVA (rmANOVA) handles designs where the same subjects are measured at multiple time points or conditions. By treating subject as a blocking factor, it controls between-subject variability and gains power over between-subjects analysis. The main complication is the **sphericity** assumption on the covariance of the repeated measures.
+
+## Prerequisites
+
+One-way ANOVA, dependence structure in repeated measures.
+
+## Theory
+
+For one within-subjects factor with $k$ levels measured on $n$ subjects, the model is
+
+$$Y_{ij} = \mu + \alpha_i + \pi_j + \varepsilon_{ij},$$
+
+where $\pi_j$ is a random subject effect and $\alpha_i$ is the fixed effect of level $i$.
+
+**Sphericity** assumes the variances of all pairwise differences between repeated measurements are equal. Mauchly's test assesses this assumption.
+
+If sphericity is violated:
+
+- **Greenhouse-Geisser correction**: adjusts degrees of freedom by multiplying by $\hat{\varepsilon}_{\text{GG}} \in [1/(k-1), 1]$.
+- **Huynh-Feldt correction**: less conservative for mild violations.
+
+Modern alternative: fit a linear mixed-effects model (`lmer`) with an unstructured or compound-symmetric covariance -- more flexible, handles missing data.
+
+## Assumptions
+
+- Normality of within-subject residuals.
+- Sphericity (or apply a correction).
+- Subjects are independent; measurements within a subject are not.
+
+## R Implementation
+
+```r
+library(afex); library(emmeans); library(rstatix)
+set.seed(2026)
+
+# 20 subjects measured at 4 time points
+n_subj <- 20
+times  <- 4
+subject <- rep(1:n_subj, each = times)
+time    <- rep(1:times, n_subj)
+
+# Simulate with a time effect and subject-specific intercepts
+df <- data.frame(
+  subject = factor(subject),
+  time    = factor(time),
+  y       = rnorm(n_subj * times, mean = 50 + 2 * time, sd = 6) +
+            rep(rnorm(n_subj, 0, 4), each = times)
+)
+
+# Using afex::aov_car
+fit <- aov_car(y ~ time + Error(subject/time), data = df)
+fit
+
+# rstatix pipeline
+df |> anova_test(dv = y, wid = subject, within = time)
+
+# Post-hoc with Bonferroni
+emm <- emmeans(fit, ~ time)
+pairs(emm, adjust = "bonferroni")
+```
+
+## Output & Results
+
+```
+Anova Table (Type 3 tests)
+
+Response: y
+   Effect         df  MSE       F  ges  p.value
+1    time  2.61, 49.5 28.7  12.39  0.19  <.001 ***
+
+Mauchly Tests for Sphericity:
+ Effect   W       p
+  time  0.87  0.78   # sphericity holds
+
+Greenhouse-Geisser eps: 0.87
+```
+
+Large within-subject effect of time (F(2.61, 49.5) = 12.39, p < 0.001, generalised $\eta^2 = 0.19$); sphericity holds so no correction needed.
+
+## Interpretation
+
+"A one-way repeated-measures ANOVA revealed a significant effect of time (F(2.61, 49.5) = 12.39, p < 0.001, generalised $\eta^2 = 0.19$; Greenhouse-Geisser correction applied). Bonferroni post-hoc comparisons identified significant increases from time 1 to time 3 and from time 2 to time 4."
+
+## Practical Tips
+
+- Check Mauchly's test; when rejected, apply Greenhouse-Geisser or Huynh-Feldt.
+- For complex designs (multiple within factors, between x within interactions), a linear mixed model is preferred.
+- Missing data in rmANOVA causes the entire subject to be dropped (listwise); mixed models handle it gracefully.
+- Report generalised $\eta^2$ for repeated-measures designs (partial $\eta^2$ is upwardly biased).
+- For non-normal residuals, use Friedman or an aligned-rank transform (`ARTool::art`).

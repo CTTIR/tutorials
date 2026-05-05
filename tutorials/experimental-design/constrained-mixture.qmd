@@ -1,0 +1,70 @@
+---
+title: Constrained Mixture Designs
+date: "2026-04-17"
+description: Mixture experiments with lower and upper bounds on components
+categories:
+  - Experimental Design
+  - constrained-mixture
+  - extreme-vertices
+  - bounds
+---
+
+## Introduction
+
+In many real-world mixture experiments, each component carries individual lower and upper bounds — salt must remain at least 5 %, alcohol must not exceed 15 %, an active pharmaceutical ingredient must be between 2 and 8 % — so the feasible blend region is no longer the full simplex but a constrained convex polytope inside it. Standard simplex-lattice and simplex-centroid designs do not exploit this structure and would place runs outside the feasible region. Extreme-vertices designs (McLean and Anderson, 1966) instead enumerate the vertices of the constraint polytope and sample them, augmenting with edge midpoints, face centroids, and an overall centroid as the design budget allows. The result is a design that is simultaneously feasible everywhere and informative about the response across the full constrained region.
+
+## Prerequisites
+
+A working understanding of simplex-lattice and simplex-centroid mixture designs, the Scheffé canonical polynomial, and basic convex-geometry concepts (vertices, edges, polytopes).
+
+## Theory
+
+Given lower bounds $L_i$ and upper bounds $U_i$ on each of the $q$ components, the feasible region is the convex polytope $\{x : L_i \leq x_i \leq U_i, \sum_i x_i = 1\}$. Its vertices are computable from the constraint set and form the natural design points; the design is augmented with edge midpoints, face centroids, and the overall centroid as needed for fitting the chosen Scheffé polynomial order.
+
+The pseudo-component transformation $x'_i = (x_i - L_i)/(1 - \sum_i L_i)$ maps the constrained region back to a standard unit simplex when only lower bounds are active, allowing standard simplex-lattice or simplex-centroid construction in the transformed coordinates. Predictions can then be back-transformed to the original-component scale.
+
+## Assumptions
+
+Components are non-negative and sum to one (they are proportions of a fixed total amount), the lower and upper bounds are fixed and known in advance, and the residual error is approximately Normal with constant variance over the feasible region.
+
+## R Implementation
+
+```r
+library(mixexp)
+
+lb <- c(0.2, 0.1, 0.3)
+ub <- c(0.5, 0.6, 0.7)
+
+xv <- Xvert(nfac = 3, lc = lb, uc = ub, ndm = 2)
+xv
+
+set.seed(2026)
+xv$y <- 10 * xv$x1 + 12 * xv$x2 + 8 * xv$x3 +
+        6 * xv$x1 * xv$x2 +
+        rnorm(nrow(xv), 0, 0.3)
+
+fit <- MixModel(xv, "y",
+                mixcomps = c("x1", "x2", "x3"), model = 2)
+summary(fit)
+```
+
+## Output & Results
+
+`Xvert()` returns the vertices of the constrained polytope along with optionally requested edge midpoints and centroids. `MixModel()` fits the Scheffé linear, quadratic, or special-cubic mixture model on the design, with coefficients interpretable as blend effects. Visualising the polytope and overlaying the design points before running the experiment is a recommended sanity check.
+
+## Interpretation
+
+A reporting sentence: "The extreme-vertices design identified seven feasible vertices of the constrained simplex with bounds $L = (0.2, 0.1, 0.3)$ and $U = (0.5, 0.6, 0.7)$. The fitted quadratic Scheffé model showed the response was maximised near the vertex $(0.5, 0.2, 0.3)$ with a meaningful pairwise synergy between components 1 and 2 ($\beta_{12} = 5.9$, $p = 0.01$). Linear blend coefficients indicated component 2 was individually most effective." Always describe the feasible region and report which vertex achieved the optimum.
+
+## Practical Tips
+
+- Use extreme-vertices designs whenever component bounds are genuinely binding; interior-only designs (simplex-lattice or centroid) miss optima that lie on the boundary of the feasible region — a common occurrence when constraints reflect formulation requirements.
+- D-optimal mixture designs (via `AlgDesign::optMonteCarlo` or `AlgDesign::optFederov`) handle complex constraints elegantly and give the most efficient design when the number of feasible candidate points exceeds the run budget.
+- Pseudo-component analysis makes the fit and interpretation more intuitive when only lower bounds are active: fit on the transformed unit simplex, then back-transform predictions to original component proportions for reporting.
+- For ratio constraints (e.g., solvent₁ : solvent₂ = 2 : 1), use a ratio reparameterisation rather than naive component-level bounds; the constraint algebra is cleaner and the design more efficient.
+- Always plot the feasible region in 3D or on the simplex before finalising the design; visualising the polytope helps detect over-tight constraints (a near-empty polytope) or accidentally redundant ones, and reveals which vertices are clinically meaningful.
+- When the polytope is degenerate (very thin in one direction), the design will be ill-conditioned; relax the offending constraint or accept a higher prediction variance in the squeezed direction.
+
+## R Packages Used
+
+`mixexp::Xvert()` for the canonical extreme-vertices design and `MixModel()` for Scheffé-model fitting; `AlgDesign::optFederov()` and `optMonteCarlo()` for D-optimal mixture designs under arbitrary linear constraints; `qualityTools::mixDesign()` for an alternative interface; `daewr` for textbook companion datasets and worked constrained-mixture examples; `MixExpR` for a tidyverse-friendly mixture-design workflow.

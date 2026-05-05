@@ -1,0 +1,76 @@
+---
+title: Feature Engineering
+date: "2026-04-17"
+description: "Transformations, interactions, and encodings to expose signal to models"
+categories:
+  - Machine Learning
+  - feature-engineering
+  - transformations
+  - interactions
+---
+
+## Introduction
+
+Feature engineering -- creating informative inputs -- is often the largest driver of predictive performance. Even deep learning benefits from domain-informed features. Standard techniques: log/sqrt transforms, interactions, polynomial bases, categorical encodings, date features, and lag features for time series.
+
+## Prerequisites
+
+Regression / classification basics; understanding the target's scale and distribution.
+
+## Theory
+
+Key transformations:
+- **Log / sqrt** stabilise right-skewed variables.
+- **Box-Cox / Yeo-Johnson** learn the optimal power transform.
+- **Polynomial and spline bases** expose non-linear relationships to linear models.
+- **Interactions** ($x_1 x_2$) surface effects whose direction depends on another variable.
+- **Target encoding** for high-cardinality categoricals: replace category with smoothed target mean.
+- **Lag / rolling features** for time series.
+
+## Assumptions
+
+Transformations preserve monotonicity where needed; target encoding uses out-of-fold means to avoid leakage.
+
+## R Implementation
+
+```r
+library(recipes); library(embed)
+
+set.seed(2026)
+n <- 300
+df <- tibble::tibble(
+  x1 = exp(rnorm(n)),                    # right-skewed
+  x2 = runif(n, 0, 10),
+  cat = sample(letters[1:20], n, replace = TRUE),
+  date = as.Date("2024-01-01") + sample(0:364, n, replace = TRUE),
+  y = runif(n)
+)
+
+rec <- recipe(y ~ ., data = df) %>%
+  step_log(x1) %>%
+  step_interact(~ x1:x2) %>%
+  step_ns(x2, deg_free = 4) %>%
+  step_date(date, features = c("dow", "month")) %>%
+  step_holiday(date) %>%
+  step_rm(date) %>%
+  step_lencode_mixed(cat, outcome = vars(y))   # mixed-effects target encoding
+
+baked <- prep(rec) %>% bake(new_data = NULL)
+colnames(baked)[1:10]
+```
+
+## Output & Results
+
+A transformed data frame with log-x1, interaction term, natural spline basis for x2, day-of-week / month features, and smoothly target-encoded category.
+
+## Interpretation
+
+"Feature engineering added 12 derived columns: log-transformed skew, spline bases, date features, and target-encoded category. The pipeline is reproducible and applied identically to train and test."
+
+## Practical Tips
+
+- Do feature engineering inside a `recipe` (or equivalent) to avoid leakage.
+- Log-transform right-skewed variables before linear models; trees handle skew fine.
+- High-cardinality categoricals benefit hugely from target encoding (with proper smoothing / CV handling).
+- Date features (day-of-week, hour, month, holiday) are often critical for temporal prediction.
+- Don't over-engineer -- more features means more noise; cross-validate additions.

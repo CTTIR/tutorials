@@ -1,0 +1,69 @@
+---
+title: Bayesian Logistic Regression
+date: "2026-04-17"
+description: Logistic regression with MCMC-based posterior for binary outcomes
+categories:
+  - Bayesian Statistics
+  - bayesian-logistic
+  - binary
+  - brms
+---
+
+## Introduction
+
+Bayesian logistic regression keeps the same Bernoulli likelihood and logit link as the maximum-likelihood version but replaces the point estimate of each coefficient with a full posterior distribution. The biggest practical pay-off is robustness in small samples or in the presence of complete or quasi-complete separation, where MLE drifts to $\pm\infty$ but a weakly informative prior pulls the estimate to a finite, defensible value. The posterior also feeds directly into propagated uncertainty for predicted probabilities, an awkward computation in the frequentist world.
+
+## Prerequisites
+
+Familiarity with classical logistic regression and odds ratios, an idea of what a prior and a posterior are, and access to a Stan-capable backend (`rstan` or `cmdstanr`).
+
+## Theory
+
+The model is
+
+$$y_i \sim \mathrm{Bernoulli}\bigl(\mathrm{logit}^{-1}(X_i \beta)\bigr),$$
+
+with priors $\beta \sim \mathcal N(0, \sigma_\beta^2)$ on the regression coefficients and a separate, often wider prior on the intercept because the average log-odds of success can lie outside the typical predictor scale. A $\mathcal N(0, 2.5)$ prior on standardised slopes is the default in `rstanarm` and a sensible starting point in `brms`. Under separation the likelihood becomes monotone in $\beta$, and any proper prior — even a very wide one — yields a well-defined posterior with finite credible intervals; this is the Bayesian analogue of Firth's penalised likelihood.
+
+## Assumptions
+
+Independent Bernoulli observations conditional on covariates, a logit link that is a reasonable approximation to the true response surface, and valid (proper) priors. As in MLE logistic regression, the linear predictor should not contain redundant columns.
+
+## R Implementation
+
+```r
+library(brms)
+
+set.seed(2026)
+d <- data.frame(x = rnorm(200))
+d$y <- rbinom(200, 1, plogis(-1 + 1.2 * d$x))
+
+fit <- brm(y ~ x, data = d, family = bernoulli,
+           prior = prior(normal(0, 2.5), class = "b") +
+                   prior(normal(0, 5), class = "Intercept"),
+           chains = 4, iter = 2000, refresh = 0)
+summary(fit)
+
+# Odds ratios
+exp(fixef(fit))
+```
+
+## Output & Results
+
+`summary(fit)` reports posterior mean, standard error, and 95 % CrI on the log-odds scale together with $\hat R$ and effective sample size; `exp(fixef(fit))` returns the same summaries on the odds-ratio scale. `posterior_predict()` delivers Bernoulli replicates that feed `pp_check()` to test calibration.
+
+## Interpretation
+
+A reporting sentence: "A Bayesian logistic regression with weakly informative $\mathcal N(0, 2.5)$ priors estimated the odds ratio for $x$ at 3.4 (95 % CrI 2.5 to 4.5); under the model, a one-standard-deviation increase in $x$ triples the odds of success." When predicted probabilities are required, summarise `posterior_epred()` rather than transforming `fixef()` by hand — only the former propagates the joint uncertainty in intercept and slope.
+
+## Practical Tips
+
+- For binary regression with rare outcomes, prefer a $\mathcal N(0, 1)$ prior on standardised slopes; the default $\mathcal N(0, 2.5)$ allows odds ratios up to about $\exp(5) \approx 150$, which can be implausibly extreme.
+- Compare predictive performance with `loo()` rather than likelihood-ratio tests; LOO is well-defined under proper priors and gives Pareto-$k$ diagnostics for influential points.
+- Hierarchical extensions are a one-line addition: `y ~ x + (1 | site)` lets baseline log-odds vary across sites and shrinks small-cluster estimates toward the population mean.
+- For severe separation, fit with `prior(normal(0, 1.5), class = "b")` rather than ML's Firth correction; the Bayesian solution is a single line of code and propagates uncertainty consistently.
+- Always inspect `pp_check(fit, type = "bars")` for binary outcomes; deviations between observed and replicated proportions reveal calibration problems that summary tables hide.
+
+## R Packages Used
+
+`brms` for model specification, `bayesplot` for posterior predictive plots, `loo` for cross-validation and model comparison, and `tidybayes` if you want tidy tibbles of posterior draws for downstream plotting.

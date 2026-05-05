@@ -1,0 +1,71 @@
+---
+title: Jaccard and Dice Dissimilarity
+date: "2026-04-17"
+description: Distance measures for binary / presence-absence data
+categories:
+  - Multivariate Statistics
+  - jaccard
+  - dice
+  - binary-distance
+---
+
+## Introduction
+
+Jaccard and Dice dissimilarities are the standard distance measures for binary (presence/absence) data: ecological community composition, disease symptom panels, gene set membership, document term frequencies after thresholding. Both indices share a key property: they ignore joint absences and focus only on agreements and disagreements among presences. This is exactly what is needed when an absence carries little information — a species absent from two sites might be absent because the habitat is unsuitable, or simply not detected — but is wrong when absences are themselves diagnostic.
+
+## Prerequisites
+
+A working understanding of binary data, set-based similarity reasoning, and the conventional 2×2 contingency table for two binary vectors.
+
+## Theory
+
+For two binary vectors $x, y$ with counts $a$ (both present), $b$ (only in $x$), $c$ (only in $y$), $d$ (both absent):
+
+- **Jaccard index**: $J = a / (a + b + c)$, the ratio of the intersection to the union of the present-set. **Jaccard dissimilarity** is $1 - J$.
+- **Dice / Sørensen coefficient**: $D = 2a / (2a + b + c)$, with **Dice dissimilarity** $1 - D$. Dice doubles the weight on joint presences relative to mismatches.
+- **Sørensen** and **Dice** are equivalent for binary data.
+
+Both ignore $d$ (joint absences), making them appropriate when absences are uninformative. Indices that include $d$ — simple matching, Hamming distance — are preferable when joint absences carry meaning (e.g., binary medical diagnoses where "neither has condition X" is informative).
+
+## Assumptions
+
+Binary data (or count data thresholded to binary), and joint absences are not meaningful for the inferential question. The same data on different absence-meaning assumptions can yield very different distances.
+
+## R Implementation
+
+```r
+library(vegan)
+
+# Species abundance data (reduce to presence/absence)
+data(dune)
+dune_pa <- (dune > 0) * 1
+head(dune_pa)
+
+# Jaccard dissimilarity
+d_jac <- vegdist(dune_pa, method = "jaccard", binary = TRUE)
+as.matrix(d_jac)[1:3, 1:3]
+
+# Sorensen (= Dice)
+d_sor <- vegdist(dune_pa, method = "bray", binary = TRUE)
+```
+
+## Output & Results
+
+Two pairwise dissimilarity matrices on the dune presence/absence data, one for Jaccard and one for Sørensen-Dice. Jaccard distances are systematically larger than Dice for the same data because Dice double-counts joint presences in its denominator.
+
+## Interpretation
+
+A reporting sentence: "Jaccard dissimilarity averaged 0.40 across all pairs of sites (range 0.16 to 0.65), indicating that 40 % of species presences are not shared between any randomly chosen pair; the corresponding Sørensen-Dice dissimilarity averaged 0.25, reflecting Dice's higher weight on joint presences." Always state which index was used; the same data produce different conclusions under Jaccard versus Dice.
+
+## Practical Tips
+
+- Use Jaccard or Dice when joint absences are biologically or ecologically uninformative (rare species, sparse term-document data, gene-set membership).
+- For abundance rather than presence-absence data, Bray-Curtis is the standard; Bray-Curtis on binarised data reduces to Sørensen-Dice.
+- For microbiome data with phylogenetic information, UniFrac (`GUniFrac::GUniFrac`) is preferable because it weights distances by evolutionary relationships, not just shared OTUs.
+- For binary medical data where joint absences are meaningful (neither patient has the condition), use simple matching (`dist(x, method = "binary")` for Hamming-style) rather than Jaccard.
+- For very large sparse binary matrices (text, single-cell sparse counts), use the sparse-matrix-aware implementations in `proxy` or `parallelDist` to avoid memory blow-up.
+- Pair dissimilarity matrices with NMDS or PCoA for visualisation; both ordinations consume Jaccard or Dice matrices directly.
+
+## R Packages Used
+
+`vegan` for `vegdist()` with `method = "jaccard"` or `"bray"` and the broader ecology workflow; `proxy` for general dissimilarity functions including binary metrics; `philentropy` for distance and similarity coefficients across many families; `GUniFrac` for phylogenetic UniFrac alternatives in microbiome analysis.

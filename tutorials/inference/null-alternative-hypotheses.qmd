@@ -1,0 +1,82 @@
+---
+title: Null and Alternative Hypotheses
+date: "2026-04-17"
+description: "Formulating H0 and H1, choosing one- vs two-sided tests, and avoiding post-hoc reformulation"
+categories:
+  - Inferential Statistics
+  - hypothesis
+  - "null"
+  - alternative
+  - one-sided
+---
+
+## Introduction
+
+Every hypothesis test begins with two hypotheses: a **null** that captures the status quo and an **alternative** that captures what we would conclude if the null is rejected. Stating both clearly, before the data arrive, is the crucial first step -- and a remarkably common source of error when skipped.
+
+## Prerequisites
+
+Random variables and population parameters.
+
+## Theory
+
+The **null hypothesis** $H_0$ is typically a statement of no effect, no difference, or a specific parameter value. The **alternative** $H_1$ (or $H_A$) is what we would conclude if we reject $H_0$.
+
+**Two-sided alternatives** are the default when the sign of the effect is unknown or of interest in both directions:
+
+$$H_0: \mu = \mu_0 \quad \text{vs.} \quad H_1: \mu \neq \mu_0.$$
+
+**One-sided alternatives** specify a direction, increasing power for that direction at the cost of giving up inference in the opposite:
+
+$$H_0: \mu \leq \mu_0 \quad \text{vs.} \quad H_1: \mu > \mu_0.$$
+
+Use a one-sided test only when:
+
+- A priori, only one direction is of scientific interest.
+- A result in the other direction would be treated identically to a null result.
+- The directionality is pre-specified in the protocol, not chosen after seeing the data.
+
+**Simple vs. composite**: $H_0: \mu = 0$ is simple (a single value); $H_0: \mu \leq 0$ is composite (a set). Test statistics and rejection rules differ slightly.
+
+**Equivalence/non-inferiority testing** flips the roles: the null is that the effect is at least as large as some margin, and rejection establishes equivalence.
+
+## Assumptions
+
+Hypotheses must be specified before examining the data. Post-hoc redefinition invalidates the sampling distribution of the p-value.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+# Two-sided test
+x <- rnorm(40, mean = 2, sd = 5)
+t.test(x, mu = 0, alternative = "two.sided")
+
+# One-sided test (H1: mu > 0)
+t.test(x, mu = 0, alternative = "greater")
+
+# One-sided test (H1: mu < 0)
+t.test(x, mu = 0, alternative = "less")
+
+# TOST (equivalence: |mu| < 1)
+library(TOSTER)
+tsum_TOST(m1 = mean(x), sd1 = sd(x), n1 = length(x),
+          low_eqbound = -1, high_eqbound = 1)
+```
+
+## Output & Results
+
+The two-sided $p$ will be roughly twice the one-sided $p$ when the point estimate is consistent with $H_1$'s direction. For equivalence testing, rejection of both one-sided components establishes equivalence.
+
+## Interpretation
+
+Pre-register or pre-specify the hypotheses in the protocol; do not switch from two-sided to one-sided after seeing the sign of the effect. Misuse of one-sided tests is a common source of reviewer objections.
+
+## Practical Tips
+
+- Default to two-sided tests unless a strong, pre-specified rationale for one-sidedness exists.
+- Never compute both one-sided and two-sided p-values and report whichever is smaller.
+- In equivalence trials, the "null" is dissimilarity and "alternative" is equivalence -- reversed from classical tests.
+- Composite null hypotheses are handled by evaluating the test statistic at the boundary.
+- Frame hypotheses in terms of the parameter of scientific interest, not the test statistic.

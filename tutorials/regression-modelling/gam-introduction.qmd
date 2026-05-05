@@ -1,0 +1,70 @@
+---
+title: "GAMs: Introduction"
+date: "2026-04-17"
+description: Generalised additive models with smoothing splines for non-linear predictor effects
+categories:
+  - "Regression & Modelling"
+  - gam
+  - smooth
+  - mgcv
+---
+
+## Introduction
+
+Generalised additive models (GAMs) replace the strict linear predictor of GLMs with a sum of smooth functions of predictors: $g(\mathbb E[Y]) = \beta_0 + \sum_j s_j(X_j)$. Each $s_j$ is a smooth, data-driven function estimated alongside the parametric components, so GAMs combine the interpretability of linear regression (additivity, coefficient-style summaries) with the flexibility of non-parametric smoothers. They are the standard tool whenever a continuous predictor's effect is suspected to be non-linear and theoretical grounds for a specific functional form are absent.
+
+## Prerequisites
+
+A working understanding of generalised linear models, basis functions for smooth curves (B-splines, thin-plate splines), and the bias-variance trade-off that motivates smoothing penalties.
+
+## Theory
+
+Each smooth function $s_j$ is represented as a linear combination of basis functions with a smoothing penalty controlling wiggliness. `mgcv::gam()` defaults to penalised thin-plate regression splines, with the smoothing parameter selected automatically by REML (recommended) or generalised cross-validation (GCV). The effective degrees of freedom (edf) for each smooth quantify fitted complexity: edf = 1 means the smooth has reduced to a straight line, higher edf indicates more curvature. The penalty trades fit against smoothness and is what prevents over-fitting at high basis dimensions.
+
+For categorical predictors, factor effects enter as ordinary parametric terms; for interactions between continuous predictors, tensor product smooths (`te()`) or `ti()` for pure interactions are available.
+
+## Assumptions
+
+Standard GLM assumptions on the conditional distribution of the outcome; smooth effects are additive (no automatic interaction detection); the basis dimension is large enough to capture the underlying smoothness (`gam.check()` diagnoses this).
+
+## R Implementation
+
+```r
+library(mgcv)
+
+set.seed(2026)
+d <- data.frame(
+  x = runif(200, 0, 10),
+  z = rnorm(200)
+)
+d$y <- 2 + sin(d$x) * 2 + 0.4 * d$z + rnorm(200, 0, 1)
+
+fit <- gam(y ~ s(x) + z, data = d)
+summary(fit)
+plot(fit, pages = 1, shade = TRUE)
+
+# Check and predict
+check.gam <- gam.check(fit)
+predict(fit, newdata = data.frame(x = 5, z = 0))
+```
+
+## Output & Results
+
+`summary(fit)` reports parametric coefficients (with $t$ tests) and approximate $F$ tests for each smooth (with edf and reference degrees of freedom). `plot(fit, shade = TRUE)` displays each smooth with a shaded confidence band around the estimated curve. `gam.check()` reports residual diagnostics and the basis-dimension k-index, which flags when more basis functions are needed.
+
+## Interpretation
+
+A reporting sentence: "A GAM with a smooth function of $x$ (edf 8.5, $F = 22.4$, $p < 0.001$) and a linear effect of $z$ ($\hat\beta = 0.41$, $p < 0.001$) recovered the simulated sinusoidal pattern in $x$ and the additive linear contribution of $z$; deviance explained 76 %, $\hat R^2_{\mathrm{adj}}$ = 0.74." Report edf for smooths and parametric coefficients for linear terms; never quote a single $p$-value for a smooth without its edf.
+
+## Practical Tips
+
+- `s(x)` uses thin-plate regression splines by default; `s(x, bs = "cr")` for cubic regression splines (faster for one-dimensional smooths); `te(x, z)` for tensor product interactions between two continuous predictors.
+- The basis dimension `k` defaults work for most smooth functions; raise it if `gam.check()` reports a low k-index, lower it for parsimony.
+- Use `method = "REML"` for smoothing-parameter selection; it is more reliable than the default GCV for finite samples.
+- For non-Gaussian outcomes, switch the family: `gam(y ~ s(x), family = binomial)`, `family = poisson`, etc.
+- `gratia::draw(fit)` produces ggplot-style smooth-effect plots with cleaner formatting than base `plot.gam()`.
+- For very large datasets, use `mgcv::bam()` with `discrete = TRUE` for substantial speed-ups; the API is otherwise identical.
+
+## R Packages Used
+
+`mgcv` for `gam()`, `bam()`, smooth bases, and REML smoothing-parameter selection; `gratia` for ggplot-style GAM diagnostics and component plots; `mgcViz` for additional GAM visualisations including QQ plots and 3D smooth surfaces; `gam` (not to be confused with `mgcv`) for the older Hastie-Tibshirani backfitting implementation.

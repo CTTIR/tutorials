@@ -1,0 +1,101 @@
+---
+title: "Power Analysis: Introduction"
+date: "2026-04-17"
+description: The four quantities of power analysis and how they trade against each other in study design
+categories:
+  - "Sample Size & Power"
+  - power-analysis
+  - sample-size
+  - effect-size
+  - alpha
+---
+
+## Introduction
+
+Power analysis turns four quantities -- effect size, significance level, power, and sample size -- into a single equation: given any three, the fourth is determined. Every responsible study design pins down three of the four in advance to solve for the fourth (usually sample size). Skipping power analysis leaves studies under- or over-powered, with reputational and ethical consequences.
+
+## Prerequisites
+
+Hypothesis testing, Type I and II errors.
+
+## Theory
+
+The four quantities:
+
+- **Effect size** ($d$, $f$, $r$, OR, RR): the magnitude of the true effect under the alternative. Must be pre-specified based on prior evidence, clinical relevance, or Cohen's conventions.
+- **Significance level** $\alpha$: the Type I error rate, almost always 0.05 two-sided.
+- **Power** $1 - \beta$: probability of detecting the true effect. Conventionally 0.80; confirmatory trials use 0.90.
+- **Sample size** $n$: number of observations (or per group).
+
+Given any three, the fourth is computed from the test's non-central distribution under $H_1$.
+
+**Sensitivity and trade-offs**:
+
+- Doubling $n$ roughly shrinks the detectable effect by $\sqrt{2}$.
+- Reducing $\alpha$ from 0.05 to 0.01 reduces power at the same $n$.
+- Larger SD reduces power; more precise measurement increases it.
+- Power for a one-sided test at $\alpha$ equals power for a two-sided test at $2\alpha$ (when the effect is in the right direction).
+
+## Assumptions
+
+The test's sampling distribution under $H_1$ must be known (or approximable). Power calculations are as valid as the assumed effect-size magnitude; a plausible range is often reported.
+
+## R Implementation
+
+```r
+library(pwr)
+
+# Solve for n given d, alpha, power
+pwr.t.test(d = 0.5, sig.level = 0.05, power = 0.80,
+           type = "two.sample", alternative = "two.sided")
+
+# Solve for d given n and power (minimum detectable effect)
+pwr.t.test(n = 30, sig.level = 0.05, power = 0.80,
+           type = "two.sample")
+
+# Power curves across d
+d_grid <- seq(0.1, 1, by = 0.05)
+pw_n30  <- sapply(d_grid, function(d) pwr.t.test(n = 30, d = d)$power)
+pw_n100 <- sapply(d_grid, function(d) pwr.t.test(n = 100, d = d)$power)
+
+plot(d_grid, pw_n30, type = "l", col = "#F4A261", lwd = 2,
+     xlab = "Cohen's d", ylab = "Power",
+     main = "Power curves: n = 30 vs n = 100 per group")
+lines(d_grid, pw_n100, col = "#2A9D8F", lwd = 2)
+abline(h = 0.80, lty = 2)
+legend("bottomright", c("n = 30", "n = 100"),
+       col = c("#F4A261", "#2A9D8F"), lwd = 2)
+```
+
+## Output & Results
+
+```
+     Two-sample t test power calculation
+
+              n = 63.77
+              d = 0.5
+      sig.level = 0.05
+          power = 0.80
+    alternative = two.sided
+
+     Two-sample t test power calculation
+
+              n = 30
+              d = 0.738
+      sig.level = 0.05
+          power = 0.80
+```
+
+64 per arm for a medium effect at 80 % power. With only 30 per arm, the minimum detectable effect is $d = 0.74$.
+
+## Interpretation
+
+For a grant or protocol: "Assuming a between-group standardised difference of $d = 0.5$ (a medium effect), $\alpha = 0.05$ two-sided, and power = 0.80, the required sample size is 64 per arm (128 total). We plan to enrol 70 per arm to allow for 10 % loss to follow-up."
+
+## Practical Tips
+
+- Choose the effect size from published data or pilot studies, not from Cohen's generic thresholds.
+- Always inflate for dropout; report the final $n$ as target.
+- Sensitivity analysis: provide $n$ for several plausible $d$ values.
+- Do not perform post-hoc power analysis with the observed effect; it is uninformative and sometimes misleading.
+- For complex designs (cluster, multilevel), use simulation-based power (`simstudy`, custom Monte Carlo) rather than formulas.

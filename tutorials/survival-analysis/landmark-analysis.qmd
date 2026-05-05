@@ -1,0 +1,78 @@
+---
+title: Landmark Analysis
+date: "2026-04-17"
+description: Conditioning on survival to a landmark time to analyse time-varying covariates
+categories:
+  - Survival Analysis
+  - landmark
+  - time-varying
+---
+
+## Introduction
+
+Landmark analysis is the standard fix for the immortal-time bias that arises when subjects are classified by a post-baseline exposure (treatment response, biomarker change, secondary event). Naively grouping subjects by a covariate measured after follow-up begins assigns "responder" status only to subjects who survived long enough to be assessed, automatically biasing comparisons in their favour. Landmark analysis sidesteps this by selecting a fixed landmark time, restricting to subjects alive and observable at that time, classifying them by covariate value *at the landmark*, and then analysing only the post-landmark survival.
+
+## Prerequisites
+
+A working understanding of Cox regression, time-varying covariates, and the immortal-time bias that makes naive responder-vs-nonresponder analyses invalid.
+
+## Theory
+
+At a chosen landmark time $L$:
+
+1. Exclude subjects with an event before $L$ — they cannot be classified by status at $L$.
+2. Classify each remaining subject by their covariate value at $L$.
+3. Treat $L$ as the new time origin and analyse the residual survival $T_i - L$ for $T_i > L$.
+4. Fit a standard Cox model on the post-landmark data.
+
+Multiple landmarks can be combined into a "super model" with `id`-clustered variance and a smooth function of $L$ as a covariate, gaining efficiency at the cost of additional model complexity (Van Houwelingen 2007).
+
+## Assumptions
+
+The covariate value at landmark $L$ is the relevant exposure for prognosis; sufficient follow-up beyond $L$ remains; and the censoring mechanism after $L$ is non-informative.
+
+## R Implementation
+
+```r
+library(survival)
+
+set.seed(2026)
+n <- 200
+d <- data.frame(
+  id = 1:n,
+  time = rexp(n, 0.1),
+  status = rbinom(n, 1, 0.6),
+  response = rbinom(n, 1, 0.5)      # binary time-varying covariate
+)
+
+L <- 6   # landmark at 6 months
+
+# Subjects at risk at L
+at_risk <- d[d$time >= L, ]
+at_risk$time_from_L <- at_risk$time - L
+at_risk$status_from_L <- at_risk$status
+
+fit <- coxph(Surv(time_from_L, status_from_L) ~ response, data = at_risk)
+summary(fit)
+```
+
+## Output & Results
+
+A standard Cox regression on the post-landmark cohort: hazard ratio for the covariate (here `response`) measured at the landmark, with 95 % confidence interval and Wald test. The number of events and at-risk subjects shrinks after the landmark, so confidence intervals are wider than in a full-cohort analysis.
+
+## Interpretation
+
+A reporting sentence: "Among the 152 patients alive at the six-month landmark, treatment responders (n = 78) had a 50 % lower hazard of subsequent death than non-responders (HR 0.50, 95 % CI 0.30 to 0.83); the analysis avoids the immortal-time bias inherent in unrestricted responder-vs-non-responder comparisons." Always state the landmark time and the post-landmark sample size.
+
+## Practical Tips
+
+- Choose the landmark time at a clinically meaningful assessment point (six-week imaging response, three-month biomarker re-measurement); arbitrary times can produce unstable estimates.
+- Multiple landmarks (super-model approach) combine information across time and provide a smooth treatment-effect estimate; cluster the variance on subject id when fitting.
+- Sample size drops at the landmark; power calculations should account for the post-landmark cohort, not the original.
+- Compare landmark results with a full time-varying Cox model that uses the covariate as a `tt()` term; both should agree if the landmark choice is reasonable.
+- Be transparent about exclusions: report how many subjects had events before $L$ and were excluded, because this is the headline difference from a naive analysis.
+- For complex time-varying patterns, consider joint longitudinal-survival models (`JM` or `joineRML`) instead of repeated landmark analyses.
+
+## R Packages Used
+
+`survival` for the standard Cox fit on landmark cohorts; `dynpred` for super-model landmark analyses with smooth time effects; `JM` and `joineRML` for joint longitudinal-survival modelling that handles continuous time-varying covariates without landmarks; `mstate` for multi-state extensions.

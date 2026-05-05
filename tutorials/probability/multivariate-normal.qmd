@@ -1,0 +1,101 @@
+---
+title: The Multivariate Normal Distribution
+date: "2026-04-17"
+description: Generalisation of the normal to random vectors; the keystone of multivariate analysis
+categories:
+  - Probability Theory
+  - multivariate-normal
+  - mvn
+  - covariance
+  - mahalanobis
+---
+
+## Introduction
+
+The multivariate normal (MVN) is the joint distribution that plays the same role for random vectors that the normal plays for random scalars. It is parameterised by a mean vector and a covariance matrix, and it underlies linear discriminant analysis, principal component analysis, Gaussian graphical models, and most of multivariate inference.
+
+## Prerequisites
+
+Normal distribution, linear algebra (vectors, matrices, positive-definite matrices).
+
+## Theory
+
+A random vector $\mathbf{X} \in \mathbb{R}^p$ is MVN with mean $\boldsymbol{\mu} \in \mathbb{R}^p$ and positive definite covariance $\Sigma \in \mathbb{R}^{p \times p}$ if its density is
+
+$$f(\mathbf{x}) = \frac{1}{(2\pi)^{p/2} |\Sigma|^{1/2}} \exp\!\left\{-\tfrac{1}{2} (\mathbf{x} - \boldsymbol{\mu})^\top \Sigma^{-1} (\mathbf{x} - \boldsymbol{\mu})\right\}.$$
+
+The exponent is the squared **Mahalanobis distance** from $\mathbf{x}$ to $\boldsymbol{\mu}$.
+
+Key properties:
+
+- **Marginals are MVN**: every subset of components is MVN.
+- **Conditionals are MVN**: given a subset of components, the rest is MVN with mean and covariance depending on the conditioning values.
+- **Linear transformations**: if $\mathbf{X} \sim \mathcal{N}_p(\boldsymbol{\mu}, \Sigma)$ and $A$ is any matrix, then $A \mathbf{X} \sim \mathcal{N}(A \boldsymbol{\mu}, A \Sigma A^\top)$.
+- **Zero correlation implies independence** in the MVN family (unlike general distributions).
+- **Mahalanobis distance squared** $\sim \chi^2_p$ for $\mathbf{X} \sim \mathcal{N}_p(\boldsymbol{\mu}, \Sigma)$.
+
+## Assumptions
+
+$\Sigma$ must be symmetric positive-definite. Degenerate cases (singular $\Sigma$) give a distribution supported on a lower-dimensional affine subspace.
+
+## R Implementation
+
+```r
+library(mvtnorm); library(ggplot2)
+
+set.seed(2026)
+mu    <- c(0, 1)
+Sigma <- matrix(c(1, 0.6, 0.6, 2), 2, 2)
+
+X <- rmvnorm(2000, mean = mu, sigma = Sigma)
+colMeans(X)
+cov(X)
+
+df <- data.frame(X1 = X[, 1], X2 = X[, 2])
+ggplot(df, aes(X1, X2)) +
+  geom_point(alpha = 0.3, colour = "#2A9D8F") +
+  stat_ellipse(level = 0.95, colour = "#F4A261", linewidth = 1) +
+  coord_equal() +
+  theme_minimal()
+
+# Conditional distribution: X1 | X2 = x2
+# mu_1 + Sigma_12 Sigma_22^{-1} (x2 - mu_2)
+x2_val <- 2.0
+cond_mean <- mu[1] + Sigma[1, 2] / Sigma[2, 2] * (x2_val - mu[2])
+cond_var  <- Sigma[1, 1] - Sigma[1, 2]^2 / Sigma[2, 2]
+c(mean = cond_mean, var = cond_var)
+
+# Mahalanobis distance
+md2 <- mahalanobis(X, center = mu, cov = Sigma)
+c(mean_md2 = mean(md2), expected = 2)   # chi^2_2 mean = 2
+```
+
+## Output & Results
+
+```
+ [1]  0.003 1.012
+
+         [,1]      [,2]
+[1,]    1.002    0.605
+[2,]    0.605    1.989
+
+    mean      var
+  0.3000   0.8200
+
+mean_md2 expected
+    2.00     2.00
+```
+
+Empirical mean and covariance closely match the theoretical values, and the Mahalanobis distance squared has the expected chi-squared mean.
+
+## Interpretation
+
+MVN assumptions underlie multiple regression (normal errors), linear discriminant analysis (normal class densities), and most factor-analytic and SEM approaches. Violations of joint normality invalidate ellipsoidal confidence regions and some likelihood-based tests.
+
+## Practical Tips
+
+- Check joint normality with chi-squared Q-Q plots of Mahalanobis distance squared, not just marginal Q-Q plots.
+- Near-singular $\Sigma$ (high collinearity) causes numerical instability; regularise with `Sigma + k I` or use generalised inverses.
+- For high-dimensional MVN ($p$ large), shrinkage estimators (Ledoit-Wolf) stabilise the covariance.
+- Sampling from MVN: `mvtnorm::rmvnorm`, or directly via Cholesky: $\mathbf{X} = \boldsymbol{\mu} + L \mathbf{z}$ with $L L^\top = \Sigma$ and $\mathbf{z} \sim \mathcal{N}_p(0, I)$.
+- The Kullback-Leibler divergence between two MVNs has a closed form; useful in information-geometric methods.

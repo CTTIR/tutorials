@@ -1,0 +1,68 @@
+---
+title: Tobit Regression
+date: "2026-04-17"
+description: Linear regression for outcomes censored at a known threshold
+categories:
+  - "Regression & Modelling"
+  - tobit
+  - censored
+  - latent-variable
+---
+
+## Introduction
+
+Tobit regression handles outcomes that are observed at the boundary value for cases that fall outside a censoring threshold. Income top-coded at \$200,000 (right-censored at the cap), laboratory values below the limit of detection (left-censored at the LOD), drug refill rates that cap at 100 %, all share the same structure: a real underlying value exists, but the observation records the censoring threshold rather than the true value. OLS on the observed outcome is biased toward zero in such cases; Tobit recovers the latent-model coefficients via the appropriate Normal likelihood.
+
+## Prerequisites
+
+A working understanding of linear regression, the difference between censoring and truncation, and the Normal distribution as the latent error model.
+
+## Theory
+
+For latent $Y^*_i = X_i^\top \beta + \varepsilon_i$ with $\varepsilon_i \sim \mathcal N(0, \sigma^2)$, the observed value is $Y_i = \max(L, Y^*_i)$ for left-censoring or $Y_i = \min(U, Y^*_i)$ for right-censoring. Maximum-likelihood estimation combines two contributions:
+
+$$L(\beta, \sigma) = \prod_{i \notin \mathrm{cens}} \phi\!\left(\frac{Y_i - X_i^\top \beta}{\sigma}\right) \cdot \prod_{i \in \mathrm{cens}} \Phi\!\left(\frac{L - X_i^\top \beta}{\sigma}\right).$$
+
+The first product is the standard Normal likelihood for non-censored observations; the second is the probability of censoring for boundary observations. The Tobit model assumes the same coefficients govern both the threshold decision and the observed values; two-part models relax this when those processes differ.
+
+## Assumptions
+
+Latent outcome Normally distributed; censoring threshold known and the same for all observations (or known per observation); standard linear-model assumptions on the latent regression.
+
+## R Implementation
+
+```r
+library(AER)
+
+set.seed(2026)
+x <- rnorm(200)
+y_star <- 2 + 1.5 * x + rnorm(200)
+y <- pmax(y_star, 0)    # left-censored at 0
+
+fit <- tobit(y ~ x, left = 0, right = Inf)
+summary(fit)
+
+# Compare with OLS on observed y
+coef(lm(y ~ x))
+```
+
+## Output & Results
+
+`tobit()` returns coefficient estimates on the latent scale, recovering the data-generating parameters. OLS on the same observed (censored) data attenuates the slope toward zero, illustrating the bias from ignoring the censoring structure.
+
+## Interpretation
+
+A reporting sentence: "Tobit regression with left-censoring at 0 estimated the latent-scale slope at 1.47 (95 % CI 1.19 to 1.75, $p < 0.001$), close to the true 1.5; OLS on the same data gave 0.98 (95 % CI 0.78 to 1.18), biased toward zero by the unaccounted censoring." Always describe the censoring rule and its threshold in methods.
+
+## Practical Tips
+
+- Tobit assumes the same coefficients govern both the censoring and observed values; if these processes differ (some observations are structurally at the boundary, others are observed because of underlying behaviour), use a two-part / hurdle model instead.
+- For right-censored time-to-event data, use survival regression (Cox, parametric AFT), not Tobit; the censoring mechanism differs.
+- Check Normality of the latent residuals via quantile residuals (`fitdistrplus` for diagnostics); Tobit is sensitive to non-Normal latent errors.
+- Tobit is common in economics (income, expenditure); biomedicine more often uses two-part models for detection-limit data because the "below LOD" decision is biologically distinct from the actual concentration.
+- For mixed-effects censored outcomes, `survreg(... , dist = "gaussian")` extended with random effects via `survival` workarounds, or `crch` for heteroscedastic censored regression.
+- Predictions can target the censored observation (`type = "response"`) or the latent value (`type = "linear"`); choose based on what the question requires.
+
+## R Packages Used
+
+`AER::tobit()` for the canonical Tobit implementation; `survival::survreg()` with `Surv(..., type = "left")` as an alternative formulation; `VGAM::vglm()` with `family = tobit()` for richer specifications; `crch` for censored regression with heteroscedastic errors; `pscl::hurdle()` for hurdle alternatives when the threshold decision is distinct from the observed values.

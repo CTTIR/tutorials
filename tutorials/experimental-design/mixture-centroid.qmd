@@ -1,0 +1,71 @@
+---
+title: Simplex Centroid Designs
+date: "2026-04-17"
+description: Mixture designs including centroids of all sub-simplices
+categories:
+  - Experimental Design
+  - mixture
+  - centroid
+  - scheffe
+---
+
+## Introduction
+
+Simplex centroid designs are mixture experiments that include the centroids of every sub-simplex of the component simplex: each pure component (vertex), each binary midpoint (edge centroid), each ternary centroid (face centroid), and on up to the overall centroid of the full simplex. The result is a set of $2^q - 1$ design points for $q$ components that spans all blend orders simultaneously, making the design well suited to detecting higher-order synergies — three-way and four-way blend interactions that simpler simplex-lattice designs cannot estimate. They are widely used in food science, pharmaceutical formulation, and chemical product development whenever the response depends on combinations of multiple ingredients and pure components alone do not capture the behaviour.
+
+## Prerequisites
+
+Familiarity with mixture experiments, the simplex-lattice design, and the Scheffé canonical polynomial form for mixture models.
+
+## Theory
+
+For $q$ components a simplex centroid design has $2^q - 1$ points: $\binom{q}{1} = q$ vertices, $\binom{q}{2}$ edge midpoints, $\binom{q}{3}$ face centroids, and so on, up to the overall centroid. The Scheffé canonical polynomial including all blend orders is
+
+$$y = \sum_i \beta_i x_i + \sum_{i<j} \beta_{ij} x_i x_j + \sum_{i<j<k} \beta_{ijk} x_i x_j x_k + \cdots,$$
+
+with no intercept (because $\sum_i x_i = 1$). The simplex centroid design supplies exactly enough information to estimate every blend term up to the $q$-way interaction, in contrast to simplex-lattice designs that estimate only up to a chosen order $m \leq q$.
+
+## Assumptions
+
+Components are non-negative and sum to one (so the design lies on the standard simplex), higher-order synergies are potentially meaningful (otherwise a lower-order simplex-lattice would suffice), and residual error is approximately Normal with constant variance across the simplex.
+
+## R Implementation
+
+```r
+library(mixexp)
+
+design <- SCD(3)
+design
+
+set.seed(2026)
+design$y <- 10 * design$x1 + 12 * design$x2 + 8 * design$x3 +
+            6 * design$x1 * design$x2 +
+            4 * design$x1 * design$x3 +
+            3 * design$x1 * design$x2 * design$x3 +
+            rnorm(nrow(design), 0, 0.3)
+
+fit <- MixModel(design, "y",
+                mixcomps = c("x1", "x2", "x3"), model = 3)
+summary(fit)
+```
+
+## Output & Results
+
+`SCD()` returns the seven design points for a three-component simplex centroid (three vertices, three edge midpoints, the centroid). Fitting the cubic Scheffé model yields coefficients for the linear blend, the three pairwise blend interactions, and the ternary blend. Reporting the ternary coefficient explicitly is the canonical way to demonstrate that the centroid design has captured higher-order synergy beyond pairwise interaction.
+
+## Interpretation
+
+A reporting sentence: "The seven-run simplex centroid design with cubic Scheffé fit detected a meaningful ternary synergy ($\beta_{123} = 3.1$, $p = 0.02$) beyond the pairwise blend interactions ($\beta_{12} = 6.0$, $\beta_{13} = 3.9$). The ternary centroid (1/3, 1/3, 1/3) achieved a fitted response of 11.3, exceeding any binary edge centroid; the optimal blend therefore mixes all three components rather than just pairs." Always report the higher-order coefficients explicitly when justifying a centroid design.
+
+## Practical Tips
+
+- Simplex centroid designs require more runs than simplex-lattice designs of the same maximum interaction order; use the centroid form only when higher-order blends are scientifically plausible and worth estimating.
+- Plot the fitted response surface on the ternary (three-component) or quaternary simplex; mixture-design intuition is overwhelmingly visual, and contour plots on the simplex reveal where the optimum lies far more clearly than coefficient lists.
+- Augment the simplex centroid with axial points (positions partway between the centroid and each vertex) to improve coverage of non-centroid mixtures and stabilise prediction in the interior of the simplex.
+- For bounded mixtures with explicit constraints on minimum or maximum component proportions, extreme-vertices designs are the appropriate alternative; the standard centroid form assumes the full unconstrained simplex.
+- Mixture-amount designs cross the simplex with a total-amount factor and are appropriate when both formulation and total dose matter; they are common in pharmaceutical formulation and feed-mixture studies.
+- The `mixexp` and `MixExpR` packages also support mixture-process designs that combine mixture components with non-mixture process variables (e.g., temperature, pressure); these are increasingly common in chemical-engineering DoE.
+
+## R Packages Used
+
+`mixexp::SCD()` and `mixexp::MixModel()` for the canonical simplex centroid design and Scheffé-model fitting; `MixExpR` for an alternative tidyverse-friendly mixture-design ecosystem; `qualityTools::mixDesign()` for related mixture-design construction; `daewr` for textbook companion datasets and worked examples.

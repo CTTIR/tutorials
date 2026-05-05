@@ -1,0 +1,76 @@
+---
+title: tidybayes Workflow
+date: "2026-04-17"
+description: "Extract, manipulate, and visualise posterior draws in tidyverse style"
+categories:
+  - Bayesian Statistics
+  - tidybayes
+  - posterior
+  - ggplot2
+---
+
+## Introduction
+
+`tidybayes` is the bridge between Bayesian model objects and the rest of the tidyverse. After fitting a model with `brms`, `rstanarm`, or raw Stan, you typically want to compare posteriors across parameters, summarise interval estimates by subgroup, or layer credible bands on top of raw observations. Doing this with the matrices that samplers natively produce is awkward; `tidybayes` reshapes them into long-format tibbles in which every draw of every parameter occupies its own row, making the familiar `dplyr` verbs and `ggplot2` geoms work without modification.
+
+## Prerequisites
+
+A working understanding of Bayesian inference (priors, likelihoods, posteriors), comfort with `dplyr` pipelines, and a fitted MCMC model object. You do not need to write Stan by hand — `brm()` or `stan_glm()` is enough.
+
+## Theory
+
+A posterior is a joint distribution over parameters represented as $S$ MCMC draws. `tidybayes::spread_draws()` returns one row per draw per parameter, so a model with $K$ regression coefficients yields $S \times K$ rows. `gather_draws()` produces an even longer format with a `.variable` column, useful when faceting. The package adds geoms — `stat_halfeye`, `stat_pointinterval`, `stat_lineribbon` — that compute density and interval summaries on the fly, so the data frame stays untransformed. Predictive draws come from `epred_draws()` (expectation of the posterior predictive) and `predicted_draws()` (full predictive distribution including residual variation).
+
+## Assumptions
+
+The model has already converged: chains have mixed, $\hat R$ is below 1.01, and effective sample size is adequate. `tidybayes` does not diagnose convergence; it visualises whatever draws you give it, so a poorly mixed chain produces a misleading posterior summary.
+
+## R Implementation
+
+```r
+library(brms); library(tidybayes); library(ggplot2)
+
+data(mtcars)
+fit <- brm(mpg ~ wt + hp, data = mtcars, chains = 4, iter = 2000, refresh = 0)
+
+# Tidy draws
+draws <- fit |>
+  spread_draws(b_wt, b_hp)
+
+head(draws)
+
+# Visualise posterior
+draws |>
+  pivot_longer(c(b_wt, b_hp), names_to = "parameter", values_to = "value") |>
+  ggplot(aes(x = value, y = parameter)) +
+  stat_halfeye(fill = "#2A9D8F") +
+  theme_minimal()
+
+# Conditional effects
+fit |>
+  epred_draws(newdata = data.frame(wt = 2.5, hp = seq(50, 300, 10))) |>
+  ggplot(aes(x = hp, y = .epred)) +
+  stat_lineribbon(alpha = 0.3) +
+  theme_minimal()
+```
+
+## Output & Results
+
+`spread_draws()` returns a tibble with `.chain`, `.iteration`, `.draw`, and one column per parameter. The half-eye plot shows the posterior density together with a black point at the median and bars at the 66 % and 95 % credible intervals. `stat_lineribbon` produces a shaded band that widens at horsepower values poorly supported by the data, communicating where extrapolation is risky.
+
+## Interpretation
+
+A reporting sentence: "The posterior median effect of weight on miles-per-gallon was $-3.9$ (95 % CrI $-5.4$ to $-2.4$), while horsepower contributed $-0.03$ (95 % CrI $-0.05$ to $-0.01$); both intervals exclude zero, consistent with each predictor having a non-trivial association after the other is controlled for." Pair narrative numbers with the half-eye plot so readers can see the full posterior shape and not just an interval.
+
+## Practical Tips
+
+- Use `spread_draws()` when you want one column per parameter and `gather_draws()` when you plan to facet by parameter name.
+- Regular expressions are accepted: `spread_draws(fit, b_[a-z]+)` extracts every regression coefficient at once.
+- `add_epred_draws()` and `add_predicted_draws()` attach predictive draws directly to a `newdata` frame, which is convenient when overlaying credible bands on observed points.
+- Use `mean_qi()`, `median_qi()`, or `mode_hdi()` to collapse draws into interval summaries; `point_interval = mean_qi` is the default in most geoms but is worth setting explicitly for reproducibility.
+- The package is engine-agnostic: the same code path supports `rstan`, `cmdstanr`, `rstanarm`, and `brms`, so refactoring between them rarely affects downstream plotting code.
+- Avoid coercing draws to wide format prematurely; `ggplot2` is happiest with the long tibble that `tidybayes` returns.
+
+## R Packages Used
+
+`brms` for model fitting, `tidybayes` for posterior reshaping and stat geoms, `ggplot2` and `dplyr` for plotting and manipulation, plus `posterior` (loaded transitively) for low-level draw arrays.

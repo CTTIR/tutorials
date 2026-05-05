@@ -1,0 +1,79 @@
+---
+title: Trajectory Analysis
+date: "2026-04-17"
+description: Inferring developmental and activation trajectories from scRNA-seq
+categories:
+  - Bioinformatics
+  - scrnaseq
+  - trajectory
+  - pseudotime
+---
+
+## Introduction
+
+Trajectory inference orders single cells along a continuous developmental or activation path, producing a pseudotime value per cell that represents its progress along the trajectory. Biological processes such as cell differentiation, cell-cycle progression, T-cell activation, and disease progression are continuous in nature; clustering imposes discrete categories that conceal the underlying continuous structure. Trajectory methods recover that continuity by fitting smooth curves or graphs through the data in dimensional-reduced space.
+
+## Prerequisites
+
+A working understanding of scRNA-seq normalisation, dimensional reduction (PCA, UMAP), clustering, and the conceptual difference between discrete cell types and continuous developmental trajectories.
+
+## Theory
+
+The two dominant trajectory frameworks:
+
+**Slingshot** constructs a minimum spanning tree on cluster centroids in a reduced-dimensional space (typically PCA), specifies or infers a starting cluster, and fits smooth principal curves through each lineage from the start. Pseudotime is the arc length along each curve, computed per cell.
+
+**Monocle3** uses a reverse-graph-embedding approach on UMAP coordinates, fitting a principal graph and ordering cells along it. Monocle3 handles complex branching topologies more naturally than Slingshot.
+
+Both methods require either a specified root cluster or an inferred one (with biological-marker-based validation strongly recommended). Pseudotime values are then used as a continuous covariate in downstream gene-by-pseudotime models (`tradeSeq`, generalised additive models) to identify genes whose expression varies along the trajectory.
+
+## Assumptions
+
+Cells lie on a low-dimensional biological manifold; the cluster topology approximates the trajectory topology; the chosen root cluster represents the developmental starting state.
+
+## R Implementation
+
+```r
+library(slingshot); library(SingleCellExperiment)
+
+set.seed(2026)
+n_cells <- 200
+x <- seq(0, 1, length.out = n_cells)
+pc1 <- x + rnorm(n_cells, 0, 0.05)
+pc2 <- x^2 + rnorm(n_cells, 0, 0.05)
+
+sce <- SingleCellExperiment(
+  assays = list(counts = matrix(rpois(n_cells * 50, 3), 50, n_cells))
+)
+reducedDim(sce, "PCA") <- cbind(pc1, pc2)
+sce$cluster <- factor(cut(x, breaks = 4, labels = 1:4))
+
+sce <- slingshot(sce, clusterLabels = sce$cluster,
+                 reducedDim = "PCA", start.clus = "1")
+head(slingPseudotime(sce))
+
+plot(reducedDim(sce, "PCA"), col = sce$cluster, pch = 16, asp = 1,
+     main = "Slingshot lineage")
+lines(SlingshotDataSet(sce), lwd = 2, col = "black")
+```
+
+## Output & Results
+
+`slingshot()` returns the `SingleCellExperiment` object augmented with pseudotime values (one column per lineage). The plot overlays smooth principal curves on the PCA scatter, with cells coloured by cluster, making the inferred lineage structure visible.
+
+## Interpretation
+
+A reporting sentence: "Slingshot trajectory inference on the cluster-resolved PCA embedding recovered a single lineage from cluster 1 (root, validated as quiescent stem cells by SOX2 expression) through clusters 2 and 3 to cluster 4 (terminally activated cells); pseudotime correlated strongly with the known maturation marker BMI1 ($\rho = 0.84$, $p < 0.001$)." Always validate trajectory direction with known biology.
+
+## Practical Tips
+
+- Specify `start.clus` explicitly when biology supports a clear initial state; automatic root inference is often unreliable for complex datasets.
+- Compute trajectories on PCA space, not UMAP; UMAP distorts distances and produces unstable trajectory inference.
+- Test genes for differential expression along pseudotime with `tradeSeq` (generalised additive models on count data) for principled identification of trajectory-driven genes.
+- Monocle3 is preferred when the trajectory has complex branching structure (multiple lineages diverging); Slingshot is simpler and works well for linear or weakly branching trajectories.
+- Always validate the inferred direction against known biological markers (start-state vs end-state); pseudotime is direction-less without a defined root.
+- Pair trajectory analysis with cluster annotation; the lineage structure should connect biologically meaningful states, not arbitrary clusters.
+
+## R Packages Used
+
+`slingshot` for principal-curve-based trajectory inference; `monocle3` for graph-based trajectory inference with branching support; `tradeSeq` for differential gene expression along pseudotime; `condiments` for trajectory testing under multiple conditions; `dyno` for unified access to dozens of trajectory inference methods.

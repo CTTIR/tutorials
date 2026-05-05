@@ -1,0 +1,69 @@
+---
+title: White Noise Tests
+date: "2026-04-17"
+description: Testing a residual series for independence and constant variance
+categories:
+  - Time Series Analysis
+  - white-noise
+  - residual-diagnostics
+  - portmanteau
+---
+
+## Introduction
+
+After fitting a time-series model — ARIMA, ETS, regression with ARIMA errors — the residuals should look like white noise: zero mean, constant variance, and no autocorrelation. White-noise tests check these properties formally and are the standard residual-diagnostic battery for time-series modelling. Significant rejection indicates the model has missed structure that should motivate refinement; failure to reject supports model adequacy.
+
+## Prerequisites
+
+A working understanding of ARIMA models, residual diagnostics, and the autocorrelation function (ACF) as the visual counterpart to formal autocorrelation tests.
+
+## Theory
+
+Three test families dominate practice:
+
+- **Portmanteau tests** (Box-Pierce, Ljung-Box) aggregate squared sample autocorrelations over the first $h$ lags into a single chi-squared statistic. Under the white-noise null, $Q \sim \chi^2_{h - p - q}$ where $p + q$ is the number of fitted ARMA parameters. The Ljung-Box variant has a small-sample correction and is preferred over Box-Pierce.
+- **Turning-points test**: counts the number of local maxima and minima in the residual series; under iid, has known mean $2(n-2)/3$ and variance, giving an approximate Normal test for independence.
+- **Runs test**: counts runs of consecutive same-sign residuals; tests independence without distributional assumptions.
+
+A failure on Ljung-Box at any lag indicates missed autocorrelation that the model should address; a failure on the runs or turning-points test indicates more general non-randomness.
+
+## Assumptions
+
+Null: residuals are iid white noise. The tests have different power against autocorrelation, heteroscedasticity, and non-linearity; no single test detects all departures, so multiple tests are run as a battery.
+
+## R Implementation
+
+```r
+library(forecast)
+
+set.seed(2026)
+fit <- arima(AirPassengers, order = c(0, 1, 1), seasonal = c(0, 1, 1))
+resid_fit <- residuals(fit)
+
+# Ljung-Box
+Box.test(resid_fit, lag = 24, type = "Ljung-Box", fitdf = 2)
+
+# Visual + ARIMA diagnostic
+checkresiduals(fit)
+```
+
+## Output & Results
+
+`Box.test()` returns the test statistic and $p$-value; `checkresiduals()` aggregates the Ljung-Box test with ACF, histogram, and time-series plots into a single diagnostic display.
+
+## Interpretation
+
+A reporting sentence: "Ljung-Box at lag 24 on the residuals from the ARIMA(0,1,1)(0,1,1)\[12\] fit gave $Q = 28.1$ on 22 degrees of freedom ($p = 0.17$); the ACF showed no isolated significant lags, the histogram was approximately Normal, and the residual time-series plot showed no remaining structure. Residuals are consistent with white noise." Always pair the numerical test with the ACF plot.
+
+## Practical Tips
+
+- Choose the maximum lag $h$ around $\log n$ to a small multiple thereof; for seasonal models, set $h$ at least one full seasonal period to detect missed seasonal autocorrelation.
+- Use `fitdf = p + q` for ARMA($p$, $q$) fitted models; the test ignores the parameter cost otherwise and is anti-conservative.
+- A significant Ljung-Box after model fitting indicates missed structure; add AR or MA terms, seasonal terms, or consider a different model family.
+- Pair the formal Ljung-Box test with a visual ACF inspection; isolated significant lags can be substantively meaningful even if the omnibus test passes.
+- `forecast::checkresiduals()` is the convenient one-call diagnostic battery; use it routinely after every time-series fit.
+- For non-Normal residuals, a Jarque-Bera or Shapiro-Wilk test on the residuals complements the ACF-based tests.
+
+## R Packages Used
+
+Base R `Box.test()` for Ljung-Box and Box-Pierce; `forecast::checkresiduals()` for the integrated diagnostic; `tseries::runs.test()` for the runs test; `randtests::turning.point.test()` for the turning-points test; `feasts::ljung_box()` for the modern tidyverts implementation.

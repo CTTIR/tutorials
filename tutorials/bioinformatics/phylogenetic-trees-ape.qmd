@@ -1,0 +1,72 @@
+---
+title: Phylogenetic Trees with ape
+date: "2026-04-17"
+description: Building and interpreting phylogenetic trees using distance-based and maximum-likelihood methods
+categories:
+  - Bioinformatics
+  - phylogeny
+  - ape
+  - tree
+---
+
+## Introduction
+
+Phylogenetic trees depict the evolutionary relationships among sequences (species, strains, cells). They are central to taxonomy, molecular epidemiology, and cancer-clone tracing. `ape` is the standard R package for tree construction and manipulation, and `phangorn` adds maximum-likelihood and parsimony methods.
+
+## Prerequisites
+
+Multiple sequence alignment; nucleotide or amino-acid substitution models.
+
+## Theory
+
+**Distance-based methods** (neighbour-joining, UPGMA) compute pairwise distances from the alignment and build a tree that approximates those distances; fast but statistically crude.
+
+**Maximum-likelihood (ML)** methods posit a substitution model (JC69, K80, GTR + Gamma + I) and find the tree topology + branch lengths maximising the likelihood of the observed alignment.
+
+**Bootstrapping** resamples alignment columns to assess topology confidence; bootstrap values $\geq$ 70 % are commonly considered well-supported.
+
+## Assumptions
+
+Alignment columns are homologous and independent; the substitution model captures key features (transition/transversion bias, rate heterogeneity).
+
+## R Implementation
+
+```r
+library(ape)
+
+# Load an example alignment shipped with ape
+data(woodmouse)          # DNAbin alignment of 15 sequences, 965 sites
+
+# Distance matrix under K80 model
+d <- dist.dna(woodmouse, model = "K80")
+
+# Neighbour-joining tree
+nj_tree <- nj(d)
+plot(nj_tree, main = "Neighbour-joining tree (woodmouse)",
+     cex = 0.6, font = 1)
+add.scale.bar()
+
+# Bootstrap support
+bp <- boot.phylo(nj_tree, woodmouse,
+                 function(x) nj(dist.dna(x, model = "K80")),
+                 B = 100, quiet = TRUE)
+plot(nj_tree, main = "NJ tree with bootstrap support",
+     cex = 0.6, font = 1)
+nodelabels(bp, cex = 0.5, frame = "none", adj = c(1.3, -0.3))
+```
+
+## Output & Results
+
+A neighbour-joining tree with branch lengths in substitutions per site; bootstrap values annotated at internal nodes.
+
+## Interpretation
+
+"The neighbour-joining tree of the cytochrome b sequences recovers the regional subclades with bootstrap support > 80 %, consistent with the geographic sampling structure."
+
+## Practical Tips
+
+- For genome-scale data, use ML tools like `RAxML-NG` or `IQ-TREE` externally and import trees with `ape::read.tree()`.
+- NJ is fast but sensitive to model misspecification; ML is the gold standard for small-moderate alignments.
+- Use `phangorn::modelTest()` to pick a substitution model by AIC/BIC before running ML.
+- Annotate trees with `ggtree` for publication-ready figures including metadata overlays.
+- For large strain trees (SARS-CoV-2), use Nextstrain / `treetime` rather than base ape.

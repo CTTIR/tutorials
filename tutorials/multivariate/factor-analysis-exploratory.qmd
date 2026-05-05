@@ -1,0 +1,79 @@
+---
+title: Exploratory Factor Analysis
+date: "2026-04-17"
+description: "Identifying latent factors from correlated manifest variables, with extraction, rotation, and number-of-factors decisions"
+categories:
+  - Multivariate Statistics
+  - efa
+  - factor-analysis
+  - loading
+  - rotation
+---
+
+## Introduction
+
+Exploratory factor analysis (EFA) searches for a small number of latent factors that explain the correlations among a larger set of observed variables. It is the cornerstone of psychometric scale development, the standard tool for validating questionnaire structures, and a useful exploratory technique in any context where many correlated indicators are believed to reflect a smaller number of latent constructs. The output — rotated factor loadings together with factor correlations — directly informs item-selection, scale-construction, and CFA model-specification decisions.
+
+## Prerequisites
+
+A working understanding of correlation matrices, principal components analysis, and the conceptual difference between observed indicators and latent constructs.
+
+## Theory
+
+The common factor model is
+
+$$X = \Lambda F + U,$$
+
+where $X$ is the observed item matrix, $\Lambda$ is the loading matrix, $F$ are the common factors, and $U$ is unique (specific) variance. Unlike PCA, which lumps common and specific variance together, EFA explicitly partitions the variance.
+
+The standard EFA workflow has five steps:
+
+1. **Check factorability**: Kaiser-Meyer-Olkin (KMO > 0.6 acceptable, > 0.8 good) and Bartlett's sphericity test confirm that the correlation matrix has enough structure to factor.
+2. **Choose number of factors**: parallel analysis is the modern gold standard; the obsolete Kaiser eigenvalue-greater-than-1 rule and the subjective scree plot are still seen but should be supplemented.
+3. **Extract**: maximum likelihood (ML) for inferential purposes, principal-axis factoring (PAF) for robustness, principal-components for quick exploration.
+4. **Rotate**: varimax (orthogonal) or oblimin / promax (oblique) for interpretable loadings.
+5. **Interpret**: examine rotated loadings, factor correlations, and item communalities.
+
+## Assumptions
+
+Multivariate Normal continuous data for ML extraction; linearity of item-factor relationships; sufficient sample size (rule of thumb: at least 5–10 cases per item, with $n \ge 200$ as a floor).
+
+## R Implementation
+
+```r
+library(psych); library(GPArotation)
+
+d <- bfi[, 1:25]   # 25-item big-five inventory
+
+# Factorability
+KMO(d)
+cortest.bartlett(cor(d, use = "pairwise"), n = nrow(d))
+
+# Number of factors
+fa.parallel(d, fa = "fa")
+
+# EFA with 5 factors, oblique rotation
+efa <- fa(d, nfactors = 5, rotate = "oblimin", fm = "ml")
+print(efa, cut = 0.3)
+```
+
+## Output & Results
+
+`KMO()` returns overall and per-item factorability indices; `cortest.bartlett()` returns the sphericity test. `fa.parallel()` overlays observed eigenvalues on simulated null eigenvalues to determine the number of factors. `fa()` returns rotated loadings, communalities, factor correlations (under oblique rotation), and explained variance per factor.
+
+## Interpretation
+
+A reporting sentence: "EFA on 25 personality items (n = 2,800; KMO = 0.85, Bartlett's $\chi^2 = 18{,}245$, $p < 0.001$) supported a five-factor solution by parallel analysis; oblimin-rotated loadings aligned with the Big Five structure (extraversion, neuroticism, conscientiousness, agreeableness, openness), explaining 45 % of common variance, and factor correlations ranged from 0.15 to 0.42." Always report KMO, Bartlett, the number-of-factors method, the extraction method, and the rotation.
+
+## Practical Tips
+
+- Use parallel analysis (`fa.parallel`) for the number-of-factors decision; avoid the obsolete "eigenvalue > 1" Kaiser rule which over-extracts in most settings.
+- Prefer oblique rotation (oblimin, promax) by default; uncorrelated factors are rare in real psychological or biological data.
+- Watch for Heywood cases — loadings above 1 or communalities above 1 — which indicate over-extraction or model misspecification.
+- For ordinal Likert items, use polychoric correlations (`fa(..., cor = "poly")`); Pearson correlations on Likert items underestimate the true factor structure.
+- For confirmatory tests of the resulting structure, run a separate CFA (`lavaan::cfa`) on a held-out sample; never confirm on the data used to extract.
+- Report item communalities alongside loadings; communalities below 0.20 indicate items that contribute little to any factor and may need removal.
+
+## R Packages Used
+
+`psych` for `fa()`, `KMO()`, `fa.parallel()`, and the comprehensive EFA workflow; `GPArotation` for the underlying rotation algorithms; `EFAtools` for parallel-analysis-aware extraction with bootstrap confidence intervals; `lavaan` for confirmatory factor analysis as the natural follow-up; `MBESS` for additional reliability and structural-equation utilities.

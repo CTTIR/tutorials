@@ -1,0 +1,78 @@
+---
+title: Polynomial Regression
+date: "2026-04-17"
+description: "Extending linear regression with powers of predictors: orthogonal polynomials and overfitting risk"
+categories:
+  - "Regression & Modelling"
+  - polynomial
+  - orthogonal
+  - overfitting
+---
+
+## Introduction
+
+Polynomial regression fits the outcome as a sum of powers of a predictor: linear, quadratic, cubic, and higher. It is the simplest way to model a non-linear relationship without moving outside the linear-model framework. Quadratic and cubic terms can capture the curvature of biological dose-response, growth, and saturation curves, and the resulting model retains the familiar OLS inference tools. The principal weakness — wild extrapolation outside the data range and instability at high degrees — motivates the more disciplined alternative of restricted cubic splines.
+
+## Prerequisites
+
+A working understanding of simple linear regression, the geometric meaning of coefficients, and the bias-variance trade-off as model complexity grows.
+
+## Theory
+
+The polynomial model is
+
+$$Y = \beta_0 + \beta_1 X + \beta_2 X^2 + \dots + \beta_d X^d + \varepsilon.$$
+
+Two parameterisations coexist:
+
+- **Orthogonal polynomials** (`poly(X, d)`): basis functions are mutually uncorrelated. Numerically stable for high degrees; individual coefficients lose intuitive interpretation but predictions and overall fit are identical to raw polynomials.
+- **Raw polynomials** (`poly(X, d, raw = TRUE)` or `I(X^2)`): retain the natural "per unit" interpretation but introduce collinearity that inflates standard errors of individual coefficients.
+
+High-degree polynomials over-fit and extrapolate poorly; degrees 2 or 3 cover most applications, and beyond that splines (natural cubic, restricted cubic) are usually preferable because they constrain tail behaviour.
+
+## Assumptions
+
+Standard regression assumptions on residuals; the polynomial degree is high enough to capture the underlying curvature but not so high that it chases noise.
+
+## R Implementation
+
+```r
+# Simulated quadratic relationship
+set.seed(2026)
+x <- runif(100, 0, 10)
+y <- 2 + 3 * x - 0.4 * x^2 + rnorm(100, 0, 2)
+
+# Orthogonal quadratic
+fit_ortho <- lm(y ~ poly(x, 2))
+summary(fit_ortho)
+
+# Raw quadratic (interpretable coefficients)
+fit_raw <- lm(y ~ poly(x, 2, raw = TRUE))
+summary(fit_raw)
+
+# Visualise
+plot(x, y, pch = 20)
+curve(predict(fit_raw, newdata = data.frame(x)), add = TRUE,
+      col = "#2A9D8F", lwd = 2)
+```
+
+## Output & Results
+
+Both fits produce identical $R^2$, residuals, and predictions; the coefficient values differ because of the parameterisation. Visualising the fitted curve overlaid on the data is the primary inferential output, since coefficients on individual polynomial terms are not directly interpretable.
+
+## Interpretation
+
+A reporting sentence: "A quadratic regression of $y$ on $x$ recovered the simulated curvature ($R^2 = 0.78$); the raw-polynomial coefficients give a peak at $\hat x = -\hat\beta_1 / (2\hat\beta_2) = 3.75$, consistent with the data-generating function. A linear-only fit performed substantially worse ($R^2 = 0.30$) and missed the curvature entirely." Always show the fitted curve; coefficient tables alone do not communicate non-linear structure.
+
+## Practical Tips
+
+- Degrees 2 or 3 usually suffice for biological and clinical applications; beyond that, splines are more disciplined.
+- Orthogonal polynomials are more numerically stable for high degrees and avoid the matrix-conditioning problems that raw polynomials produce.
+- Use `anova(fit1, fit2)` to test whether a higher-order term improves the fit; the partial $F$-test is the right tool.
+- Do not extrapolate beyond the range of $X$; polynomials diverge to $\pm\infty$ rapidly outside the support.
+- For multiple predictors with non-linear effects, GAMs (`mgcv::gam`) automate smoothness selection and avoid the manual choice of polynomial degree.
+- Restricted cubic splines (`rms::rcs`) are usually preferable to high-order polynomials in clinical reporting because they constrain tail behaviour to be linear.
+
+## R Packages Used
+
+Base R `lm()` with `poly()` for orthogonal or raw polynomials; `splines::ns()` and `rms::rcs()` for spline alternatives; `mgcv::gam()` for non-parametric smooth-effect modelling; `car::residualPlots()` for diagnostic comparison of polynomial degrees.

@@ -1,0 +1,68 @@
+---
+title: "Parametric Survival: Log-Normal"
+date: "2026-04-17"
+description: Log-normal AFT model for non-monotone hazards
+categories:
+  - Survival Analysis
+  - log-normal-survival
+  - parametric
+---
+
+## Introduction
+
+The log-normal survival model assumes that $\log T$ follows a Normal distribution. Its distinctive feature among parametric survival models is a *non-monotone* hazard — the instantaneous risk rises early in follow-up, peaks, and then declines. This shape suits diseases or processes in which susceptible individuals fail relatively quickly while a hardy subset survives indefinitely: for example, post-surgical mortality (early peri-operative risk that wanes), some cancer recurrences, and time-to-engagement processes in behavioural data. Where Weibull and exponential models lock in monotone hazards, log-normal accommodates the rise-and-fall pattern naturally.
+
+## Prerequisites
+
+A working understanding of the log-normal distribution, parametric survival regression, and the accelerated-failure-time (AFT) parameterisation as an alternative to the proportional-hazards form.
+
+## Theory
+
+The log-normal survival function is
+
+$$S(t) = 1 - \Phi\!\left(\frac{\log t - \mu}{\sigma}\right),$$
+
+with hazard
+
+$$h(t) = \frac{(1/(t \sigma)) \phi((\log t - \mu)/\sigma)}{1 - \Phi((\log t - \mu)/\sigma)}.$$
+
+The hazard has a unique maximum near $t \approx \exp(\mu - \sigma^2)$ for $\sigma > 1$ and decreases thereafter. The AFT parameterisation $\log T = X\beta + \sigma W$ (with $W \sim \mathcal N(0, 1)$) makes regression coefficients interpretable as multiplicative effects on the *event time* — a one-unit increase in a covariate scales the time scale by $\exp(-\beta)$.
+
+## Assumptions
+
+A non-monotone (rising-then-falling) hazard, log-Normal residual structure on the log time scale, independent observations, and non-informative censoring.
+
+## R Implementation
+
+```r
+library(survival); library(flexsurv)
+
+data(lung)
+fit <- survreg(Surv(time, status) ~ age + sex, data = lung, dist = "lognormal")
+summary(fit)
+
+# flexsurv
+flex <- flexsurvreg(Surv(time, status) ~ age + sex, data = lung, dist = "lnorm")
+plot(flex, type = "hazard")
+```
+
+## Output & Results
+
+`survreg()` returns AFT coefficients on the log-time scale plus the scale parameter $\sigma$. `flexsurvreg()` produces equivalent estimates with cleaner survival, hazard, and quantile prediction methods. `plot(flex, type = "hazard")` draws the model-implied hazard curve, making the rise-peak-decline shape visible against KM-based hazard estimates.
+
+## Interpretation
+
+A reporting sentence: "A log-normal AFT model estimated that each additional year of age shortened expected event time by approximately 2 % ($\hat\beta_{\mathrm{age}} = -0.02$, 95 % CI $-0.04$ to $-0.00$); the model-implied hazard peaked at approximately 9 months and declined thereafter, consistent with the observed concentration of events in the first year of follow-up." Always plot the implied hazard alongside Kaplan-Meier to verify the non-monotone shape is supported by the data.
+
+## Practical Tips
+
+- Use log-normal when Kaplan-Meier or non-parametric hazard estimates show a clear "hump" of events early in follow-up; for monotone hazards, Weibull or exponential are simpler and more efficient.
+- Log-logistic is a close alternative with similar non-monotone hazard but heavier tails; compare AICs across both before committing.
+- AIC comparison across parametric families (exponential, Weibull, log-normal, log-logistic, generalised gamma) is the standard model-selection workflow; the generalised gamma nests several of these.
+- For very flexible hazards beyond the log-normal shape, Royston-Parmar spline-based models offer more freedom while remaining parametric.
+- Predictions on the natural time scale come via `predict(fit, type = "quantile")` for `survreg` or `summary(flex, type = "quantile")` for `flexsurv` objects.
+- When some covariates produce monotone hazards and others produce non-monotone, consider a heterogeneous-effects extension or a flexible spline model rather than forcing one parametric family.
+
+## R Packages Used
+
+`survival` for `survreg()` with `dist = "lognormal"`; `flexsurv` for `flexsurvreg()` with cleaner prediction interfaces and rich plotting; `eha` for additional parametric hazard models; `rstpm2` for Royston-Parmar spline-based parametric extensions when the log-normal hazard shape is too restrictive.

@@ -1,0 +1,74 @@
+---
+title: Response Surface Methodology
+date: "2026-04-17"
+description: Optimising processes via second-order polynomial response surfaces
+categories:
+  - Experimental Design
+  - rsm
+  - optimisation
+  - second-order
+---
+
+## Introduction
+
+Response surface methodology (RSM), introduced by Box and Wilson in 1951, is a sequential experimental strategy for finding and characterising the optimum of a process response in the space of multiple controllable factors. RSM combines fractional or full factorial screening, steepest-ascent search, and second-order polynomial fitting near the optimum into a coherent workflow that has become standard practice in chemical engineering, food science, pharmaceutical formulation, manufacturing process improvement, and any setting where a smooth response surface must be navigated efficiently. Its hallmark is the staged, sequential character: each stage of experimentation informs the next, and only the final stage commits resources to the dense second-order designs needed for full characterisation.
+
+## Prerequisites
+
+A working understanding of factorial designs, polynomial regression for response-surface modelling, gradient-based optimisation concepts, and the canonical form of a quadratic surface.
+
+## Theory
+
+RSM operates in two main phases:
+
+1. **First-order phase**: a fractional or full factorial with replicated centre points fits a linear model in a restricted operating region. The path of steepest ascent (or descent) along the fitted gradient guides further experimentation toward the optimum, with confirmation runs along the path.
+2. **Second-order phase**: once experimentation is near the optimum, a central composite or Box-Behnken design fits a full second-order polynomial. Canonical analysis decomposes the quadratic-form matrix into eigenvalues, classifying the stationary point as a maximum, minimum, saddle, or rising/stationary ridge.
+
+The canonical form is what makes RSM more than just curve-fitting: it characterises the geometry of the response surface and reveals when the optimum is genuinely a peak, when it lies on a ridge requiring constrained search, and when further experimentation is needed.
+
+## Assumptions
+
+The response is a smooth, well-defined function of the factors over the design region; a second-order polynomial is an adequate local approximation in the neighbourhood of the optimum; residual error is Normal with constant variance; runs are independent.
+
+## R Implementation
+
+```r
+library(rsm)
+
+set.seed(2026)
+ccd <- ccd(~ x1 + x2, n0 = c(3, 3), alpha = "rotatable",
+           randomize = FALSE)
+ccd$y <- 10 + 2 * ccd$x1 + 1.5 * ccd$x2 -
+         1.2 * ccd$x1^2 - 0.9 * ccd$x2^2 +
+         0.6 * ccd$x1 * ccd$x2 +
+         rnorm(nrow(ccd), 0, 0.4)
+
+fit <- rsm(y ~ SO(x1, x2), data = ccd)
+summary(fit)
+
+contour(fit, ~ x1 + x2, at = c(0, 0), image = TRUE,
+        main = "RSM response surface")
+
+canonical(fit)
+```
+
+## Output & Results
+
+The `rsm()` summary returns linear, quadratic, and interaction coefficients with significance tests, plus the canonical-analysis classification (maximum, minimum, saddle, or ridge) based on the eigenvalues of the quadratic-form matrix. `contour()` and `persp()` render the surface visually, and `canonical()` reports the stationary point in original and canonical coordinates.
+
+## Interpretation
+
+A reporting sentence: "Response-surface methodology with a 14-run rotatable CCD identified a concave surface with stationary point at $(x_1^*, x_2^*) = (0.85, 0.72)$. Canonical analysis confirmed a true maximum (both eigenvalues negative: $\lambda_1 = -1.31$, $\lambda_2 = -0.79$); predicted peak response 12.1, with a 95 % prediction interval of [11.5, 12.7]. Confirmation runs at the predicted optimum yielded 12.0 (mean of 3 replicates), within the interval and supporting the model." Always validate the predicted optimum with confirmation runs.
+
+## Practical Tips
+
+- The first-order steepest-ascent phase can save many runs; don't jump straight to a second-order fit if the operating region is far from the optimum, because a quadratic fit far from the peak yields meaningless coefficients and wasted runs.
+- Always inspect contour and 3D surface plots in addition to the coefficient table; numerical summaries can hide ridges, saddles, and other surface features that are obvious visually.
+- Canonical analysis reveals the nature of the stationary point through the signs of the eigenvalues: all negative = maximum, all positive = minimum, mixed signs = saddle, near-zero = ridge requiring constrained or directional search.
+- When the predicted optimum lies outside the experimental design region, use ridge analysis (constrained optimisation along the path of steepest ascent within the cube) rather than naive extrapolation, which is dangerous and statistically unsupported.
+- Follow RSM with confirmation runs at the predicted optimum and inside the prediction interval; falsified predictions reveal model inadequacy and motivate a higher-order fit or a re-positioned design region.
+- For multiple responses (a common situation in industrial work — yield, purity, cost), use desirability functions to combine the surfaces into a single optimisation criterion rather than optimising each response independently.
+
+## R Packages Used
+
+`rsm` for canonical RSM construction and analysis (CCD, BBD, second-order fits, canonical analysis, steepest-ascent paths, contour and 3D plots); `desirability` for multi-response desirability-function optimisation; `qualityTools` for an alternative RSM toolkit; `Vdgraph` for variance-dispersion graphs comparing RSM design alternatives; `daewr` for textbook companion examples and `DoE.wrapper` for higher-level design-workflow integration.

@@ -1,0 +1,351 @@
+---
+title: Probability Theory
+description: "Foundations of probability: axioms, conditional probability, Bayes' theorem, and the major probability distributions used in applied statistics"
+---
+
+Probability is the mathematical language of uncertainty, and every inferential procedure in statistics is built on its foundation. This area develops probability from its axioms through to the distributions that populate regression models, survival analysis, and Bayesian inference.
+
+The treatment is operational: every concept is paired with R code that either simulates from the distribution or computes the relevant probability, density, or quantile. Readers who prefer a purely conceptual reading can skip the code blocks; readers who prefer hands-on exploration can skim the theory.
+
+## Core topics
+
+- Kolmogorov axioms and the algebra of events
+- Conditional probability, the law of total probability, and Bayes' theorem
+- Random variables: discrete and continuous, PMF, PDF, CDF, survival and hazard functions
+- Expectation, variance, covariance, correlation, and the algebra of expectations
+- Joint, marginal, and conditional distributions; independence and conditional independence
+- Discrete distributions: Bernoulli, binomial, Poisson, geometric, negative binomial, hypergeometric, multinomial
+- Continuous distributions: uniform, normal, Student's t, chi-squared, F, gamma, beta, exponential, Weibull, log-normal
+- Multivariate normal distribution and its role throughout applied statistics
+- Transformations of random variables and the delta method
+- Convergence concepts: law of large numbers, central limit theorem
+
+Every distribution tutorial includes the R functions (`d`, `p`, `q`, `r` prefixes) and a worked example of when the distribution arises naturally in a real research setting.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bayes' Theorem](bayes-theorem.qmd)
+Inverting conditional probabilities: from likelihood to posterior, with applications to diagnostic testing and Bayesian inference
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Conditional Distributions](conditional-distributions.qmd)
+The distribution of one random variable given the value of another, and conditional expectations
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Conditional Probability](conditional-probability.qmd)
+Probability of one event given another, the product rule, and how conditioning reshapes the sample space
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Convolutions of Distributions](convolutions.qmd)
+Distribution of a sum of independent random variables, computed via convolution integrals
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Copulas: An Introduction](copulas-introduction.qmd)
+Separating marginal distributions from the dependence structure via Sklar's theorem
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Discrete vs Continuous Variables](discrete-vs-continuous.qmd)
+Two fundamental kinds of random variable and the mixed case in between
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Expectation of a Random Variable](expectation.qmd)
+The probability-weighted average of a random variable's values, with its algebraic properties
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Independence](independence.qmd)
+Events and variables that do not inform each other, and the distinction between pairwise and mutual independence
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Joint Distributions](joint-distributions.qmd)
+The distribution of a pair (or vector) of random variables, encoding their dependence structure
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Kolmogorov's Axioms of Probability](kolmogorov-axioms.qmd)
+The three axioms that define a probability measure on a sigma-algebra of events
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Law of Total Probability](law-of-total-probability.qmd)
+Decomposing a marginal probability over a partition of the sample space
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Marginal Distributions](marginal-distributions.qmd)
+Recovering the distribution of a single variable from a joint distribution by integrating out the others
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Random Variables](random-variables.qmd)
+Measurable functions from sample space to real numbers: the mathematical object behind every statistic
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Sample Space and Events](sample-space-events.qmd)
+The set of possible outcomes, events as subsets, and the algebra of set operations
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Student's t-Distribution](t-distribution.qmd)
+Heavier-tailed relative of the normal, used for small-sample inference on means
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Bernoulli Distribution](bernoulli-distribution.qmd)
+The distribution of a single binary trial with success probability p
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Beta Distribution](beta-distribution.qmd)
+Distribution over [0, 1] for proportions and probabilities; conjugate prior for the binomial
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Binomial Distribution](binomial-distribution.qmd)
+The count of successes in n independent Bernoulli trials with common probability p
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Chi-Squared Distribution](chi-squared-distribution.qmd)
+Sum of squared independent standard normals; foundation of chi-squared tests and ANOVA
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Correlation Coefficient](correlation-coefficient.qmd)
+Standardised covariance bounded in [-1, 1], measuring the strength of linear association
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Cumulative Distribution Function](cumulative-distribution-function.qmd)
+F(x) = P(X ≤ x): the universal descriptor of a random variable's distribution
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Exponential Distribution](exponential-distribution.qmd)
+Waiting time between events in a Poisson process, with the memoryless property
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The F Distribution](f-distribution.qmd)
+Ratio of two independent scaled chi-squared random variables; foundation of ANOVA and variance tests
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Gamma Distribution](gamma-distribution.qmd)
+Flexible right-skewed distribution for positive continuous data; sum of independent exponentials
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Geometric Distribution](geometric-distribution.qmd)
+Number of Bernoulli trials until the first success, with the memoryless property
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Hazard Function](hazard-function.qmd)
+Instantaneous event rate given survival so far; central concept of survival analysis
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Hypergeometric Distribution](hypergeometric-distribution.qmd)
+Sampling without replacement from a finite population
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Log-Normal Distribution](lognormal-distribution.qmd)
+Positive-valued distribution whose logarithm is normal; multiplicative processes and biomedical concentrations
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Multinomial Distribution](multinomial-distribution.qmd)
+Multi-category generalisation of the binomial with category probabilities summing to one
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Multivariate Normal Distribution](multivariate-normal.qmd)
+Generalisation of the normal to random vectors; the keystone of multivariate analysis
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Negative Binomial Distribution](negative-binomial-distribution.qmd)
+Overdispersed count distribution, derivable as a gamma mixture of Poissons
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Normal Distribution](normal-distribution.qmd)
+Definition, properties, and practical use of the normal (Gaussian) distribution, with R examples for every common task
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Poisson Distribution](poisson-distribution.qmd)
+Counts of rare events per unit time or space with rate λ
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Probability Density Function](probability-density-function.qmd)
+The function whose integral gives probability for a continuous random variable
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Probability Mass Function](probability-mass-function.qmd)
+The function that assigns probability to each value of a discrete random variable
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Survival Function](survival-function.qmd)
+Probability of surviving past time t; the complement of the CDF for positive random variables
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Uniform Distribution](uniform-distribution.qmd)
+Equal probability over an interval (continuous) or a set (discrete)
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Weibull Distribution](weibull-distribution.qmd)
+Flexible positive-valued distribution with monotone hazard; reliability and survival analysis
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Transformations of Random Variables](transformations-of-rv.qmd)
+Distribution of g(X) given the distribution of X, via the change-of-variables formula
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Variance and Covariance](variance-covariance-of-rv.qmd)
+Second moments of one and two random variables: dispersion and joint variation
+:::
+
+:::

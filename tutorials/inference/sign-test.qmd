@@ -1,0 +1,82 @@
+---
+title: The Sign Test
+date: "2026-04-17"
+description: Testing a median or paired difference using only the direction of each observation
+categories:
+  - Inferential Statistics
+  - sign-test
+  - median
+  - non-parametric
+---
+
+## Introduction
+
+The sign test is the most assumption-light procedure for a one-sample median or paired comparison. It ignores the magnitude of deviations and uses only whether each observation is above or below the reference value (or whether each pair increased or decreased).
+
+## Prerequisites
+
+Binomial distribution, paired data.
+
+## Theory
+
+For iid $X_1, \ldots, X_n$ and a hypothesised median $m_0$, let $S = \#\{X_i > m_0\}$. Under $H_0$: median $= m_0$,
+
+$$S \sim \mathrm{Binomial}(n', 0.5),$$
+
+where $n'$ excludes any $X_i = m_0$. The two-sided p-value is computed from the binomial PMF.
+
+For paired data, apply the test to the signs of the paired differences.
+
+The sign test has lower power than the Wilcoxon signed-rank when the symmetry assumption of the latter holds. Its advantage is that it works under **any** continuous distribution.
+
+## Assumptions
+
+- iid observations (or independent pairs).
+- Continuous distribution (else need to handle ties at the reference).
+
+No symmetry, no shape assumption.
+
+## R Implementation
+
+```r
+library(BSDA)
+set.seed(2026)
+
+# One-sample: test whether median equals 100
+x <- rlnorm(30, meanlog = log(105), sdlog = 0.3)
+SIGN.test(x, md = 100)
+
+# Paired: test whether intervention changes a score
+pre  <- rpois(25, 5)
+post <- pre + sample(-1:3, 25, replace = TRUE)
+SIGN.test(post, pre, md = 0)
+```
+
+## Output & Results
+
+```
+        One-sample Sign-Test
+data:  x
+s = 21, p-value = 0.021
+alternative hypothesis: true median is not equal to 100
+95 percent confidence interval: 97.5 to 120
+
+        Dependent-samples Sign-Test
+data:  post and pre
+S = 19, p-value = 0.016
+95 percent CI for median difference: 0.5 to 2.0
+```
+
+Both tests reject: the one-sample median significantly exceeds 100; paired differences are significantly positive.
+
+## Interpretation
+
+"The median post-intervention score was 7.0 (95 % CI 0.5 to 2.0 for the paired difference), significantly higher than pre (sign test, 19 of 25 positive differences, exact binomial p = 0.016)."
+
+## Practical Tips
+
+- Use the sign test when the distribution of paired differences is badly skewed or clearly not symmetric.
+- Report the number of positive, negative, and zero differences; the latter are excluded from the test.
+- The sign test's 95 % CI for the median is a distribution-free interval based on order statistics.
+- With many ties at the reference, consider the Wilcoxon or rank-based alternative, understanding their stronger assumptions.
+- Power is lower than Wilcoxon signed-rank; prefer Wilcoxon when its symmetry assumption is plausible.

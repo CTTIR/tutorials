@@ -1,0 +1,91 @@
+---
+title: Frequency Tables
+date: "2026-04-17"
+description: "Counting categorical and discrete-numeric variables: absolute, relative, and cumulative frequencies"
+categories:
+  - Descriptive Statistics
+  - frequency-table
+  - counts
+  - proportions
+---
+
+## Introduction
+
+A frequency table is the most basic summary of a categorical or discrete-numeric variable: for each distinct value, how many times it occurred (absolute frequency), what share of the sample it represents (relative frequency), and the running total up to and including that value (cumulative frequency). Frequency tables are the building blocks of chi-squared tests, goodness-of-fit analyses, and most epidemiological prevalence reporting.
+
+## Prerequisites
+
+The reader should know what a categorical variable is and be comfortable with R factors.
+
+## Theory
+
+Given a categorical variable $X$ with levels $c_1, \ldots, c_k$ observed in a sample of size $n$:
+
+- **Absolute frequency** $f_j$: number of times $c_j$ appears.
+- **Relative frequency** $r_j = f_j / n$: the proportion.
+- **Cumulative frequency** $F_j = f_1 + \ldots + f_j$: running count. Meaningful only for ordered variables.
+- **Cumulative relative frequency** $R_j = F_j / n$: running proportion, equivalent to the empirical CDF at $c_j$.
+
+## Assumptions
+
+Frequency tables are descriptive; no distributional assumption. The variable must be categorical (nominal or ordinal) or discrete numeric.
+
+## R Implementation
+
+```r
+library(dplyr)
+library(janitor)
+library(gt)
+
+set.seed(2026)
+cohort <- tibble::tibble(
+  stage = factor(sample(c("I", "II", "III", "IV"), 250, replace = TRUE,
+                        prob = c(0.20, 0.35, 0.30, 0.15)),
+                 levels = c("I", "II", "III", "IV"), ordered = TRUE)
+)
+
+# Base R
+table(cohort$stage)
+prop.table(table(cohort$stage))
+cumsum(prop.table(table(cohort$stage)))
+
+# Tidy with janitor
+cohort |>
+  tabyl(stage) |>
+  adorn_pct_formatting(digits = 1) |>
+  adorn_totals("row")
+
+# Publication-ready via gt
+cohort |> count(stage) |>
+  mutate(pct = 100 * n / sum(n),
+         cum_pct = cumsum(pct)) |>
+  gt() |>
+  fmt_number(columns = c(pct, cum_pct), decimals = 1)
+```
+
+## Output & Results
+
+```
+  I  II III  IV
+ 53  87  77  33
+
+    I    II   III    IV
+ 0.21  0.35  0.31  0.13
+
+    I    II   III    IV
+ 0.21  0.56  0.87  1.00
+```
+
+For the ordered stages, the cumulative column shows that 87% of patients are stage III or earlier.
+
+## Interpretation
+
+Report frequency tables for every categorical variable in a manuscript's Table 1. Include both counts and percentages: "Stage III: 77 (30.8%)". For ordered variables, the cumulative column often tells the story more clearly than the raw counts.
+
+## Practical Tips
+
+- Preserve factor level ordering when reporting; ordered factors in R maintain the sequence automatically.
+- Report the denominator used for percentages (total sample or column total) to avoid confusion.
+- For sparse levels, consider collapsing categories; report both the original and collapsed table.
+- Missing values: `table()` excludes NAs by default; use `useNA = "always"` to include them.
+- Publication tables benefit from `gtsummary::tbl_summary()` which handles both frequencies and continuous variables.

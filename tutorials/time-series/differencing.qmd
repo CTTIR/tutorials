@@ -1,0 +1,76 @@
+---
+title: Differencing a Time Series
+date: "2026-04-17"
+description: Removing trend via first differences; seasonal differencing for cyclic patterns
+categories:
+  - Time Series Analysis
+  - differencing
+  - trend
+  - seasonal-difference
+---
+
+## Introduction
+
+Differencing is the simplest tool for making a non-stationary series stationary: replace each observation by its difference from the previous one. First differences remove linear trends; seasonal differences remove fixed-period seasonality; combined regular and seasonal differencing handles both. The order of differencing $d$ in ARIMA$(p, d, q)$ is exactly the count of first differences applied; the seasonal differencing order $D$ in SARIMA$(p,d,q)(P,D,Q)_s$ counts seasonal differences.
+
+## Prerequisites
+
+A working understanding of stationarity, AR models, and the relationship between trend, seasonality, and the spectrum of a series.
+
+## Theory
+
+Standard differencing operations:
+
+- **First differences**: $\Delta y_t = y_t - y_{t-1}$. Removes linear (level-shift) non-stationarity.
+- **Second differences**: $\Delta^2 y_t = \Delta y_t - \Delta y_{t-1}$. Removes quadratic trend. Rarely needed in practice; second differences typically over-difference and inflate residual variance.
+- **Seasonal differences** at period $s$: $\Delta_s y_t = y_t - y_{t-s}$. Removes constant seasonal patterns at frequency $1/s$.
+- **Combined regular and seasonal**: $\Delta \Delta_s y_t = (y_t - y_{t-1}) - (y_{t-s} - y_{t-s-1})$.
+
+Over-differencing introduces unnecessary moving-average structure (the differenced series has a strong negative lag-1 autocorrelation); always use the minimum differencing order needed for stationarity. KPSS- or ADF-based automated selection (`forecast::ndiffs` and `nsdiffs`) chooses the required orders.
+
+## Assumptions
+
+The non-stationarity is of the kind that differencing addresses (stochastic trend or fixed-period seasonality); deterministic polynomial trends are better handled by detrending regression.
+
+## R Implementation
+
+```r
+library(forecast)
+
+x <- AirPassengers
+plot(x)
+
+# First difference
+plot(diff(x))
+
+# Seasonal difference (lag = 12 for monthly)
+plot(diff(x, lag = 12))
+
+# Both
+plot(diff(diff(x, lag = 12)))
+
+# Automatic: number of differences needed
+ndiffs(log(x))         # regular
+nsdiffs(log(x))        # seasonal
+```
+
+## Output & Results
+
+`diff(x, lag = s, differences = d)` produces $\Delta^d_s y$. `ndiffs()` returns the required regular differencing order based on KPSS by default; `nsdiffs()` returns the seasonal differencing order. For the log-AirPassengers series, both regular and seasonal differencing once each produces a stationary residual.
+
+## Interpretation
+
+A reporting sentence: "Monthly air-passenger counts on the log scale required one regular difference and one seasonal difference at lag 12 to achieve stationarity (KPSS $p > 0.10$ on the doubly-differenced series); the resulting series motivates an ARIMA$(0, 1, 1)(0, 1, 1)_{12}$ model on the log scale, equivalent to a multiplicative seasonal ARIMA on the original scale." Always confirm stationarity after differencing.
+
+## Practical Tips
+
+- Log-transform first for series with variance that grows with the level; the log scale is then additive and the differencing is well-behaved.
+- ARIMA$(p, d, q)$ encodes the differencing order $d$; the corresponding `Arima()` call automatically applies the difference and works with the original series for prediction.
+- `forecast::ndiffs()` and `nsdiffs()` automate the choice of regular and seasonal differencing orders; useful as a starting point for `auto.arima`.
+- Over-differencing inflates residual variance and introduces a strong negative MA(1) coefficient; if you see $\theta_1$ near $-0.95$ in a differenced model, consider whether the differencing was excessive.
+- Always confirm stationarity after differencing with ADF and KPSS; if either test still indicates non-stationarity, examine the data for structural breaks or non-linear trends.
+- For deterministic polynomial trends, detrending regression is more efficient than differencing; ARIMA's stochastic-trend interpretation differs.
+
+## R Packages Used
+
+Base R `diff()` for differencing operations; `forecast::ndiffs()`, `nsdiffs()`, and `auto.arima()` for automated differencing decisions; `feasts::unitroot_ndiffs()` and `unitroot_nsdiffs()` for the modern tidyverts equivalents; `tseries::adf.test()` and `kpss.test()` for confirming stationarity after differencing.

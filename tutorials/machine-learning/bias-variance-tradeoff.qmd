@@ -1,0 +1,72 @@
+---
+title: The Bias-Variance Tradeoff
+date: "2026-04-17"
+description: Decomposition of prediction error into structural and sampling components
+categories:
+  - Machine Learning
+  - bias-variance
+  - decomposition
+  - flexibility
+---
+
+## Introduction
+
+Every supervised-learning error decomposes into structural bias (the wrong model class cannot fit the truth), variance (sampling noise in the fit), and irreducible noise. The bias-variance tradeoff is the single most important mental model for picking between a rigid and a flexible estimator.
+
+## Prerequisites
+
+Regression basics; expected value and variance of estimators.
+
+## Theory
+
+For squared loss and a target $f(x) + \varepsilon$ with $\mathbb{E}[\varepsilon] = 0$, $\text{Var}(\varepsilon) = \sigma^2$:
+
+$$\mathbb{E}[(y - \hat{f}(x))^2] = \underbrace{(\mathbb{E}[\hat{f}(x)] - f(x))^2}_{\text{Bias}^2} + \underbrace{\mathbb{E}[(\hat{f}(x) - \mathbb{E}[\hat{f}(x)])^2]}_{\text{Variance}} + \sigma^2.$$
+
+Complex models: low bias, high variance. Simple models: high bias, low variance. Regularisation, averaging (bagging), and dropout explicitly shift along this curve.
+
+## Assumptions
+
+Squared loss and iid samples; trained estimator is a random function of the training set.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+true_f <- function(x) sin(x)
+x_test <- seq(0, 2 * pi, length.out = 100)
+f_true <- true_f(x_test)
+
+n_reps  <- 200; n_train <- 30
+
+simulate_fit <- function(degree) {
+  preds <- replicate(n_reps, {
+    x_train <- runif(n_train, 0, 2 * pi)
+    y_train <- true_f(x_train) + rnorm(n_train, 0, 0.3)
+    mdl <- lm(y_train ~ poly(x_train, degree))
+    predict(mdl, newdata = data.frame(x_train = x_test))
+  })
+  bias <- rowMeans(preds) - f_true
+  variance <- apply(preds, 1, var)
+  list(bias2 = mean(bias^2), variance = mean(variance))
+}
+
+sapply(c(1, 3, 7, 15), simulate_fit)
+```
+
+## Output & Results
+
+As polynomial degree grows, bias^2 falls and variance rises; the sum (excess MSE beyond noise) is minimised at an intermediate flexibility.
+
+## Interpretation
+
+"Polynomial degree 3 balanced bias (0.12) and variance (0.09), minimising excess MSE; degree 15 reduced bias to 0.001 but inflated variance to 0.45, hurting generalisation."
+
+## Practical Tips
+
+- Overfitting corresponds to high variance (the same structure fits differently across training resamples).
+- Underfitting corresponds to high bias (structurally too restrictive to capture the signal).
+- Ensembling (bagging, random forests) reduces variance without increasing bias.
+- Regularisation (ridge, lasso) increases bias but reduces variance -- tune by CV.
+- Deep learning's "double descent" is a modern complication; the classical curve is the best starting intuition.

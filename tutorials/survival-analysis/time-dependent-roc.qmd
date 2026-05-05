@@ -1,0 +1,68 @@
+---
+title: Time-Dependent ROC
+date: "2026-04-17"
+description: ROC curves and AUC evaluated at specific follow-up times for survival predictions
+categories:
+  - Survival Analysis
+  - time-dependent-roc
+  - auc
+  - timeROC
+---
+
+## Introduction
+
+Time-dependent ROC extends classical ROC analysis to right-censored survival data. At each chosen evaluation time $t$, the analysis treats subjects observed to fail before $t$ as cases and subjects known to survive past $t$ as controls; subjects censored before $t$ are reweighted via inverse-probability-of-censoring weights. The resulting time-specific AUC summarises how well a continuous risk score (such as a Cox linear predictor) discriminates failures from survivors at $t$. It is the natural extension of the C-index to "what is the AUC at exactly one year" reporting.
+
+## Prerequisites
+
+A working understanding of ROC curves, the C-index, Cox regression linear predictors, and inverse-probability-of-censoring weighting.
+
+## Theory
+
+Two definitions of cases and controls compete:
+
+- **Incident / dynamic** ($I/D$): cases are subjects who fail at time $t$ exactly; controls are those still at risk past $t$. Useful for hazard-style discrimination.
+- **Cumulative / dynamic** ($C/D$): cases are subjects who fail at any time $\le t$; controls are those still at risk past $t$. The more common choice for clinical risk-score reporting.
+
+Inverse-probability-of-censoring weights compensate for subjects censored before the comparison can be made; the censoring distribution is typically estimated by Kaplan-Meier on the censoring times. The result is a time-dependent AUC at each requested $t$ with bootstrap or analytical confidence intervals.
+
+## Assumptions
+
+Non-informative censoring (or correctly conditional on covariates if `weighting = "cox"` or `"aalen"` is used) and a continuous risk marker that is meaningful as a ranking score.
+
+## R Implementation
+
+```r
+library(timeROC); library(survival)
+
+data(lung)
+fit <- coxph(Surv(time, status) ~ age + sex + ph.ecog, data = lung)
+lp <- predict(fit, type = "lp")
+
+tROC <- timeROC(T = lung$time, delta = lung$status, marker = lp,
+                times = c(180, 365, 730), cause = 1,
+                weighting = "marginal")
+tROC
+plot(tROC, time = 365, col = "steelblue")
+```
+
+## Output & Results
+
+`timeROC` returns time-specific AUCs with their standard errors at each requested horizon, along with empirical sensitivity-specificity pairs that can be plotted as a ROC curve. The plot shows the ROC curve at one selected time; running over multiple times reveals how discrimination evolves through follow-up.
+
+## Interpretation
+
+A reporting sentence: "The Cox linear predictor's time-dependent AUC was 0.72 (95 % CI 0.65 to 0.79) at one year and 0.69 (95 % CI 0.62 to 0.76) at two years; discrimination remained stable across the two-year window relevant to clinical decision-making." Always report AUCs at clinically meaningful horizons, not just the global C-index, because discrimination can change substantially across follow-up.
+
+## Practical Tips
+
+- Report AUCs at the horizons that drive clinical decisions; a five-year AUC is irrelevant for a six-month treatment decision and vice versa.
+- The cumulative/dynamic definition is more common in clinical reporting; incident/dynamic is more useful when modelling hazards directly.
+- `timeROC()` supports competing risks via the `cause` argument; the same workflow applies with the failure of interest specified.
+- AUC alone does not capture calibration; pair time-dependent AUCs with calibration plots and Brier scores at the same times.
+- For external validation, apply the development-cohort risk score to the validation cohort and compute time-dependent AUCs there; in-sample AUCs are optimistic.
+- Use `weighting = "cox"` or `weighting = "aalen"` when censoring depends on covariates; the marginal weighting assumes censoring is uninformative given baseline covariates.
+
+## R Packages Used
+
+`timeROC` for `timeROC()` with marginal, Cox, and Aalen-based weighting; `risksetROC` for an alternative kernel-smoothed implementation; `pec` for compatible prediction-error curves; `survAUC` for additional AUC variants including Uno's C-statistic.

@@ -1,0 +1,77 @@
+---
+title: Crossover Designs
+date: "2026-04-17"
+description: Within-subject comparison of treatments with washout and carryover consideration
+categories:
+  - Experimental Design
+  - crossover
+  - ab-ba
+  - carryover
+---
+
+## Introduction
+
+Crossover designs apply two or more treatments to each subject in sequence, separated by washout periods, so that every subject acts as their own control. The within-subject comparison gains substantial efficiency over parallel-group designs because between-subject variability — typically the largest component of variance in clinical-pharmacology studies — is removed from the treatment contrast. The simplest and most widely used crossover is the two-period two-treatment AB/BA design, in which half of the subjects receive treatment A in period 1 and B in period 2, and the other half receive the reverse sequence. Crossovers are standard in bioequivalence studies, in early-phase clinical pharmacology, and in many sensory and ergonomic experiments where conditions can be evaluated repeatedly on the same subject.
+
+## Prerequisites
+
+A working understanding of repeated-measures analysis, mixed-effects models with subject as a random effect, and the concept of carryover (residual treatment effect from one period influencing the next).
+
+## Theory
+
+In an AB/BA crossover, the standard mixed-effects analysis model is
+
+$$y_{ijk} = \mu + \pi_j + \tau_k + s_i + \varepsilon_{ijk},$$
+
+with period effect $\pi_j$, treatment effect $\tau_k$, subject random effect $s_i \sim N(0, \sigma_s^2)$, and residual error $\varepsilon_{ijk}$. The treatment effect is estimated as the within-subject difference, eliminating the between-subject variance. **Carryover** — a residual treatment effect from period 1 affecting period 2 — manifests as a sequence-by-period interaction; if present, it biases the simple within-subject treatment estimate and requires either an adequate washout, a more complex Williams design, or a model that includes carryover terms.
+
+## Assumptions
+
+Carryover is absent or has been controlled by an adequate washout period (pharmacologically, at least five half-lives of the active compound), the underlying condition is stable across periods (no progressive disease or natural recovery), and treatment effects are independent of order. Subjects are exchangeable between sequences.
+
+## R Implementation
+
+```r
+library(nlme)
+
+set.seed(2026)
+n <- 20
+sequence <- sample(c("AB", "BA"), n, replace = TRUE)
+subj_re <- rnorm(n, 0, 1)
+
+y_A <- subj_re + rnorm(n, 0, 0.5)
+y_B <- subj_re + 0.6 + rnorm(n, 0, 0.5)
+
+df <- data.frame(
+  subject = rep(1:n, each = 2),
+  period  = rep(1:2, n),
+  sequence = rep(sequence, each = 2),
+  treatment = unlist(lapply(sequence, function(s) strsplit(s, "")[[1]])),
+  y = unlist(lapply(1:n, function(i)
+    if (sequence[i] == "AB") c(y_A[i], y_B[i]) else c(y_B[i], y_A[i])))
+)
+
+fit <- lme(y ~ treatment + period, random = ~ 1 | subject, data = df)
+summary(fit)$tTable
+```
+
+## Output & Results
+
+The mixed-effects fit returns the treatment effect with within-subject standard error and the period effect as a separate fixed term. The random-intercept structure absorbs between-subject variance, dramatically tightening the treatment estimate compared with a parallel-group design of the same total sample size.
+
+## Interpretation
+
+A reporting sentence: "The two-period AB/BA crossover analysis estimated the B–A treatment difference as 0.56 (95 % CI 0.32 to 0.80, $p < 0.001$), achieving roughly three-fold precision relative to a parallel-group design with the same number of subjects. The period effect was not significant ($p = 0.41$), and the sequence × period interaction (a marker of carryover) was also non-significant ($p = 0.62$), supporting the no-carryover assumption. The mandated washout of seven half-lives was sufficient." Always report period and carryover diagnostics.
+
+## Practical Tips
+
+- Adequate washout — at least five half-lives of the active compound, often more for compounds with long-lived metabolites — is the best defence against carryover; designing in conservative washouts is far cheaper than dealing with biased results post hoc.
+- Avoid crossover designs for conditions that evolve naturally during the study (progressive disease, healing wounds, post-surgical recovery) or for interventions whose effects are short-lived and wash out rapidly without further dosing; both violate the stability assumption.
+- The 3 × 3 Williams design balances first-order carryover effects across treatment pairs when carryover is plausible and washout cannot be made arbitrarily long; it is the standard alternative to AB/BA in pharmacology.
+- Always analyse with a mixed-effects model that includes subject as a random effect; pooled two-sample $t$-tests ignore the within-subject structure and overstate the true precision dramatically.
+- Report the period effect separately from the treatment effect; a strong period effect (e.g., a drift in measurement instrument) can bias the treatment estimate if the design is imbalanced across sequences.
+- Pre-specify the carryover diagnostic and what will be done if carryover is detected; reactive analysis decisions after seeing the data inflate type-I error and are increasingly flagged by regulators.
+
+## R Packages Used
+
+`nlme::lme()` for mixed-effects analysis with explicit random-effect specification; `lme4::lmer()` and `lmerTest` as alternatives with Satterthwaite or Kenward-Roger denominator df; `Crossover` for canonical crossover-design construction including Williams squares; `crossdes` for systematic generation of balanced crossover layouts; `daewr` for textbook companion datasets including pharmacology examples.

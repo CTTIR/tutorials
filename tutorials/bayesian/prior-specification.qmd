@@ -1,0 +1,68 @@
+---
+title: Prior Specification
+date: "2026-04-17"
+description: "Choosing priors: informative, weakly informative, flat, and the risks of each"
+categories:
+  - Bayesian Statistics
+  - prior
+  - weakly-informative
+  - informative
+---
+
+## Introduction
+
+Choosing a prior is the most consequential modelling decision in any Bayesian analysis after the choice of likelihood. The prior shapes the posterior strongly when data are sparse, almost imperceptibly when data are abundant, and unpredictably in the middle ground that most applied work occupies. Three categories cover most needs: flat or improper priors, weakly informative priors that regularise without imposing substantive content, and informative priors that incorporate genuine pre-data knowledge. Modern Bayesian practice has converged on weakly informative priors as the default because they stabilise sampling, regularise small-sample inference, and remain agnostic enough that the data dominate the posterior whenever they are informative.
+
+## Prerequisites
+
+A working understanding of Bayes' theorem, the role of the prior in posterior updating, and basic familiarity with parameter scales (standardised vs. raw, log-scale vs. linear).
+
+## Theory
+
+**Flat / improper priors** assign constant density across the support. They sometimes appear intuitive but can yield improper posteriors in hierarchical models or near boundary points, and they are not invariant under reparameterisation.
+
+**Weakly informative priors** are proper distributions broad enough to admit any plausible value while ruling out absurd ones. Standard choices are $\mathcal N(0, 2.5)$ for standardised slopes, $\mathcal N(0, 10)$ for intercepts, $\mathrm{half\text{-}Cauchy}(0, 5)$ or $\mathrm{half\text{-}Normal}(0, 2.5)$ for variance components, and $\mathrm{LKJ}(2)$ for correlation matrices. They regularise estimates without injecting domain claims.
+
+**Informative priors** carry substantive content from previous studies, theoretical bounds, or expert elicitation. They are appropriate when the information is defensible and reproducible, and inappropriate when chosen post-hoc to push the posterior somewhere convenient.
+
+The **prior predictive check** — simulating from the prior, propagating through the likelihood, and inspecting the implied range of `y` — is the single most useful sanity check. If the prior implies blood pressures of 1,000 mm Hg or odds ratios of $10^6$, it is too wide.
+
+## Assumptions
+
+The prior reflects pre-data information honestly, the likelihood is correctly specified, and the prior is proper unless the resulting posterior has been verified to be proper analytically.
+
+## R Implementation
+
+```r
+library(brms)
+
+# Logistic regression with weakly informative priors
+priors <- prior(normal(0, 2.5), class = "b") +
+          prior(normal(0, 10),  class = "Intercept")
+
+# brms: inspect priors before fitting
+get_prior(y ~ x1 + x2, data = data.frame(y = rbinom(100, 1, 0.5),
+                                          x1 = rnorm(100), x2 = rnorm(100)),
+          family = bernoulli)
+```
+
+## Output & Results
+
+`get_prior()` lists every parameter class with its default prior, ready to be overridden. After fitting, `prior_summary(fit)` confirms exactly which priors entered the model — a step worth running for any analysis intended for publication.
+
+## Interpretation
+
+A reporting sentence: "We placed weakly informative priors on all coefficients ($\beta \sim \mathcal N(0, 2.5)$ on standardised predictors, intercept $\sim \mathcal N(0, 10)$) and a $\mathrm{half\text{-}Cauchy}(0, 2.5)$ prior on the random-effect standard deviation; a sensitivity analysis under tighter $\mathcal N(0, 1)$ slopes produced indistinguishable posterior summaries." Always disclose priors and at least one sensitivity check; reviewers increasingly expect both.
+
+## Practical Tips
+
+- Defaults from `brms` and `rstanarm` are weakly informative and well-engineered; override them only when you have a reason.
+- Flat priors are not "neutral"; they can dominate hierarchical posteriors at the boundary and make sampling unstable.
+- For variance components, use half-Cauchy or half-Normal priors with scales matched to the natural variability of the data; never use a flat prior on a SD.
+- For unstandardised predictors, multiply prior scales by the empirical SD of the predictor so that the implied effect range is plausible.
+- Run prior predictive simulations (`sample_prior = "only"` in `brms`) before fitting; the implied range of `y` is the simplest check that the prior is not absurd.
+- Sensitivity analysis is mandatory for small-sample studies; report the posterior under at least two prior scales differing by an order of magnitude.
+
+## R Packages Used
+
+`brms` for prior specification with `get_prior()` / `prior_summary()`, `rstanarm` for an alternative interface with auto-scaled defaults, `bayesplot` for prior predictive visualisation, and `bayestestR` for tidy summaries that report priors alongside posteriors.

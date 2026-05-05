@@ -1,0 +1,70 @@
+---
+title: Weakly Informative Priors
+date: "2026-04-17"
+description: Priors that regularise without imposing substantive constraints
+categories:
+  - Bayesian Statistics
+  - weakly-informative
+  - regularisation
+  - prior
+---
+
+## Introduction
+
+Weakly informative priors are the modern default in applied Bayesian work. They assign non-trivial probability to a plausible range of parameter values while remaining broad enough that the data dominate the posterior. They differ from "non-informative" priors (which can be improper or pathological) and from informative priors (which encode substantive knowledge): the goal is to regularise the inference, rule out absurd values, and stabilise sampling without injecting domain claims that the data cannot challenge. The result is a posterior that looks much like a frequentist estimate when data are abundant, but that behaves sensibly under separation, sparsity, and high-dimensional regression where likelihood-only methods misbehave.
+
+## Prerequisites
+
+A working understanding of priors, the role of the prior in Bayesian updating, and basic familiarity with regression on standardised predictors.
+
+## Theory
+
+A prior is *weakly informative* if it gives small but non-zero probability to extreme values, has a finite second moment when possible, and is centred at a value that does not bias the analysis (zero, in most regression contexts). Standard choices for standardised predictors:
+
+- Regression slopes: $\mathcal N(0, 2.5)$ or $\mathcal N(0, 5)$ on standardised covariates.
+- Intercept (after centring $y$): $\mathcal N(0, 10)$.
+- Standard deviations of random effects or residuals: $\mathrm{half\text{-}Normal}(0, 2.5)$, $\mathrm{half\text{-}Cauchy}(0, 5)$, or $\mathrm{Exponential}(\lambda)$ with rate matched to the SD scale.
+- Correlation matrices: LKJ prior with shape $\eta \geq 2$, which gently regularises toward weakly correlated structures.
+
+A useful calibration test: simulate from the prior predictive distribution and check that the implied range of `y` is plausible. If the prior implies effects of $\pm 1{,}000$ on a quantity bounded by physiology, it is too wide.
+
+## Assumptions
+
+Predictors are on a sensible scale (typically standardised), priors are proper (so the posterior is integrable), and the prior predictive range covers the plausible space without dominating it.
+
+## R Implementation
+
+```r
+library(brms)
+
+# Default brms priors are weakly informative
+data_ex <- data.frame(y = rnorm(100), x = rnorm(100))
+get_prior(y ~ x, data = data_ex)
+
+# Explicit weakly informative
+fit <- brm(y ~ x, data = data_ex,
+           prior = prior(normal(0, 2.5), class = "b") +
+                   prior(normal(0, 5),   class = "Intercept") +
+                   prior(exponential(1), class = "sigma"),
+           iter = 2000, chains = 4, refresh = 0)
+```
+
+## Output & Results
+
+`get_prior()` lists every parameter class together with the package's default prior; explicit overrides replace them by class. After fitting, `prior_summary(fit)` confirms exactly which priors entered the model — a step worth running for any analysis intended for publication.
+
+## Interpretation
+
+A reporting sentence: "Weakly informative priors $\mathcal N(0, 2.5)$ on standardised slopes and $\mathrm{Exponential}(1)$ on the residual scale yielded a posterior centred close to the OLS estimate ($\beta = 0.51$, 95 % credible interval 0.31 to 0.71), with negligible prior pull at this sample size; a sensitivity analysis under $\mathcal N(0, 1)$ produced essentially identical posterior summaries." Disclosing both the prior and a sensitivity check is the gold-standard report.
+
+## Practical Tips
+
+- Gelman's heuristic: half-Cauchy with scale 2.5–5 for variance components — heavy enough to allow large variances when warranted, regularising enough to prevent boundary-zero estimates.
+- For unstandardised predictors, multiply the prior scale by the predictor's empirical SD to keep the implied effect range plausible.
+- LKJ(2) for correlation matrices is a sensible default; tighten only when you have reason to expect weak correlations.
+- Always run prior predictive checks (`sample_prior = "only"`); they reveal absurd implied ranges before the data can mask them.
+- For non-standardised log-odds problems where the baseline log-odds is far from zero, widen the prior on the intercept (e.g. $\mathcal N(0, 10)$) so the prior mode does not exclude the data-implied baseline.
+
+## R Packages Used
+
+`brms` for formula-based prior specification with `get_prior()` / `prior_summary()`, `rstanarm` for an alternative interface with auto-scaled defaults, `bayestestR` for posterior summaries that report the prior alongside the posterior, and `bayesplot` for prior predictive visualisation.

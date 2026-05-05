@@ -1,0 +1,77 @@
+---
+title: Forest Plots (Visualisation)
+date: "2026-04-17"
+description: Point estimates and confidence intervals stacked across studies or subgroups
+categories:
+  - Data Visualisation
+  - forest-plot
+  - meta-analysis
+  - subgroup
+---
+
+## Introduction
+
+The forest plot is the signature visualisation of meta-analysis and of subgroup analyses in clinical trials. Each row shows one study (or one subgroup) as a point estimate and a horizontal confidence interval, with study name and sample size in a margin column and a pooled summary as a diamond at the bottom. The compact layout invites direct visual comparison: heterogeneity reads as horizontal scatter across rows, while consistency reads as alignment near the same vertical position. Done well, a forest plot communicates more about a meta-analysis than the accompanying numerical table.
+
+## Prerequisites
+
+A working knowledge of point estimates, confidence intervals, the difference between fixed-effect and random-effects pooling, and basic `ggplot2`.
+
+## Theory
+
+A forest plot encodes three quantities per study: the point estimate (a marker, with size optionally proportional to inverse-variance weight), the lower and upper confidence-interval limits (a horizontal segment), and a study label. Conventional additions:
+
+- A vertical reference line at the null value (1 for ratios, 0 for differences).
+- A diamond rather than a circle for pooled estimates, with the diamond width equal to the CI.
+- Effect-size and CI text in a right-margin column for readers who need numbers as well as positions.
+
+Ratios (HR, OR, RR) belong on a log axis so that the visual width of a CI corresponds to its multiplicative width and so that intervals symmetric on the log scale appear symmetric.
+
+## Assumptions
+
+Effect estimates and confidence intervals are available and on a comparable scale across studies; weighting (if any) is computed appropriately for the meta-analytic model.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+studies <- data.frame(
+  study = c("Trial A", "Trial B", "Trial C", "Trial D", "Pooled"),
+  estimate = c(0.85, 0.70, 0.95, 0.88, 0.85),
+  lo = c(0.65, 0.50, 0.75, 0.66, 0.75),
+  hi = c(1.10, 0.98, 1.20, 1.16, 0.96),
+  is_pooled = c(FALSE, FALSE, FALSE, FALSE, TRUE)
+)
+
+ggplot(studies, aes(x = estimate, y = factor(study, levels = rev(study)))) +
+  geom_vline(xintercept = 1, linetype = "dashed", colour = "grey60") +
+  geom_errorbarh(aes(xmin = lo, xmax = hi), height = 0.2) +
+  geom_point(aes(size = is_pooled, shape = is_pooled), colour = "#2A9D8F") +
+  scale_size_manual(values = c(3, 5), guide = "none") +
+  scale_shape_manual(values = c(16, 18), guide = "none") +
+  scale_x_log10() +
+  labs(x = "Hazard ratio (log scale)", y = NULL) +
+  theme_minimal()
+```
+
+## Output & Results
+
+A five-row forest plot: four trials displayed as circles with horizontal error bars, a pooled summary as a larger diamond at the bottom, and a vertical null line at HR = 1 on a log-x axis. The dispersion of the four trial estimates around the pooled diamond communicates between-study heterogeneity at a glance.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Forest plot of hazard ratios from four trials and the random-effects pooled estimate (REML, $I^2 = 23 \%$); horizontal error bars show 95 % confidence intervals on a log scale, the diamond marks the pooled estimate, and the dashed vertical line corresponds to no effect (HR = 1)." Always state the pooling model and a heterogeneity statistic.
+
+## Practical Tips
+
+- Log-transform ratios on the x-axis so confidence-interval widths correspond to multiplicative width; otherwise small effects look disproportionately large.
+- Make marker size proportional to inverse-variance weight in meta-analysis (`size = 1/SE^2`); this is the convention readers expect.
+- Use a diamond for pooled estimates with width equal to the CI; `geom_polygon()` produces these cleanly.
+- Order studies meaningfully — chronologically, by size, by point estimate, or by subgroup — and disclose the ordering choice in the caption.
+- Add a right-margin column with numerical effect estimates and CIs (`geom_text()` at fixed x, mapped y); readers expect both visual and numeric information.
+- For automated meta-analysis output, `metafor::forest.rma()` and `forestplot` produce publication-ready figures with weighted markers, columns, and heterogeneity annotations without hand-coding the `ggplot`.
+
+## R Packages Used
+
+`ggplot2` for hand-built forest plots; `forestplot` for two-column publication-style forests; `metafor::forest.rma()` for meta-analysis output forests; `meta::forest()` for random-effects forests with prediction intervals; `ggforestplot` for tidy hazard-ratio displays from regression models.

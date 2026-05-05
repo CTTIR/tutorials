@@ -87,15 +87,3 @@ The chi-squared goodness-of-fit is the default categorical-variable test. For co
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 00acacd7e7b54536a93513977accca09 -->
-<img src="https://vg09.met.vgwort.de/na/00acacd7e7b54536a93513977accca09"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

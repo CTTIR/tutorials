@@ -1,0 +1,73 @@
+---
+title: Violin Plots
+date: "2026-04-17"
+description: Symmetric kernel density plots for comparing distributions across groups
+categories:
+  - Data Visualisation
+  - violin
+  - density
+  - group-comparison
+---
+
+## Introduction
+
+A violin plot displays a kernel-density estimate vertically and reflects it around the central axis, producing the symmetric outline that gives the geom its name. It combines the clarity of a density plot with the side-by-side grouping that boxplots provide, and — crucially — reveals multi-modality and skew that boxplots flatten into a single rectangle. For comparing the *shape* of distributions across categories, violin plots are often the right default; for comparing only the median and quartile structure, boxplots remain more compact.
+
+## Prerequisites
+
+A working understanding of kernel density estimation, boxplots, and `ggplot2` aesthetic mappings.
+
+## Theory
+
+For each group, `geom_violin()` computes a kernel density $\hat f(x)$ on the response variable, draws the density curve vertically, and mirrors it across the group's central axis. The resulting width at each y-value is proportional to $\hat f(y)$, so wide regions correspond to high density. The `scale` argument controls how groups are sized relative to each other: `"area"` makes all violins equal area, `"count"` scales width proportional to the group's sample size, and `"width"` makes them all the same maximum width. The `trim` argument decides whether the density tails are truncated at the data extremes (`TRUE`, default) or extrapolated beyond them (`FALSE`).
+
+## Assumptions
+
+A continuous outcome and a categorical (or ordered) grouping variable, with enough observations per group (at least 20–30) for the kernel density to be meaningful. Below that threshold the shape becomes unstable and a strip plot or jittered scatter is more honest.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+# Basic violin
+ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
+  geom_violin() +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal()
+
+# Violin + boxplot overlay
+ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
+  geom_violin(alpha = 0.5, trim = FALSE) +
+  geom_boxplot(width = 0.2, fill = "white", outlier.shape = NA) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal()
+
+# Violin + jittered points
+ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
+  geom_violin(alpha = 0.5) +
+  geom_jitter(width = 0.1, alpha = 0.5) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal()
+```
+
+## Output & Results
+
+Three views of the iris sepal-length data: a plain violin per species, a violin with a narrow boxplot overlay showing median and quartiles, and a violin with jittered raw points overlaid for full transparency. The third version is the most informative when the audience is unfamiliar with kernel-density visualisations.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Sepal length by species (n = 50 per group); violin width is proportional to kernel-density estimate (`scale = "area"`), the inset boxplot summarises the median and IQR, and jittered points show individual observations." Always describe what the violin's width encodes; readers unfamiliar with the geom default to thinking it represents count.
+
+## Practical Tips
+
+- For multi-modal distributions (e.g. Old Faithful eruption times), the violin reveals the second mode that a boxplot would hide entirely; this is the strongest single argument for the geom.
+- Set `trim = FALSE` only when the density tails are biologically meaningful; otherwise the default trim avoids implausible extrapolation.
+- Combine with a narrow boxplot (`width = 0.15`) when readers expect numeric summaries; the inset preserves quartile information without dominating the visual.
+- For paired or matched groups, `introdataviz::geom_split_violin()` produces left-right halves so two conditions share the same x-position.
+- For large $n$, prefer violins over jittered points; violins scale to millions of observations whereas individual points stack into uninformative blobs.
+- For small $n$ ($< 20$ per group), a strip plot or a boxplot is more honest than a violin; the kernel density estimate is too noisy to trust.
+
+## R Packages Used
+
+`ggplot2` for `geom_violin()`; `introdataviz` for split violins; `ggdist` for `stat_halfeye()` and other slabinterval geoms that combine violins with credible-interval annotations; `vioplot` for a base-R alternative when `ggplot2` is not available.

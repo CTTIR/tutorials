@@ -91,15 +91,3 @@ Pearson's $r$ itself is the effect size. Cohen's thresholds: small 0.10, medium 
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 0056112faf9241fd934d1d69c0dcc223 -->
-<img src="https://vg09.met.vgwort.de/na/0056112faf9241fd934d1d69c0dcc223"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

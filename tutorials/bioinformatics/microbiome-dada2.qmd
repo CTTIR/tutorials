@@ -1,0 +1,90 @@
+---
+title: Microbiome Analysis with DADA2
+date: "2026-04-17"
+description: Amplicon sequence variant (ASV) inference from 16S/ITS amplicon data
+categories:
+  - Bioinformatics
+  - microbiome
+  - 16S
+  - DADA2
+  - ASV
+---
+
+## Introduction
+
+DADA2 (Divisive Amplicon Denoising Algorithm 2) infers exact amplicon sequence variants (ASVs) from 16S rRNA, 18S, ITS, or other amplicon sequencing data. It replaces the older OTU-clustering approach (which lumps similar sequences together at, typically, 97 % identity) with single-nucleotide resolution. ASVs are reproducible across studies — the same sequence is the same variant regardless of who runs the analysis — and allow finer taxonomic assignment than the threshold-based OTU representation.
+
+## Prerequisites
+
+A working understanding of amplicon sequencing (paired-end or single-end Illumina), primer trimming, and basic microbial ecology including the OTU vs ASV distinction.
+
+## Theory
+
+DADA2 fits a position- and quality-aware error model from the observed FASTQ data, then uses it to distinguish real biological variants from sequencing errors. The intuition: a sequence appearing more often than the error model predicts is a candidate ASV; sequences explained by errors from a more abundant variant are merged into it. The final output is a per-sample ASV count table (analogous to a gene count matrix in RNA-seq) that feeds the same downstream pipeline — alpha and beta diversity, differential-abundance testing, ordination.
+
+The standard pipeline: filter and trim FASTQs, learn error rates, denoise per sample, merge paired-end reads, construct a sequence table, remove chimeras, assign taxonomy.
+
+## Assumptions
+
+Primers have been removed before DADA2 input; paired-end reads overlap sufficiently for merging; error rates are sample-specific (DADA2 estimates them per run).
+
+## R Implementation
+
+DADA2 processes FASTQs on disk; here we simulate a post-DADA2 ASV count table for downstream analysis:
+
+```r
+library(phyloseq)
+
+set.seed(2026)
+n_asv <- 80; n_samples <- 20
+otu_tab <- matrix(rpois(n_asv * n_samples, lambda = 10), n_asv, n_samples)
+rownames(otu_tab) <- paste0("ASV", 1:n_asv)
+colnames(otu_tab) <- paste0("S", 1:n_samples)
+
+tax_tab <- matrix(sample(c("Firmicutes", "Bacteroidetes", "Proteobacteria"),
+                          n_asv, replace = TRUE), n_asv, 1)
+rownames(tax_tab) <- rownames(otu_tab); colnames(tax_tab) <- "Phylum"
+
+meta <- data.frame(group = factor(rep(c("ctrl", "case"), each = 10)),
+                   row.names = colnames(otu_tab))
+
+ps <- phyloseq(otu_table(otu_tab, taxa_are_rows = TRUE),
+               tax_table(tax_tab),
+               sample_data(meta))
+
+sort(sample_sums(ps), decreasing = TRUE)[1:5]   # per-sample depth
+taxa_sums(ps)[1:5]                              # per-ASV total
+```
+
+The actual DADA2 calls (commented for the simulation example):
+
+```r
+# filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen = c(240, 160),
+#               maxEE = c(2, 2), truncQ = 2, compress = TRUE)
+# errF <- learnErrors(filtFs); errR <- learnErrors(filtRs)
+# dadaFs <- dada(filtFs, err = errF); dadaRs <- dada(filtRs, err = errR)
+# mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs)
+# seqtab <- makeSequenceTable(mergers)
+# seqtab.nochim <- removeBimeraDenovo(seqtab, method = "consensus")
+```
+
+## Output & Results
+
+The DADA2 output is an ASV-by-sample count matrix together with taxonomy assignments from SILVA or GTDB. Wrapping the count table, taxonomy, and sample metadata in a `phyloseq` object provides the standard input for downstream community ecology analyses.
+
+## Interpretation
+
+A reporting sentence: "DADA2 inferred 2{,}148 amplicon sequence variants across 50 samples after chimera removal; 980 ASVs were assigned to phylum level using the SILVA v138 reference, with median read depth of 42{,}300 reads per sample. The resulting `phyloseq` object served as input to alpha-diversity (Shannon, Simpson) and beta-diversity (Bray-Curtis NMDS) analyses." Always state the reference database version and the read-retention rate.
+
+## Practical Tips
+
+- Always run `removeBimeraDenovo()` after sequence-table construction to strip chimeric ASVs; they accumulate during PCR and can be a substantial fraction of the count.
+- Assign taxonomy with SILVA (v138 or later for 16S) or GTDB; species-level assignment for short amplicons is usually unreliable due to limited resolution.
+- Filter ASVs present in fewer than 2 samples to reduce noise; very rare ASVs are often sequencing artefacts.
+- `DECIPHER::IdTaxa()` provides a faster alternative to DADA2's `assignTaxonomy()` and supports the same SILVA reference.
+- Always check per-sample read-retention at each DADA2 step (filtering, denoising, merging, chimera removal); large drops at any step usually mean over-strict parameters.
+- For 16S V4 region with overlapping 250 bp paired-end reads, `truncLen = c(240, 160)` is a sensible starting point; tune based on quality profiles.
+
+## R Packages Used
+
+`dada2` for ASV inference and the canonical workflow; `phyloseq` for downstream community-ecology analysis on the ASV count table; `DECIPHER` for fast taxonomy assignment; `vegan` for alpha and beta diversity; `ANCOMBC` and `ALDEx2` for compositional differential-abundance testing.

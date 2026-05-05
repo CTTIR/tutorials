@@ -1,0 +1,271 @@
+---
+title: Multivariate Statistics
+description: "Dimensionality reduction, clustering, and classical multivariate methods for data with many correlated variables"
+---
+
+When data contain many variables measured on the same units -- gene expression across thousands of transcripts, questionnaire batteries with dozens of items, physiological measurements across multiple domains -- univariate methods are rarely sufficient. Multivariate statistics provides tools for reducing dimensions, discovering structure, classifying observations, and summarising relationships between sets of variables.
+
+This area covers classical methods that remain the default first pass for most multivariate datasets, alongside their modern refinements.
+
+## Methods covered
+
+- Principal component analysis (PCA): derivation, scaling choices, number-of-components selection, biplots
+- Factor analysis: exploratory and confirmatory, rotation (varimax, promax, oblimin), goodness-of-fit
+- Multidimensional scaling (MDS): metric and non-metric, Shepard diagrams
+- Correspondence analysis for categorical data and its multiple-variable extension
+- Cluster analysis: hierarchical (agglomerative and divisive), k-means, k-medoids (PAM), DBSCAN
+- Cluster validation: silhouette, gap statistic, elbow heuristics, stability by resampling
+- Linear and quadratic discriminant analysis
+- Canonical correlation analysis: relating two sets of variables
+- Partial least squares (PLS) regression and PLS-DA
+- Distance and dissimilarity measures: Euclidean, Mahalanobis, Gower, Jaccard, Bray-Curtis
+
+Packages used throughout include `stats`, `FactoMineR`, `factoextra`, `cluster`, `vegan`, `MASS`, `psych`, and `mixOmics`.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bray-Curtis Dissimilarity](bray-curtis.qmd)
+The standard ecological distance metric for species-abundance community data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Canonical Correlation Analysis](canonical-correlation.qmd)
+Identifying pairs of linear combinations that maximise correlation between two variable sets
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Cluster Validation: Silhouette](cluster-validation-silhouette.qmd)
+Measuring how well each observation fits its assigned cluster relative to neighbouring clusters
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Confirmatory Factor Analysis](factor-analysis-confirmatory.qmd)
+Testing a pre-specified factor structure against data, with chi-squared and incremental fit indices
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Correspondence Analysis](correspondence-analysis.qmd)
+Low-dimensional biplot representation of contingency tables via chi-squared distance
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [DBSCAN Clustering](dbscan-clustering.qmd)
+Density-based clustering with automatic noise detection and arbitrary cluster shapes
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Distance and Dissimilarity Measures](distance-measures.qmd)
+Euclidean, Manhattan, Minkowski, Canberra, and their use in clustering / MDS
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Exploratory Factor Analysis](factor-analysis-exploratory.qmd)
+Identifying latent factors from correlated manifest variables, with extraction, rotation, and number-of-factors decisions
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Factor Rotation](factor-rotation.qmd)
+Orthogonal and oblique rotations to make factor loadings interpretable
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Gaussian Mixture Models](gaussian-mixture-models.qmd)
+Model-based clustering via mixtures of multivariate normals, fitted by EM
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Hierarchical Clustering](hierarchical-clustering.qmd)
+Agglomerative (bottom-up) clustering with various linkage criteria and dendrogram display
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Independent Component Analysis](ica-independent-component-analysis.qmd)
+Signal separation: recovering independent latent sources from linear mixtures
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Jaccard and Dice Dissimilarity](jaccard-dissimilarity.qmd)
+Distance measures for binary / presence-absence data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Kernel PCA](kernel-pca.qmd)
+Non-linear dimensionality reduction via PCA in an implicit feature space
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Linear Discriminant Analysis](linear-discriminant-analysis.qmd)
+Classifier assuming multivariate normal within-class distributions with equal covariance
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [MANOVA](manova.qmd)
+Multivariate analysis of variance: testing group differences across multiple correlated outcomes jointly
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Mahalanobis Distance](mahalanobis-distance.qmd)
+Scale- and correlation-aware distance for multivariate data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Metric Multidimensional Scaling](mds-metric.qmd)
+Representing a distance matrix in low-dimensional Euclidean coordinates
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Multiple Correspondence Analysis](multiple-correspondence-analysis.qmd)
+Extension of correspondence analysis to more than two categorical variables
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Non-Metric Multidimensional Scaling](mds-nonmetric.qmd)
+MDS using only the ranks of distances, minimising Kruskal stress
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [PLS Discriminant Analysis](pls-da.qmd)
+PLS extended to classification via dummy-coded class indicators
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Partial Least Squares Regression](pls-regression.qmd)
+Regression using latent components optimised for outcome prediction in high dimensions
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Partitioning Around Medoids](pam-kmedoids.qmd)
+PAM: robust k-medoids clustering for non-Euclidean distances and outlier-contaminated data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Principal Component Analysis](principal-component-analysis.qmd)
+Dimensionality reduction by variance-maximising projection, with interpretation, scaling, and visualisation in R
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Quadratic Discriminant Analysis](quadratic-discriminant-analysis.qmd)
+LDA with class-specific covariance matrices; quadratic decision boundaries
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Structural Equation Models](structural-equation-models.qmd)
+Combining measurement (CFA) and structural (path) components for latent-variable regression
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Elbow Method](elbow-method.qmd)
+Choosing the number of clusters by identifying a bend in the within-cluster sum of squares curve
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Gap Statistic](gap-statistic.qmd)
+Choosing the number of clusters via comparison with a null (uniform) distribution
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [UMAP and t-SNE: Overview](umap-tsne-overview.qmd)
+Modern non-linear dimensionality reduction for visualisation: UMAP, t-SNE, and their caveats
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [k-Means Clustering](kmeans-clustering.qmd)
+Partitioning observations into k clusters by minimising within-cluster sum of squares
+:::
+
+:::

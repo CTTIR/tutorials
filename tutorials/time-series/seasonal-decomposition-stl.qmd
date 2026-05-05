@@ -1,0 +1,73 @@
+---
+title: Seasonal Decomposition (STL)
+date: "2026-04-17"
+description: Loess-based seasonal-trend decomposition robust to outliers
+categories:
+  - Time Series Analysis
+  - stl
+  - decomposition
+  - loess
+---
+
+## Introduction
+
+STL (Seasonal and Trend decomposition using Loess) is the most flexible classical decomposition method for time series. It separates a series into trend, seasonal, and remainder components using iterative locally-weighted regression (loess) smoothers. Three properties distinguish STL from alternatives: it handles any kind of seasonality (not just monthly or quarterly), it allows the seasonal pattern to change over time, and it is robust to outliers when run with the robust option enabled.
+
+## Prerequisites
+
+A working understanding of time-series decomposition, the additive vs multiplicative model distinction, and basic familiarity with loess smoothers.
+
+## Theory
+
+STL alternates two loess smoothing operations until convergence: a seasonal smoother that operates within each cycle position (all Januaries together, all Februaries together, etc.) and a trend smoother that operates across the de-seasonalised series. Two window parameters control the resulting decomposition:
+
+- `s.window`: seasonal-window length. `"periodic"` forces a constant seasonal pattern across the series; an integer (typical 7, 9, 11) allows the seasonal pattern to change gradually.
+- `t.window`: trend-window length. Larger values produce smoother trend estimates.
+
+For multiplicative seasonality (where seasonal amplitude grows with the level), apply STL to the log of the series; the result is interpretable as an additive decomposition on the log scale.
+
+## Assumptions
+
+Additive components on the chosen scale; the seasonal cycle is correctly specified (`frequency()` of the `ts` object); sufficient series length to estimate the decomposition (at least two full seasonal cycles).
+
+## R Implementation
+
+```r
+library(forecast)
+
+# log-transform for multiplicative data
+x <- log(AirPassengers)
+
+# STL with fixed seasonal
+stl_fit <- stl(x, s.window = "periodic")
+autoplot(stl_fit)
+
+# Seasonal adjustment
+seasadj <- seasadj(stl_fit)
+plot(seasadj)
+
+# Forecast via STL + ETS
+fc <- forecast(stl_fit, method = "ets", h = 24)
+autoplot(fc)
+```
+
+## Output & Results
+
+`stl()` returns an `stl` object with the decomposition. `autoplot()` produces a four-panel display: original series, trend, seasonal, and remainder. `seasadj()` extracts the seasonally adjusted series (original minus seasonal); `forecast(stl_fit)` applies a chosen method (ETS, ARIMA) to the seasonally adjusted component and adds back the seasonal pattern.
+
+## Interpretation
+
+A reporting sentence: "STL decomposition of log-AirPassengers showed a smooth upward trend (annual growth approximately 5 %), stable multiplicative seasonality (constant on the log scale, multiplicative on the original), and a remainder series consistent with white noise (Ljung-Box $p = 0.32$); the seasonal pattern peaked in July–August, consistent with summer holiday travel." Always describe trend and seasonality separately and check that the remainder is approximately white noise.
+
+## Practical Tips
+
+- `s.window = "periodic"` forces a constant seasonal pattern across the series; integer values (7, 11) allow the seasonal pattern to evolve. Use the integer when seasonality has visibly shifted over the series.
+- Set `robust = TRUE` for outlier-resistant fitting; the standard STL is sensitive to single extreme observations.
+- For forecasting, `stlf()` is a one-call wrapper that applies STL + an automatic ETS or ARIMA forecast on the seasonally adjusted series.
+- STL handles any seasonal period; for multiple seasonalities (e.g. weekly and yearly), use `forecast::mstl()` which decomposes into multiple seasonal layers.
+- Residuals (remainder) should look like white noise; systematic structure indicates the trend or seasonal windows need tuning.
+- Compare STL to classical seasonal decomposition (`decompose`) and X-13 (`seasonal::seas`); STL is generally more flexible but X-13 is the regulatory standard for official statistics.
+
+## R Packages Used
+
+Base R `stl()` for the canonical implementation; `forecast::stlf()` for STL-based forecasting; `forecast::mstl()` for multi-seasonal decomposition; `seasonal::seas()` for X-13 ARIMA-SEATS as the official-statistics alternative; `feasts::STL()` for the modern tidyverts interface.

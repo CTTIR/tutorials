@@ -1,0 +1,76 @@
+---
+title: Volcano Plots
+date: "2026-04-17"
+description: Visualising significance versus effect size across genes
+categories:
+  - Bioinformatics
+  - visualisation
+  - volcano
+  - DE
+---
+
+## Introduction
+
+A volcano plot summarises a differential-expression result in a single scatter: log fold change on the x-axis, $-\log_{10}$ adjusted $p$-value on the y-axis. Genes in the upper-left and upper-right corners — large effect *and* high precision — are the targets of interest; genes near the bottom of the plot fail the significance criterion regardless of effect size, and genes near zero on the x-axis fail the biological-relevance criterion regardless of significance. The combined visual makes the standard two-criterion ranking immediately apparent and is the canonical figure of any differential-expression report.
+
+## Prerequisites
+
+A working understanding of differential-expression analysis output (DESeq2, edgeR, limma-voom), log fold change, and FDR-adjusted $p$-values.
+
+## Theory
+
+The volcano plot's signature shape arises from the relationship between effect-size estimates and their standard errors: extreme fold changes are typically reported by genes with low expression (and therefore noisier estimates with worse $p$-values), so the "wings" of high fold change at low significance are sparse. The dense central column near zero fold change, with $p$-values uniformly distributed from very high to moderately significant, represents the bulk of unchanged genes.
+
+Standard cutoffs combine fold-change and significance: $|\log_2 \mathrm{FC}| > 1$ (two-fold change) and adjusted $p < 0.05$ jointly. Either criterion alone is misleading — large effects with poor precision (e.g. low-expression genes) and small effects at extreme significance (e.g. very high-expression genes with tiny but reproducible changes) both produce different scientific conclusions.
+
+## Assumptions
+
+The DE analysis was correctly specified; $p$-values are calibrated (DE methods generally produce well-calibrated $p$-values under their assumptions); fold-change sign is interpretable as a directional effect.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+set.seed(2026)
+n <- 5000
+logFC <- c(rnorm(n - 100), rnorm(100, 2))
+pval  <- c(runif(n - 100), 10^(-runif(100, 2, 6)))
+padj  <- p.adjust(pval, "BH")
+
+df <- data.frame(logFC = logFC, padj = padj)
+df$cat <- with(df, ifelse(padj < 0.05 & abs(logFC) > 1,
+                          ifelse(logFC > 0, "up", "down"), "ns"))
+
+ggplot(df, aes(logFC, -log10(padj), colour = cat)) +
+  geom_point(alpha = 0.5, size = 1) +
+  geom_hline(yintercept = -log10(0.05), linetype = 2) +
+  geom_vline(xintercept = c(-1, 1), linetype = 2) +
+  scale_colour_manual(values = c(up = "#E76F51",
+                                  down = "#2A9D8F",
+                                  ns = "grey70")) +
+  labs(x = "log2 fold change", y = "-log10 adjusted p",
+       title = "Volcano plot (DE results)") +
+  theme_minimal()
+```
+
+## Output & Results
+
+A scatter with up- and down-regulated genes highlighted in distinct colours and dashed lines at the chosen FC and FDR thresholds. The visual immediately conveys how many genes pass both criteria, the symmetry of up vs down regulation, and the distribution of effect sizes among significant hits.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Volcano plot of differential expression between conditions A and B (n = 6 per group); 100 genes passed FDR < 0.05 and $|\log_2 \mathrm{FC}| > 1$ (45 up, 55 down); the five most significant genes are labelled. Dashed lines mark the FDR and fold-change thresholds." Always state the cutoffs and sample sizes.
+
+## Practical Tips
+
+- Use `EnhancedVolcano::EnhancedVolcano()` for publication-ready volcano plots with automatic gene labelling, customisable thresholds, and `ggrepel`-based label placement.
+- Truncate extreme $-\log_{10} p$ values (e.g. cap at 50) for readability; very small $p$-values otherwise stretch the y-axis and compress the bulk of the plot.
+- Report both raw and FDR-adjusted $p$-value thresholds transparently in the figure caption.
+- Add gene labels only for the top-ranked hits or biologically-curated genes of interest; many labels obscure the plot.
+- Volcano plots do not show absolute expression magnitude; pair with MA plots when expression-dependent effects are suspected.
+- For comparing multiple contrasts, use facets or different colour schemes; overlaying multiple contrasts on a single volcano usually fails.
+
+## R Packages Used
+
+`ggplot2` for hand-built volcano plots; `EnhancedVolcano` for publication-ready volcano plots with extensive customisation; `ggrepel` for non-overlapping gene labels; `Glimma::glimmaVolcano()` for interactive volcano plots embeddable in HTML reports.

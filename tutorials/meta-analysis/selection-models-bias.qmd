@@ -1,0 +1,69 @@
+---
+title: Selection Models for Publication Bias
+date: "2026-04-17"
+description: Weighted-distribution models for adjusting meta-analysis for selection
+categories:
+  - Meta-Analysis
+  - selection
+  - publication-bias
+  - weighted
+---
+
+## Introduction
+
+Selection models address publication bias more rigorously than trim-and-fill or simple regression-based asymmetry tests. They posit an explicit weight function describing how the probability of publication depends on a study's $p$-value or effect magnitude, then re-estimate the pooled effect under that assumed selection mechanism to recover a bias-adjusted estimate. Where trim-and-fill is descriptive and triangular in its assumption, selection models are formally model-based and yield likelihood-ratio tests of the selection hypothesis itself. The cost is stronger parametric assumptions about the form of the selection process, which means selection models are most useful when the meta-analysis is large enough that the selection function can be reasonably identified from the data.
+
+## Prerequisites
+
+A working understanding of publication bias as a selection process, maximum-likelihood estimation, and the logic of inverse-probability weighting on a sampled population.
+
+## Theory
+
+Given observed effects $y_i$ with standard errors $\mathrm{SE}_i$ from published studies, the observed density is
+
+$$p_{\text{obs}}(y) = \frac{w(y, \mathrm{SE}) \, p(y)}{\int w(y, \mathrm{SE}) \, p(y) \, dy},$$
+
+where $p(y)$ is the population density of true effects and $w(\cdot)$ is a selection weight function — typically a step function in the one-sided $p$-value, with selection probability dropping at conventional thresholds (0.025, 0.05, 0.10). Maximum-likelihood estimation of the joint $(\mu, \tau^2, w)$ parameters then inverts the selection mechanism to recover the bias-adjusted pooled effect, and a likelihood-ratio test against the null of $w(\cdot) \equiv 1$ formally tests for selection.
+
+## Assumptions
+
+The functional form of the selection weight is correctly specified (or at least a reasonable approximation), the meta-analysis contains enough studies to identify the selection parameters (typically 15–20+), and the studies are exchangeable conditional on their effect size and standard error.
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+k <- 20
+yi <- rnorm(k, 0.3, 0.15)
+vi <- 1 / sample(40:250, k, replace = TRUE)
+
+res <- rma(yi, vi, method = "REML")
+
+sel <- selmodel(res, type = "stepfun",
+                steps = c(0.025, 0.10, 0.50, 1.0),
+                alternative = "greater")
+sel
+```
+
+## Output & Results
+
+`selmodel()` returns the bias-adjusted pooled estimate, its standard error and confidence interval, the estimated selection weights at each step, and a likelihood-ratio test against the null of no selection. Comparing the adjusted and unadjusted estimates side by side quantifies how much the conclusion shifts under the assumed selection mechanism.
+
+## Interpretation
+
+A reporting sentence: "A step-function selection model with thresholds at $p = 0.025, 0.10, 0.50$ provided strong evidence for selective publication (likelihood-ratio test vs no-selection, $\chi^2 = 13.1$, df $= 3$, $p = 0.004$). The bias-adjusted standardised mean difference was 0.19 (95 % CI 0.05 to 0.33), substantially attenuated from the unadjusted estimate of 0.32 (0.21 to 0.43). The result suggests publication bias inflates the unadjusted pooled effect by roughly 40 %." Always report both estimates and the LR test.
+
+## Practical Tips
+
+- Selection models require at least 15–20 studies for stable estimates; below this threshold the selection function is poorly identified and confidence intervals become uninformatively wide.
+- Try several weight-function structures (different step thresholds, smooth-monotone forms) as sensitivity analyses; the bias-adjusted estimate can be quite sensitive to the assumed selection mechanism, and convergent results across forms are reassuring.
+- Always report both the unadjusted and the selection-adjusted estimates, plus the LR test for selection; the unadjusted estimate remains the primary, and the selection-adjusted estimate is sensitivity.
+- Modern alternatives — PET-PEESE regression-based correction, $p$-uniform and $p$-curve, and Vevea–Hedges weight-function models — are useful when standard step-function selection models fit poorly or fail to converge.
+- Bayesian selection models with informative priors on the weight parameters (e.g., in `RoBMA` and related packages) are a stable alternative when frequentist MLE is unstable.
+- Selection models adjust only for the selection mechanism they are told to assume; other forms of bias (selective outcome reporting, dependent effect-size selection) require separate handling.
+
+## R Packages Used
+
+`metafor::selmodel()` for the canonical step-function and smooth selection-model implementations; `weightr` for Vevea–Hedges weight-function models; `puniform` and `puniforms` for $p$-uniform corrections; `RoBMA` for Bayesian model-averaged publication-bias adjustment; `metasens` for limit-meta-analysis and Copas-model alternatives.

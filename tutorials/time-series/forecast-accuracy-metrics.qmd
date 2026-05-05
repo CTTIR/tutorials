@@ -1,0 +1,69 @@
+---
+title: Forecast Accuracy Metrics
+date: "2026-04-17"
+description: "MAE, RMSE, MAPE, MASE: scaled and scale-dependent measures of forecast error"
+categories:
+  - Time Series Analysis
+  - mae
+  - rmse
+  - mape
+  - mase
+---
+
+## Introduction
+
+Forecast accuracy is evaluated through error metrics that compare predictions against held-out actuals. Each metric encodes a different loss function and has different units, so the choice of metric depends on the substantive cost structure of forecasting errors. The four most widely reported are MAE, RMSE, MAPE, and MASE; understanding their differences and trade-offs is essential for fair comparison across forecasting methods and across series.
+
+## Prerequisites
+
+A working understanding of forecasting, the difference between in-sample and out-of-sample evaluation, and basic loss-function concepts.
+
+## Theory
+
+Let $e_t = y_t - \hat y_t$ be the forecast error on the test window of length $n$.
+
+- **Mean Absolute Error**: $\mathrm{MAE} = \frac{1}{n} \sum |e_t|$. Scale-dependent, same units as the data; treats all errors equally.
+- **Root Mean Squared Error**: $\mathrm{RMSE} = \sqrt{\frac{1}{n} \sum e_t^2}$. Scale-dependent, penalises large errors more heavily; the natural metric when squared loss is the cost function.
+- **Mean Absolute Percentage Error**: $\mathrm{MAPE} = \frac{100}{n} \sum |e_t / y_t|$. Scale-independent percentage; undefined for $y_t = 0$ and asymmetric (penalises over-forecasts more than under-forecasts at the same absolute level).
+- **Mean Absolute Scaled Error**: $\mathrm{MASE} = \mathrm{MAE} / \bar e_{\text{naive}}$, scaled by the in-sample MAE of a naive forecast. Scale-independent, symmetric, defined for all data (including zeros). Values below 1 mean "better than naive seasonal forecast in sample".
+
+For probabilistic forecasts, the continuous ranked probability score (CRPS) generalises MAE to forecast distributions and is the standard scoring rule for prediction intervals.
+
+## Assumptions
+
+A comparable held-out test window of sufficient length to give stable error estimates; the chosen metric matches the substantive loss function of forecasting errors.
+
+## R Implementation
+
+```r
+library(forecast)
+
+x <- AirPassengers
+train <- window(x, end = c(1957, 12))
+test  <- window(x, start = c(1958, 1))
+
+fit  <- auto.arima(train)
+fc   <- forecast(fit, h = length(test))
+accuracy(fc, test)
+```
+
+## Output & Results
+
+`accuracy()` returns a table with ME (mean error, indicates bias), RMSE, MAE, MPE, MAPE, MASE, and ACF1 (lag-1 autocorrelation of residuals) on both the training and test sets. The training-set numbers measure in-sample fit; the test-set numbers are the genuine out-of-sample predictive performance.
+
+## Interpretation
+
+A reporting sentence: "On the held-out three-year window, the ARIMA forecast achieved test-set RMSE of 22.8 passengers, MAE of 18.5, and MASE of 0.42; the MASE below 1 confirms substantially better predictive performance than a naive seasonal forecast." Always report multiple metrics — RMSE for squared-error context, MAE for absolute-error context, MASE for scale-free comparison.
+
+## Practical Tips
+
+- Report multiple metrics; they reward different error properties and a model can dominate on one while losing on another.
+- MAPE is popular in business reporting but misleading for series with values near zero or with negative values; use sMAPE or MASE instead.
+- MASE is the recommended scale-free metric in academic forecasting evaluation; it is symmetric, defined for zeros, and benchmarked against a meaningful baseline.
+- Evaluate on a held-out tail (chronological train/test split), never in-sample; in-sample errors are systematically optimistic.
+- For comparing many forecasts across many series, aggregate metrics via rolling-origin cross-validation; a single train/test split is sensitive to the choice of cutoff.
+- For probabilistic forecasts, report CRPS or interval scores; point-forecast metrics ignore the prediction-interval calibration.
+
+## R Packages Used
+
+`forecast::accuracy()` for the standard suite of point-forecast metrics; `Metrics::rmse()`, `mae()`, `mape()` for individual metrics; `scoringRules` for proper scoring rules including CRPS for probabilistic forecasts; `fabletools::accuracy()` for the modern tidyverts equivalent.

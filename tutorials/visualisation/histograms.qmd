@@ -1,0 +1,77 @@
+---
+title: Histograms
+date: "2026-04-17"
+description: Univariate distribution display via binned frequencies or densities
+categories:
+  - Data Visualisation
+  - histogram
+  - distribution
+  - bins
+---
+
+## Introduction
+
+A histogram is the simplest distributional display: bin the range of a continuous variable, count the observations in each bin, and draw bars proportional to those counts. It is the canonical first plot of any exploratory data analysis. It is also the geom most often misled by its own settings — the impression of "skewness" or "bimodality" can be conjured or hidden entirely by the choice of bin width, so a good histogram is one inspected at several resolutions before being committed to print.
+
+## Prerequisites
+
+A working knowledge of continuous variables, the difference between counts and densities, and `ggplot2` aesthetic mappings.
+
+## Theory
+
+Three choices shape every histogram:
+
+- **Bin count** (or `binwidth`). Too few bins hide modes and skew; too many exaggerate sampling noise. Common rules of thumb: Sturges ($\log_2 n + 1$, optimal for Normal data of moderate size), Freedman–Diaconis (binwidth $= 2 \cdot \mathrm{IQR}/n^{1/3}$, robust to outliers), Scott ($3.5 \sigma / n^{1/3}$, optimised for Normal data).
+- **Frequency vs density y-axis**. Frequency (raw count) is the default; density (count divided by binwidth, integrating to 1) is essential for comparing groups of different sample sizes or overlaying with a density curve.
+- **Bin boundaries**. Where the first bin starts affects the appearance, especially for small samples; this is the so-called "boundary effect", invisible in dense data and obvious in sparse.
+
+The shape impression depends on all three; a histogram should always be reproduced with at least two bin counts before any conclusion is drawn.
+
+## Assumptions
+
+A continuous (or discrete-but-numerous) variable. Categorical data should go to bar charts; small ordinal scales (Likert) often look better as bar charts even if technically histograms apply.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+# Basic histogram
+ggplot(mtcars, aes(mpg)) +
+  geom_histogram(bins = 15, fill = "#2A9D8F", colour = "white") +
+  theme_minimal()
+
+# Density y-axis for group comparison
+ggplot(iris, aes(Sepal.Length, fill = Species)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 position = "identity", alpha = 0.5, bins = 20) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal()
+
+# Automatic binwidth via Freedman-Diaconis
+ggplot(diamonds, aes(price)) +
+  geom_histogram(binwidth = 2 * IQR(diamonds$price) / nrow(diamonds)^(1/3),
+                 fill = "#2A9D8F", colour = "white") +
+  theme_minimal()
+```
+
+## Output & Results
+
+Three histograms: the 32-row `mtcars` mileage with 15 bins, a three-species iris overlay on a density y-axis (so the groups are comparable despite identical sample sizes), and a Freedman–Diaconis-binwidth view of diamond prices that handles the long right tail more gracefully than a default 30-bin choice.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Distribution of fuel efficiency (mpg) across 32 cars, 15 equal-width bins covering the range 10–35 mpg." Always state the bin count or binwidth in the caption; a histogram without that information is impossible to reproduce.
+
+## Practical Tips
+
+- Always inspect with several bin counts before committing to one; modes that survive a doubling of bins are real, modes that disappear were artefacts.
+- Use `after_stat(density)` (formerly `..density..`) when overlaying multiple groups of different sizes; raw counts conflate distribution shape with sample-size differences.
+- For long right tails (waiting times, prices, gene expression), log-transform the x-axis (`scale_x_log10()`) before binning; the resulting histogram reveals structure invisible on the linear scale.
+- For small samples ($n < 30$) prefer a dot plot or strip plot; a histogram of 30 points binned into 10 bars is mostly empty.
+- Overlay `geom_density()` (with `aes(y = after_stat(density))`) for a smooth summary that complements the bins; the two together communicate both the discrete bins and the smooth shape.
+- Avoid mixing colour (group) with fill aesthetics when the same column drives both; pick one and let the legend speak for itself.
+
+## R Packages Used
+
+`ggplot2` for `geom_histogram()`; `scales` for x-axis label formatters when the data are on currency or large-number scales; `ggdensity` for combined histogram-and-density displays; `ggdist` for modern slabinterval geoms that often replace histograms entirely in posterior visualisations.

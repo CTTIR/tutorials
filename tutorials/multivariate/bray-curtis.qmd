@@ -1,0 +1,68 @@
+---
+title: Bray-Curtis Dissimilarity
+date: "2026-04-17"
+description: The standard ecological distance metric for species-abundance community data
+categories:
+  - Multivariate Statistics
+  - bray-curtis
+  - ecological
+  - abundance
+---
+
+## Introduction
+
+Bray-Curtis dissimilarity is the default index for comparing ecological communities described by species-abundance data. It ranges from 0 when two samples share the same composition and abundances to 1 when they share no species at all, and unlike binary indices it makes use of the abundance information rather than collapsing it to presence/absence. Microbial ecology, plant community work, and any compositional dataset where rare and abundant species both contribute meaningful information typically reach for Bray-Curtis as the first dissimilarity to compute.
+
+## Prerequisites
+
+A working knowledge of distance and dissimilarity matrices, abundance data structures, and ordination methods (NMDS, PCoA) that consume dissimilarity matrices.
+
+## Theory
+
+For two samples $i$ and $j$ with abundances $x_{ik}$ across species $k$:
+
+$$\mathrm{BC}_{ij} = \frac{\sum_k |x_{ik} - x_{jk}|}{\sum_k (x_{ik} + x_{jk})}.$$
+
+It is a dissimilarity, not a strict metric — the triangle inequality can fail, so Bray-Curtis matrices are best visualised with non-metric MDS (NMDS) rather than principal coordinates. The binary form (presence-absence input) reduces to the Sørensen dissimilarity. Bray-Curtis is sensitive to dominant species; a log or Hellinger transformation of the abundance matrix before computing the index down-weights dominance and lets rare species contribute more.
+
+## Assumptions
+
+Count or abundance data, all entries non-negative, comparable sampling effort across samples (or normalisation to relative abundance to remove the effort difference).
+
+## R Implementation
+
+```r
+library(vegan)
+
+data(dune)
+d_bc <- vegdist(dune, method = "bray")
+as.matrix(d_bc)[1:3, 1:3]
+
+# Log-transform to down-weight dominant species
+d_bc_log <- vegdist(log1p(dune), method = "bray")
+
+# NMDS visualisation
+nmds <- metaMDS(dune, distance = "bray", k = 2, trymax = 50)
+plot(nmds, type = "t")
+```
+
+## Output & Results
+
+`vegdist()` returns a `dist` object containing the lower-triangular Bray-Curtis matrix. `metaMDS()` runs NMDS on the resulting matrix and returns coordinates, stress, and convergence diagnostics. Stress values below 0.1 indicate excellent representation; 0.1–0.2 acceptable; above 0.2 poor.
+
+## Interpretation
+
+A reporting sentence: "Bray-Curtis dissimilarity averaged 0.55 across all pairs (range 0.32 to 0.84), indicating substantial community turnover; NMDS in two dimensions converged at stress 0.07, and PERMANOVA (`vegan::adonis2`) detected a significant management-type effect ($F = 3.6$, $p = 0.001$, $R^2 = 0.21$)." Always pair Bray-Curtis ordination with a formal group test such as PERMANOVA or ANOSIM.
+
+## Practical Tips
+
+- Log-transform abundance (`log1p()`) or use Hellinger distance (`vegdist(..., method = "hellinger")`) to reduce dominance by abundant species.
+- Bray-Curtis is the default distance in `vegan::metaMDS()`; passing the data matrix directly is equivalent to `vegdist(data, "bray")` followed by `metaMDS()` on the dist.
+- For phylogenetic-aware distances on microbial communities, use UniFrac (`GUniFrac::GUniFrac`) instead; it accounts for evolutionary relationships among taxa.
+- Pair NMDS with PERMANOVA (`adonis2`) for group comparison and PERMDISP (`betadisper`) to check homogeneity of multivariate dispersion; significant PERMDISP can confound PERMANOVA conclusions.
+- `vegdist()` supports many alternatives — Jaccard, Manhattan, Euclidean, Canberra, Gower, Hellinger — change `method` to switch.
+- For very large community matrices, sparse implementations in `parallelDist` scale Bray-Curtis computation across cores without code changes.
+
+## R Packages Used
+
+`vegan` for `vegdist()`, `metaMDS()`, `adonis2()`, and `betadisper()`; `GUniFrac` for phylogenetic UniFrac variants on microbiome data; `parallelDist` for fast multi-core distance computation; `phyloseq` for microbiome workflows that integrate Bray-Curtis with sequence and tree data.

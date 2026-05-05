@@ -1,0 +1,71 @@
+---
+title: "Power for McNemar's Test"
+date: "2026-04-17"
+description: Sample size for paired binary comparisons driven by the rate of discordant pairs
+categories:
+  - "Sample Size & Power"
+  - power
+  - mcnemar
+  - paired-binary
+  - discordant
+---
+
+## Introduction
+
+Power for McNemar's test depends on the rate of discordant pairs, not on the overall sample size alone. The concordant pairs contribute nothing to the test, so studies with high agreement need proportionally more pairs.
+
+## Prerequisites
+
+McNemar's test, paired binary data.
+
+## Theory
+
+Let $p_{10}$ = probability of (+, -) pairs and $p_{01}$ = probability of (-, +). The null hypothesis is $p_{10} = p_{01}$. Under $H_1$, the total proportion of discordant pairs is $p_{\text{disc}} = p_{10} + p_{01}$; the odds ratio of a "+ on test 1" given discordance is $p_{10}/p_{01}$.
+
+For a two-sided test at $\alpha$ and power $1 - \beta$:
+
+$$n \approx \frac{(z_{1-\alpha/2} + z_{1-\beta})^2}{p_{\text{disc}} \cdot \left(\frac{p_{10} - p_{01}}{p_{10} + p_{01}}\right)^2}.$$
+
+As discordance drops, $n$ grows rapidly.
+
+## Assumptions
+
+- Independent paired observations.
+- Pre-specified $p_{10}, p_{01}$ from pilot.
+
+## R Implementation
+
+```r
+library(pwrss)
+
+# Expected p10 = 0.15, p01 = 0.05, alpha = 0.05, power = 0.80
+pwrss.z.mcnemar(p10 = 0.15, p01 = 0.05,
+                alpha = 0.05, power = 0.80)
+
+# Manual calculation
+p10 <- 0.15; p01 <- 0.05
+p_disc <- p10 + p01
+OR <- (p10 - p01) / (p10 + p01)
+n_manual <- (qnorm(0.975) + qnorm(0.80))^2 / (p_disc * OR^2)
+n_manual
+```
+
+## Output & Results
+
+$n \approx 79$ pairs required. If discordance is lower (say $p_{10} = 0.10$, $p_{01} = 0.05$), required $n$ roughly doubles.
+
+## Interpretation
+
+"With an expected proportion of (+, -) pairs of 0.15 and (-, +) pairs of 0.05, McNemar's test requires 79 paired observations for 80 % power at two-sided $\alpha = 0.05$."
+
+## Practical Tips
+
+- Plan for the total sample, not just discordant pairs; concordant pairs are expected but non-informative.
+- The formula is sensitive to the assumed discordance rates; sensitivity analysis is essential.
+- For very high agreement (concordant pairs >> discordant), large samples are needed; consider redesigning the comparison.
+- Exact McNemar is more conservative in small samples; simulate if exactness matters.
+- Extension to Bowker or Stuart-Maxwell for multi-category paired data requires simulation-based power.
+
+## Reporting
+
+Always report the assumed discordance rates alongside the resulting sample size. Reviewers and ethics committees expect to see how the number of pairs was derived from the marginal probabilities, because the same total sample can yield very different power depending on the split between $p_{10}$ and $p_{01}$. Where the pilot estimate of discordance is uncertain, present a small grid of $n$ across plausible values rather than a single point estimate, and state which value drove the final target. If a sequential design is anticipated, note that the formula above is for a single fixed analysis and that group-sequential or adaptive variants require separate boundary calculations.

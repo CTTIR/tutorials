@@ -1,0 +1,82 @@
+---
+title: Boxplots
+date: "2026-04-17"
+description: "Five-number summary display: Tukey boxplots with whiskers and outlier rules"
+categories:
+  - Data Visualisation
+  - boxplot
+  - five-number-summary
+  - tukey
+---
+
+## Introduction
+
+A boxplot — also called a box-and-whisker plot — compresses a continuous distribution into a five-number summary: minimum, first quartile, median, third quartile, maximum, with Tukey's fences at $\pm 1.5 \times \mathrm{IQR}$ defining the whiskers and flagging anything beyond as an outlier. Boxplots are the workhorse for compact group-by-group comparisons because they put many groups side by side without ink overload. They are also the geom most often misused: they hide bimodality, hide sample size, and hide the raw observations behind a tidy rectangle, all of which can mislead readers who do not realise what the box actually summarises.
+
+## Prerequisites
+
+A working understanding of quartiles, the interquartile range, and the standard $\pm 1.5 \cdot \mathrm{IQR}$ outlier convention.
+
+## Theory
+
+The standard Tukey boxplot has the following components per group:
+
+- A box spanning the first and third quartiles (the IQR).
+- A horizontal line at the median inside the box.
+- Whiskers extending to the most extreme observation within $\pm 1.5 \times \mathrm{IQR}$ of the box edges.
+- Individual points beyond the whiskers drawn as outliers.
+
+Variants:
+
+- **Notched boxplot**: notches at $\pm 1.57 \cdot \mathrm{IQR} / \sqrt n$ give an approximate 95 % confidence interval for the median; non-overlapping notches between groups suggest a real difference in medians.
+- **Variable-width boxplot**: box width proportional to $\sqrt n$, encoding group size visually.
+- **Letter-value plot**: replaces the single box with nested boxes of decreasing depth, suitable for very large $n$ where a single Tukey box hides tail structure.
+
+## Assumptions
+
+For descriptive use, none. For the notched-boxplot CI interpretation, the approximation assumes approximately symmetric within-group distributions; under heavy skew the notches mislead.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+# Standard
+ggplot(mtcars, aes(factor(cyl), mpg, fill = factor(cyl))) +
+  geom_boxplot() +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal()
+
+# Notched
+ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
+  geom_boxplot(notch = TRUE) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal()
+
+# Boxplot + jittered points (show data and summary)
+ggplot(mtcars, aes(factor(cyl), mpg)) +
+  geom_boxplot(outlier.shape = NA, fill = "#2A9D8F", alpha = 0.5) +
+  geom_jitter(width = 0.2, alpha = 0.5) +
+  theme_minimal()
+```
+
+## Output & Results
+
+Three views: a standard side-by-side boxplot of mpg by cylinder count, a notched boxplot of iris sepal length per species (notches show approximate median CIs), and a hybrid plot that hides the default outlier dots and overlays jittered raw points so the boxplot's summary and the underlying data are both visible.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Boxplots of fuel efficiency by cylinder count (n = 11, 7, 14 for 4, 6, 8 cylinders); boxes span Q1 to Q3, the line marks the median, whiskers extend to the most extreme observation within $1.5 \cdot \mathrm{IQR}$, and dots are outliers." Always describe the whisker definition; some software uses 5 %/95 % quantiles or min/max instead of the Tukey rule.
+
+## Practical Tips
+
+- Hide default outliers (`outlier.shape = NA`) whenever you overlay `geom_jitter()`; otherwise extreme points appear twice.
+- Notches can overshoot the box for very small samples; R prints a warning when this happens, and the plot becomes uninterpretable.
+- Use `varwidth = TRUE` to encode group sizes via box width when groups are unbalanced; the visual cue is subtle but informative.
+- For very small samples ($n < 10$), prefer a dot plot or strip plot over a boxplot; quartile-based summaries are unstable for tiny groups.
+- Boxplots hide multi-modality; always inspect a density or histogram alongside before concluding that a group is unimodal.
+- For very large samples, a letter-value plot (`lvplot::geom_lv()`) preserves more of the tail structure than a single Tukey box.
+
+## R Packages Used
+
+`ggplot2` for `geom_boxplot()` and the `varwidth` / `notch` parameters; `lvplot` for letter-value plots at very large $n$; `ggbeeswarm` and `ggdist` for richer alternatives that combine boxplot summaries with raw points and distributional shape.

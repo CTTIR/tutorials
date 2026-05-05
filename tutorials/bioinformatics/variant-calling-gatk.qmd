@@ -1,0 +1,68 @@
+---
+title: Variant Calling with GATK
+date: "2026-04-17"
+description: Short-variant detection from aligned BAMs via the GATK Best Practices pipeline
+categories:
+  - Bioinformatics
+  - gatk
+  - variants
+  - HaplotypeCaller
+---
+
+## Introduction
+
+Variant calling turns aligned reads into a list of single-nucleotide variants (SNVs) and small insertions/deletions (indels). GATK's HaplotypeCaller is the de facto standard: it locally reassembles regions with evidence of variation and emits probabilistic genotype calls in VCF format.
+
+## Prerequisites
+
+Sequence alignment, BAM format, reference genome indexing.
+
+## Theory
+
+HaplotypeCaller proceeds in four stages: define **active regions** (loci with potential variation), perform **local de novo assembly** of haplotypes, **align reads to haplotypes** via pair-HMM, and **genotype** using likelihoods. For cohorts, each sample is first emitted as a per-sample GVCF, then joint-genotyped with `GenotypeGVCFs` -- this preserves reference evidence and scales linearly with samples.
+
+Downstream filtering is done with variant-quality score recalibration (VQSR) for whole-genome data or hard filters for smaller studies.
+
+## Assumptions
+
+Reads are duplicate-marked, base-quality-recalibrated (BQSR), and aligned to a standard reference; ploidy is specified.
+
+## R Implementation
+
+The GATK workflow runs on the command line (Java-based); R interacts with VCF output via `VariantAnnotation`.
+
+```r
+library(VariantAnnotation)
+
+# Sample VCF from the package
+vcf_file <- system.file("extdata", "chr22.vcf.gz", package = "VariantAnnotation")
+vcf <- readVcf(vcf_file, "hg19")
+
+vcf                                      # summary (SNPs, indels, samples)
+head(rowRanges(vcf))                     # variant coordinates
+head(info(vcf)[, c("AF", "DP")])         # population AF, depth
+geno(vcf)$GT[1:5, 1:3]                   # genotype calls (sample x variant)
+```
+
+A representative GATK command (not run here):
+
+```
+gatk HaplotypeCaller -R ref.fa -I sample.bam -O sample.g.vcf.gz -ERC GVCF
+gatk GenotypeGVCFs   -R ref.fa -V cohort.g.vcf.gz -O cohort.vcf.gz
+```
+
+## Output & Results
+
+A VCF / GVCF with per-variant coordinates, alleles, annotations, and per-sample genotypes, depths, and likelihoods.
+
+## Interpretation
+
+"Joint genotyping with GATK HaplotypeCaller called 4.2M SNVs and 0.8M indels across the cohort; after VQSR with 99.9% sensitivity we retained 3.9M high-confidence SNVs."
+
+## Practical Tips
+
+- Always BQSR before calling; skipping it inflates false positives, especially for low-frequency variants.
+- Use GVCF workflow for multi-sample studies; `HaplotypeCaller` in direct VCF mode is only for single-sample work.
+- `DeepVariant` is a competitive deep-learning alternative, producing similar quality without assembly.
+- For somatic calls, use `Mutect2`, not HaplotypeCaller.
+- Filter by depth, strand bias, and mapping quality (see `VariantFiltration`); many library artefacts look like rare variants.

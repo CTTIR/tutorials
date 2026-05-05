@@ -1,0 +1,94 @@
+---
+title: Simple Linear Regression
+date: "2026-04-17"
+description: "Fitting, diagnosing, and interpreting a linear regression with a single continuous predictor, from first principles"
+categories:
+  - "Regression & Modelling"
+  - linear-regression
+  - ols
+  - residuals
+  - diagnostics
+---
+
+## Introduction
+
+Simple linear regression models the mean of a continuous outcome as a linear function of a single continuous predictor. It is the workhorse of applied statistics: half of all reported analyses are linear regressions in some disguise, and the concepts it introduces (least squares estimation, residuals, fit-vs-data trade-off, R-squared, confidence and prediction bands) generalise to every more complex model.
+
+## Prerequisites
+
+The reader should know what a mean, a variance, and a correlation are, and should be comfortable reading a scatter plot. No prior regression experience is required.
+
+## Theory
+
+Given pairs $(x_i, y_i)$ for $i = 1, \ldots, n$, the simple linear regression model is
+
+$$y_i = \beta_0 + \beta_1 x_i + \varepsilon_i, \qquad \varepsilon_i \overset{iid}{\sim} \mathcal{N}(0, \sigma^2).$$
+
+The parameters $\beta_0$ (intercept) and $\beta_1$ (slope) are estimated by ordinary least squares -- minimising the sum of squared residuals $\sum (y_i - \hat{y}_i)^2$. Closed-form solutions are
+
+$$\hat{\beta}_1 = \frac{\sum (x_i - \bar{x})(y_i - \bar{y})}{\sum (x_i - \bar{x})^2}, \qquad \hat{\beta}_0 = \bar{y} - \hat{\beta}_1 \bar{x}.$$
+
+The standard error of the slope is $SE(\hat{\beta}_1) = s / \sqrt{\sum (x_i - \bar{x})^2}$, where $s$ is the residual standard error. Under the normality assumption, $\hat{\beta}_1$ is normally distributed around $\beta_1$, and $\hat{\beta}_1 / SE(\hat{\beta}_1)$ follows a $t$ distribution with $n - 2$ degrees of freedom under the null $\beta_1 = 0$.
+
+The coefficient of determination is $R^2 = 1 - \frac{SS_{res}}{SS_{tot}}$ -- the proportion of variance in $y$ explained by the linear relationship with $x$. For simple regression, $R^2$ equals the squared Pearson correlation.
+
+## Assumptions
+
+The OLS inference machinery relies on four assumptions:
+
+1. **Linearity**: the true relationship between $x$ and the mean of $y$ is linear.
+2. **Independence**: the errors $\varepsilon_i$ are independent of each other.
+3. **Homoscedasticity**: the errors have constant variance $\sigma^2$ regardless of $x$.
+4. **Normality of errors**: the errors are normally distributed -- important for small-sample inference, less so for large samples.
+
+## R Implementation
+
+```r
+library(broom)
+library(ggplot2)
+library(performance)
+
+set.seed(7)
+n <- 80
+x <- runif(n, 0, 10)
+y <- 2 + 1.5 * x + rnorm(n, sd = 1.5)
+df <- data.frame(x, y)
+
+fit <- lm(y ~ x, data = df)
+tidy(fit, conf.int = TRUE)
+glance(fit)
+
+ggplot(df, aes(x = x, y = y)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", colour = "steelblue") +
+  theme_minimal(base_size = 12)
+
+check_model(fit)
+```
+
+The `tidy()` function returns a one-row-per-term table with estimates, standard errors, t statistics, p-values, and confidence intervals. `glance()` returns a one-row model-level summary: R-squared, adjusted R-squared, residual standard error, F statistic, and log-likelihood. `check_model()` produces the standard diagnostic panel.
+
+## Output & Results
+
+Typical coefficient output:
+
+| term | estimate | std.error | statistic | p.value | conf.low | conf.high |
+|---|---|---|---|---|---|---|
+| (Intercept) | 1.982 | 0.326 | 6.080 | <0.001 | 1.333 | 2.631 |
+| x | 1.512 | 0.056 | 27.155 | <0.001 | 1.401 | 1.623 |
+
+$R^2 = 0.904$, residual SE = 1.47, F(1, 78) = 737.4.
+
+## Interpretation
+
+The slope estimate of 1.512 (95% CI 1.401 to 1.623) says that a one-unit increase in $x$ is associated with a 1.51-unit increase in the conditional mean of $y$, holding all else equal (vacuous for a simple regression, but the phrasing generalises). The intercept of 1.982 is the predicted $y$ when $x = 0$; this is only a scientifically meaningful quantity if $x = 0$ is within the range of the data.
+
+For a manuscript: "A simple linear regression showed that $y$ increased significantly with $x$, $b = 1.51$ (95% CI 1.40 to 1.62), $t(78) = 27.2$, $p < 0.001$. The model explained 90.4% of the variance in $y$."
+
+## Practical Tips
+
+- Always plot the data and the fitted line; numbers alone can hide gross misfit.
+- Residuals-vs-fitted and Q-Q plots are the two diagnostics you should reflexively inspect.
+- An $R^2$ of 0.9 is stellar in physics, mediocre in psychology, and suspect in epidemiology -- interpret it in context.
+- The confidence interval is for the *mean* response at a given $x$; the prediction interval, which is wider, is for a *new individual* observation.
+- Extrapolating beyond the range of the observed $x$ is risky: the linear relationship that held for $x \in [0, 10]$ may be nonsense for $x = 100$.

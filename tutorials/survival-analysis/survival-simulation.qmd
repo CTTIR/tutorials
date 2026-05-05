@@ -1,0 +1,79 @@
+---
+title: Simulating Survival Data
+date: "2026-04-17"
+description: Generating realistic censored time-to-event datasets for power analysis and method validation
+categories:
+  - Survival Analysis
+  - simulation
+  - inverse-hazard
+---
+
+## Introduction
+
+Simulating censored time-to-event data is essential for three classes of work: power and sample-size calculations for trials with non-standard designs, validation of new statistical methods (does the estimator recover the truth?), and pedagogy. The inverse-hazard method generates event times from any specified hazard function and lets you build realistic datasets that match a target survival pattern, censoring distribution, and covariate-effect structure.
+
+## Prerequisites
+
+A working understanding of hazard and cumulative hazard functions, the inverse-CDF method for random-number generation, and the relationship between proportional-hazards models and exponentiated covariate effects.
+
+## Theory
+
+For a hazard $h(t \mid x)$ with cumulative hazard $H(t \mid x)$ and a uniform variate $U \sim \mathrm{Uniform}(0, 1)$,
+
+$$T = H^{-1}\bigl(-\log U \mid x\bigr)$$
+
+has the target distribution. Under proportional hazards $H(t \mid x) = H_0(t) \exp(x^\top \beta)$, so
+
+$$T_i = H_0^{-1}\!\left(-\log U_i / \exp(x_i^\top \beta)\right).$$
+
+Censoring is added by drawing an independent censoring time $C_i$ from a chosen distribution (administrative, exponential, or empirical from a real cohort) and recording $\min(T_i, C_i)$ as the observation time and $\mathbf 1\{T_i \le C_i\}$ as the event indicator.
+
+## Assumptions
+
+The specified baseline hazard and covariate-effect structure are the truth being simulated; the censoring distribution is independent of $T_i$ unless the simulation explicitly handles informative censoring.
+
+## R Implementation
+
+```r
+library(simsurv)
+
+set.seed(2026)
+n <- 300
+x <- data.frame(id = 1:n, arm = factor(rep(c("A", "B"), each = n/2)))
+x$arm_num <- as.numeric(x$arm) - 1
+
+# Weibull baseline: lambda = 0.1, gamma = 1.2
+sim <- simsurv(lambdas = 0.1, gammas = 1.2,
+               x = x, betas = c(arm_num = -0.5),
+               maxt = 10)
+
+# Merge with covariates
+d <- merge(sim, x, by = "id")
+head(d)
+
+# Kaplan-Meier
+library(survival)
+fit_km <- survfit(Surv(eventtime, status) ~ arm, data = d)
+plot(fit_km)
+```
+
+## Output & Results
+
+`simsurv()` returns a tibble with one row per subject containing the simulated event time, the censoring indicator (here taken at `maxt = 10`), and the subject id. Merging back with the covariate frame gives a complete simulated dataset ready for analysis. The Kaplan-Meier plot shows the two arms separating with the designed effect size.
+
+## Interpretation
+
+A reporting sentence: "Simulated Weibull data with shape 1.2, baseline scale 0.1, and a treatment hazard ratio of $\exp(-0.5) = 0.61$; a Cox model on the simulated data recovered an HR of 0.59 (95 % CI 0.46 to 0.76), confirming the simulation is correctly calibrated." Always confirm that the analysis pipeline recovers the simulation parameters before using the simulator for power calculations.
+
+## Practical Tips
+
+- `simsurv` supports Weibull and Gompertz baselines plus user-defined hazard functions; for arbitrary parametric shapes, supply `hazard` or `loghazard` directly.
+- For competing risks, simulate each cause's event time independently and record the cause that occurred first; the resulting data have the correct cumulative incidence functions.
+- Match the censoring distribution to the real-study target: administrative censoring at study end, plus loss-to-follow-up exponentials with rates calibrated to historical drop-out.
+- For power calculations, run thousands of simulated datasets, fit the planned model on each, and record the proportion of times the test rejects at the chosen alpha; this is the standard Monte Carlo power estimator.
+- For time-varying covariates, simulate via piecewise-constant hazards across pre-specified intervals; `simsurv` supports `tdefunction` for time-dependent covariate effects.
+- For validation of new methods, re-simulate under several scenarios (PH violation, heavy censoring, sparse events) and check robustness; a method that works only on its design assumptions is brittle.
+
+## R Packages Used
+
+`simsurv` for the canonical inverse-hazard simulator with Weibull, Gompertz, and user-defined baselines; `flexsurv` for `rflexsurv()` simulation from fitted flexible models; `coxed` for Cox-model-based simulations; `survSim` for additional simulation extensions including frailty and time-dependent effects.

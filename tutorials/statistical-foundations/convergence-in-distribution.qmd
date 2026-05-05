@@ -1,0 +1,90 @@
+---
+title: Convergence in Distribution
+date: "2026-04-17"
+description: "The weakest standard mode of convergence, underlying the central limit theorem"
+categories:
+  - Statistical Foundations
+  - convergence-in-distribution
+  - weak-convergence
+  - clt
+---
+
+## Introduction
+
+Convergence in distribution (also called weak convergence) is the mode of convergence that underlies the central limit theorem. Unlike convergence in probability, which says the random variables themselves get close, convergence in distribution says only that their probability distributions get close. It is the weakest useful mode of convergence in classical probability theory and the one that defines every "asymptotic distribution" quoted in applied statistics.
+
+## Prerequisites
+
+The reader should know what a CDF is and should have seen the central limit theorem at least once before.
+
+## Theory
+
+A sequence $Y_n$ converges in distribution to $Y$, written $Y_n \xrightarrow{d} Y$, if
+
+$$\lim_{n \to \infty} F_{Y_n}(y) = F_Y(y)$$
+
+at every continuity point $y$ of $F_Y$. Equivalently, $E[g(Y_n)] \to E[g(Y)]$ for every bounded continuous $g$ (the "portmanteau" characterisation).
+
+**Key examples.**
+
+- The central limit theorem: $\sqrt{n}(\bar{X}_n - \mu)/\sigma \xrightarrow{d} \mathcal{N}(0, 1)$.
+- Binomial to Poisson: $\text{Binomial}(n, \lambda/n) \xrightarrow{d} \text{Poisson}(\lambda)$.
+- Sample maxima of uniform variables: $n(1 - \max X_i / \theta) \xrightarrow{d} \text{Exponential}(1)$ for $X_i \sim \text{Uniform}(0, \theta)$.
+
+**Relationships.**
+
+- Convergence in probability implies convergence in distribution.
+- Convergence in distribution to a constant implies convergence in probability.
+- Neither implies $E[Y_n] \to E[Y]$ unless additional integrability holds.
+
+**Slutsky's theorem**: if $Y_n \xrightarrow{d} Y$ and $Z_n \xrightarrow{P} c$ (a constant), then $Y_n + Z_n \xrightarrow{d} Y + c$ and $Y_n Z_n \xrightarrow{d} cY$. This is the tool that lets us substitute consistent estimators into asymptotic formulas without changing the limit.
+
+**Delta method**: if $\sqrt{n}(\hat{\theta} - \theta) \xrightarrow{d} \mathcal{N}(0, \sigma^2)$ and $g$ is differentiable at $\theta$ with $g'(\theta) \neq 0$, then
+
+$$\sqrt{n}(g(\hat{\theta}) - g(\theta)) \xrightarrow{d} \mathcal{N}(0, [g'(\theta)]^2 \sigma^2).$$
+
+## Assumptions
+
+Convergence in distribution is defined for any sequence with values in a metric space; in the classical case, real-valued, with a CDF at every $n$. The CLT additionally requires iid observations with finite variance.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+set.seed(2026)
+n <- 30
+
+xbars <- replicate(5000, {
+  x <- rexp(n, rate = 1)
+  (mean(x) - 1) / (1 / sqrt(n))
+})
+
+df <- data.frame(z = xbars)
+ggplot(df, aes(x = z)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 60,
+                 fill = "steelblue", colour = "white") +
+  stat_function(fun = dnorm, colour = "red", linewidth = 1) +
+  labs(x = "Standardised sample mean",
+       y = "Density",
+       title = "CLT in action: exponential source, n = 30") +
+  theme_minimal()
+```
+
+We standardise the sample mean of exponential draws; by the CLT, its distribution should approximate the standard normal as $n$ grows.
+
+## Output & Results
+
+The histogram matches the overlaid standard normal density closely; mean and SD of the standardised statistic are near 0 and 1 respectively. Doubling $n$ produces an even tighter match; halving $n$ shows visible skewness that the CLT has not yet erased.
+
+## Interpretation
+
+Every asymptotic "distribution" in classical statistics -- the normal for Wald tests, the chi-squared for LRTs, the F for ratio tests -- is a statement of convergence in distribution. The practical utility is that the limiting distribution is computable, even when the exact finite-sample distribution is not.
+
+## Practical Tips
+
+- Convergence in distribution does not imply that expectations converge; "tail probabilities settle" is the safer mental image.
+- Slutsky's theorem is the tool that turns pivot-based arguments into asymptotic ones -- memorise it.
+- The delta method is how standard errors propagate through differentiable transformations; it is how log-odds ratios get their SEs from odds-ratio SEs and vice versa.
+- In small samples, the nominal asymptotic distribution can be a poor approximation; simulate or bootstrap to check.
+- Convergence in distribution to a degenerate point mass (a constant) is equivalent to convergence in probability -- a useful diagnostic.

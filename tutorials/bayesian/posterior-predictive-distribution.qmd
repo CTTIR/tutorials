@@ -1,0 +1,67 @@
+---
+title: The Posterior Predictive Distribution
+date: "2026-04-17"
+description: Distribution of a new observation integrating over posterior uncertainty about parameters
+categories:
+  - Bayesian Statistics
+  - posterior-predictive
+  - prediction
+  - ppd
+---
+
+## Introduction
+
+The posterior predictive distribution (PPD) is the Bayesian answer to the question "what range of values can a future observation plausibly take?" It accounts for two sources of uncertainty simultaneously: the sampling variability that would persist even if the parameters were known, and the residual parameter uncertainty quantified by the posterior. A plug-in prediction that uses only the posterior mean throws away the second source and produces intervals that are too narrow — a frequent and consequential mistake in applied work.
+
+## Prerequisites
+
+A working understanding of posterior distributions, the difference between parameter inference and observation prediction, and Monte Carlo sampling from MCMC draws.
+
+## Theory
+
+For data $y$ and a prospective new observation $\tilde y$, the posterior predictive distribution is
+
+$$p(\tilde y \mid y) = \int p(\tilde y \mid \theta) p(\theta \mid y) \, \mathrm d \theta.$$
+
+The Monte Carlo approximation is direct: for each posterior draw $\theta^{(s)}$, sample $\tilde y^{(s)} \sim p(\tilde y \mid \theta^{(s)})$. The collection $\{\tilde y^{(s)}\}_{s=1}^S$ is itself a sample from the PPD, and any quantile, interval, or expectation of interest comes from it. Because the integral over $\theta$ is automatic in this formulation, the resulting prediction interval is wider than the corresponding interval based on a plug-in $\hat\theta$, and that extra width is the propagated parameter uncertainty.
+
+## Assumptions
+
+Valid posterior draws (converged chains, adequate ESS) and the assumed data-generating model $p(\tilde y \mid \theta)$ for the new observation. If the new observation is from a different population or covariate range, the PPD inherits the model's extrapolation behaviour and may be unrealistic.
+
+## R Implementation
+
+```r
+library(brms)
+
+set.seed(2026)
+n <- 100
+d <- data.frame(x = rnorm(n), y = NA)
+d$y <- 2 + 1.5 * d$x + rnorm(n)
+
+fit <- brm(y ~ x, data = d, chains = 2, iter = 2000, refresh = 0)
+
+# Posterior predictive samples
+pp <- posterior_predict(fit, newdata = data.frame(x = 0:3))
+apply(pp, 2, quantile, c(0.025, 0.5, 0.975))
+```
+
+## Output & Results
+
+`posterior_predict()` returns a matrix with one row per posterior draw and one column per `newdata` row. Summarising columnwise gives the posterior predictive median and 95 % interval at each new $x$. The resulting interval combines the residual standard deviation with the parameter uncertainty inherited from the posterior of $\beta_0$ and $\beta_1$.
+
+## Interpretation
+
+A reporting sentence: "At $x = 2$ the posterior predictive 95 % interval for a new observation is 3.1 to 6.8, with median 5.0; the corresponding interval for the conditional mean is 4.7 to 5.3, illustrating that residual variability dominates the predictive uncertainty in this model." Distinguishing the predictive interval from the credible interval on the mean is essential — they answer different questions and the former is always wider.
+
+## Practical Tips
+
+- Use `posterior_epred()` for the conditional-mean credible interval (no residual variability), `posterior_predict()` for the full predictive distribution including residual variation, and `posterior_linpred()` if you need the linear predictor before any link transformation.
+- Pair PPD draws with `pp_check(fit)` to confirm that the model captures the marginal distribution of the data; a misspecified family will produce predictive intervals that are too tight or too wide where they matter.
+- For binary, count, or ordinal outcomes, the PPD is a discrete distribution; visualise with rootograms or bar charts rather than density curves.
+- When predicting beyond the observed predictor range, report posterior predictive intervals separately for in-sample and out-of-sample $x$; readers should see where extrapolation begins.
+- Always summarise the PPD on the original scale of the outcome; transforming a credible interval on the linear predictor and adding back-of-the-envelope residual SD is rarely correct.
+
+## R Packages Used
+
+`brms` and `rstanarm` for `posterior_predict()`, `posterior_epred()`, and `posterior_linpred()`; `tidybayes::predicted_draws()` for tidy long-format predictive draws; `bayesplot` for `pp_check()` and other PPD diagnostic plots.

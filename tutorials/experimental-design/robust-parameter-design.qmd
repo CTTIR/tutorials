@@ -1,0 +1,76 @@
+---
+title: Robust Parameter Design
+date: "2026-04-17"
+description: Choosing controllable factor levels to minimise response variance across noise factors
+categories:
+  - Experimental Design
+  - robust-design
+  - taguchi
+  - variance
+---
+
+## Introduction
+
+Robust parameter design (Taguchi, 1950s-60s) seeks combinations of controllable design factors that minimise response variability across noise factors (environmental, batch-to-batch, use-conditions). The goal is a product or process that performs consistently regardless of noise.
+
+## Prerequisites
+
+Factorial designs; variance decomposition.
+
+## Theory
+
+**Inner array** of control factors crossed with **outer array** of noise factors. At each control setting, compute a summary -- mean, standard deviation, or signal-to-noise ratio. Choose the control setting that optimises the summary.
+
+Modern approach: fit a response model with control, noise, and control-x-noise interactions; find control levels that minimise variance while meeting the target mean.
+
+## Assumptions
+
+Noise factors represent realistic variation at use time; interactions with control factors are the primary lever for variance reduction.
+
+## R Implementation
+
+```r
+library(FrF2)
+
+set.seed(2026)
+# Inner array: 2^3 controllable factors
+ctrl <- FrF2(nruns = 8, nfactors = 3, randomize = FALSE)
+ctrl$A <- as.numeric(as.character(ctrl$A))
+ctrl$B <- as.numeric(as.character(ctrl$B))
+ctrl$C <- as.numeric(as.character(ctrl$C))
+
+# Outer array: 2^2 noise factors
+noise <- expand.grid(N1 = c(-1, 1), N2 = c(-1, 1))
+
+# Simulate: noise x control interaction
+results <- do.call(rbind, lapply(1:nrow(ctrl), function(i) {
+  vals <- sapply(1:nrow(noise), function(j) {
+    10 + 2 * ctrl$A[i] + 1.5 * ctrl$B[i] +
+      0.5 * noise$N1[j] + 0.8 * ctrl$A[i] * noise$N1[j] +
+      rnorm(1, 0, 0.3)
+  })
+  data.frame(run = i, mean = mean(vals), sd = sd(vals),
+             snr = -10 * log10(var(vals)))
+}))
+results
+
+# Choose control level minimising variance
+results$A <- ctrl$A
+cbind(ctrl, results)[order(results$sd), ]
+```
+
+## Output & Results
+
+Per-control-run mean, SD, and signal-to-noise ratio; the control combination with the smallest SD is the robust-optimal.
+
+## Interpretation
+
+"Robust parameter design identified setting (A = -1, B = +1, C = +1) as minimising response SD across noise factors. Control factor A interacted with noise factor N1, explaining the variance reduction at A = -1."
+
+## Practical Tips
+
+- The inner-outer array approach can be computationally expensive; use a combined model with control-noise interactions when possible.
+- Report both mean and variance; robust designs often accept a small mean-response penalty for large variance reduction.
+- Consider dual-response surface methods for joint mean-variance optimisation.
+- Pay attention to control-noise interactions: that is where robustness lives.
+- Combining Taguchi's philosophy with modern RSM is more flexible than pure Taguchi methods.

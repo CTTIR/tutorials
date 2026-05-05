@@ -1,0 +1,94 @@
+---
+title: The Exponential Distribution
+date: "2026-04-17"
+description: "Waiting time between events in a Poisson process, with the memoryless property"
+categories:
+  - Probability Theory
+  - exponential
+  - waiting-time
+  - memoryless
+  - hazard
+---
+
+## Introduction
+
+The exponential distribution models waiting times between events in a Poisson process with constant rate. It is the only continuous distribution with the memoryless property, and it is the simplest parametric model in survival and reliability analysis.
+
+## Prerequisites
+
+Continuous random variables and the Poisson process.
+
+## Theory
+
+A non-negative random variable $X$ is **exponential with rate $\lambda > 0$** if
+
+$$f(x) = \lambda e^{-\lambda x}, \qquad x \geq 0.$$
+
+CDF: $F(x) = 1 - e^{-\lambda x}$. Survival function: $S(x) = e^{-\lambda x}$.
+
+Moments:
+
+- $E[X] = 1/\lambda$ (the mean waiting time).
+- $\mathrm{Var}(X) = 1/\lambda^2$.
+
+**Memoryless property**: $P(X > s + t \mid X > s) = P(X > t)$. The probability of waiting another $t$ units, given we have already waited $s$, is the same as the unconditional probability of waiting $t$.
+
+**Constant hazard**: $h(x) = f(x)/S(x) = \lambda$. The instantaneous event rate does not depend on how long the object has already survived.
+
+**Relationship to Poisson**: in a Poisson process with rate $\lambda$, inter-arrival times are iid exponential with rate $\lambda$.
+
+**Scale vs rate**: some R functions use rate ($\lambda$), others use scale ($1/\lambda$). Check the documentation.
+
+## Assumptions
+
+Constant hazard (no ageing / no improvement). Violations motivate the Weibull or log-normal distributions.
+
+## R Implementation
+
+```r
+lambda <- 0.5
+
+X <- rexp(1e5, rate = lambda)
+c(mean = mean(X), theoretical = 1 / lambda,
+  var  = var(X),  theoretical_var = 1 / lambda^2)
+
+# Memoryless property
+P_past_2 <- mean(X > 2)
+P_past_5_given_2 <- mean(X[X > 2] > 5)        # P(X > 5 | X > 2)
+P_past_3 <- mean(X > 3)                        # should equal above by memorylessness
+c(conditional = P_past_5_given_2, unconditional = P_past_3)
+
+# Constant hazard
+breaks <- seq(0, 10, by = 1)
+hazards <- sapply(seq_len(length(breaks) - 1), function(i) {
+  in_bin <- X >= breaks[i] & X < breaks[i + 1]
+  sum(in_bin) / sum(X >= breaks[i])
+})
+round(hazards, 3)
+```
+
+## Output & Results
+
+```
+    mean theoretical      var  theoretical_var
+    1.996        2.0    3.985             4.0
+
+  conditional  unconditional
+       0.2232         0.2229
+
+ [1] 0.394 0.392 0.392 0.400 0.391 0.395 0.394 0.389 0.399 0.394
+```
+
+Empirical mean and variance match theoretical; memoryless property holds; empirical hazard is constant at $\approx 1 - e^{-\lambda}$ per unit interval.
+
+## Interpretation
+
+Exponential survival is the simplest hypothesis one can test in reliability and survival. When observed hazard is non-constant, report the Weibull or a flexible parametric model instead.
+
+## Practical Tips
+
+- `rexp(n, rate)` in R uses the rate parameterisation; `scale = 1/rate`.
+- Log-transform to compress the heavy right tail for visualisation.
+- Constant hazard is a strong and testable assumption; plot $-\log S(t)$ against $t$; linearity indicates exponentiality.
+- For right-censored data, use survival-analysis tools (`survreg(..., dist = "exponential")`) rather than naive `rexp`.
+- Exponential is the discrete geometric's continuous analogue; both share memorylessness.

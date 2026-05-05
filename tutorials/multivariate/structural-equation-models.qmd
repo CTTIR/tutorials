@@ -1,0 +1,83 @@
+---
+title: Structural Equation Models
+date: "2026-04-17"
+description: Combining measurement (CFA) and structural (path) components for latent-variable regression
+categories:
+  - Multivariate Statistics
+  - sem
+  - lavaan
+  - latent
+  - path-analysis
+---
+
+## Introduction
+
+Structural equation modelling (SEM) is the unified framework that integrates measurement (how observed items reflect underlying latent constructs) and structure (how latent constructs relate to each other) into a single estimation problem. It generalises confirmatory factor analysis (measurement only), path analysis (regressions among observed variables only), and multivariate regression. Modern psychometrics, organisational research, and increasingly clinical-outcomes work depend on SEM as the primary analytical tool because it isolates relationships among true constructs from those distorted by measurement error.
+
+## Prerequisites
+
+A working understanding of confirmatory factor analysis, multiple regression, latent-variable thinking, and basic familiarity with `lavaan` syntax.
+
+## Theory
+
+SEM estimates measurement and structural parameters jointly by maximum likelihood (or robust ML, weighted least squares for ordinal indicators). Components in `lavaan` syntax:
+
+- **Measurement model** (`=~`): latent factor defined by its observed indicators.
+- **Structural regressions** (`~`): latent-on-latent or latent-on-observed regressions.
+- **Variances / covariances** (`~~`): residual correlations or factor covariances.
+- **Defined parameters** (`:=`): derived quantities such as indirect effects.
+
+Standard fit indices (CFI, TLI, RMSEA, SRMR) parallel those of CFA. Indirect effects and confidence intervals are computed at the level of MCMC or bootstrap draws.
+
+## Assumptions
+
+Correct specification of both the measurement and structural components, multivariate Normal continuous indicators (or robust estimators for non-Normal data), and sufficient sample size — at least 200 observations as a rough rule, more for complex models.
+
+## R Implementation
+
+```r
+library(lavaan); library(semPlot)
+
+model <- '
+  # Measurement
+  ind60 =~ x1 + x2 + x3
+  dem60 =~ y1 + y2 + y3 + y4
+  dem65 =~ y5 + y6 + y7 + y8
+
+  # Structural
+  dem60 ~ ind60
+  dem65 ~ ind60 + dem60
+
+  # Residual correlations
+  y1 ~~ y5
+  y2 ~~ y4 + y6
+  y3 ~~ y7
+  y4 ~~ y8
+  y6 ~~ y8
+'
+fit <- sem(model, data = PoliticalDemocracy)
+summary(fit, standardized = TRUE, fit.measures = TRUE)
+
+semPaths(fit, "std", layout = "tree2")
+```
+
+## Output & Results
+
+`summary(fit, standardized = TRUE)` reports unstandardised and standardised coefficients, factor loadings, residual covariances, and the full set of fit indices. `semPaths()` renders a path diagram with arrow widths proportional to standardised coefficients.
+
+## Interpretation
+
+A reporting sentence: "The structural equation model fit the Political Democracy data well (CFI 0.99, RMSEA 0.04 [90 % CI 0.02 to 0.06], SRMR 0.05); industrialisation in 1960 predicted both 1960 and 1965 democracy ($\beta = 0.45$ and $0.39$ respectively), and 1960 democracy strongly predicted 1965 democracy ($\beta = 0.84$, $p < 0.001$)." Always report standardised coefficients alongside fit indices.
+
+## Practical Tips
+
+- Check the measurement model in isolation (run a CFA) before adding structural paths; weak factors produce uninterpretable structural relationships.
+- Use `modificationIndices()` cautiously; data-driven modifications blur the confirmatory status of the analysis and inflate Type I error.
+- For mediation analysis, define indirect effects with `:=` and request bootstrap CIs (`sem(..., se = "bootstrap")`); the indirect effect is a product of coefficients with non-Normal sampling distribution.
+- For ordinal indicators, switch to weighted least squares (`estimator = "WLSMV"`); ordinary ML on Likert items violates Normality assumptions.
+- Very complex models need very large samples; if $n < 5$ per estimated parameter, results are unstable and a simpler path model may be more robust.
+- For cross-cultural or multi-group comparisons, fit measurement-invariance hierarchies (configural, metric, scalar) before comparing latent means across groups.
+
+## R Packages Used
+
+`lavaan` for `sem()`, `cfa()`, `growth()`, and `lavInspect()`; `semPlot` for path diagrams; `semTools` for measurement-invariance tests, reliability coefficients, and modification heuristics; `blavaan` for Bayesian SEM that handles small samples and complex priors.

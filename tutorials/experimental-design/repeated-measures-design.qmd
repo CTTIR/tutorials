@@ -1,0 +1,77 @@
+---
+title: Repeated-Measures Designs
+date: "2026-04-17"
+description: "Designs with a within-subject factor: multiple measurements per unit"
+categories:
+  - Experimental Design
+  - repeated-measures
+  - within-subject
+  - mixed-effects
+---
+
+## Introduction
+
+Repeated-measures designs measure the same experimental unit at multiple time points or under multiple conditions. They gain statistical power relative to between-subject designs by removing the between-subject component of variance from the within-subject contrasts of interest, but they introduce a within-subject correlation structure that must be modelled correctly. The classical repeated-measures ANOVA requires sphericity and is restricted to balanced complete designs; the modern alternative is mixed-effects modelling with subject as a random effect, which accommodates unbalanced data, missing time points, and richer covariance structures while remaining valid under broader assumptions.
+
+## Prerequisites
+
+A working understanding of one-way and factorial ANOVA, the concept of correlated data, and the essentials of mixed-effects modelling with random intercepts and (optionally) random slopes.
+
+## Theory
+
+The standard mixed-effects model for repeated measures is
+
+$$y_{ij} = \mu + \tau_j + s_i + \varepsilon_{ij}, \qquad s_i \sim N(0, \sigma_s^2), \quad \varepsilon_{ij} \sim N(0, \sigma^2),$$
+
+with within-subject factor effect $\tau_j$, subject random intercept $s_i$, and residual error $\varepsilon_{ij}$. Common covariance structures imposed on the residual vector for one subject include:
+
+- **Compound symmetry**: equal residual variance and equal correlation across all time pairs (strict — implied by a random-intercept model).
+- **AR(1)**: autoregressive of order one, with correlation decaying with lag.
+- **Unstructured**: fully general $T \times T$ covariance with $T(T+1)/2$ parameters.
+
+For classical repeated-measures ANOVA, sphericity is the relevant assumption, and Greenhouse–Geisser or Huynh–Feldt corrections are applied when Mauchly's test detects a violation.
+
+## Assumptions
+
+The within-subject correlation structure is correctly specified, residuals are approximately Normal, and missing data are missing at random (MAR) — a standard assumption that mixed-effects models can accommodate without listwise deletion.
+
+## R Implementation
+
+```r
+library(lme4); library(lmerTest)
+
+set.seed(2026)
+n_sub <- 30; n_time <- 4
+sub_re <- rnorm(n_sub, 0, 1)
+
+df <- expand.grid(subject = 1:n_sub, time = 1:n_time)
+df$y <- 10 + 0.5 * df$time + sub_re[df$subject] +
+        rnorm(nrow(df), 0, 0.5)
+
+fit_ri <- lmer(y ~ factor(time) + (1 | subject), data = df)
+anova(fit_ri)
+
+fit_rs <- lmer(y ~ time + (time | subject), data = df)
+summary(fit_rs)$coefficients
+```
+
+## Output & Results
+
+`lmer()` with a random intercept gives the within-subject contrast for time, and `anova()` from `lmerTest` provides $F$-tests with Satterthwaite-adjusted denominator df. Adding a random slope (`(time | subject)`) lets the within-subject trend itself vary across subjects, which is appropriate when there is reason to believe individuals differ in their response trajectories.
+
+## Interpretation
+
+A reporting sentence: "Repeated-measures analysis with subject as a random intercept showed a significant time effect ($F_{3, 87} = 18.2$, $p < 0.001$). The subject random effect absorbed substantial between-subject variance ($\sigma_s^2 = 1.04$, $\sigma^2 = 0.27$, intra-class correlation 0.79), markedly improving precision relative to a between-subject analysis. A random-slope model that allowed subject-specific time trends did not improve fit ($\Delta \mathrm{AIC} = +1.4$), so the random-intercept specification is reported as primary." Always report variance components.
+
+## Practical Tips
+
+- Use mixed-effects models (`lmer` from `lme4`, `lme` from `nlme`, or generalised-mixed via `glmmTMB`) rather than classical repeated-measures ANOVA whenever possible; they handle unbalanced data, missing time points, irregular timing, and richer covariance structures naturally.
+- For irregular or continuous timing, specify time as a continuous covariate with random slopes; this is far more efficient than treating each time point as a separate factor level when the response is genuinely a smooth function of time.
+- If you must use classical repeated-measures ANOVA (e.g., for compatibility with a standard reporting requirement), check sphericity with Mauchly's test and apply Greenhouse–Geisser or Huynh–Feldt correction whenever it is violated.
+- Missing time points are handled naturally by mixed-effects models under the MAR assumption; classical repeated-measures ANOVA requires complete cases and discards subjects with any missing time, which is wasteful and can introduce bias.
+- Report both the fixed-effect estimates (the substantive scientific output) and the random-effect variance components (which describe how much within-subject correlation is present); the latter is essential for judging whether the design is well chosen.
+- For binary or count outcomes measured repeatedly, use generalised mixed-effects models (`glmer`, `glmmTMB`) or generalised estimating equations (GEE via the `geepack` package) — the latter trade efficiency for robust marginal inference.
+
+## R Packages Used
+
+`lme4::lmer()` and `lmerTest` for mixed-effects analysis with denominator-df adjustment; `nlme::lme()` for richer covariance-structure specification (AR1, unstructured) on the residuals; `glmmTMB` for generalised and complex-covariance mixed models; `geepack::geeglm()` for population-averaged GEE analyses; `afex::aov_car()` for classical repeated-measures ANOVA with built-in sphericity correction.

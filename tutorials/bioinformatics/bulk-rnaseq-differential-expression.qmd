@@ -1,0 +1,94 @@
+---
+title: Bulk RNA-seq Differential Expression with DESeq2
+date: "2026-04-17"
+description: "A complete DESeq2 workflow: from count matrix through normalisation, dispersion estimation, Wald testing, and LFC shrinkage"
+categories:
+  - Bioinformatics
+  - rna-seq
+  - deseq2
+  - differential-expression
+  - bioconductor
+  - negative-binomial
+---
+
+## Introduction
+
+Bulk RNA-seq asks which genes change in expression between conditions. DESeq2 is the most widely used framework for the analysis: it models counts with a negative binomial distribution, shares dispersion information across genes to stabilise estimates in small samples, and tests each gene's log-fold change for significance with multiple-testing correction. A standard DESeq2 workflow goes from a raw count matrix to a list of differentially expressed genes in a dozen lines of R.
+
+## Prerequisites
+
+The reader should understand what a count matrix is (rows = genes, columns = samples), the basic biology of RNA-seq (reads mapped to transcripts, summed per gene), and the idea of a generalised linear model. Familiarity with Bioconductor data structures (`SummarizedExperiment`) is helpful.
+
+## Theory
+
+DESeq2 assumes that the read count $K_{ij}$ for gene $i$ in sample $j$ follows a negative binomial distribution
+
+$$K_{ij} \sim \text{NB}(\text{mean} = \mu_{ij},\; \text{dispersion} = \alpha_i),$$
+
+where $\mu_{ij} = s_j q_{ij}$ is the product of a sample-specific size factor $s_j$ (for sequencing depth normalisation) and a gene-specific expected count $q_{ij}$ that depends on the experimental design through a log-linear model $\log_2 q_{ij} = \sum_k x_{jk} \beta_{ik}$.
+
+Three ideas make DESeq2 work well on small-sample studies:
+
+1. **Size factors** are computed by the median-of-ratios method, which is robust to highly expressed genes dominating the normalisation.
+2. **Dispersion shrinkage** borrows strength across genes: each gene's dispersion estimate is shrunk toward a mean-dispersion trend fitted across all genes, so that noisy per-gene estimates in small samples do not produce wild inference.
+3. **Log-fold-change shrinkage** (via `apeglm` or `ashr`) pulls LFCs of low-count genes toward zero, preventing them from dominating ranked gene lists.
+
+The Wald test compares the estimated coefficient of interest to zero, with standard errors that reflect both the design and the dispersion. The Benjamini-Hochberg procedure controls the false discovery rate across the thousands of genes tested.
+
+## Assumptions
+
+- Read counts follow a negative binomial distribution -- usually reasonable for bulk mRNA-seq; may fail for very-low-coverage or heavily PCR-amplified libraries.
+- The dispersion-mean trend is smooth across genes.
+- Replicates within a condition are exchangeable after accounting for modelled covariates.
+- No confounding between the biological condition and technical covariates (batch, library prep date). If there is, include the technical covariate in the design.
+
+## R Implementation
+
+```r
+library(DESeq2)
+library(apeglm)
+library(ggplot2)
+
+counts <- matrix(rnbinom(20000 * 6, mu = 100, size = 10),
+                 nrow = 20000, ncol = 6)
+rownames(counts) <- paste0("gene", seq_len(20000))
+colnames(counts) <- paste0("sample", seq_len(6))
+coldata <- data.frame(condition = factor(rep(c("control", "treated"), each = 3)),
+                      row.names = colnames(counts))
+
+counts[1:200, 4:6] <- counts[1:200, 4:6] * 3
+
+dds <- DESeqDataSetFromMatrix(countData = counts,
+                              colData = coldata,
+                              design = ~ condition)
+
+dds <- dds[rowSums(counts(dds) >= 10) >= 3, ]
+
+dds <- DESeq(dds)
+
+res <- lfcShrink(dds, coef = "condition_treated_vs_control",
+                 type = "apeglm")
+
+summary(res)
+head(res[order(res$padj), ])
+
+plotMA(res, ylim = c(-3, 3))
+```
+
+The toy simulation above creates 20,000 genes and 6 samples, upregulates the first 200 genes in the treated condition, and runs the standard DESeq2 pipeline: construct the DESeqDataSet, filter very-low-count genes, estimate size factors and dispersion, fit the model, and shrink LFCs for reporting.
+
+## Output & Results
+
+The `summary(res)` output reports the number of genes up- and down-regulated at the default alpha (0.1): typically a few hundred in the simulated upregulated set, with a small number of false positives at FDR 10%. The MA plot shows that the shrunken LFCs are compressed toward zero at low mean expression, as desired.
+
+## Interpretation
+
+For a manuscript: "Differential expression between treated and control samples was assessed with DESeq2 (v1.44). Size factors were estimated by the median-of-ratios method; dispersions were shared across genes via the DESeq2 trend; log-fold changes were shrunk using `apeglm`. 212 genes were differentially expressed at an FDR of 5% (154 up, 58 down)."
+
+## Practical Tips
+
+- Use `vst()` or `rlog()` transformations for downstream visualisation (PCA, heatmaps); use raw counts in DESeq2's own pipeline.
+- Filter low-count genes *before* running DESeq (e.g., keep genes with $\geq 10$ counts in $\geq$ the smallest group size). This improves multiple-testing adjusted p-values without inflating false discoveries.
+- Always inspect the PCA of normalised samples before differential expression. If samples cluster by batch rather than by condition, revise the design formula before interpreting results.
+- `apeglm` shrinkage is the recommended default for LFC reporting. `ashr` handles contrasts; `normal` is the legacy method.
+- Report shrunken LFCs for ranking and visualisation, but use the Wald test p-values for significance calling.

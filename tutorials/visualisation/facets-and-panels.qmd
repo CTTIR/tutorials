@@ -1,0 +1,78 @@
+---
+title: Facets and Panels
+date: "2026-04-17"
+description: Creating small multiples via facet_wrap and facet_grid
+categories:
+  - Data Visualisation
+  - ggplot2
+  - facet
+  - small-multiples
+  - panels
+---
+
+## Introduction
+
+Small multiples — a grid of identical plots, one per subgroup — are one of the most powerful visualisation idioms in modern data analysis. They let the reader compare a relationship across many conditions without overlaying everything on a single set of axes, which becomes unreadable beyond three or four series. `ggplot2` calls this faceting and provides two complementary functions: `facet_wrap()` for a one-dimensional set of panels arranged into rows and columns, and `facet_grid()` for a strict row-by-column matrix indexed by two grouping variables.
+
+## Prerequisites
+
+A working knowledge of `ggplot2`'s grammar of graphics, layered geoms, and the distinction between aesthetic mappings and faceting variables.
+
+## Theory
+
+`facet_wrap(~ var)` partitions the data by `var`, creates one panel per level, and arranges them into a single block whose dimensions can be specified with `nrow` or `ncol`. `facet_grid(rows ~ cols)` produces a matrix of panels indexed by two variables, leaving an empty cell for combinations that have no data. Both functions share a `scales` argument controlling axis behaviour:
+
+- `"fixed"` (default): all panels share x and y axes — the right choice when the comparative question is the headline.
+- `"free_x"`, `"free_y"`, `"free"`: each panel sets its own axis range — useful when scales differ enough that fixed axes hide structure within panels but at the cost of cross-panel comparability.
+
+Strip labels (the panel headers) are themed via `labeller`; `label_both` combines variable name and level, `label_parsed` interprets the level as a math expression.
+
+## Assumptions
+
+No statistical assumptions; faceting is a display convention. The only practical constraint is that the number of panels remains small enough to be readable at the final print size — usually no more than 9–12 panels per page.
+
+## R Implementation
+
+```r
+library(ggplot2); library(palmerpenguins)
+data(penguins)
+
+# facet_wrap: one factor
+ggplot(penguins, aes(flipper_length_mm, body_mass_g)) +
+  geom_point(aes(colour = species), alpha = 0.7) +
+  facet_wrap(~ sex) +
+  theme_minimal()
+
+# facet_grid: two factors (rows = island, cols = sex)
+ggplot(penguins, aes(flipper_length_mm, body_mass_g)) +
+  geom_point(aes(colour = species), alpha = 0.7) +
+  facet_grid(island ~ sex) +
+  theme_minimal()
+
+# Free scales
+ggplot(penguins, aes(flipper_length_mm, body_mass_g)) +
+  geom_point(aes(colour = species), alpha = 0.7) +
+  facet_wrap(~ species, scales = "free") +
+  theme_minimal()
+```
+
+## Output & Results
+
+Three faceted views: a two-panel split by sex, a 3-by-3 grid by island and sex, and a three-panel split by species with free axes per panel. Each version answers a different question — "how does the relationship differ between sexes", "across both island and sex", or "what does it look like inside each species ignoring scale".
+
+## Interpretation
+
+A reporting sentence (figure caption): "Body mass against flipper length faceted by sex (`facet_wrap(~ sex)`); colour distinguishes the three penguin species." Always describe the faceting variable in the caption — readers should not have to infer the grid axis from strip labels alone.
+
+## Practical Tips
+
+- Reach for `facet_wrap()` when there is one grouping variable; use `facet_grid()` only when the row/column structure is meaningful and balanced.
+- Keep `scales = "fixed"` whenever the cross-panel comparison is the inferential focus; switch to free scales only when within-panel magnitudes differ enough to obscure shape.
+- Limit the panel count: 9–12 is the practical upper bound on a journal-sized figure; beyond that, faceting fragments rather than illuminates.
+- Use `labeller = labeller(var = c("M" = "Male", "F" = "Female"))` to spell out short factor levels for the reader.
+- For aligned axes across `facet_wrap()` panels with very different ranges, fix one axis (`scales = "free_y"`) rather than freeing both — this preserves comparability where it matters.
+- `coord_cartesian(xlim = ..., ylim = ...)` zooms while leaving the underlying data unfiltered; combine with `facet_grid()` when you want fixed-scale comparisons but with a tighter view than the natural data range.
+
+## R Packages Used
+
+`ggplot2` for `facet_wrap()` and `facet_grid()`; `ggh4x` for nested facets and per-panel scale control; `palmerpenguins` as a small dataset rich in faceting structure for examples.

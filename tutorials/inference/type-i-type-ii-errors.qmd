@@ -1,0 +1,93 @@
+---
+title: Type I and Type II Errors
+date: "2026-04-17"
+description: Rejecting a true null (alpha) and failing to reject a false null (beta); power and the trade-off
+categories:
+  - Inferential Statistics
+  - type-i
+  - type-ii
+  - alpha
+  - beta
+  - power
+---
+
+## Introduction
+
+Two kinds of error arise in hypothesis testing: rejecting a true null (Type I) and failing to reject a false null (Type II). Their probabilities -- $\alpha$ and $\beta$ -- are the core quantities of statistical decision theory. Power $1 - \beta$ is one minus the Type II rate, and the rate at which sample size and effect size trade against $\alpha$ is the currency of study design.
+
+## Prerequisites
+
+Hypothesis testing, p-values, sampling distributions.
+
+## Theory
+
+The 2x2 decision table:
+
+|                        | $H_0$ true      | $H_0$ false     |
+|------------------------|-----------------|-----------------|
+| Reject $H_0$           | Type I ($\alpha$) | correct (power) |
+| Fail to reject $H_0$   | correct          | Type II ($\beta$) |
+
+- $\alpha = P(\text{reject } H_0 \mid H_0)$ is the significance level, usually set to 0.05.
+- $\beta = P(\text{fail to reject } H_0 \mid H_1)$ is the Type II error rate.
+- Power $= 1 - \beta$, usually targeted at 0.80 or 0.90.
+
+For a given test, power depends on: the true effect size (larger $\Rightarrow$ higher power), the sample size (larger $\Rightarrow$ higher power), the significance level ($\alpha$ smaller $\Rightarrow$ power lower), and the variability of the outcome (larger SD $\Rightarrow$ lower power).
+
+**Trade-off**: tightening $\alpha$ (to 0.01, say) reduces Type I errors but increases Type II errors for a fixed sample size. Only increasing $n$ reduces both.
+
+## Assumptions
+
+The test is correctly specified; the distributional model holds under $H_0$ and $H_1$.
+
+## R Implementation
+
+```r
+library(ggplot2)
+set.seed(2026)
+
+# Simulation: Type I rate at alpha = 0.05 when H0 true
+n_sims <- 10000
+p_null <- replicate(n_sims, t.test(rnorm(30, 0, 1), mu = 0)$p.value)
+mean(p_null < 0.05)
+
+# Power at alpha = 0.05 when H1 true (effect size = 0.5)
+p_alt <- replicate(n_sims, t.test(rnorm(30, 0.5, 1), mu = 0)$p.value)
+mean(p_alt < 0.05)
+
+# Compare to theoretical power
+power.t.test(n = 30, delta = 0.5, sd = 1, type = "one.sample")
+
+# Power curve
+d_grid <- seq(0, 1, by = 0.05)
+pw <- sapply(d_grid, function(d)
+  power.t.test(n = 30, delta = d, sd = 1, type = "one.sample")$power)
+
+ggplot(data.frame(d = d_grid, power = pw), aes(d, power)) +
+  geom_line(colour = "#2A9D8F", linewidth = 1) +
+  geom_hline(yintercept = 0.8, linetype = "dashed", colour = "#F4A261") +
+  labs(x = "Effect size d", y = "Power",
+       title = "Power curve at alpha = 0.05, n = 30") +
+  theme_minimal()
+```
+
+## Output & Results
+
+```
+[1] 0.0510    # empirical Type I rate
+[1] 0.7549    # empirical power at d = 0.5
+```
+
+Empirical Type I error is close to the nominal 0.05; empirical power at $d = 0.5$ matches the theoretical calculation.
+
+## Interpretation
+
+In study design, sample size is chosen to achieve a pre-specified power at the minimum effect size of interest. Reporting post-hoc power based on observed effects is misleading and discouraged.
+
+## Practical Tips
+
+- Power at 80 % is the conventional minimum; 90 % for confirmatory trials.
+- Type I and II errors are fixed by the design, not by the data; a significant p-value does not "justify" the design after the fact.
+- In multiple-comparison settings, family-wise error rate replaces single-test $\alpha$.
+- Sequential designs (group-sequential trials) adjust $\alpha$ across looks to preserve overall Type I rate.
+- Heavy-tailed or non-normal data reduce power; use rank-based tests or robust alternatives when applicable.

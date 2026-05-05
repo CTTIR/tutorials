@@ -1,0 +1,84 @@
+---
+title: Mann-Whitney U Test
+date: "2026-04-17"
+description: Non-parametric two-sample test based on ranks; alternative to the independent t-test
+categories:
+  - Inferential Statistics
+  - mann-whitney
+  - wilcoxon-rank-sum
+  - non-parametric
+  - ranks
+---
+
+## Introduction
+
+The Mann-Whitney U test (equivalent to the Wilcoxon rank-sum test) compares two independent groups using ranks rather than raw values. It is the non-parametric analogue of the two-sample t-test, and is appropriate for ordinal outcomes or continuous data that clearly violate normality.
+
+## Prerequisites
+
+Ranks, two-sample comparison.
+
+## Theory
+
+For independent samples $X_1, \ldots, X_{n_1}$ and $Y_1, \ldots, Y_{n_2}$, pool the observations, rank them, and sum the ranks in the first group to get $R_1$. The U statistic is
+
+$$U_1 = R_1 - \frac{n_1(n_1 + 1)}{2}.$$
+
+Under $H_0: F_X = F_Y$, $U_1$ has a known distribution computed via the Wilcoxon rank sum. Large-sample normal approximation uses
+
+$$E[U] = n_1 n_2 / 2, \quad \mathrm{Var}(U) = n_1 n_2 (n_1 + n_2 + 1) / 12.$$
+
+Effect sizes:
+
+- **Rank-biserial correlation** $r_{rb} = 1 - 2 U / (n_1 n_2)$, range $[-1, 1]$.
+- **Probability of superiority** $A = U / (n_1 n_2)$.
+
+## Assumptions
+
+- Two independent groups.
+- Observations at least ordinal.
+- Similar distribution shapes for a median-difference interpretation; otherwise the test compares distributions more generally.
+
+## R Implementation
+
+```r
+library(effectsize)
+set.seed(2026)
+
+group1 <- rlnorm(25, meanlog = log(50), sdlog = 0.4)
+group2 <- rlnorm(30, meanlog = log(60), sdlog = 0.4)
+
+wilcox.test(group1, group2)
+
+# Effect size: rank-biserial
+rank_biserial(group1, group2)
+
+# Median IQR comparisons
+c(median1 = median(group1), IQR1 = IQR(group1),
+  median2 = median(group2), IQR2 = IQR(group2))
+```
+
+## Output & Results
+
+```
+        Wilcoxon rank sum test with continuity correction
+W = 240, p-value = 0.008
+
+r (rank biserial) | 95% CI
+----------------------------
+-0.36             | [-0.59, -0.10]
+```
+
+Significant difference at p = 0.008; rank-biserial -0.36 indicates a moderate shift with group 1 tending to be smaller.
+
+## Interpretation
+
+"Serum biomarker concentrations were significantly lower in the control group than in cases (Mann-Whitney $U = 240$, $p = 0.008$, rank-biserial $r = -0.36$). Median concentration was 47 (IQR 34-59) ng/mL vs. 62 (IQR 47-73) in cases."
+
+## Practical Tips
+
+- Report medians and IQRs alongside the test; means and SDs are inappropriate when you chose Mann-Whitney.
+- For small samples with no ties, use the exact distribution (`exact = TRUE`); with ties, R issues a warning and falls back to the normal approximation.
+- The test is insensitive to outliers but sensitive to distributional shape differences (not just medians).
+- For paired ordinal data, use the Wilcoxon signed-rank test.
+- Power relative to the t-test is about 95 % under normality and can exceed it under heavy tails.

@@ -1,0 +1,67 @@
+---
+title: KPSS Test
+date: "2026-04-17"
+description: Testing for stationarity (null) against a unit-root alternative
+categories:
+  - Time Series Analysis
+  - kpss
+  - stationarity
+  - unit-root
+---
+
+## Introduction
+
+The Kwiatkowski-Phillips-Schmidt-Shin (KPSS) test is the natural complement to the augmented Dickey-Fuller (ADF) test for assessing stationarity. The two tests have flipped null hypotheses: ADF tests a unit-root null against a stationary alternative; KPSS tests a stationary null against a unit-root alternative. Running both and comparing their conclusions gives a more robust verdict than either alone, because a single test that fails to reject is uninformative — failure to reject a unit-root null is not evidence of stationarity, and vice versa.
+
+## Prerequisites
+
+A working understanding of stationarity, unit-root processes (random walks), and the augmented Dickey-Fuller test as the complementary stationarity diagnostic.
+
+## Theory
+
+The KPSS framework decomposes $y_t = r_t + \beta t + \varepsilon_t$, where $r_t = r_{t-1} + u_t$ is a random walk. Under the null of stationarity, the variance of the random-walk innovations is zero ($\sigma^2_u = 0$); under the alternative, $r_t$ contributes a stochastic trend. The test statistic is based on partial sums of residuals from regressing $y_t$ on (optionally) a constant and a trend; large partial-sum behaviour indicates a unit root and the test rejects stationarity.
+
+The "Level" version tests stationarity around a constant mean; the "Trend" version tests stationarity around a deterministic trend. Choosing between them depends on whether the series has a visible time trend.
+
+## Assumptions
+
+Correct model specification (level vs trend stationarity); the lag truncation parameter is adequate for the underlying autocorrelation structure (default works for most applications).
+
+## R Implementation
+
+```r
+library(tseries)
+
+# Stationary series
+y1 <- rnorm(100)
+kpss.test(y1, null = "Level")
+
+# Random walk (unit root)
+y2 <- cumsum(rnorm(100))
+kpss.test(y2, null = "Level")
+
+# Trend-stationary series
+y3 <- 0.5 * (1:100) + rnorm(100)
+kpss.test(y3, null = "Trend")
+```
+
+## Output & Results
+
+`kpss.test()` returns the KPSS statistic and the $p$-value (with a note about the truncation lag and the type of stationarity tested). Small statistics correspond to large $p$-values and indicate insufficient evidence to reject stationarity; large statistics reject and support a unit root.
+
+## Interpretation
+
+A reporting sentence: "The stationary white-noise series gave a KPSS statistic of 0.08 ($p > 0.10$, fail to reject stationarity); the random-walk series gave a statistic of 2.34 ($p < 0.01$, reject stationarity)." Always state which null was tested (Level vs Trend) and pair with an ADF test for the complementary perspective.
+
+## Practical Tips
+
+- `null = "Level"` for plain stationarity around a constant mean; `"Trend"` for stationarity around a deterministic trend. Choose based on whether a time-trend is visible in the series.
+- Bandwidth (lag-truncation) choice affects test size; the default is adequate for most series. For long-memory or strongly autocorrelated series, increase the truncation manually.
+- Combine with the ADF test: if both agree (ADF rejects unit root, KPSS fails to reject stationarity), stationarity is well-supported; if both disagree (ADF fails, KPSS rejects), a unit root is well-supported.
+- If both tests give ambiguous answers (ADF fails, KPSS fails), the series is borderline and additional diagnostics (autocorrelation structure, Phillips-Perron, fractional integration) help.
+- For multivariate or panel data, use Im-Pesaran-Shin or Levin-Lin-Chu tests; KPSS is univariate.
+- Differencing the series and re-testing is the standard workflow if a unit root is detected; the differenced series should pass both KPSS and ADF.
+
+## R Packages Used
+
+`tseries::kpss.test()` for the canonical implementation; `urca::ur.kpss()` for an alternative with finer control over deterministic components and bandwidth selection; `tseries::adf.test()` for the complementary ADF test; `forecast::ndiffs()` for an integrated workflow that automatically applies KPSS to determine the required differencing order.

@@ -1,0 +1,273 @@
+---
+title: Experimental Design
+description: "Planning experiments for valid inference: randomisation, blocking, factorial designs, split-plot, response surface, and optimal design"
+---
+
+An experiment is only as good as its design. No amount of sophisticated analysis rescues a study whose structure confounds the treatment effect with nuisance variation. This area covers the principles of experimental design -- randomisation, replication, blocking, factorial structure -- and the catalogue of specific designs that economise on runs while still answering the scientific question.
+
+Tutorials are framed around the design-then-analyse workflow: the ANOVA table and the factorial model for each design are shown alongside the randomisation procedure and the graphical summaries (main-effects, interaction, contour) that communicate the results.
+
+## Designs covered
+
+- Completely randomised design (CRD) with equal and unequal replication
+- Randomised complete block design (RCBD) and incomplete block designs (BIBD)
+- Latin square and Graeco-Latin square designs for two nuisance factors
+- Factorial designs: $2^k$, $3^k$, and general mixed-level factorials
+- Fractional factorials, resolution, and alias structure for screening experiments
+- Split-plot and strip-plot designs for hard-to-change factors
+- Repeated-measures and crossover designs
+- Response surface methodology: central composite and Box-Behnken designs
+- Optimal design theory: D-, A-, I-optimality; algorithmic construction
+- Taguchi methods: signal-to-noise, inner and outer arrays
+- Mixture designs: simplex lattice, simplex centroid, constrained mixtures
+- Robust parameter design and its role in quality improvement
+
+Packages: `AlgDesign`, `agricolae`, `rsm`, `DoE.base`, `FrF2`, `mixexp`, `crossdes`, `lme4`.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [2^k Factorial Designs](factorial-2k.qmd)
+Full factorial experiments with k two-level factors
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [3^k Factorial Designs](factorial-3k.qmd)
+Full factorial experiments with k three-level factors
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Balanced Incomplete Block Designs](balanced-incomplete-block.qmd)
+BIBDs when block size is smaller than treatment count
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Box-Behnken Designs](box-behnken-design.qmd)
+Three-level rotatable designs for RSM without factorial-corner runs
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Central Composite Designs](central-composite-design.qmd)
+Response-surface designs combining factorial, axial, and centre points
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Completely Randomised Design](completely-randomized-design.qmd)
+The simplest experimental design: random assignment of treatments to units
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Constrained Mixture Designs](constrained-mixture.qmd)
+Mixture experiments with lower and upper bounds on components
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Crossover Designs](crossover-designs.qmd)
+Within-subject comparison of treatments with washout and carryover consideration
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Desirability Functions](desirability-function.qmd)
+Multi-response optimisation via geometric-mean desirability scores
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Fractional Factorial Designs](fractional-factorial-design.qmd)
+A fraction of a 2^k design: economical screening with acceptable confounding
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Graeco-Latin Square Designs](graeco-latin-square.qmd)
+Blocking on three nuisance factors by superimposing two orthogonal Latin squares
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Latin Square Designs](latin-square.qmd)
+Blocking on two nuisance factors via a Latin-square arrangement
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Method of Steepest Ascent](steepest-ascent.qmd)
+Moving along the gradient of a first-order response surface toward the optimum
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Optimal Designs: D, A, I](optimal-design-d-a-i.qmd)
+D-, A-, I-, and G-optimality criteria for computer-generated designs
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Orthogonal Arrays](orthogonal-arrays.qmd)
+Tabulated fractional-factorial arrays L4, L8, L9, L16, L27
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Plackett-Burman Designs](plackett-burman.qmd)
+Highly efficient two-level screening designs for many factors
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Power Analysis for DOE](power-in-doe.qmd)
+Calculating power for detecting main effects and interactions in designed experiments
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Principles of Blocking](blocking-principles.qmd)
+Local control of nuisance variability for precision gains
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Randomisation in Design](randomization-in-design.qmd)
+Purpose, procedures, and role of randomisation in experimental design
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Randomised Complete Block Design](randomised-complete-block.qmd)
+Blocking to control known nuisance variation, with construction, analysis, and interpretation in R
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Repeated-Measures Designs](repeated-measures-design.qmd)
+Designs with a within-subject factor: multiple measurements per unit
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Resolution and Aliasing](resolution-aliasing.qmd)
+Understanding the confounding structure of fractional factorial designs
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Response Surface Methodology](response-surface-methodology.qmd)
+Optimising processes via second-order polynomial response surfaces
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Robust Parameter Design](robust-parameter-design.qmd)
+Choosing controllable factor levels to minimise response variance across noise factors
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Signal-to-Noise Ratios](signal-to-noise-ratio.qmd)
+Taguchi's SNR metrics combining mean and variance
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Simplex Centroid Designs](mixture-centroid.qmd)
+Mixture designs including centroids of all sub-simplices
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Simplex Lattice Mixture Designs](mixture-designs-simplex.qmd)
+Experimental designs for component-proportion factors that sum to 1
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Split-Plot Designs](split-plot-design.qmd)
+Designs with hard-to-change and easy-to-change factors
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Strip-Plot Designs](strip-plot-design.qmd)
+Designs with two hard-to-change factors applied to perpendicular strips
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Taguchi Methods](taguchi-methods.qmd)
+Orthogonal-array designs and signal-to-noise optimisation for quality engineering
+:::
+
+:::

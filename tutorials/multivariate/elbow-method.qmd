@@ -1,0 +1,65 @@
+---
+title: The Elbow Method
+date: "2026-04-17"
+description: Choosing the number of clusters by identifying a bend in the within-cluster sum of squares curve
+categories:
+  - Multivariate Statistics
+  - elbow
+  - wss
+  - cluster-number
+---
+
+## Introduction
+
+The elbow method is the simplest heuristic for choosing the number of clusters in $k$-means or any partitioning algorithm. The within-cluster sum of squares (WSS) decreases monotonically with $k$, but the rate of decrease slows once the natural cluster structure has been captured. Plotting WSS against $k$ reveals a "bend" — the elbow — at the point where additional clusters bring diminishing returns. The method is unavoidably subjective but widely used because it is fast, intuitive, and works well when the data have well-separated clusters.
+
+## Prerequisites
+
+A working understanding of $k$-means clustering, the within-cluster sum of squares as a quality criterion, and the relationship between $k$ and within-cluster compactness.
+
+## Theory
+
+For partition $C = \{C_1, \dots, C_k\}$ of the data, $\mathrm{WSS}(k) = \sum_{j=1}^k \sum_{x \in C_j} \|x - \bar x_j\|^2$ is the total within-cluster sum of squared distances to centroids. As $k$ grows, WSS necessarily decreases — at $k = n$ it reaches zero. A genuine cluster structure produces a sharp bend at the true number of clusters, after which adding more $k$ subdivides homogeneous regions and yields only modest reductions. The bend is identified visually or, more reproducibly, by algorithms such as Kneedle that compute a normalised distance from each point on the curve to a chord between the endpoints.
+
+## Assumptions
+
+A genuine cluster structure exists in the data; if no clusters are present, no clear elbow appears. Variables are standardised so distances along each axis are comparable.
+
+## R Implementation
+
+```r
+library(factoextra)
+
+X <- scale(iris[, 1:4])
+
+# Elbow plot
+fviz_nbclust(X, kmeans, method = "wss", k.max = 10)
+
+# Manual: compute WSS across k
+wss <- sapply(1:10, function(k)
+  kmeans(X, centers = k, nstart = 25)$tot.withinss)
+plot(1:10, wss, type = "b",
+     xlab = "Number of clusters k",
+     ylab = "Within-cluster sum of squares")
+```
+
+## Output & Results
+
+A monotone decreasing WSS curve. For the standardised iris data, the bend appears at $k = 3$, consistent with the three species. `fviz_nbclust()` automates the standard elbow plot with `ggplot2` styling and works with $k$-means, PAM, and CLARA via the `FUNcluster` argument.
+
+## Interpretation
+
+A reporting sentence: "The elbow plot showed a clear bend at $k = 3$ (within-cluster sum of squares dropped from 681 at $k = 1$ to 140 at $k = 3$ and only marginally further to 96 at $k = 10$); we chose $k = 3$, consistent with the silhouette method's optimum and with the known species structure." Always couple the elbow visual with at least one quantitative criterion (silhouette, gap statistic).
+
+## Practical Tips
+
+- Pair the elbow with the silhouette method (`fviz_nbclust(..., method = "silhouette")`) and the gap statistic (`method = "gap_stat"`); concordance across all three increases confidence in the chosen $k$.
+- If no clear elbow appears, the data may not have a natural cluster structure; do not force a $k$ where the WSS curve is smooth.
+- Standardise variables before clustering; variables with larger variance dominate WSS without standardisation and distort the elbow.
+- Use `nstart = 25` or higher when computing WSS; multiple random starts avoid local minima that produce noisy WSS curves.
+- The Kneedle algorithm (R package `kneedle`) automates elbow detection by finding the point of maximum curvature; useful for batch processing many datasets.
+- Elbow alone is insufficient justification for a chosen $k$ in publications; report it alongside silhouette and gap-statistic results.
+
+## R Packages Used
+
+`factoextra` for `fviz_nbclust()` ggplot-style elbow, silhouette, and gap-statistic plots; `cluster` for the underlying clustering algorithms; `NbClust` for 30+ cluster-validation indices in one call; `kneedle` for automated elbow detection.

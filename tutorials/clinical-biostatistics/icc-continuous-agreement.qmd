@@ -1,0 +1,69 @@
+---
+title: Intraclass Correlation Coefficient (ICC)
+date: "2026-04-17"
+description: Absolute agreement and consistency for continuous inter-rater reliability
+categories:
+  - Clinical Biostatistics
+  - icc
+  - reliability
+  - agreement
+---
+
+## Introduction
+
+The Intraclass Correlation Coefficient (ICC) quantifies inter-rater reliability on continuous measurements. Unlike Pearson's correlation, it penalises systematic rater bias (two raters who differ by a constant still have Pearson = 1 but ICC < 1). Several ICC forms reflect different study designs and questions.
+
+## Prerequisites
+
+Variance components; random vs fixed effects.
+
+## Theory
+
+Shrout-Fleiss (1979) forms:
+- **ICC(1, 1)**: one-way random effects; each subject rated by a different random rater.
+- **ICC(2, 1)**: two-way random effects; **absolute agreement** between raters.
+- **ICC(3, 1)**: two-way mixed effects; **consistency** (ignores systematic rater bias).
+
+Single rater vs average of $k$ raters: ICC(x, 1) vs ICC(x, k).
+
+## Assumptions
+
+Subjects and raters are drawn from appropriate populations; ratings are independent given subject; ICC form matches the intended use.
+
+## R Implementation
+
+```r
+library(psych)
+
+set.seed(2026)
+n <- 30
+subject_re <- rnorm(n, 0, 1)
+
+# 3 raters, each with own systematic bias
+r1 <- subject_re + rnorm(n, 0, 0.4)
+r2 <- subject_re + 0.3 + rnorm(n, 0, 0.4)    # rater 2 higher by 0.3
+r3 <- subject_re - 0.2 + rnorm(n, 0, 0.4)
+
+df <- cbind(r1, r2, r3)
+
+icc_res <- ICC(df, lmer = FALSE)
+icc_res$results[, c("type", "ICC", "lower bound", "upper bound")]
+```
+
+## Output & Results
+
+Six ICC forms with 95 % CIs. Agreement ICC (2, 1) is lower than consistency ICC (3, 1) when raters have systematic biases.
+
+## Interpretation
+
+"Single-rater absolute-agreement ICC(2, 1) = 0.78 (95 % CI 0.63-0.88); consistency ICC(3, 1) = 0.83. Systematic rater differences moderately lowered absolute agreement."
+
+## Practical Tips
+
+- Choose ICC form by study question:
+  - **ICC(2, 1)** if you want to quantify agreement including systematic rater differences.
+  - **ICC(3, 1)** if you will remove systematic rater effects in practice (e.g., calibrate each rater).
+- For clinical usability, average-of-$k$-raters ICCs are the most interpretable.
+- Thresholds (Koo-Li): < 0.5 poor, 0.5-0.75 moderate, 0.75-0.9 good, $>$ 0.9 excellent.
+- ICC $<$ 0.7 is usually insufficient for individual decision-making.
+- Pair ICC with Bland-Altman for graphical assessment of rater-specific bias.

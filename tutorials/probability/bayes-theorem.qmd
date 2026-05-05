@@ -1,0 +1,92 @@
+---
+title: "Bayes' Theorem"
+date: "2026-04-17"
+description: "Inverting conditional probabilities: from likelihood to posterior, with applications to diagnostic testing and Bayesian inference"
+categories:
+  - Probability Theory
+  - bayes-theorem
+  - prior
+  - posterior
+  - diagnostic
+---
+
+## Introduction
+
+Bayes' theorem is the rule for inverting conditional probabilities: given $P(B \mid A)$, it tells us $P(A \mid B)$. It is the mathematical bridge between diagnostic sensitivity and positive predictive value, between forward simulation and inverse inference, between a likelihood function and a posterior distribution. Every Bayesian analysis, every clinical prediction, and every probabilistic classifier is an application of Bayes' theorem in disguise.
+
+## Prerequisites
+
+Conditional probability and the law of total probability.
+
+## Theory
+
+For events $A$ and $B$ with $P(B) > 0$,
+
+$$P(A \mid B) = \frac{P(B \mid A) \, P(A)}{P(B)}.$$
+
+When $\{A_i\}$ forms a partition of the sample space, the denominator expands by the law of total probability:
+
+$$P(A_i \mid B) = \frac{P(B \mid A_i) \, P(A_i)}{\sum_j P(B \mid A_j) \, P(A_j)}.$$
+
+In the Bayesian vocabulary:
+
+- $P(A)$ is the **prior**: what was believed before observing $B$.
+- $P(B \mid A)$ is the **likelihood**: how likely $B$ is under each hypothesis.
+- $P(A \mid B)$ is the **posterior**: updated belief about $A$ after observing $B$.
+- $P(B)$ is the **marginal likelihood** or "evidence".
+
+Posterior $\propto$ likelihood $\times$ prior is the single most important slogan in Bayesian statistics.
+
+## Assumptions
+
+- $P(B) > 0$; otherwise conditioning is undefined.
+- The prior $P(A)$ must be specified; choosing it is where domain knowledge enters.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+# Diagnostic test: prior = prevalence, likelihood = sensitivity and specificity
+sensitivity <- 0.92
+specificity <- 0.97
+prevalences <- seq(0.001, 0.5, length.out = 100)
+
+ppv <- sensitivity * prevalences /
+       (sensitivity * prevalences + (1 - specificity) * (1 - prevalences))
+
+df <- data.frame(prevalence = prevalences, ppv = ppv)
+
+ggplot(df, aes(prevalence, ppv)) +
+  geom_line(colour = "#2A9D8F", linewidth = 1) +
+  geom_vline(xintercept = 0.01, linetype = "dashed", colour = "#F4A261") +
+  geom_vline(xintercept = 0.30, linetype = "dashed", colour = "#F4A261") +
+  labs(x = "Disease prevalence",
+       y = "Positive predictive value",
+       title = "PPV depends strongly on prevalence (Bayes' theorem)") +
+  theme_minimal()
+
+c(prevalence_001 = ppv[which.min(abs(prevalences - 0.01))],
+  prevalence_030 = ppv[which.min(abs(prevalences - 0.30))])
+```
+
+## Output & Results
+
+```
+prevalence_001 prevalence_030
+        0.2368         0.9290
+```
+
+At 1% prevalence, a positive test on a 92%-sensitive, 97%-specific assay gives only 24% probability of disease. At 30% prevalence, the same test yields a 93% PPV. The test characteristics are unchanged; the posterior depends crucially on the prior.
+
+## Interpretation
+
+The prevalence dependence of PPV is the canonical real-world application of Bayes' theorem. Reporting "our test has 92% sensitivity and 97% specificity" is meaningless without the prevalence of the intended use population; the clinically relevant quantity is PPV.
+
+## Practical Tips
+
+- Never cite sensitivity / specificity in isolation when discussing diagnostic utility; always give the PPV and NPV at the target prevalence.
+- Bayes' theorem scales trivially to many hypotheses via the partition form; for continuous parameter spaces, the sums become integrals.
+- Prior choice is contentious in some Bayesian applications; weakly informative priors (Cauchy, normal with wide scale) are standard defaults.
+- Updating sequentially: the posterior after observation 1 becomes the prior for observation 2. Chains of updates are equivalent to a single update with all observations.
+- The **likelihood ratio** $P(B \mid A) / P(B \mid A^c)$ converts the prior odds of $A$ to the posterior odds multiplicatively -- often a cleaner formulation than raw probabilities.

@@ -1,0 +1,92 @@
+---
+title: "Welch's t-Test"
+date: "2026-04-17"
+description: "Two-sample t-test that does not assume equal variances; R's default"
+categories:
+  - Inferential Statistics
+  - welch
+  - t-test
+  - unequal-variances
+  - satterthwaite
+---
+
+## Introduction
+
+Welch's t-test is the standard two-sample mean-comparison test when variances across groups may differ. R's `t.test()` defaults to Welch (`var.equal = FALSE`). Decades of simulation evidence favour Welch as the default choice regardless of whether variances appear equal; the efficiency cost versus the equal-variance (Student) test is negligible when variances are equal, and the robustness gain is substantial when they are not.
+
+## Prerequisites
+
+Two-sample t-test, variance, degrees of freedom.
+
+## Theory
+
+Given independent samples of sizes $n_1, n_2$ with means $\bar{X}_1, \bar{X}_2$ and sample variances $s_1^2, s_2^2$, the Welch test statistic is
+
+$$T = \frac{\bar{X}_1 - \bar{X}_2}{\sqrt{s_1^2/n_1 + s_2^2/n_2}}.$$
+
+The Welch-Satterthwaite approximation gives the degrees of freedom
+
+$$\nu = \frac{(s_1^2/n_1 + s_2^2/n_2)^2}{\frac{(s_1^2/n_1)^2}{n_1 - 1} + \frac{(s_2^2/n_2)^2}{n_2 - 1}}.$$
+
+$\nu$ is generally not an integer. Under $H_0: \mu_1 = \mu_2$, $T \sim t_\nu$ approximately.
+
+## Assumptions
+
+- Independent observations within and across groups.
+- Approximately normal observations (or large $n$).
+- No extreme outliers.
+
+Equal variances are **not** required.
+
+## R Implementation
+
+```r
+library(effectsize); library(broom)
+set.seed(2026)
+
+n1 <- 25; n2 <- 40
+group1 <- rnorm(n1, mean = 100, sd = 8)
+group2 <- rnorm(n2, mean = 106, sd = 18)   # larger variance
+
+df <- data.frame(
+  x     = c(group1, group2),
+  group = factor(rep(c("A", "B"), c(n1, n2)))
+)
+
+# Welch (default)
+t.test(x ~ group, data = df) |> tidy()
+
+# Student (var.equal = TRUE) for comparison
+t.test(x ~ group, data = df, var.equal = TRUE) |> tidy()
+
+# Effect size
+cohens_d(x ~ group, data = df)
+```
+
+## Output & Results
+
+```
+# Welch
+estimate1 = 100.8, estimate2 = 106.7, t = -1.77, df = 58.9, p = 0.082
+
+# Student (for comparison)
+estimate1 = 100.8, estimate2 = 106.7, t = -1.56, df = 63,  p = 0.124
+
+Cohen's d | 95% CI
+-------------------
+-0.40     | [-0.93, 0.14]
+```
+
+Welch's df (58.9) is smaller than Student's (63) because the variances differ; the Welch p-value is consequently smaller in this case, though both fail to reject.
+
+## Interpretation
+
+Reporting "Welch's t(58.9) = -1.77, p = 0.082" makes the Welch variant explicit. Cohen's $d$ uses a pooled SD by default; for very unequal variances the "Glass's delta" alternative uses only one group's SD.
+
+## Practical Tips
+
+- Do not run Levene's test to decide between Welch and Student; a conditional choice inflates Type I error. Default to Welch.
+- Satterthwaite df can be fractional; report it as a number with decimals.
+- Welch's test is slightly more conservative than Student when variances are equal; the cost is negligible.
+- For rank-based alternatives, use Mann-Whitney U.
+- Welch-style corrections exist for ANOVA (Welch's F) and linear models (heteroscedasticity-consistent SEs).

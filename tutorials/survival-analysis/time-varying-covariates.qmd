@@ -1,0 +1,67 @@
+---
+title: Time-Varying Covariates
+date: "2026-04-17"
+description: "Covariates whose value changes during follow-up: counting-process data layout"
+categories:
+  - Survival Analysis
+  - time-varying-covariates
+  - counting-process
+---
+
+## Introduction
+
+Real survival studies routinely include covariates whose value changes during follow-up: treatment initiation, laboratory measurements repeated at each visit, secondary events that alter prognosis. Including these as time-fixed baseline values misrepresents the exposure history; pretending the baseline value applied throughout follow-up biases hazard-ratio estimates and is a leading cause of immortal-time errors. The standard remedy is the counting-process data layout, which splits each subject's follow-up into intervals during which covariate values are constant and lets the partial likelihood combine the contributions correctly.
+
+## Prerequisites
+
+A working understanding of Cox regression, the partial likelihood, and the distinction between baseline (time-fixed) and time-varying covariates.
+
+## Theory
+
+In counting-process format each row represents one interval $(\tau_{ij}^{\text{start}}, \tau_{ij}^{\text{stop}}]$ during which covariate values for subject $i$ are constant. The columns are:
+
+- `tstart`: interval start.
+- `tstop`: interval end.
+- `event`: 1 if the event occurred at `tstop`, otherwise 0.
+- Covariates with their values during the interval.
+
+The partial likelihood evaluates each subject's risk-set contribution using whichever interval includes the event time, so each event time naturally compares subjects with their then-current covariate values. Robust ("sandwich") variance estimators, requested via `cluster = id`, account for the within-subject correlation induced by multiple rows per subject.
+
+## Assumptions
+
+Covariate values are constant within each interval and accurately measured. The covariate is "internal" if its trajectory could be affected by the event of interest (e.g., a biomarker that changes after treatment), or "external" if it is determined exogenously (e.g., scheduled treatment dose); inference from internal covariates requires careful causal interpretation.
+
+## R Implementation
+
+```r
+library(survival)
+
+data(cgd, package = "survival")
+head(cgd)
+
+# Multi-row-per-subject: counting-process format
+fit <- coxph(Surv(tstart, tstop, status) ~ treat + inherit,
+             data = cgd, cluster = id)
+summary(fit)
+```
+
+## Output & Results
+
+`summary(fit)` produces the usual Cox-regression output with hazard ratios, confidence intervals, and Wald tests for each covariate, plus robust standard errors that respect the within-subject clustering. The number of subjects (one per cluster) and the number of events are reported alongside the number of intervals.
+
+## Interpretation
+
+A reporting sentence: "After accounting for the time-varying treatment status across each subject's intervals, prophylactic treatment reduced the hazard of CGD infection by 60 % (HR 0.40, 95 % CI 0.25 to 0.63); robust standard errors were clustered on subject identifier to account for repeated intervals." When the time-varying covariate is treatment status, always describe whether subjects could move between exposure groups and how often.
+
+## Practical Tips
+
+- Use `survSplit()` (or `tmerge()` for multi-event data) to convert wide-format clinical data into the counting-process layout; doing this by hand is error-prone.
+- Always specify `cluster = id` (or `cluster(id)` in the formula) so robust standard errors account for multiple rows per subject; ignoring clustering produces SEs that are too small.
+- Check for overlapping intervals: the same subject should never have two rows whose intervals share any time.
+- For external time-varying covariates (treatment delivered at fixed planned times), landmark analysis is a cleaner alternative that avoids the data-management overhead.
+- For internal time-varying covariates (biomarkers that respond to the disease course), joint longitudinal-survival models (`JM`, `joineRML`) are preferable because they correctly handle the feedback loop.
+- Be explicit in the methods section about which covariates were treated as time-varying and how often they were updated; readers cannot reproduce the analysis without this information.
+
+## R Packages Used
+
+`survival` for `coxph()` with counting-process input, `survSplit()`, and `tmerge()`; `dynpred` for landmark and dynamic-prediction alternatives; `JM` and `joineRML` for joint longitudinal-survival models; `mstate` for multi-state extensions when intervals correspond to state transitions.

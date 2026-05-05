@@ -1,0 +1,72 @@
+---
+title: "Cohen's Kappa"
+date: "2026-04-17"
+description: Chance-corrected agreement between two raters on categorical data
+categories:
+  - Clinical Biostatistics
+  - kappa
+  - agreement
+  - reliability
+---
+
+## Introduction
+
+Cohen's kappa, introduced by Jacob Cohen in 1960, measures agreement between two raters on a categorical scale, with a correction for the agreement that would be expected by chance alone. Raw percent agreement can look impressive even when most of it reflects coincidence — two raters who both diagnose 90 % of patients as healthy will agree on at least 81 % of cases purely by chance. Kappa subtracts this chance baseline, leaving a more honest measure of the genuine signal in inter-rater agreement. It is now the de facto standard for inter-rater reliability on nominal categorical outcomes, widely used in imaging-rater studies, pathology grading, diagnostic-criteria validation, and any reliability assessment with two raters and a categorical scale.
+
+## Prerequisites
+
+A working understanding of categorical data, contingency-table summaries, observed agreement as a percentage, and the concept of chance-expected agreement under independent raters.
+
+## Theory
+
+Cohen's kappa is
+
+$$\kappa = \frac{p_o - p_e}{1 - p_e},$$
+
+where $p_o$ is the observed proportion of cases on which the two raters agreed and $p_e$ is the proportion expected by chance, computed as $p_e = \sum_k p_{1k} p_{2k}$ from the marginal proportions. Kappa ranges from $-1$ to $+1$: $\kappa = 1$ is perfect agreement, $\kappa = 0$ is exactly chance-level, and negative values indicate systematic disagreement worse than chance.
+
+Landis and Koch (1977) proposed widely used (and equally widely criticised) benchmarks: 0.01–0.20 slight, 0.21–0.40 fair, 0.41–0.60 moderate, 0.61–0.80 substantial, and 0.81–1.00 almost perfect. These thresholds are descriptive heuristics, not strict cut-offs.
+
+## Assumptions
+
+There are exactly two raters, the categorical scale has mutually exclusive and exhaustive categories, ratings between the two raters are independent (one did not see or influence the other), and both raters classify the same set of subjects.
+
+## R Implementation
+
+```r
+library(psych)
+
+set.seed(2026)
+n <- 100
+rater1 <- factor(sample(c("pos", "neg"), n, replace = TRUE))
+agree <- rbinom(n, 1, 0.8)
+rater2 <- ifelse(agree == 1, as.character(rater1),
+                 ifelse(rater1 == "pos", "neg", "pos"))
+rater2 <- factor(rater2, levels = levels(rater1))
+
+tab <- table(rater1, rater2)
+tab
+
+cohen.kappa(cbind(rater1, rater2))
+```
+
+## Output & Results
+
+`cohen.kappa()` returns the unweighted (and weighted, where applicable) kappa statistic, its standard error, and a confidence interval. Reporting the contingency table alongside the kappa value gives readers the raw evidence; a small or imbalanced contingency table can produce surprising kappa behaviour and the table is the only diagnostic that reveals it.
+
+## Interpretation
+
+A reporting sentence: "Inter-rater agreement on the binary classification was substantial (Cohen's $\kappa = 0.58$, 95 % CI 0.41 to 0.75) per the Landis-Koch benchmarks, with observed agreement 80 % and chance-expected agreement 52 %. The contingency table showed approximately balanced marginals (rater 1: 51 % positive; rater 2: 53 % positive), so the kappa-paradox concern that affects skewed-marginal samples does not apply here." Always report observed agreement, marginals, and the kappa value together.
+
+## Practical Tips
+
+- Kappa depends on the prevalence and balance of the categories — the well-known "kappa paradox": very low-prevalence categories can produce small kappa values even when observed agreement is high, because the chance-expected agreement is also high. Always report kappa alongside the observed agreement and the marginals so readers can diagnose this.
+- For nominal scales with more than two categories, the unweighted kappa treats every disagreement equally; for ordinal scales (mild / moderate / severe) use the weighted kappa to credit partial agreement, with quadratic weights as the conventional default.
+- For more than two raters, use Fleiss's kappa (a generalisation of Cohen's kappa) or, when the rating is on an interval-like scale, the intraclass correlation coefficient (ICC); these handle multi-rater designs that Cohen's kappa cannot.
+- Confidence intervals on kappa via the delta method are routinely reported by `psych::cohen.kappa()`; bootstrap CIs are preferable for small samples or when the marginal distributions are very imbalanced.
+- Distinguish inter-rater reliability (different raters on the same subjects) from intra-rater reliability (the same rater on different occasions); both can be assessed by kappa, but the design and inferential implications differ.
+- For continuous outcomes use a Bland-Altman analysis or the ICC; kappa is appropriate only for categorical scales and is misleading when applied to continuous data after dichotomisation.
+
+## R Packages Used
+
+`psych::cohen.kappa()` for the canonical Cohen's and weighted kappa with confidence intervals; `irr::kappa2()` and `irr::kappam.fleiss()` for an alternative interface and multi-rater extensions; `vcd::Kappa()` for kappa within the `vcd` contingency-table ecosystem; `epibasix` for kappa with epidemiological reporting; `DescTools::CohenKappa()` for fast computation alongside related descriptive statistics.

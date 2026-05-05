@@ -1,0 +1,65 @@
+---
+title: Quadratic Discriminant Analysis
+date: "2026-04-17"
+description: LDA with class-specific covariance matrices; quadratic decision boundaries
+categories:
+  - Multivariate Statistics
+  - qda
+  - classification
+  - quadratic
+---
+
+## Introduction
+
+Quadratic discriminant analysis (QDA) extends linear discriminant analysis (LDA) by allowing each class to have its own covariance matrix instead of pooling across classes. The relaxation transforms the decision boundary from a hyperplane (LDA) into a conic section (ellipse, parabola, or hyperbola) and gives the classifier flexibility to handle classes whose spread differs in shape or orientation. The cost is parameter count: $K$ separate covariance matrices instead of one, which means more training data is required to estimate them precisely.
+
+## Prerequisites
+
+A working understanding of linear discriminant analysis, multivariate Normal distributions, and the role of class covariance matrices in shaping decision boundaries.
+
+## Theory
+
+The QDA discriminant for class $k$ is
+
+$$\delta_k(x) = -\tfrac{1}{2}(x - \mu_k)^\top \Sigma_k^{-1} (x - \mu_k) - \tfrac{1}{2}\log|\Sigma_k| + \log \pi_k,$$
+
+where $\mu_k, \Sigma_k, \pi_k$ are the class mean, class covariance, and class prior probability respectively. A test observation is assigned to the class with the largest $\delta_k(x)$. The quadratic term in $x$ is what produces non-linear decision boundaries; pooling covariances across classes (as LDA does) eliminates the quadratic term and recovers linearity.
+
+## Assumptions
+
+Multivariate Normal within each class, with possibly different covariance matrices across classes; independent observations; sufficient observations per class to estimate $\Sigma_k$ stably (rule of thumb: at least 5–10 observations per dimension per class).
+
+## R Implementation
+
+```r
+library(MASS)
+
+set.seed(2026)
+train_idx <- sample(nrow(iris), 100)
+train <- iris[train_idx, ]; test <- iris[-train_idx, ]
+
+fit_qda <- qda(Species ~ ., data = train)
+pred <- predict(fit_qda, test)
+table(pred$class, test$Species)
+```
+
+## Output & Results
+
+`qda()` returns class priors, class means, and class-specific group counts. `predict()` provides class labels and posterior probabilities. The confusion matrix (`table(pred$class, test$Species)`) summarises classification accuracy on the held-out fold.
+
+## Interpretation
+
+A reporting sentence: "QDA classified the iris test set with 94 % accuracy (47/50 correct); LDA reached 98 % on the same split, suggesting the equal-covariance assumption was reasonable here and the additional flexibility of QDA is not warranted." Compare QDA against LDA whenever class covariances are not obviously different; the simpler model often wins.
+
+## Practical Tips
+
+- Prefer QDA when within-class covariance structures clearly differ in scale or orientation; if pooled covariance is a good approximation, LDA generalises better.
+- QDA requires more training data than LDA because of the per-class covariance estimation; in high dimensions or with small classes, LDA or regularised discriminant analysis (RDA) is more reliable.
+- RDA (`klaR::rda`) interpolates between LDA and QDA via shrinkage parameters; cross-validate the shrinkage to find the data's preferred point on the spectrum.
+- QDA decision boundaries are conic — ellipses, parabolas, or hyperbolas; visualise on a 2D projection (`klaR::partimat`) to see the curvature.
+- For high-dimensional or non-Gaussian data, compare against flexible classifiers (random forests, SVMs with RBF kernels); QDA's quadratic boundary may not match the true structure.
+- Diagnose the equal-covariance assumption with Box's M test (`biotools::boxM`); a significant test motivates QDA over LDA, but the test is itself sensitive to non-Normality.
+
+## R Packages Used
+
+`MASS` for `qda()` and `lda()`; `klaR` for `rda()` (regularised discriminant analysis) and `partimat()` for partition diagnostics; `caret` for cross-validated comparison across discriminant variants; `biotools::boxM()` for Box's M test of homogeneity of covariance.

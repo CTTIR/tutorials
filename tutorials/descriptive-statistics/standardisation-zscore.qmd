@@ -1,0 +1,84 @@
+---
+title: Standardisation and z-Scores
+date: "2026-04-17"
+description: "Centring and scaling a variable, and the robust-z alternative"
+categories:
+  - Descriptive Statistics
+  - z-score
+  - standardisation
+  - scale
+  - robust-z
+---
+
+## Introduction
+
+A z-score expresses each observation as its distance from the mean in units of the standard deviation. Standardisation is often applied before clustering, PCA, ridge/lasso regression, and any procedure whose output is unit-sensitive. For data with outliers, a robust variant using the median and MAD is safer.
+
+## Prerequisites
+
+The reader should know what the mean, SD, median, and MAD are.
+
+## Theory
+
+The classical z-score for observation $x_i$ is
+
+$$z_i = (x_i - \bar{x}) / s.$$
+
+After standardisation, the sample mean is 0 and the sample SD is 1. The values are dimensionless and comparable across variables measured on different scales.
+
+The **robust z** uses the median and scaled MAD:
+
+$$z_i^{\text{robust}} = (x_i - \text{median}(x)) / (1.4826 \cdot \mathrm{MAD}(x)).$$
+
+It reduces to the classical z for normal data but resists the inflation of the scale estimator by outliers.
+
+Standardisation is not the same as normalisation. **Min-max normalisation** rescales to $[0, 1]$: $(x_i - \min(x)) / (\max(x) - \min(x))$. Each has its use; z-scores preserve relative distances better.
+
+## Assumptions
+
+Purely algebraic; no distributional assumption. The choice between classical and robust z depends on whether outliers are present.
+
+## R Implementation
+
+```r
+library(robustbase)
+
+set.seed(2026)
+x <- c(rnorm(50, mean = 100, sd = 10), 200, 250)
+
+z_classical <- scale(x)
+z_robust    <- (x - median(x)) / (1.4826 * mad(x, constant = 1))
+
+range(z_classical)
+range(z_robust)
+
+cohort <- data.frame(
+  age  = rnorm(100, 58, 12),
+  sbp  = rnorm(100, 130, 18),
+  crp  = rlnorm(100, log(3), 0.6)
+)
+z_cohort <- scale(cohort)
+colMeans(z_cohort)
+apply(z_cohort, 2, sd)
+```
+
+## Output & Results
+
+```
+range(z_classical): -1.69   6.11
+range(z_robust):    -2.02  15.04
+```
+
+The robust z flags the outlier at 250 as > 15 SDs from the median, while the classical z only gives 6. Classical z understates the deviation because the extreme point has inflated the sample SD.
+
+## Interpretation
+
+Report z-scores when comparing observations on different scales. Biological examples: centred and scaled gene-expression values across samples; cognitive-test scores scaled to a reference population.
+
+## Practical Tips
+
+- `scale()` returns a matrix; wrap with `as.data.frame()` when using downstream tidyverse functions.
+- Save the `center` and `scale` attributes to apply the same standardisation to new test data -- critical in predictive modelling.
+- For skewed variables, log-transform before standardising.
+- The robust z is a simple and effective first-pass outlier filter: $|z^{\text{robust}}| > 3$ flags candidates.
+- Do not standardise the outcome in a regression if interpretability is desired; standardise predictors if comparing coefficients.

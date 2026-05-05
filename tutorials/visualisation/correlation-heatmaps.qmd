@@ -1,0 +1,72 @@
+---
+title: Correlation Heatmaps
+date: "2026-04-17"
+description: Visualising a correlation matrix with colour-encoded cells and significance markers
+categories:
+  - Data Visualisation
+  - correlation-matrix
+  - corrplot
+  - ggcorrplot
+---
+
+## Introduction
+
+A correlation heatmap renders a correlation matrix as a grid of colour-encoded cells, with the cell colour mapping the correlation coefficient on a diverging palette centred at zero. It is the natural overview figure for a multivariate dataset: dozens of pairwise correlations that would be impossible to read as a numeric table become a single image where blocks of similarly correlated variables stand out by colour. Hierarchical reordering of rows and columns brings related variables together and reveals cluster structure, often suggesting candidate factors for downstream analysis.
+
+## Prerequisites
+
+A working understanding of correlation coefficients (Pearson, Spearman, Kendall), basic familiarity with hierarchical clustering, and `ggplot2` colour scales.
+
+## Theory
+
+A correlation heatmap displays $r_{ij}$ in cell $(i, j)$. Standard variants:
+
+- Symmetric with numbers shown — useful when the matrix is small (≤ 8 variables).
+- Upper or lower triangle only — avoids redundancy and saves visual space.
+- Significance overlay — marks non-significant correlations as blank or with a cross, so the eye is not drawn to noise.
+- Hierarchical reordering — uses correlation distance ($1 - |r|$) to cluster related variables and reveal block structure.
+
+The colour scale must be diverging (typically red–white–blue or the Brewer `RdBu`) and centred at zero so positive and negative correlations are visually symmetric. Sequential or qualitative palettes destroy the sign information and are wrong for correlations.
+
+## Assumptions
+
+A valid correlation matrix (any kind: Pearson for linear, Spearman for monotone, polychoric for ordinal). The matrix should be positive-semi-definite if it will feed downstream methods; this is automatic when computed from raw data with `cor()`.
+
+## R Implementation
+
+```r
+library(corrplot); library(ggcorrplot)
+
+corr_mat <- cor(mtcars)
+
+# corrplot
+corrplot(corr_mat, method = "color", order = "hclust",
+         addCoef.col = "black", tl.col = "black")
+
+# ggcorrplot with p-value overlay
+p_mat <- cor_pmat(mtcars)
+ggcorrplot(corr_mat, hc.order = TRUE, type = "lower",
+           p.mat = p_mat, insig = "blank",
+           lab = TRUE, lab_size = 3)
+```
+
+## Output & Results
+
+Two correlation heatmaps for the 11-variable `mtcars` dataset: a full symmetric heatmap with hierarchical reordering and numeric cell labels, and a lower-triangle version with non-significant cells masked. The first emphasises the full structure; the second is a cleaner publication figure.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Pearson correlation matrix for 11 vehicle attributes (n = 32), reordered hierarchically using $1 - |r|$ as the distance; cells with $p > 0.05$ are blanked. The two visible blocks correspond to size-related variables (weight, displacement, horsepower) and efficiency-related variables (mpg, quarter-mile time)." Always state the correlation type and the reordering method.
+
+## Practical Tips
+
+- Use a diverging palette centred at zero; the Brewer `RdBu` or `viridis::cividis` (with the centre stretched) work well in print.
+- Hierarchical reordering (`hc.order = TRUE` in `ggcorrplot`, `order = "hclust"` in `corrplot`) brings related variables together and is almost always preferable to alphabetical order.
+- Mask non-significant cells (`insig = "blank"`) to direct the reader's attention to robust signals; alternatively, mark with crosses to show the test was performed.
+- For more than 30 variables, the figure becomes a coloured pixel grid without readable labels; consider summarising via principal components or factor analysis instead.
+- State the correlation type (Pearson, Spearman, Kendall) and the test correction (if any) in the caption; readers should not have to guess.
+- For partial correlations, use `ppcor::pcor()` and feed the resulting matrix into the same heatmap geom; partial correlations often reveal structure that pairwise correlations obscure.
+
+## R Packages Used
+
+`corrplot` for the canonical correlation heatmap with reordering and significance overlays; `ggcorrplot` for a `ggplot2`-native interface; `Hmisc::rcorr()` for correlation matrices with associated $p$-values; `psych::corPlot()` for an alternative with rich cell formatting.

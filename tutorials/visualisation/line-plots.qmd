@@ -1,0 +1,86 @@
+---
+title: Line Plots
+date: "2026-04-17"
+description: Connecting ordered observations with lines for time-series and trajectory displays
+categories:
+  - Data Visualisation
+  - line
+  - time-series
+  - trajectory
+---
+
+## Introduction
+
+Line plots connect ordered observations and exploit a powerful perceptual cue: the human eye reads slope as rate of change effortlessly. They are the default geom for time-series, dose-response curves, individual-trajectory ("spaghetti") displays, cumulative distributions, and any context where the x-axis carries a meaningful sequence. The same simplicity that makes them effective also makes them dangerous when the x-axis lacks order — connecting unordered categories with a line implies a trajectory that does not exist and misleads readers into seeing trends in noise.
+
+## Prerequisites
+
+A working knowledge of `ggplot2`'s aesthetic mappings, a clear distinction between continuous, ordered, and unordered variables, and an understanding of how `group` aesthetics control which points get joined.
+
+## Theory
+
+`geom_line()` joins points in the order they appear within each group defined by the `group` aesthetic; default groups come from any discrete colour, fill, or linetype mapping. For paired or repeated-measures data, the `group` aesthetic must be set explicitly to the subject identifier so that individual trajectories are connected, not all observations across subjects. Variants include:
+
+- `geom_step()` for cumulative quantities such as ECDFs or Kaplan–Meier survival curves, where the underlying process changes only at observed events.
+- `geom_path()` for trajectories ordered by row position rather than the x-aesthetic, useful for state-space plots.
+- `geom_ribbon()` paired with a line for confidence or prediction bands.
+
+For many overlapping lines, alpha-blending or faceting prevents the "spaghetti pile" that hides individual trajectories.
+
+## Assumptions
+
+The x-axis values are ordered meaningfully — by time, dose, position, or rank. Connecting nominal categories with a line is a presentation error, not a stylistic choice.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+# Single time series
+ggplot(economics, aes(date, unemploy)) +
+  geom_line(colour = "#2A9D8F", linewidth = 1) +
+  theme_minimal()
+
+# Multiple groups
+ggplot(airquality, aes(Day, Ozone, group = Month, colour = factor(Month))) +
+  geom_line(linewidth = 1) +
+  scale_colour_brewer(palette = "Set2") +
+  theme_minimal()
+
+# Paired trajectories (pre/post style)
+df <- data.frame(
+  subject = rep(1:20, each = 2),
+  time    = rep(c("pre", "post"), 20),
+  value   = c(rnorm(20, 50, 10), rnorm(20, 55, 10))
+)
+ggplot(df, aes(time, value, group = subject)) +
+  geom_line(colour = "grey70") +
+  geom_point(size = 2) +
+  theme_minimal()
+
+# Step line (cumulative)
+ggplot(mtcars, aes(wt)) +
+  stat_ecdf(geom = "step", colour = "#2A9D8F", linewidth = 1) +
+  theme_minimal()
+```
+
+## Output & Results
+
+Four illustrative line plots: a long-running unemployment series, monthly ozone levels coloured by month, individual subject trajectories from pre to post, and the empirical cumulative distribution function of car weights as a step line. Each shows a different idiomatic use of the line geom.
+
+## Interpretation
+
+A reporting sentence: "Individual subject responses from pre to post are connected by grey lines, with overlaid points indicating measurement times; group-mean changes (not shown) are reported in Table 1." Always describe the unit of analysis a line represents (subject, country, replicate); a line plot without that context is ambiguous.
+
+## Practical Tips
+
+- Set the `group` aesthetic explicitly for paired or repeated-measures data; the default group inferred from colour or linetype rarely matches the intended unit.
+- Add `geom_point()` on top of `geom_line()` when x-values are sparse so individual observations remain visible; pure lines hide irregular sampling.
+- For uncertainty bands, layer `geom_ribbon(aes(ymin = lo, ymax = hi), alpha = 0.3)` *before* the line so the line draws on top.
+- Use `geom_step()` for ECDFs and survival curves — they are step functions, not smooth ones, and a smooth interpolation misrepresents the underlying mathematics.
+- For dozens of overlapping trajectories, lower `alpha` (0.2–0.4) and add a single bold line for the group mean or median; pure spaghetti loses readability above 30–40 trajectories.
+- When the y-axis spans orders of magnitude with multiplicative growth, use `scale_y_log10()` so constant-rate growth reads as a straight line.
+
+## R Packages Used
+
+`ggplot2` for `geom_line()`, `geom_step()`, `geom_path()`, `geom_ribbon()`, and `stat_ecdf()`; `ggrepel` for non-overlapping line-end labels; `directlabels` for legend-free per-series labelling that scales better than colour-and-legend in print.

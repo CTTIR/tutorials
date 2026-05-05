@@ -1,0 +1,67 @@
+---
+title: brms Basics
+date: "2026-04-17"
+description: "High-level R interface to Stan: formula syntax, families, prior specification"
+categories:
+  - Bayesian Statistics
+  - brms
+  - stan
+  - bayesian-regression
+---
+
+## Introduction
+
+`brms` is the most widely used high-level interface between R and Stan. It accepts the familiar `lme4` formula syntax for fixed and random effects, automatically translates the model to Stan, compiles it, runs the No-U-Turn Sampler (NUTS), and returns a posterior together with diagnostic and predictive helpers. This means you can fit Bayesian generalised linear, mixed, multinomial, ordinal, censored, distributional, or non-linear models without writing Stan by hand, while still being able to inspect or override the generated code when the situation demands it.
+
+## Prerequisites
+
+Comfort with classical regression, an understanding of priors and posteriors, and a working `rstan` or `cmdstanr` toolchain (a C++ compiler is required on first use). Familiarity with `lme4` formulas accelerates the learning curve dramatically because almost every random-effects expression carries over unchanged.
+
+## Theory
+
+A `brms` model has three pieces: a **formula** (mean structure plus optional distributional terms), a **family** (likelihood and link), and **priors** (per parameter class). Random effects use `(slope | group)` syntax, with `||` for uncorrelated terms. Distributional models, set up through `bf(y ~ ..., sigma ~ ...)`, let any parameter of the family depend on predictors. Priors are attached by class: `b` for population-level slopes, `Intercept` for the centred intercept, `sd` for random-effect standard deviations, `sigma` for residual scale, and `cor` for correlation matrices via the LKJ distribution. Defaults are weakly informative but should be reviewed for any analysis intended for publication.
+
+## Assumptions
+
+Inherits the assumptions of the chosen family — for `gaussian` that means linearity in the linear predictor, additivity, and Normal residuals after partial pooling. Convergence diagnostics ($\hat R < 1.01$, no divergent transitions, sensible effective sample size) are also a precondition for trusting any posterior summary.
+
+## R Implementation
+
+```r
+library(brms)
+
+data(sleepstudy, package = "lme4")
+
+fit <- brm(Reaction ~ Days + (Days | Subject),
+           data = sleepstudy,
+           family = gaussian,
+           prior = prior(normal(0, 30), class = "b") +
+                   prior(exponential(0.1), class = "sigma") +
+                   prior(exponential(0.1), class = "sd") +
+                   prior(lkj(2), class = "cor"),
+           chains = 4, iter = 2000, refresh = 0)
+
+summary(fit)
+pp_check(fit)
+```
+
+## Output & Results
+
+`summary()` reports posterior means, standard errors, 95 % credible intervals, $\hat R$, bulk effective sample size, and tail effective sample size for every population-level coefficient, group-level standard deviation, and the residual scale. `pp_check()` overlays simulated datasets on the observed outcome; if the empirical density falls inside the cloud of replicated densities, the model captures the marginal distribution adequately.
+
+## Interpretation
+
+A reporting sentence: "A Bayesian linear mixed model (`brms` 2.21, four chains, 2,000 iterations) estimated reaction time to increase by 10.5 ms per day of sleep deprivation (95 % CrI 7.4 to 13.6), with substantial between-subject heterogeneity in both intercept ($SD = 26$) and slope ($SD = 6.5$); $\hat R = 1.00$ for all parameters." Always pair the point estimate with the credible interval and a convergence statistic.
+
+## Practical Tips
+
+- Run `get_prior()` on your formula before fitting; it lists every prior class so you can override defaults instead of inheriting them silently.
+- Inspect `stancode(fit)` and `standata(fit)` when something behaves oddly; the generated code is readable and reveals exactly how `brms` parameterised the model.
+- `conditional_effects()` produces marginal effect plots with credible bands and is the fastest way to communicate non-linear or interaction effects to non-Bayesian audiences.
+- Use `add_criterion(fit, "loo")` to attach LOO-CV for later model comparison; storing it on the object avoids re-fitting.
+- For very large datasets, switch to `backend = "cmdstanr"` and `threads_per_chain = 2` to exploit within-chain parallelism.
+- When defaults yield divergent transitions, increase `adapt_delta` to 0.95 or 0.99 before reaching for stronger priors.
+
+## R Packages Used
+
+`brms` for model specification and compilation, `rstan` or `cmdstanr` as the sampling backend, `bayesplot` for diagnostic plots used internally by `pp_check()`, and `posterior` for handling draw arrays.

@@ -1,0 +1,76 @@
+---
+title: Interpreting ACF and PACF
+date: "2026-04-17"
+description: Identifying AR and MA orders from autocorrelation and partial autocorrelation functions
+categories:
+  - Time Series Analysis
+  - acf
+  - pacf
+  - model-identification
+---
+
+## Introduction
+
+The autocorrelation function (ACF) and partial autocorrelation function (PACF) are the foundational diagnostic tools for ARIMA model identification. The Box-Jenkins approach uses their characteristic patterns to guess plausible orders for AR and MA terms before fitting. Even with modern automated tools (`auto.arima`), reading the ACF and PACF remains an essential skill for sanity-checking automated choices, identifying seasonal structure, and diagnosing residuals.
+
+## Prerequisites
+
+A working understanding of autoregressive (AR) and moving-average (MA) processes, the difference between correlation and partial correlation, and stationarity as a precondition for meaningful ACF interpretation.
+
+## Theory
+
+The ACF $\rho_k$ measures correlation between $y_t$ and $y_{t-k}$. The PACF $\phi_{kk}$ measures correlation between $y_t$ and $y_{t-k}$ after removing the effects of shorter lags $1, 2, \dots, k-1$. Box-Jenkins identification rules:
+
+| Process | ACF | PACF |
+|---------|-----|------|
+| AR($p$) | Tails off (decays slowly) | Cuts off at lag $p$ |
+| MA($q$) | Cuts off at lag $q$ | Tails off |
+| ARMA($p,q$) | Tails off | Tails off |
+
+The dashed lines in R's ACF plot show approximate 95 % confidence bands ($\pm 1.96/\sqrt n$) under a white-noise null; values outside the bands are statistically significant at the 5 % level.
+
+For seasonal data, expect spikes at multiples of the seasonal period; multiplicative seasonal patterns produce decaying spikes at $s, 2s, 3s, \dots$ in the ACF.
+
+## Assumptions
+
+The series is stationary; if not, difference first until it becomes stationary, then read the ACF / PACF on the differenced series.
+
+## R Implementation
+
+```r
+library(forecast)
+
+set.seed(2026)
+ar_series <- arima.sim(list(ar = 0.7), n = 200)
+ma_series <- arima.sim(list(ma = -0.5), n = 200)
+
+par(mfrow = c(2, 2))
+acf(ar_series, main = "ACF of AR(1)")
+pacf(ar_series, main = "PACF of AR(1)")
+acf(ma_series, main = "ACF of MA(1)")
+pacf(ma_series, main = "PACF of MA(1)")
+par(mfrow = c(1, 1))
+
+ggtsdisplay(ar_series)
+```
+
+## Output & Results
+
+The four-panel display shows characteristic Box-Jenkins patterns: AR(1) ACF tails off geometrically while its PACF cuts off after lag 1; MA(1) ACF cuts off after lag 1 while its PACF tails off. `ggtsdisplay()` integrates the time-series plot with ACF and PACF in a single ggplot-style view.
+
+## Interpretation
+
+A reporting sentence: "The ACF of the simulated AR(1) tailed off geometrically (lag-1 correlation 0.69, decaying smoothly); the PACF cut off sharply after lag 1 (0.69 at lag 1, well within bands at lags 2 onward), consistent with the AR(1) data-generating process. The MA(1) showed the reverse pattern, confirming Box-Jenkins identification rules." Identify the model class from the patterns before fitting any model.
+
+## Practical Tips
+
+- Always difference the series until stationary before reading ACF / PACF on the levels; non-stationary series produce decaying ACFs that mimic AR.
+- Use `forecast::ggtsdisplay()` for a combined time-series + ACF + PACF view; faster than three separate plots.
+- Significance bands assume a white-noise null; after model fitting, the residual ACF is the key diagnostic and should be approximately within bands.
+- Seasonal patterns appear at lags equal to the seasonal period; spikes at $s, 2s, 3s$ on the ACF indicate seasonal AR/MA structure.
+- Complex ACF / PACF patterns (mixed ARMA, seasonal-plus-non-seasonal) are difficult to identify by eye; reach for `auto.arima` and verify the chosen orders against the ACF.
+- For very long series, even tiny correlations are statistically significant; focus on the magnitude and pattern, not on which lags fall just outside the bands.
+
+## R Packages Used
+
+Base R `acf()` and `pacf()`; `forecast::ggtsdisplay()` for ggplot-style integrated diagnostics; `feasts::ACF()`, `PACF()`, `gg_tsdisplay()` for the modern tidyverts equivalent; `astsa::acf2()` for compact two-panel display.

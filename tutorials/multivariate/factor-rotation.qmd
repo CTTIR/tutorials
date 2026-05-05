@@ -1,0 +1,78 @@
+---
+title: Factor Rotation
+date: "2026-04-17"
+description: Orthogonal and oblique rotations to make factor loadings interpretable
+categories:
+  - Multivariate Statistics
+  - rotation
+  - varimax
+  - promax
+  - oblimin
+---
+
+## Introduction
+
+After factor extraction, rotation transforms the loading matrix to make interpretation easier without changing model fit. The mathematical reason is that any rotation of the factor solution produces the same predicted covariance matrix; rotation merely chooses a particular representation among the infinitely many that fit equally well. The choice of rotation method — orthogonal versus oblique, varimax versus promax versus oblimin — substantially affects which interpretation a reader will reach, so disclosing it is part of any responsible EFA report.
+
+## Prerequisites
+
+A working understanding of exploratory factor analysis, factor loadings, and the distinction between orthogonal and oblique factor structures.
+
+## Theory
+
+**Orthogonal rotations** keep factors uncorrelated; the rotated loading matrix retains the property that factors do not share variance.
+
+- **Varimax**: maximises the variance of squared loadings within each column, producing "simple structure" where each variable loads strongly on one factor and weakly on others.
+- **Quartimax**: maximises variance per row; tends to produce a single general factor.
+
+**Oblique rotations** allow factors to correlate; this is more realistic for most psychological, biological, and social phenomena where underlying constructs are not artificially independent.
+
+- **Oblimin**: direct minimisation of cross-factor loadings under controlled obliquity.
+- **Promax**: applies a power transformation to a varimax solution to produce an oblique structure.
+- **Geomin**: alternative oblique rotation popular in IRT contexts.
+
+Oblique rotations produce both a *pattern* matrix (regression-like loadings of variables on factors) and a *structure* matrix (correlations between variables and factors); the two coincide only under orthogonal rotation.
+
+## Assumptions
+
+Rotation leaves fit unchanged; only interpretation changes. The chosen rotation respects the substantive theory about whether factors should correlate.
+
+## R Implementation
+
+```r
+library(psych); library(GPArotation)
+
+d <- bfi[, 1:25]
+
+# Varimax (orthogonal)
+efa_v <- fa(d, nfactors = 5, rotate = "varimax", fm = "ml")
+print(efa_v, cut = 0.3)
+
+# Oblimin (oblique)
+efa_ob <- fa(d, nfactors = 5, rotate = "oblimin", fm = "ml")
+print(efa_ob, cut = 0.3)
+
+# Factor correlations after oblique rotation
+efa_ob$Phi
+```
+
+## Output & Results
+
+`fa()` returns a rotated loading matrix; under oblique rotation, `$Phi` contains the factor correlation matrix. Setting `cut = 0.3` in `print()` suppresses small loadings for cleaner display. Comparing varimax and oblimin loadings on the same data shows how dramatically the interpretation can shift.
+
+## Interpretation
+
+A reporting sentence: "Oblimin-rotated factors showed moderate correlations (range 0.15 to 0.42), justifying oblique rotation; the resulting pattern matrix gave clear simple structure with loadings above 0.40 aligning with the hypothesised Big Five domains and cross-loadings predominantly below 0.20." Always report factor correlations under oblique rotation; they justify the choice and constrain interpretation.
+
+## Practical Tips
+
+- Oblique rotation (oblimin or promax) is the default in modern psychometrics; orthogonal rotation should be justified by genuine reason to expect uncorrelated factors.
+- Report factor correlations from the Phi matrix; if all are below 0.20, an orthogonal solution may be acceptable.
+- Varimax produces simpler-looking loading structures but can be misleading when factors truly correlate; the apparent simplicity may hide systematic cross-loadings.
+- Quartimax tends to produce a strong general factor; useful when a hierarchical structure is expected (Spearman's $g$, hierarchical personality models).
+- Rotation is a numerical optimisation; start from multiple random initialisations to confirm the solution is stable.
+- `psych::fa.diagram()` visualises the rotated structure as a path diagram, often easier to communicate than a loadings table.
+
+## R Packages Used
+
+`psych` for `fa()` and the broad EFA / CFA workflow with rotation options; `GPArotation` for the underlying rotation algorithms (oblimin, promax, geomin, simplimax); `lavaan` for confirmatory factor analysis as the natural follow-up; `EFAtools` for parallel-analysis-aware EFA workflows.

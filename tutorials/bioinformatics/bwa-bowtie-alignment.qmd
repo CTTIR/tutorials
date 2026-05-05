@@ -1,0 +1,72 @@
+---
+title: Alignment with BWA and Bowtie
+date: "2026-04-17"
+description: Fast read alignment to a reference genome via Burrows-Wheeler Transform indexing
+categories:
+  - Bioinformatics
+  - bwa
+  - bowtie2
+  - alignment
+  - bwt
+---
+
+## Introduction
+
+BWA-MEM and Bowtie2 are the dominant short-read DNA aligners in modern sequencing pipelines. Both use a Burrows-Wheeler-transformed (BWT) index of the reference genome to achieve rapid exact and approximate matching. The BWT compresses the reference while preserving the ability to query for substrings efficiently — the algorithmic insight that brought genome-scale alignment from hours per sample to minutes. Production alignment runs at the command line; R wrappers (`Rbowtie2`, `BWA` via `Rsubread`) integrate with downstream Bioconductor analyses.
+
+## Prerequisites
+
+A working understanding of FASTQ format, reference genomes, and the SAM/BAM alignment format.
+
+## Theory
+
+**BWA-MEM** (Burrows-Wheeler Aligner, Maximal Exact Matches) seeds local alignments by finding maximal exact matches, then extends via banded Smith-Waterman. It is the default aligner for whole-genome DNA sequencing because of its accuracy on long-insert paired-end reads and its handling of indels.
+
+**Bowtie2** offers end-to-end alignment (the read must align contiguously) or local alignment (soft-clipping allowed at read ends). It is fast and accurate for short reads and is a common choice for ChIP-seq, ATAC-seq, and small-genome DNA sequencing.
+
+Both write SAM (text) or BAM (binary) output, including alignment scores, mapping quality, mate-pair information, and tags for soft-clipping, mismatches, and other features. For long reads (PacBio, Nanopore), use minimap2 instead — it is designed for the higher error rates and longer alignment lengths.
+
+## Assumptions
+
+Short reads (typically below ~300 bp; for longer, switch to minimap2); reference genome appropriate to the species and assembly version of the experiment.
+
+## R Implementation
+
+```r
+library(Rbowtie2); library(Rsamtools)
+
+# Build index (one-off)
+# bowtie2_build(references = "reference.fa", bt2Index = "idx")
+
+# Align
+# bowtie2(bt2Index = "idx", samOutput = "aln.sam",
+#         seq1 = "reads.fastq", overwrite = TRUE)
+
+# Convert SAM to sorted, indexed BAM
+# asBam("aln.sam", destination = "aln_sorted")
+# indexBam("aln_sorted.bam")
+
+# Read a short segment
+# scanBam("aln_sorted.bam", param = ScanBamParam(which = GRanges("chr1", IRanges(1, 1000))))
+```
+
+## Output & Results
+
+The primary output is a BAM file containing aligned reads with mapping quality, CIGAR string, and tags. `samtools flagstat` (or `Rsamtools::quickBamFlagSummary()`) reports alignment statistics: total reads, reads aligned, properly paired, duplicates, secondary alignments. A 95–98 % alignment rate is typical for high-quality WGS data.
+
+## Interpretation
+
+A reporting sentence: "BWA-MEM (v0.7.17) alignment to GRCh38 achieved 97 % overall alignment rate on a 30× whole-genome library, with <1 % ambiguously mapped reads (multi-mappers); after Picard MarkDuplicates, the duplicate rate was 8 %, consistent with a well-optimised PCR-based library prep." Always state the aligner version, reference assembly, and alignment / duplicate rates.
+
+## Practical Tips
+
+- Use minimap2 for long reads (PacBio HiFi, Oxford Nanopore); BWA-MEM and Bowtie2 are short-read tools and lose accuracy beyond about 300 bp.
+- Report alignment statistics (`flagstat`) after alignment as a routine QC step; declines in alignment rate signal contamination, library-prep problems, or reference mismatch.
+- Index BAM files (`samtools index` or `Rsamtools::indexBam()`) for random-access by downstream tools (variant calling, peak calling, browser visualisation).
+- Deduplicate after alignment with Picard MarkDuplicates or `samtools markdup`; PCR duplicates inflate variant-calling false positives if not removed.
+- For paired-end reads, specify both mate files; the aligner uses insert-size constraints to improve mapping accuracy near repeats.
+- For ChIP-seq and ATAC-seq, Bowtie2 with `--very-sensitive` is the standard; for WGS variant calling, BWA-MEM is preferred.
+
+## R Packages Used
+
+`Rbowtie2` for `bowtie2()` and `bowtie2_build()`; `Rsubread::align()` for BWA-style alignment; `Rsamtools` for BAM manipulation, indexing, and flagstat-style statistics; `GenomicAlignments` for downstream alignment-aware analysis.

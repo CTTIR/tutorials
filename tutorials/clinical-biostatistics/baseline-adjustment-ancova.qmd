@@ -1,0 +1,70 @@
+---
+title: Baseline Adjustment with ANCOVA
+date: "2026-04-17"
+description: Adjusting for baseline covariates to improve precision and address regression to the mean
+categories:
+  - Clinical Biostatistics
+  - ancova
+  - baseline
+  - regression-to-mean
+---
+
+## Introduction
+
+Analysis of Covariance (ANCOVA) regresses the outcome on treatment and baseline value jointly. Compared to a naive change-from-baseline t-test, ANCOVA gains precision, handles regression to the mean correctly, and reduces SE roughly by a factor of $\sqrt{1 - \rho^2}$ where $\rho$ is baseline-outcome correlation.
+
+## Prerequisites
+
+Linear regression; correlation; change scores.
+
+## Theory
+
+**Naive change-score analysis**: compare $\Delta = Y_{\text{post}} - Y_{\text{baseline}}$ across arms. Unbiased under randomisation but less efficient than ANCOVA when baseline correlates with outcome.
+
+**ANCOVA**: $Y_{\text{post}} = \alpha + \beta_{\text{trt}} \cdot T + \beta_{\text{base}} \cdot Y_{\text{baseline}} + \varepsilon$. Treatment effect $\beta_{\text{trt}}$ has lower SE than the change-score test.
+
+Regression to the mean: if groups have different baselines by chance, change scores bias toward the difference; ANCOVA corrects for this.
+
+## Assumptions
+
+Linear relationship between baseline and outcome; no treatment-by-baseline interaction (common extension: stratify or add interaction term).
+
+## R Implementation
+
+```r
+set.seed(2026)
+n <- 200
+baseline <- rnorm(n, 10, 2)
+arm      <- factor(rep(c("ctrl", "trt"), each = n/2))
+
+# Outcome correlated with baseline; true trt effect = 1
+outcome <- 0.7 * baseline + ifelse(arm == "trt", 1, 0) +
+           rnorm(n, 0, 1)
+
+# Naive change-score analysis
+change <- outcome - baseline
+t.test(change ~ arm)
+
+# ANCOVA
+fit <- lm(outcome ~ arm + baseline)
+summary(fit)$coefficients
+
+# SE comparison
+sd(change[arm == "trt"] - mean(change[arm == "trt"]))
+```
+
+## Output & Results
+
+ANCOVA estimates the treatment effect with substantially smaller SE than the change-score t-test when baseline-outcome correlation is non-trivial.
+
+## Interpretation
+
+"ANCOVA estimated the treatment effect as 1.02 (95 % CI 0.74-1.30, p < 0.001) with ~40 % lower SE than the change-score analysis, leveraging the 0.7 baseline-outcome correlation."
+
+## Practical Tips
+
+- Use ANCOVA for any continuous outcome where a baseline measurement is available.
+- Even with small baseline-outcome correlation (0.3), ANCOVA improves power.
+- The "change from baseline" as an outcome is a special case of ANCOVA with $\beta_{\text{base}} = 1$ forced; ANCOVA with free $\beta$ is preferred.
+- Pre-specify baseline adjustment in the SAP; post-hoc addition risks bias.
+- EMA guidance on baseline adjustment: stratification and ANCOVA are both acceptable; ANCOVA is more efficient when baseline is continuous.

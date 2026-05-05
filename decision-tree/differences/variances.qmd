@@ -93,15 +93,3 @@ The Fligner-Killeen test (`fligner.test()`) is a non-parametric alternative to L
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 00b486e62f8c43e1bdf74d8113867811 -->
-<img src="https://vg09.met.vgwort.de/na/00b486e62f8c43e1bdf74d8113867811"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

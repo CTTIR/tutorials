@@ -1,0 +1,64 @@
+---
+title: R-hat and ESS Diagnostics
+date: "2026-04-17"
+description: Convergence (R-hat) and effective sample size (ESS) for MCMC quality control
+categories:
+  - Bayesian Statistics
+  - rhat
+  - ess
+  - convergence
+  - autocorrelation
+---
+
+## Introduction
+
+An MCMC posterior summary is only as good as the chain that produced it. Two questions decide whether the draws are usable: have the chains converged on the same distribution, and how many independent observations is the autocorrelated chain actually worth? The first is answered by $\hat R$, the second by effective sample size (ESS). These two numbers, reported alongside every parameter in modern Bayesian output, are the minimum diagnostic checklist before any posterior interval is interpreted.
+
+## Prerequisites
+
+A working understanding of Markov chain Monte Carlo, the role of warm-up versus sampling iterations, and the autocorrelation structure of MCMC draws.
+
+## Theory
+
+$\hat R$ compares the variance between chains to the variance within chains. If chains have converged on the same target, the two variance estimates agree and $\hat R \to 1$; persistent disagreement inflates $\hat R$. The Vehtari et al. (2021) rank-normalised variant handles heavy-tailed posteriors and is the default in `posterior::summarise_draws()`. ESS expresses the variance of the Monte Carlo estimator as if the draws were independent: $n_{\text{eff}} = N / (1 + 2 \sum_k \rho_k)$ for autocorrelations $\rho_k$. Bulk ESS quantifies precision of the posterior mean and median; tail ESS quantifies precision of the 5 % and 95 % quantiles, which require many more draws because they are estimated from a thin part of the distribution.
+
+## Assumptions
+
+At least four chains started from dispersed initial values, with adequate warm-up so that the sampler has tuned step size and mass matrix. A single chain cannot diagnose convergence, regardless of how long it is — between-chain variance is undefined.
+
+## R Implementation
+
+```r
+library(brms); library(posterior)
+
+data(sleepstudy, package = "lme4")
+fit <- brm(Reaction ~ Days + (Days | Subject), data = sleepstudy,
+           chains = 4, iter = 2000, refresh = 0)
+
+# Summary with R-hat and ESS
+summary(fit)
+
+# Per-parameter
+post_draws <- as_draws_df(fit)
+summarise_draws(post_draws)
+```
+
+## Output & Results
+
+`summary(fit)` reports `Rhat`, `Bulk_ESS`, and `Tail_ESS` for every parameter. `summarise_draws()` returns the same diagnostics in a tidy tibble, ready for `dplyr` filtering when a model has hundreds of parameters and you want to know which one needs attention.
+
+## Interpretation
+
+A reporting sentence: "All parameters had $\hat R \le 1.00$, bulk ESS $> 2{,}000$, and tail ESS $> 1{,}500$; sampling is adequate for posterior intervals." Conventional thresholds: $\hat R < 1.01$ indicates convergence, $\hat R > 1.05$ is a clear failure; bulk and tail ESS should each exceed 400 for credible interval estimation to be reliable.
+
+## Practical Tips
+
+- If $\hat R$ exceeds 1.01, double the iteration count first; if the problem persists, reparameterise (e.g. non-centred random effects) rather than throwing more iterations at it.
+- Low ESS relative to total draws (ratios under 0.1) signals strong autocorrelation; raise `adapt_delta` or examine the model for funnel-shaped geometry.
+- Divergent transitions in HMC are a separate, more serious diagnostic — they indicate that the sampler missed regions of the posterior, not just that it explored slowly. Always inspect them with `bayesplot::mcmc_parcoord()` or `pairs()`.
+- Trace plots remain a useful supplement: a "hairy caterpillar" with chains overlapping is what convergence looks like; a chain wandering away or stuck in a valley is visible long before $\hat R$ catches it for short runs.
+- For very high-dimensional models, monitor $\hat R$ and ESS for *derived* quantities of interest (e.g. predictions, contrasts), not just raw parameters; convergence of one does not imply the other.
+
+## R Packages Used
+
+`posterior` for the rank-normalised $\hat R$, bulk and tail ESS, and tidy-draw structures, `bayesplot` for diagnostic plots, and `brms` (or `rstanarm`, `cmdstanr`) as the modelling backend that produces the draws in the first place.

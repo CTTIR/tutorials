@@ -90,9 +90,6 @@ website:
         href: "mailto:58561665+r-heller@users.noreply.github.com"
     right: "Built with [Quarto](https://quarto.org)"
 
-filters:
-  - scripts/vgwort.lua
-
 format:
   html:
     theme:

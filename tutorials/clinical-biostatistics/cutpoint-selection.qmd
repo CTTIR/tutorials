@@ -1,0 +1,69 @@
+---
+title: Cutpoint Selection
+date: "2026-04-17"
+description: "Youden's J, cost-based, and closest-to-(0,1) criteria for diagnostic thresholds"
+categories:
+  - Clinical Biostatistics
+  - cutpoint
+  - threshold
+  - youden
+---
+
+## Introduction
+
+Once a continuous diagnostic test's discrimination is established, a clinical cutpoint must be chosen to turn continuous scores into binary decisions. The optimal cutpoint depends on the trade-off between sensitivity and specificity and on relative costs of false positives vs false negatives.
+
+## Prerequisites
+
+Sensitivity and specificity; ROC curves.
+
+## Theory
+
+Common criteria:
+- **Youden's J**: maximise $\text{Sens} + \text{Spec} - 1$. Implicitly assumes equal cost of FN and FP.
+- **Closest to (0, 1)**: minimise $\sqrt{(1 - \text{Sens})^2 + (1 - \text{Spec})^2}$.
+- **Cost-weighted**: minimise $c_{FN}(1 - \text{Sens}) \cdot p_D + c_{FP}(1 - \text{Spec}) \cdot (1 - p_D)$ where $p_D$ is prevalence.
+- **Target specificity (or sensitivity)**: fix one and maximise the other.
+
+## Assumptions
+
+Target population has a known prevalence; costs of misclassification are elicited or set by convention; cutpoint will generalise to a new sample.
+
+## R Implementation
+
+```r
+library(pROC); library(cutpointr)
+
+set.seed(2026)
+n <- 300
+disease <- factor(sample(c(0, 1), n, replace = TRUE, prob = c(0.6, 0.4)))
+score   <- rnorm(n, mean = ifelse(disease == 1, 1.2, 0))
+
+roc_obj <- roc(response = disease, predictor = score,
+               levels = c("0", "1"), direction = "<")
+youden_thr <- coords(roc_obj, "best", best.method = "youden",
+                     transpose = FALSE)
+youden_thr
+
+# cutpointr package: multiple criteria in one call
+cp <- cutpointr(data.frame(score, disease),
+                x = score, class = disease,
+                method = maximize_metric, metric = youden)
+summary(cp)
+```
+
+## Output & Results
+
+Cutpoint at Youden's J and associated sensitivity/specificity. Common cutpoint in this simulation: ~0.6 with sensitivity ~0.7 and specificity ~0.7.
+
+## Interpretation
+
+"Maximum Youden's J was achieved at a cutpoint of 0.63 (sensitivity 0.72, specificity 0.71). In a population with 40 % prevalence, this yields PPV 0.62 and NPV 0.80."
+
+## Practical Tips
+
+- Internal cutpoints overfit the training data; cross-validate or use a separate holdout set.
+- Clinical cutpoints should be stable, rounded to a meaningful precision, and validated prospectively.
+- For screening tests, favour sensitivity; for confirmatory tests, favour specificity.
+- Report both the cutpoint and its downstream metrics (Sens, Spec, PPV, NPV, LR+, LR-).
+- Decision-curve analysis (Vickers-Elkin) incorporates clinical utility across a range of threshold probabilities.

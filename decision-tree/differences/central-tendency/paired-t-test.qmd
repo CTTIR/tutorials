@@ -91,15 +91,3 @@ If the paired differences are non-normal, use the [Wilcoxon signed-rank test](/d
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 0083758a694a479089f062499698c988 -->
-<img src="https://vg09.met.vgwort.de/na/0083758a694a479089f062499698c988"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

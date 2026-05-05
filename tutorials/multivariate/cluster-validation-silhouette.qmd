@@ -1,0 +1,73 @@
+---
+title: "Cluster Validation: Silhouette"
+date: "2026-04-17"
+description: Measuring how well each observation fits its assigned cluster relative to neighbouring clusters
+categories:
+  - Multivariate Statistics
+  - silhouette
+  - cluster-validation
+---
+
+## Introduction
+
+The silhouette is the most widely used internal validation metric for clustering. For each observation, it compares the mean distance to others in its own cluster against the mean distance to the nearest competing cluster, returning a value between $-1$ and $+1$. Values near 1 indicate observations comfortably inside their assigned cluster; values near 0 indicate ambiguous assignments on a cluster boundary; negative values indicate observations that would fit better in a different cluster. Averaging silhouettes across observations gives a single number summarising cluster quality without needing labels or external references.
+
+## Prerequisites
+
+A working understanding of distance metrics, clustering algorithms ($k$-means, hierarchical, PAM), and the distinction between internal and external validation criteria.
+
+## Theory
+
+For observation $i$ in cluster $C_k$, define:
+
+- $a_i$ = mean distance from $i$ to all other observations in $C_k$.
+- $b_i$ = minimum, over clusters $C_l \neq C_k$, of the mean distance from $i$ to observations in $C_l$.
+
+The silhouette width is
+
+$$s_i = \frac{b_i - a_i}{\max(a_i, b_i)}, \qquad s_i \in [-1, 1].$$
+
+The cluster silhouette is the mean $s_i$ across observations in that cluster; the overall silhouette is the mean across all observations. Conventional thresholds: $> 0.7$ indicates a strong cluster structure, $0.5$–$0.7$ reasonable, $0.25$–$0.5$ weak, $< 0.25$ no substantial structure.
+
+## Assumptions
+
+A meaningful distance metric; unambiguous cluster assignments. Silhouette assumes convex clusters and can be misleading for density-defined or non-convex shapes (rings, half-moons), where DBSCAN-style validation is more appropriate.
+
+## R Implementation
+
+```r
+library(cluster); library(factoextra)
+
+X <- scale(iris[, 1:4])
+
+# k-means with silhouette
+km <- kmeans(X, centers = 3, nstart = 25)
+sil <- silhouette(km$cluster, dist(X))
+summary(sil)
+
+fviz_silhouette(sil)
+
+# Choose k by silhouette
+fviz_nbclust(X, kmeans, method = "silhouette")
+```
+
+## Output & Results
+
+`silhouette()` returns per-observation $s_i$, the assigned cluster, and the nearest-competing cluster. `summary()` aggregates by cluster and overall. `fviz_silhouette()` produces the canonical horizontal-bar silhouette plot. `fviz_nbclust()` automates $k$ selection by maximising overall silhouette.
+
+## Interpretation
+
+A reporting sentence: "$k$-means with $k = 3$ on the standardised iris data produced an overall silhouette width of 0.51 (cluster widths 0.79, 0.39, 0.45), no observations had negative silhouette, and 12 observations near the versicolor / virginica boundary had values below 0.20." Always report cluster-specific silhouettes, not just the overall mean — a poorly-fitting cluster can be hidden inside a high overall average.
+
+## Practical Tips
+
+- Use silhouette to choose $k$ alongside the elbow method and gap statistic; concordance across all three is the strongest argument for a chosen partition.
+- Negative silhouettes flag misassigned observations; investigate whether they represent genuine intermediate cases, data errors, or an inadequate $k$.
+- Silhouette is misleading for non-convex clusters (rings, manifolds); for density-based methods (DBSCAN, OPTICS), prefer density-aware validation indices.
+- Plot silhouette per cluster and compare cluster-level means; a single low-silhouette cluster pulls the overall mean down without a per-cluster breakdown making it visible.
+- Alternative internal indices (Davies-Bouldin, Calinski-Harabasz, Dunn) capture different aspects of cluster quality; `NbClust` computes 30+ and reports the consensus optimum.
+- Silhouette computation is $O(n^2)$ in distance evaluations; for very large $n$, use sub-sample-based silhouette via `cluster::silhouette()` on a random subset.
+
+## R Packages Used
+
+`cluster` for `silhouette()` and the underlying clustering algorithms; `factoextra` for `fviz_silhouette()` and `fviz_nbclust()` ggplot-style visualisation; `NbClust` for 30+ alternative internal indices in one call; `clusterCrit` for additional intrinsic and extrinsic validation indices.

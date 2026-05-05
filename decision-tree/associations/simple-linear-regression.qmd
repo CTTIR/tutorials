@@ -96,15 +96,3 @@ The slope coefficient is the natural effect size. Standardised: $\beta^* = \beta
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 005b45f911b24292b5e251c88ce2e934 -->
-<img src="https://vg09.met.vgwort.de/na/005b45f911b24292b5e251c88ce2e934"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

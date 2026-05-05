@@ -1,0 +1,108 @@
+---
+title: Conditional Probability
+date: "2026-04-17"
+description: "Probability of one event given another, the product rule, and how conditioning reshapes the sample space"
+categories:
+  - Probability Theory
+  - conditional-probability
+  - product-rule
+  - conditioning
+---
+
+## Introduction
+
+Conditional probability quantifies how information about one event updates the probability of another. It is the lens through which every diagnostic test, every Bayesian update, and every hazard calculation is viewed. The rules are simple; the interpretations are subtle and recurrently misunderstood in applied research.
+
+## Prerequisites
+
+Basic probability, sample spaces, and set operations.
+
+## Theory
+
+For events $A$ and $B$ with $P(B) > 0$, the **conditional probability of $A$ given $B$** is
+
+$$P(A \mid B) = \frac{P(A \cap B)}{P(B)}.$$
+
+Conceptually, conditioning restricts attention to the subset of the sample space where $B$ occurred, and then asks: among those outcomes, what fraction are in $A$?
+
+Rearranging gives the **product (multiplication) rule**:
+
+$$P(A \cap B) = P(A \mid B) \, P(B) = P(B \mid A) \, P(A).$$
+
+The product rule extends to multiple events via the chain rule:
+
+$$P(A_1 \cap \ldots \cap A_n) = P(A_1) \, P(A_2 \mid A_1) \, P(A_3 \mid A_1 \cap A_2) \cdots$$
+
+Conditioning preserves the axioms: fixing $B$, the function $P(\cdot \mid B)$ is itself a valid probability measure on the conditional sample space. All standard properties (complement rule, inclusion-exclusion) hold with $P$ replaced by $P(\cdot \mid B)$.
+
+## Assumptions
+
+- $P(B) > 0$. Conditioning on a zero-probability event is not defined in the elementary setting; measure-theoretic extensions exist but are beyond scope.
+- The original probability space is fixed; conditioning does not change $\Omega$, only the measure restricted to $B$.
+
+## R Implementation
+
+We use a 2x2 population table to demonstrate conditioning mechanically.
+
+```r
+set.seed(2026)
+
+# Simulated screening-test data: 10 000 patients
+# True disease status and test result
+n <- 10000
+disease_prev <- 0.05
+sensitivity  <- 0.90
+specificity  <- 0.95
+
+patients <- data.frame(
+  disease = rbinom(n, 1, disease_prev)
+) |>
+  within({
+    test <- ifelse(disease == 1,
+                   rbinom(length(disease), 1, sensitivity),
+                   rbinom(length(disease), 1, 1 - specificity))
+  })
+
+tab <- table(patients$test, patients$disease,
+             dnn = c("test", "disease"))
+tab
+
+p_disease_given_test_pos <- tab["1", "1"] / sum(tab["1", ])
+p_disease_given_test_pos
+
+p_test_pos_given_disease <- tab["1", "1"] / sum(tab[, "1"])
+p_test_pos_given_disease
+
+p_joint <- tab["1", "1"] / n
+c(joint = p_joint,
+  formula = p_test_pos_given_disease * mean(patients$disease == 1))
+```
+
+## Output & Results
+
+```
+       disease
+test        0    1
+     0   9030    48
+     1    472  450
+
+[1] 0.4881    # P(disease | test+)
+[1] 0.9036    # P(test+ | disease)
+
+joint   formula
+0.0450    0.0450
+```
+
+The product rule is verified: $P(\text{test+} \cap \text{disease}) = P(\text{test+} \mid \text{disease}) \cdot P(\text{disease})$. And $P(\text{disease} \mid \text{test+}) = 0.49$ -- far below the sensitivity of 0.90, because disease prevalence is low.
+
+## Interpretation
+
+The final ratio -- 49% positive predictive value despite 90% sensitivity -- is the classic base-rate lesson in clinical testing. In a manuscript: "positive predictive value was 49%, reflecting the low prevalence of disease in the screened population despite a sensitive test."
+
+## Practical Tips
+
+- $P(A \mid B) \neq P(B \mid A)$ in general; this is the prosecutor's fallacy when confused in legal and clinical settings.
+- Always check that the conditioning event has positive probability; in small samples, conditional probabilities based on empty strata are undefined.
+- When interpreting a conditional probability, state the conditioning event explicitly: "the probability of disease *given that the test is positive*" is clearer than "the positive predictive value" for non-specialist readers.
+- Chain the product rule when computing joint probabilities of many events: $P(A \cap B \cap C) = P(A) P(B \mid A) P(C \mid A \cap B)$.
+- Conditioning changes the denominator: moving from marginal to conditional probability requires dividing by $P(B)$.

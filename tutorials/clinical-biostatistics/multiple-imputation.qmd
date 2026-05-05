@@ -1,0 +1,72 @@
+---
+title: Multiple Imputation
+date: "2026-04-17"
+description: "Imputing multiple plausible values and combining via Rubin's rules"
+categories:
+  - Clinical Biostatistics
+  - multiple-imputation
+  - mice
+  - rubin
+---
+
+## Introduction
+
+Multiple imputation (MI; Rubin 1987) replaces each missing value with $m > 1$ plausible values drawn from the posterior predictive distribution of the missing data given the observed. The analysis is run on each of the $m$ completed datasets; Rubin's rules combine the results into a single inference reflecting both within-imputation and between-imputation uncertainty.
+
+## Prerequisites
+
+Missing-data mechanisms (MAR); Bayesian predictive distributions.
+
+## Theory
+
+**MI procedure**:
+1. Impute: create $m$ completed datasets via a predictive model.
+2. Analyse: apply the intended model to each dataset.
+3. Pool: combine $\bar{\hat{\beta}} = (1/m) \sum \hat{\beta}_k$; total variance $T = \bar{W} + (1 + 1/m) B$, where $\bar{W}$ is mean within-imputation variance and $B$ is between-imputation variance.
+
+`mice` uses chained equations: iteratively impute each variable using the others as predictors.
+
+## Assumptions
+
+Missing at random (MAR); imputation model is correctly specified (correct functional form, includes all predictors that might correlate with missingness).
+
+## R Implementation
+
+```r
+library(mice)
+
+set.seed(2026)
+n <- 300
+df <- data.frame(
+  x1 = rnorm(n), x2 = rnorm(n),
+  x3 = sample(c("a", "b", "c"), n, replace = TRUE),
+  y  = rnorm(n)
+)
+df$y[sample(n, 60)] <- NA       # 20% missing
+df$x2[sample(n, 30)] <- NA      # 10% missing
+
+# Chained-equations imputation, 20 imputations
+imp <- mice(df, m = 20, method = c("pmm", "pmm", "polyreg", "pmm"),
+            printFlag = FALSE)
+
+# Fit the model on each imputation and pool
+fit <- with(imp, lm(y ~ x1 + x2 + x3))
+pooled <- pool(fit)
+summary(pooled)
+```
+
+## Output & Results
+
+Pooled regression coefficients with SEs that correctly reflect imputation uncertainty; `fmi` (fraction of missing information) indicates how much of the variance comes from imputation.
+
+## Interpretation
+
+"Multiple imputation (m = 20) under MAR gave a pooled coefficient of 0.94 (SE 0.10, 95 % CI 0.74-1.14); fraction of missing information 0.18 suggests reasonable efficiency."
+
+## Practical Tips
+
+- Include **all** variables used in the substantive model, plus auxiliary variables correlated with missingness, in the imputation model.
+- $m$ should be $\geq$ 100 when a large fraction is missing; 20 is a minimum for exploratory work.
+- For regression on interactions or non-linearity, include those terms in the imputation model too (impute so the model matches).
+- Use predictive mean matching (pmm) for continuous variables to avoid unrealistic extrapolations.
+- Always check convergence of chained equations via trace plots.

@@ -1,0 +1,100 @@
+---
+title: The Gamma Distribution
+date: "2026-04-17"
+description: Flexible right-skewed distribution for positive continuous data; sum of independent exponentials
+categories:
+  - Probability Theory
+  - gamma
+  - shape
+  - rate
+  - positive-continuous
+---
+
+## Introduction
+
+The gamma distribution is a flexible right-skewed distribution on positive real numbers. It is parameterised by a shape and a rate (or scale) and includes the exponential, Erlang, and chi-squared as special cases. In applied work it models waiting times, concentrations, and response amplitudes -- any positive continuous variable with light-to-moderate right skew.
+
+## Prerequisites
+
+Exponential distribution, basic calculus.
+
+## Theory
+
+A gamma random variable with shape $\alpha > 0$ and rate $\beta > 0$ has PDF
+
+$$f(x) = \frac{\beta^\alpha}{\Gamma(\alpha)} x^{\alpha - 1} e^{-\beta x}, \qquad x > 0.$$
+
+Scale parameterisation: $\theta = 1/\beta$, so $f(x) = \frac{1}{\theta^\alpha \Gamma(\alpha)} x^{\alpha - 1} e^{-x/\theta}$.
+
+Moments:
+
+- $E[X] = \alpha / \beta$ (rate form) = $\alpha \theta$ (scale form).
+- $\mathrm{Var}(X) = \alpha / \beta^2 = \alpha \theta^2$.
+
+**Special cases**:
+
+- Shape $\alpha = 1$: exponential$(\beta)$.
+- Integer shape $\alpha = k$: Erlang distribution, which equals the sum of $k$ iid exponentials with rate $\beta$.
+- Shape $\alpha = \nu/2$, rate $\beta = 1/2$: chi-squared with $\nu$ df.
+
+**Sum property**: independent Gamma$(\alpha_1, \beta)$ and Gamma$(\alpha_2, \beta)$ sum to Gamma$(\alpha_1 + \alpha_2, \beta)$.
+
+**Conjugacy**: gamma is conjugate to the Poisson likelihood (prior on $\lambda$); gamma-Poisson mixture yields negative binomial.
+
+## Assumptions
+
+Values must be positive. The flexibility comes from the two parameters; monotone hazard (increasing for $\alpha > 1$, decreasing for $\alpha < 1$, constant for $\alpha = 1$).
+
+## R Implementation
+
+```r
+library(MASS)
+
+shape <- 2.5; rate <- 0.8
+
+X <- rgamma(1e5, shape = shape, rate = rate)
+c(mean = mean(X), theoretical_mean = shape / rate,
+  var  = var(X),  theoretical_var = shape / rate^2)
+
+# Visualise the PDF
+curve(dgamma(x, shape, rate), from = 0, to = 15,
+      main = paste("Gamma(shape =", shape, ", rate =", rate, ")"),
+      xlab = "x", ylab = "f(x)", col = "#2A9D8F", lwd = 2)
+
+# MLE fit
+fit <- fitdistr(X, "gamma")
+fit$estimate
+
+# Sum of independent exponentials equals Erlang (gamma with integer shape)
+k <- 5; lambda <- 1
+S <- replicate(5000, sum(rexp(k, rate = lambda)))
+c(mean_empirical = mean(S), mean_theoretical = k / lambda,
+  var_empirical  = var(S),  var_theoretical  = k / lambda^2)
+```
+
+## Output & Results
+
+```
+  mean theoretical_mean      var theoretical_var
+  3.13             3.125     3.92            3.906
+
+    shape    rate
+  2.507   0.802       # MLE recovers true parameters
+
+mean_empirical mean_theoretical  var_empirical  var_theoretical
+         4.989            5.000          5.014            5.000
+```
+
+Empirical moments match theoretical; MLE recovers the true parameters; the sum of 5 iid exponentials has the predicted Erlang moments.
+
+## Interpretation
+
+Gamma is a default parametric model for positive continuous variables that do not fit well to normal or log-normal. In generalised linear models, a gamma family (`glm(..., family = Gamma)`) is appropriate for positive continuous outcomes with variance proportional to the squared mean.
+
+## Practical Tips
+
+- Watch R's `rgamma(n, shape, rate)` vs `rgamma(n, shape, scale = ...)`; only one of `rate` and `scale` should be given.
+- Fitting a gamma to data: `MASS::fitdistr(x, "gamma")` or `fitdistrplus::fitdist`.
+- Small shape ($\alpha < 1$) gives a distribution with a pole at zero; reasonable for heavily skewed data but breaks with zero values in a sample.
+- For modelling variance in mixed models, the gamma distribution appears as the distribution of random-effect variances in certain hierarchical setups.
+- Log-gamma (log of a gamma) is often approximately normal and easier to work with for some computations.

@@ -1,0 +1,68 @@
+---
+title: Blinding Procedures
+date: "2026-04-17"
+description: "Masking participants, investigators, assessors, and analysts"
+categories:
+  - Clinical Biostatistics
+  - blinding
+  - masking
+  - bias
+---
+
+## Introduction
+
+Blinding (masking) keeps trial participants and personnel unaware of treatment assignments to minimise performance, assessment, and analyst biases. Single, double, triple, and quadruple blinding refer to which stakeholder groups are masked; each layer blocks a specific bias pathway.
+
+## Prerequisites
+
+RCT design; sources of bias in clinical research.
+
+## Theory
+
+- **Single blinding**: participant unaware; investigator aware.
+- **Double blinding**: participant and investigator both unaware. Standard for drug vs placebo.
+- **Triple blinding**: adds blinded outcome assessors (PROBE designs invert this).
+- **Quadruple blinding**: adds blinded statisticians / analysts.
+
+Each additional layer addresses bias but also increases operational complexity.
+
+## Assumptions
+
+Identical appearance, taste, and packaging of active and placebo; emergency unblinding procedures are in place.
+
+## R Implementation
+
+Blinding is operational -- not a statistical analysis per se -- but the **success of blinding** should be audited.
+
+```r
+# Simulate an end-of-study blinding-integrity questionnaire
+set.seed(2026)
+n <- 200
+guess <- factor(sample(c("active", "placebo", "don't know"),
+                        n, replace = TRUE,
+                        prob = c(0.4, 0.35, 0.25)))
+true  <- factor(rep(c("active", "placebo"), each = n/2))
+
+# James blinding index (range 0-1; 0.5 = good blinding)
+tab <- table(guess, true)
+n <- sum(tab)
+# Simpler chi-square test of correct-guess rate
+correct <- sum(guess == true)
+binom.test(correct, length(guess), p = 0.5)
+```
+
+## Output & Results
+
+Binomial test of whether the correct-guess rate exceeds chance; p > 0.05 consistent with effective blinding.
+
+## Interpretation
+
+"End-of-study unblinding revealed 56 % correct guesses (95 % CI 49-62 %, p = 0.12 vs chance), consistent with successful blinding. The study reports the result per CONSORT recommendations."
+
+## Practical Tips
+
+- Match active and placebo precisely (taste, colour, packaging, schedule); any difference leaks information.
+- For difficult-to-blind interventions (surgery, behavioural), blind at least outcome assessment.
+- Test blinding at study end (e.g., James/Bang blinding index); report the result.
+- Pre-specify emergency unblinding procedures; document all unblinding events.
+- A statistician blinded to allocation prevents analysis-choice bias even in open-label trials.

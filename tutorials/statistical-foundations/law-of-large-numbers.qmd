@@ -1,0 +1,85 @@
+---
+title: The Law of Large Numbers
+date: "2026-04-17"
+description: "Why the sample mean converges to the population mean as the sample grows, in weak and strong forms"
+categories:
+  - Statistical Foundations
+  - law-of-large-numbers
+  - convergence
+  - consistency
+---
+
+## Introduction
+
+The law of large numbers (LLN) is the formal statement of an intuition most students bring to statistics on day one: averages settle down as you collect more data. The precise statement comes in two flavours -- the weak law and the strong law -- and its consequences flow through estimation theory, simulation methodology, and machine learning.
+
+## Prerequisites
+
+The reader should know what an expectation is, what a sample mean is, and should have seen `replicate()` or a similar simulation pattern in R.
+
+## Theory
+
+Let $X_1, X_2, \ldots$ be iid random variables with finite mean $\mu = E[X_1]$. The sample mean is $\bar{X}_n = \frac{1}{n}\sum_{i=1}^n X_i$.
+
+**Weak law (WLLN)**: for every $\varepsilon > 0$,
+
+$$\lim_{n \to \infty} P(|\bar{X}_n - \mu| > \varepsilon) = 0.$$
+
+In words, the sample mean is eventually within any pre-specified distance of the population mean with probability approaching 1. This is convergence in probability: $\bar{X}_n \xrightarrow{P} \mu$.
+
+**Strong law (SLLN)**:
+
+$$P\!\left(\lim_{n \to \infty} \bar{X}_n = \mu\right) = 1.$$
+
+The sample mean converges to the population mean almost surely -- for almost every realisation of the infinite sequence, the sample mean settles to $\mu$. This is strictly stronger than the weak law.
+
+Both laws depend on the existence of $\mu$. For distributions without a finite mean (Cauchy, Pareto with tail index below 1), the sample mean does not converge at all; it remains wild regardless of sample size.
+
+The LLN generalises beyond means: any continuous function of a sample mean is consistent for the same function of $\mu$ (continuous mapping theorem). This underwrites the plug-in principle and the consistency of most practical estimators.
+
+## Assumptions
+
+The classical LLN requires iid observations with a finite mean. The LLN for non-iid sequences (stationary ergodic, martingale-difference, mixing) holds under appropriate generalisations but requires more care.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+set.seed(2026)
+mu <- 5
+sigma <- 3
+
+n_vals <- seq(10, 10000, by = 50)
+
+draws <- rnorm(max(n_vals), mean = mu, sd = sigma)
+path <- data.frame(n = 1:length(draws),
+                   running_mean = cumsum(draws) / seq_along(draws))
+
+ggplot(path, aes(x = n, y = running_mean)) +
+  geom_line(colour = "steelblue") +
+  geom_hline(yintercept = mu, linetype = "dashed", colour = "red") +
+  scale_x_log10() +
+  labs(x = "n (log scale)",
+       y = expression(bar(X)[n]),
+       title = "LLN in action: running mean vs. population mean") +
+  theme_minimal()
+```
+
+Plotting the running sample mean against $n$ shows it converging to $\mu = 5$; different random seeds produce different paths, all converging to the same horizontal line.
+
+## Output & Results
+
+The plot shows an initial ragged behaviour for small $n$, narrowing steadily as $n$ grows, with the running mean nested closer and closer around the true 5. Classical theoretical rates: the typical deviation at sample size $n$ scales as $\sigma / \sqrt{n}$ (the standard error).
+
+## Interpretation
+
+The LLN justifies every Monte Carlo estimate and every use of the sample mean as a point estimate. A paper that reports "estimated by averaging over $N = 10^5$ simulation replicates" is implicitly invoking the LLN: the average converges to the population mean and, by the CLT, has a well-characterised standard error.
+
+## Practical Tips
+
+- The LLN guarantees convergence but says nothing about speed -- the CLT does. In practice, "large enough $n$" depends on the population's tail behaviour.
+- Check that the mean exists before trusting the LLN. A single quiet assumption failure (sampling from a heavy-tailed population) turns a routine simulation into a misleading result.
+- The LLN extends to sample variances, proportions, correlations, and more general functionals -- any "mean of transformed data" is consistent.
+- Running-mean plots are useful diagnostics in simulations: if the running mean is still drifting at the end of the simulation, more replicates are needed.
+- In online learning and streaming algorithms, the LLN underlies the convergence of stochastic-gradient and recursive estimation schemes.

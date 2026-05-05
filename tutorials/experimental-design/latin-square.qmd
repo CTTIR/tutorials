@@ -1,0 +1,68 @@
+---
+title: Latin Square Designs
+date: "2026-04-17"
+description: Blocking on two nuisance factors via a Latin-square arrangement
+categories:
+  - Experimental Design
+  - latin-square
+  - blocking
+  - design
+---
+
+## Introduction
+
+A Latin square design simultaneously blocks on two nuisance factors — the rows and columns of a $t \times t$ grid — with $t$ treatments arranged so that every treatment appears exactly once in each row and exactly once in each column. The result is a remarkably economical design: $t$ treatments are replicated $t$ times in only $t^2$ experimental units while controlling for two layers of nuisance variation. Latin squares are classical workhorses of agricultural experimentation (where rows and columns might be soil-fertility gradients in two perpendicular directions), industrial DoE (where day and operator are blocked), and clinical-pharmacology crossover trials (where subject and period block the treatment sequence).
+
+## Prerequisites
+
+A working understanding of completely randomised designs, the principle of blocking, and the partitioning of variability in two-way ANOVA models without replication.
+
+## Theory
+
+The standard analysis model is
+
+$$y_{ijk} = \mu + \rho_i + \gamma_j + \tau_k + \varepsilon_{ijk}, \qquad \varepsilon_{ijk} \sim N(0, \sigma^2),$$
+
+with row effect $\rho_i$, column effect $\gamma_j$, treatment effect $\tau_k$, and independent Normal error. The constraint that each treatment appears once per row and once per column defines a Latin square. The design has $(t-1)$ treatment df, $(t-1)$ row df, $(t-1)$ column df, and $(t-1)(t-2)$ residual df, requiring $t^2$ runs in total.
+
+## Assumptions
+
+No interactions exist between any pair of the three classifications (treatment, row, column), residual variance is homogeneous, and the response is approximately Normal. The design uses one observation per cell, so departures from these assumptions cannot easily be diagnosed from replication; residual diagnostics and a Tukey one-degree-of-freedom test for non-additivity are essential checks.
+
+## R Implementation
+
+```r
+library(agricolae)
+
+set.seed(2026)
+t <- 4
+trts <- LETTERS[1:t]
+ls_design <- design.lsd(trts, seed = 2026)
+book <- ls_design$book
+print(book)
+
+book$y <- rnorm(t^2, mean = c(10, 12, 14, 11)[as.integer(book$trts)], sd = 1.5)
+fit <- aov(y ~ row + col + trts, data = book)
+summary(fit)
+```
+
+## Output & Results
+
+`design.lsd()` returns a randomised Latin-square layout with row, column, and treatment indicators. The ANOVA partitions the total sum of squares into row, column, treatment, and residual components, with the treatment $F$-test as the primary inference. Reporting the proportions of variability absorbed by row and column blocking alongside the treatment effect characterises the gain from the design.
+
+## Interpretation
+
+A reporting sentence: "The $4 \times 4$ Latin square partitioned the 16 observations' variation into row, column, and treatment components. The treatment $F$-test was significant ($F_{3, 6} = 7.2$, $p = 0.02$), with row blocking absorbing 20 % of total variability and column blocking 14 %; residual variance was correspondingly small. The design assumes no row-treatment or column-treatment interaction, supported by visual inspection of the residuals." Always report blocking variance components and verify the no-interaction assumption.
+
+## Practical Tips
+
+- Latin squares have very few residual df for small $t$ (only 6 for $t = 4$); consider replication or a larger square if effects of interest are modest in size.
+- The analysis assumes no interactions between treatment and either blocking factor; substantive interactions invalidate the standard $F$-test, and the no-interaction assumption should always be defended from context (or tested via a Tukey one-df non-additivity check).
+- For $t > 7$ a Latin square requires too many units ($t^2 \geq 49$); a balanced incomplete block design or a fractional-factorial blocked layout is usually more practical.
+- Graeco-Latin squares extend to a third blocking factor by superimposing two orthogonal Latin squares; they are even more economical but with even fewer residual df and the same additive-effects assumption.
+- Always randomly permute rows, columns, and treatment labels of a standard Latin square to obtain a valid realisation; using an unrandomised square confounds systematic patterns with treatment effects.
+- In crossover clinical trials, "subject" plays the role of one block and "period" the role of the other; carryover effects, if present, violate the no-interaction assumption and must be modelled separately.
+
+## R Packages Used
+
+`agricolae::design.lsd()` for the canonical layout and randomisation; base R `aov()` for the ANOVA analysis; `crossdes` for systematic Latin-square construction including replicated and balanced layouts; `daewr` for textbook examples; `emmeans` for marginal means and treatment contrasts after fitting.

@@ -1,0 +1,74 @@
+---
+title: Batch Correction with ComBat
+date: "2026-04-17"
+description: Removing known batch effects from expression data using empirical-Bayes methods
+categories:
+  - Bioinformatics
+  - batch
+  - combat
+  - sva
+---
+
+## Introduction
+
+Batch effects — systematic technical variation introduced by different sequencing dates, instruments, library-prep operators, or reagent lots — bias gene-expression measurements in ways that can swamp biological signal if not addressed. ComBat is the most widely used batch-correction method, applying an empirical-Bayes adjustment to centre and scale each gene's distribution per batch. It is appropriate when batches are known and condition is not confounded with batch; the alternative — including batch as a covariate in differential-expression models — preserves more information when downstream analysis explicitly models batch.
+
+## Prerequisites
+
+A working understanding of normalisation, the distinction between technical and biological variation, and basic empirical-Bayes shrinkage.
+
+## Theory
+
+ComBat models each gene's expression as
+
+$$Y_{ij} = \alpha_j + X\beta_j + \gamma_{bj} + \delta_{bj} \varepsilon_{ij},$$
+
+with sample $i$, gene $j$, batch $b$, additive batch effect $\gamma_{bj}$, and multiplicative batch effect $\delta_{bj}$. The empirical-Bayes step shrinks per-gene batch-effect estimates toward a common distribution across genes, stabilising estimation when batches contain few samples. The output is an expression matrix with batch effects removed but biological condition (specified via `mod`) preserved.
+
+ComBat-Seq (in `sva`) is the count-data analogue, designed for raw RNA-seq counts before normalisation; standard ComBat assumes log-normalised input.
+
+## Assumptions
+
+Batches are known; biological condition is not perfectly confounded with batch (otherwise correction is impossible); sufficient samples per batch for stable empirical-Bayes shrinkage.
+
+## R Implementation
+
+```r
+library(sva)
+
+set.seed(2026)
+# Simulated: 10 genes x 20 samples, 2 batches, 2 conditions
+expr <- matrix(rnorm(10 * 20), 10, 20)
+batch <- c(rep(1, 10), rep(2, 10))
+condition <- rep(c("A", "B"), 10)
+
+# Add batch effect
+expr[, batch == 2] <- expr[, batch == 2] + 2
+
+mod <- model.matrix(~ condition)
+expr_corrected <- ComBat(dat = expr, batch = batch, mod = mod)
+
+# PCA before/after
+# prcomp(t(expr))$x[, 1:2]; prcomp(t(expr_corrected))$x[, 1:2]
+```
+
+## Output & Results
+
+`ComBat()` returns the batch-corrected expression matrix; `ComBat_seq()` returns batch-corrected counts. PCA before and after correction is the standard QC check: condition-driven clustering should remain or strengthen, while batch-driven separation should diminish substantially.
+
+## Interpretation
+
+A reporting sentence: "ComBat correction with condition included as a covariate (`mod = model.matrix(~ condition)`) reduced batch variance from 35 % of PC1 to under 5 %, while preserving the condition-driven separation that explains 28 % of the remaining variance. The corrected matrix was used for downstream visualisation and clustering." Always report which covariates were preserved during correction.
+
+## Practical Tips
+
+- Do *not* run ComBat when condition is fully confounded with batch — the correction will remove the biological signal along with the batch effect.
+- Use `ComBat_seq()` for raw RNA-seq counts; standard ComBat is for log-normalised data.
+- For differential-expression analysis, consider including batch as a covariate in the DE design (`design = ~ batch + condition` in DESeq2/edgeR/limma) rather than running ComBat first; the model-based approach is generally preferred.
+- Always report batch-correction methods explicitly in publications; reviewers expect clarity about how batch was handled.
+- Alternative methods include RUVSeq (latent factor extraction), svaseq (surrogate variable analysis), and `limma::removeBatchEffect()` (simple linear adjustment); the choice depends on whether batches are known.
+- Pair correction with PCA before and after as a routine QC step; visible improvement is the validation for whether the correction worked.
+
+## R Packages Used
+
+`sva::ComBat()` and `ComBat_seq()` for the canonical empirical-Bayes batch correction; `RUVSeq` for unsupervised factor-based correction; `limma::removeBatchEffect()` for simple linear batch removal; `harmony` for batch correction in single-cell RNA-seq workflows.

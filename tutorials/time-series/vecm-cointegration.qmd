@@ -1,0 +1,70 @@
+---
+title: VECM and Cointegration
+date: "2026-04-17"
+description: Vector error correction models for cointegrated series; Johansen trace and eigenvalue tests
+categories:
+  - Time Series Analysis
+  - vecm
+  - cointegration
+  - johansen
+---
+
+## Introduction
+
+Two or more non-stationary time series are *cointegrated* if some linear combination of them is stationary. The classic example is interest rates at different maturities: each rate is non-stationary (random-walk-like), but spreads are mean-reverting. A vector error-correction model (VECM) captures the short-run dynamics of cointegrated series while respecting the long-run equilibrium relationship; the Johansen procedure tests how many cointegrating relations exist and estimates them jointly with the dynamic parameters.
+
+## Prerequisites
+
+A working understanding of vector autoregressive (VAR) models, unit roots, and the I(1)/I(0) terminology for integrated and stationary series.
+
+## Theory
+
+The VECM is
+
+$$\Delta y_t = \Pi y_{t-1} + \sum_{i=1}^{p-1} \Gamma_i \Delta y_{t-i} + \varepsilon_t.$$
+
+The matrix $\Pi$ encodes the long-run relationships; its rank equals the number of cointegrating relations. Johansen's approach tests the rank via two statistics:
+
+- **Trace test**: $\lambda_{\text{trace}}(r) = -T \sum_{i=r+1}^k \log(1 - \hat\lambda_i)$ tests $H_0: \mathrm{rank} \le r$.
+- **Maximum eigenvalue test**: $\lambda_{\max}(r) = -T \log(1 - \hat\lambda_{r+1})$ tests $H_0: \mathrm{rank} = r$ vs $H_1: \mathrm{rank} = r + 1$.
+
+The two often agree; when they disagree, the trace test is generally preferred. Once the rank is determined, the cointegrating vectors and adjustment speeds can be estimated.
+
+## Assumptions
+
+Each series is individually I(1) (verifiable by ADF and KPSS); $k$-variate Gaussian innovations; the lag length $p$ is correctly specified.
+
+## R Implementation
+
+```r
+library(urca); library(vars)
+
+data(Canada)
+jo <- ca.jo(Canada, ecdet = "const", type = "eigen", K = 2, spec = "transitory")
+summary(jo)
+
+# Fit VECM with rank r = 1 (if supported by test)
+vecm <- cajorls(jo, r = 1)
+vecm
+```
+
+## Output & Results
+
+`ca.jo()` returns the eigenvalue and trace test statistics per candidate rank, along with critical values at 10/5/1 % levels. `cajorls()` fits the VECM at the chosen rank and returns the cointegrating vector and adjustment coefficients.
+
+## Interpretation
+
+A reporting sentence: "Johansen's trace test supported one cointegrating relationship in the Canada macroeconomic data (test statistic 32.8 vs 5 % critical value 25.3, $p < 0.05$); the corresponding cointegrating vector linked money demand and interest rates with adjustment speeds of $-0.10$ for money demand toward equilibrium." Always report both trace and max-eigenvalue results, and the chosen lag length.
+
+## Practical Tips
+
+- Confirm each series is I(1) via ADF / KPSS before cointegration testing; cointegration is meaningful only between integrated series.
+- The `ecdet` argument specifies whether deterministic terms (constant, trend) enter inside the cointegrating relation; choose based on visible long-run drift.
+- Engle-Granger two-step is simpler for two series and gives essentially equivalent conclusions; Johansen generalises to $k$ variables.
+- Report both trace and max-eigenvalue tests; they typically agree but can disagree when one or two cointegrating relations are weak.
+- For short samples (under 100 observations) and many variables, Johansen loses power; reduce the dimension or use bias-corrected critical values.
+- Once the VECM is fitted, impulse-response functions and forecast-error variance decompositions on `vec2var(vecm)` extend the standard VAR diagnostic toolkit.
+
+## R Packages Used
+
+`urca` for `ca.jo()`, `cajorls()`, and Johansen-related cointegration tests; `vars` for VAR modelling and `vec2var()` to convert a VECM back to VAR form for IRF analysis; `tsDyn::VECM()` for an alternative VECM implementation; `urca::ca.po()` for the Phillips-Ouliaris cointegration tests.

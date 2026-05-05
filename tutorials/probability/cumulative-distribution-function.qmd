@@ -1,0 +1,97 @@
+---
+title: The Cumulative Distribution Function
+date: "2026-04-17"
+description: "F(x) = P(X ≤ x): the universal descriptor of a random variable's distribution"
+categories:
+  - Probability Theory
+  - cdf
+  - quantile
+  - ecdf
+---
+
+## Introduction
+
+The cumulative distribution function (CDF) is the one representation that fits every random variable, whether discrete, continuous, or mixed. It encodes the distribution completely and supports every computation that a PMF or PDF does.
+
+## Prerequisites
+
+Random variables, basic probability.
+
+## Theory
+
+The CDF of a random variable $X$ is
+
+$$F_X(x) = P(X \leq x), \qquad x \in \mathbb{R}.$$
+
+Every CDF has the following properties:
+
+1. **Monotonic non-decreasing**: $x_1 \leq x_2 \Rightarrow F_X(x_1) \leq F_X(x_2)$.
+2. **Right-continuous**: $\lim_{x \downarrow x_0} F_X(x) = F_X(x_0)$.
+3. **Limits**: $\lim_{x \to -\infty} F_X(x) = 0$, $\lim_{x \to +\infty} F_X(x) = 1$.
+
+Conversely, any function with these three properties defines a unique probability distribution on $\mathbb{R}$.
+
+Key computations:
+
+- Interval probability: $P(a < X \leq b) = F_X(b) - F_X(a)$.
+- PDF (continuous $X$): $f_X(x) = F_X'(x)$.
+- PMF (discrete $X$): $p_X(x) = F_X(x) - F_X(x^-)$, the jump size.
+- Quantile function: $Q_X(u) = \inf\{x : F_X(x) \geq u\}$, the (generalised) inverse of $F_X$.
+
+In R, each distribution family has a `p*()` function returning the CDF; the quantile function is `q*()`. The empirical CDF is obtained with `ecdf()`.
+
+## Assumptions
+
+None beyond a well-defined probability measure.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+set.seed(2026)
+x <- rnorm(200, mean = 75, sd = 10)
+
+# Empirical CDF compared to theoretical CDF
+Fn <- ecdf(x)
+grid <- seq(50, 100, length.out = 401)
+df <- data.frame(
+  x        = grid,
+  F_empir  = Fn(grid),
+  F_theor  = pnorm(grid, mean = 75, sd = 10)
+)
+
+ggplot(df, aes(x = x)) +
+  geom_step(aes(y = F_empir), colour = "#2A9D8F") +
+  geom_line(aes(y = F_theor), colour = "#F4A261", linewidth = 1) +
+  labs(y = "CDF", title = "Empirical (step) vs theoretical (line) CDF") +
+  theme_minimal()
+
+# Interval probability via the CDF
+P_70_to_80 <- pnorm(80, 75, 10) - pnorm(70, 75, 10)
+P_70_to_80
+
+# Quantile: the value below which a given probability lies
+qnorm(0.975, 75, 10)
+```
+
+## Output & Results
+
+```
+[1] 0.3829        # P(70 < X <= 80)
+[1] 94.6          # 97.5th percentile
+```
+
+The empirical step-function is close to the theoretical normal CDF, and the differences narrow as $n$ grows (Glivenko-Cantelli).
+
+## Interpretation
+
+In a paper, the CDF appears most often as a figure showing the empirical CDF against a theoretical reference (Q-Q plot is a rotation of this idea). Interval probabilities computed from the CDF are the standard form of reporting "percentage within the normal range".
+
+## Practical Tips
+
+- The CDF is the unique object that characterises the distribution; two variables with the same CDF have the same distribution.
+- Right-continuity vs left-continuity matters only at discrete atoms; the convention is right-continuous in most modern texts.
+- The quantile function inverts the CDF; for continuous $X$, it is the ordinary functional inverse.
+- The inverse-CDF method generates random draws: $X = F^{-1}(U)$ where $U \sim \mathrm{Uniform}(0, 1)$.
+- For mixed distributions, the CDF is the most transparent representation; PDFs and PMFs require generalised definitions.

@@ -1,0 +1,77 @@
+---
+title: Crossover RCT Design
+date: "2026-04-17"
+description: Within-subject comparison across treatment periods with washout
+categories:
+  - Clinical Biostatistics
+  - crossover
+  - washout
+  - carryover
+---
+
+## Introduction
+
+A crossover randomised controlled trial assigns each participant to receive two or more treatments in sequence, separated by a washout period, so that every subject acts as their own control across the treatment comparison. The within-subject comparison removes between-subject variability — typically the dominant source of variance in clinical-pharmacology and chronic-disease studies — from the treatment estimate, giving the crossover design substantially more power than a parallel-group RCT of equal total sample size. Crossover designs are particularly common in early-phase clinical pharmacology, bioequivalence studies, sleep and migraine research, and other contexts in which the underlying condition is stable, treatment effects are reversible, and an adequate washout can eliminate pharmacological carryover.
+
+## Prerequisites
+
+A working understanding of parallel-group RCT design, within-subject paired comparisons, mixed-effects models with subject as a random effect, and the concepts of period, sequence, and carryover effects.
+
+## Theory
+
+The standard $2 \times 2$ crossover randomises participants to sequence AB (treatment A in period 1, B in period 2) or BA. The within-subject treatment contrast is the primary inference; analysis is by Grizzle's classical $t$-test on within-subject differences, or — preferably — a mixed-effects model with subject random intercept and fixed effects for period and treatment. The model is
+
+$$y_{ijk} = \mu + \pi_j + \tau_k + s_i + \varepsilon_{ijk},$$
+
+with period $\pi_j$, treatment $\tau_k$, subject random intercept $s_i$, and residual error $\varepsilon_{ijk}$. **Carryover** — a residual treatment effect from period 1 lingering into period 2 — biases the within-subject estimate; it is formally tested by the sequence × period interaction but the test is under-powered, and adequate washout is the primary defence.
+
+## Assumptions
+
+No carryover (washout long enough to eliminate the first-period treatment's effect), the condition is stable between periods (no progressive disease, no natural recovery), treatment effects are independent of period, and observations within each subject share a Normal distribution with constant variance.
+
+## R Implementation
+
+```r
+library(nlme)
+
+set.seed(2026)
+n <- 20
+sequence <- sample(c("AB", "BA"), n, replace = TRUE)
+subj_eff <- rnorm(n, 0, 1)
+
+y_A <- subj_eff + rnorm(n, 0, 0.5)
+y_B <- subj_eff + 0.5 + rnorm(n, 0, 0.5)
+
+df <- data.frame(
+  subject  = rep(1:n, each = 2),
+  period   = rep(1:2, n),
+  treatment = unlist(lapply(sequence, function(s) strsplit(s, "")[[1]])),
+  sequence = rep(sequence, each = 2),
+  y        = unlist(lapply(1:n, function(i)
+    if (sequence[i] == "AB") c(y_A[i], y_B[i]) else c(y_B[i], y_A[i])))
+)
+
+fit <- lme(y ~ treatment + period, random = ~ 1 | subject, data = df)
+summary(fit)$tTable
+```
+
+## Output & Results
+
+The mixed-effects fit returns the treatment effect with within-subject standard error and a separate period effect that adjusts for any drift between the two periods. The random subject intercept absorbs between-subject variation and is the source of the crossover design's power advantage; reporting the variance components alongside the fixed-effect estimate makes the design's gain explicit.
+
+## Interpretation
+
+A reporting sentence: "The two-period crossover analysis with mixed-effects modelling estimated the B–A treatment difference as 0.48 (95 % CI 0.22 to 0.74, $p = 0.002$), achieving over three-fold more precision than an equivalent parallel-group design with the same number of subjects. The period effect was small and non-significant ($p = 0.51$), and the sequence × period interaction (carryover diagnostic) was non-significant ($p = 0.78$), supporting the no-carryover assumption. Reporting follows the CONSORT extension for crossover trials." Always report period and carryover.
+
+## Practical Tips
+
+- Test the carryover hypothesis formally via the sequence × period interaction, but rely on design — an adequately long washout, conventionally at least five half-lives of the active compound — as the primary defence rather than the underpowered post-hoc test.
+- Unbalanced sequences (very different counts of AB and BA participants) reduce design efficiency and complicate analysis; aim for sequence balance via stratified randomisation on sequence.
+- More than two periods (Latin-square or Williams designs) improve power and allow comparison of more than two treatments, at the cost of complexity, longer trial duration, and more potential for dropout — which crossover designs handle poorly because dropouts lose paired information.
+- If the underlying condition evolves substantially within the trial timeframe (progressive disease, recovery, growth), the crossover design is inappropriate; the stability assumption is hard to defend and biases the estimate.
+- Report per the CONSORT extension for crossover trials, including the trial flow diagram (per period), the sequence allocation, washout duration, and the carryover diagnostic.
+- For ordinal or binary outcomes in a crossover design, generalised mixed-effects models (`glmer`) or paired analyses on the within-subject contingency table (McNemar) are the appropriate analysis approaches.
+
+## R Packages Used
+
+`nlme::lme()` and `lme4::lmer()` for mixed-effects analysis with subject random intercepts; `Crossover` for canonical crossover-design construction including Williams squares and higher-order designs; `crossdes` for systematic generation of balanced crossover layouts; `bear` for end-to-end bioequivalence analysis on crossover data; `Mediana` for trial-design simulation including crossover designs.

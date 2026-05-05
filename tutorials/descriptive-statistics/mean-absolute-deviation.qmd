@@ -1,0 +1,67 @@
+---
+title: Mean Absolute Deviation
+date: "2026-04-17"
+description: "Average absolute deviation from the mean or median: a robust alternative to the standard deviation"
+categories:
+  - Descriptive Statistics
+  - mad
+  - mean-absolute-deviation
+  - robust
+---
+
+## Introduction
+
+The mean absolute deviation (MAD) is the average distance of observations from a measure of central tendency. It uses absolute values instead of squares, making it less sensitive to outliers than the standard deviation. In the modern literature, the term "MAD" almost always means the **median absolute deviation from the median**, a robust scale estimator.
+
+## Prerequisites
+
+The reader should know what a mean, median, and SD are, and how to compute them in R.
+
+## Theory
+
+Two versions exist.
+
+**MAD about the mean**: $\mathrm{MAD}_{\text{mean}} = \frac{1}{n} \sum |x_i - \bar{x}|$. More stable than the SD under heavy-tailed distributions but still sensitive to outliers because it uses the mean as the centre.
+
+**MAD about the median** (modern default): $\mathrm{MAD} = \text{median}|x_i - \text{median}(x)|$. Highly robust; breakdown point of 50%. When multiplied by 1.4826, it is a consistent estimator of the SD for normal data.
+
+R's `mad()` function computes MAD about the median with the 1.4826 scaling constant by default.
+
+## Assumptions
+
+MAD is purely descriptive; no distributional assumption.
+
+## R Implementation
+
+```r
+set.seed(2026)
+x <- c(rnorm(50, mean = 100, sd = 10), 500)  # one outlier
+
+sd(x)
+mad(x, constant = 1.4826)
+mad(x, constant = 1)
+mean(abs(x - mean(x)))
+```
+
+## Output & Results
+
+```
+[1] 56.4      # SD inflated by outlier
+[1] 9.78      # MAD estimator of SD (robust)
+[1] 6.60      # raw MAD (unscaled)
+[1] 22.4      # MAD about the mean (less robust)
+```
+
+The classical SD is nearly six times the robust MAD estimator because a single extreme point at 500 dominates the sum of squares. The MAD about the median is essentially unaffected.
+
+## Interpretation
+
+Report MAD when the data contain outliers or when robustness to contamination is desirable. In biomedical chemistry, MAD is the default measure of analytical imprecision for certain platforms.
+
+## Practical Tips
+
+- `mad()` defaults: `constant = 1.4826`, `center = median`. Always check whether this is what you want.
+- For a normal sample, MAD $\times$ 1.4826 approximates the SD; the two agree closely at moderate $n$.
+- The MAD is a robust estimator but not robust to the estimator of the *centre*: use the median, not the mean, as the centre.
+- For positive-skewed data (lab values), a raw MAD on the original scale can still be informative; log-transform the data first if the skew is severe.
+- Do not confuse the MAD with the variance; they are in the same units as the data (unlike the variance, which is squared units).

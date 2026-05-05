@@ -1,0 +1,79 @@
+---
+title: Stem-and-Leaf Plots
+date: "2026-04-17"
+description: A text-based compact display of small samples that preserves every data value
+categories:
+  - Descriptive Statistics
+  - stem-and-leaf
+  - tukey
+  - exploratory
+---
+
+## Introduction
+
+The stem-and-leaf plot, introduced by John Tukey, is a compact display that shows the distribution of a small sample while preserving every data value. Each observation is split into a "stem" (leading digits) and a "leaf" (trailing digit); stems are listed vertically and leaves are written next to each stem in order. For samples up to about 100 observations, the resulting ASCII plot is a poor man's histogram that can be typed into a notebook.
+
+## Prerequisites
+
+The reader should know what a histogram is.
+
+## Theory
+
+Given observations, pick a stem width (10s, 100s, etc.) and list each observation by its stem and leaf. For example, values 12, 15, 18, 22, 25, 29, 34 with tens-digit stems:
+
+```
+1 | 2 5 8
+2 | 2 5 9
+3 | 4
+```
+
+The back-to-back variant puts two groups on either side of the stem, permitting visual comparison. Modern software rarely uses stem-and-leaf for publication figures, but it remains a quick inspection tool in R's console.
+
+## Assumptions
+
+Purely descriptive, requires nothing except numeric data.
+
+## R Implementation
+
+```r
+set.seed(2026)
+x <- round(rnorm(40, mean = 100, sd = 15))
+stem(x)
+
+# With scale change
+stem(x, scale = 0.5)
+stem(x, scale = 2)
+
+# Back-to-back
+library(aplpack)
+x <- rnorm(30, 100, 15)
+y <- rnorm(30, 110, 12)
+stem.leaf.backback(x, y)
+```
+
+## Output & Results
+
+```
+  The decimal point is 1 digit(s) to the right of the |
+
+   7 | 3
+   8 | 0447
+   9 | 01135789
+  10 | 0111345899
+  11 | 0245578
+  12 | 34
+```
+
+Each leaf on the 10-row represents one observation: 101, 101, 101, 103, 104, etc. The display is itself a histogram with the same-height bars rotated 90 degrees.
+
+## Interpretation
+
+Use stem-and-leaf plots for quick eyeballing in R's console; they reveal outliers, skew, and multimodality without generating a figure file.
+
+## Practical Tips
+
+- For samples over 100, the plot becomes cluttered; use a histogram.
+- `scale` in `stem()` adjusts the stem width; experiment to find the right granularity.
+- Back-to-back plots are a useful low-overhead alternative to side-by-side boxplots.
+- Stem-and-leaf is rarely used in journal articles today; it is a Tukey EDA tradition, not a reporting convention.
+- In teaching contexts, it remains a useful way to introduce distribution shape before histograms.

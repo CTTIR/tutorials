@@ -1,0 +1,71 @@
+---
+title: Sample Size Re-Estimation
+date: "2026-04-17"
+description: Updating trial sample size mid-study using blinded or unblinded nuisance parameter estimates
+categories:
+  - Clinical Biostatistics
+  - ssr
+  - adaptive
+  - nuisance
+---
+
+## Introduction
+
+Sample-size re-estimation (SSR) is an adaptive-design technique that updates a clinical trial's planned sample size mid-study using interim estimates of nuisance parameters such as the within-group standard deviation (continuous outcomes) or the control-arm event rate (binary outcomes). It is one of the most common and least controversial trial adaptations because, when done in the blinded form, it does not access treatment-effect information and therefore preserves the type-I error rate under mild and well-understood conditions. SSR is now standard practice when pilot-data estimates of nuisance parameters are uncertain at the planning stage and the trial is otherwise large enough that the consequences of an under- or over-estimated nuisance parameter would be substantial.
+
+## Prerequisites
+
+A working understanding of sample-size calculation, adaptive trial design, the distinction between blinded and unblinded interim analyses, and the regulatory framework around protocol-pre-specified adaptations.
+
+## Theory
+
+**Blinded SSR** uses interim estimates of nuisance parameters from pooled (across-arm) data only, without revealing any arm-level information. For continuous outcomes the pooled standard deviation suffices; for binary outcomes, the pooled event rate. Blinded SSR does not inflate type-I error under standard conditions and is widely accepted by regulators with minimal formal control.
+
+**Unblinded SSR** lets a Data Monitoring Committee see interim results by arm, supporting more flexible re-estimation rules at the cost of formal multiplicity control. The standard implementation is a combination-test or promising-zone design (Mehta and Pocock, 2011) that preserves conditional type-I error through explicit weighting of the interim and final test statistics.
+
+## Assumptions
+
+The relevant nuisance parameter is unknown at planning but estimable from interim data; the interim analysis preserves blinding where required; the SSR rule is pre-specified in the protocol and statistical analysis plan; and a maximum sample size cap is set in advance to avoid unlimited re-estimation.
+
+## R Implementation
+
+```r
+library(rpact)
+
+n_initial <- ceiling(
+  getSampleSizeMeans(alternative = 0.3, stDev = 1,
+                     alpha = 0.025, beta = 0.2,
+                     groups = 2)$numberOfSubjects
+)
+n_initial
+
+n_updated <- ceiling(
+  getSampleSizeMeans(alternative = 0.3, stDev = 1.4,
+                     alpha = 0.025, beta = 0.2,
+                     groups = 2)$numberOfSubjects
+)
+n_updated
+
+c(planned = n_initial, revised = n_updated)
+```
+
+## Output & Results
+
+The script computes the planned sample size given the protocol-assumed standard deviation and the revised sample size given the interim-observed standard deviation. The ratio of the two ($1.4^2 = 1.96$) drives the proportional increase in required sample size — a familiar "variance is squared in the sample-size formula" relationship that makes SSR especially valuable when the within-group SD was uncertain at planning.
+
+## Interpretation
+
+A reporting sentence: "A pre-specified blinded sample-size re-estimation at 50 % information accrual revealed a pooled within-group SD of 1.38, compared with the protocol-assumed 1.00. Per the pre-specified rule, the sample size was increased from 350 to 680 to maintain 80 % power against the originally specified treatment effect of 0.3 SD. The increase did not access treatment-arm information and therefore did not inflate the type-I error rate. The blinded SSR was conducted by an unblinded statistician within the DMC operating manual." Always report the blinding status and the cap.
+
+## Practical Tips
+
+- Use blinded SSR whenever possible; it is operationally simpler, less controversial with regulators, and adequate for the most common SSR application (revising the within-group SD or pooled event rate).
+- Unblinded SSR requires a statistical method that explicitly preserves the type-I error rate — typically a combination-test design (Cui-Hung-Wang or Mehta-Pocock promising-zone) that weights the interim and final test statistics in a pre-specified way.
+- Pre-specify the SSR trigger condition, the re-estimation rule, and the maximum sample-size cap in the protocol and SAP; unlimited re-estimation without a cap is not acceptable to regulators and creates an open-ended commitment that sponsors rarely want to make.
+- Document the SSR decision rationale in the final trial report — whether the SSR triggered, what the interim nuisance-parameter estimate was, and what the revised sample size became — so reviewers can assess the decision.
+- SSR is especially valuable when pilot-data estimates of nuisance parameters are uncertain or when the trial population is expected to differ from the pilot in ways that affect variance or event rate; reliable prior data make SSR less necessary.
+- Combine SSR with group-sequential efficacy and futility boundaries for a fully adaptive design that handles both nuisance-parameter uncertainty and effect-size revision; the combination is now standard in many phase-3 trials.
+
+## R Packages Used
+
+`rpact` for canonical adaptive-design analysis including blinded and unblinded SSR with built-in type-I error control; `gsDesign` and `adaptTest` for combination-test SSR with promising-zone analysis; `Mediana` for trial-design simulation including SSR strategies; `RPACT::getDataset()` for stage-data integration in re-estimation workflows; `Hmisc` and `pwr` for the underlying classical sample-size formulas.

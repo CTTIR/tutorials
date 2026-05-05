@@ -1,0 +1,74 @@
+---
+title: Colour-Blind-Safe Plots
+date: "2026-04-17"
+description: Designing plots that remain readable to viewers with colour-vision deficiencies
+categories:
+  - Data Visualisation
+  - accessibility
+  - colour-blind
+  - palette
+  - wcag
+---
+
+## Introduction
+
+Roughly 8 % of men of European descent and about 0.5 % of women have some form of colour-vision deficiency. Red-green deficiency (deuteranopia and protanopia) is by far the most common; blue-yellow (tritanopia) is rarer but still present in any large readership. A figure that relies on red-versus-green as its only contrast is unreadable for a meaningful fraction of every audience, including journal reviewers. Designing for colour-blind safety is therefore not optional politeness — it is a basic requirement of accessible scientific communication, increasingly mandated by journal style guides and by web-accessibility standards (WCAG 2.x AA).
+
+## Prerequisites
+
+A working knowledge of `ggplot2`'s colour and fill scales, basic familiarity with palette functions, and an understanding that "colour" includes both qualitative palettes (categorical groups) and sequential / diverging palettes (ordered or signed values).
+
+## Theory
+
+Safe design strategies fall into three categories:
+
+- **Perceptually uniform palettes**: `viridis`, `cividis`, `magma`, and `inferno` are designed so that equal steps in the colour space correspond to equal steps in perceived brightness, even under simulated colour-blindness. They handle the continuous case well.
+- **Hand-curated qualitative palettes**: `RColorBrewer`'s `Set2`, `Dark2`, and `Paired` are explicitly tested for colour-blind safety up to a certain number of categories (six to eight); beyond that, distinguishability degrades.
+- **Redundant encoding**: pair colour with shape, linetype, line weight, or a direct text label so a reader who cannot distinguish the colours can still tell the groups apart from a second visual channel.
+
+Simulation tools such as `colorBlindness::cvdPlot()` and `dichromat` re-render any `ggplot` under deuteranopia, protanopia, and tritanopia simulations; treat them as the colour equivalent of a spell-checker run before submission.
+
+## Assumptions
+
+No statistical assumptions; the only constraint is that the figure's information content survives loss of one colour channel.
+
+## R Implementation
+
+```r
+library(ggplot2); library(viridis); library(colorBlindness)
+
+# Unsafe: default red-green
+p_bad <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+  geom_point(size = 3) +
+  scale_colour_manual(values = c("red", "orange", "green")) +
+  theme_minimal()
+
+# Safe: viridis + shape redundancy
+p_good <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl), shape = factor(cyl))) +
+  geom_point(size = 3) +
+  scale_colour_viridis_d(option = "D", end = 0.85) +
+  theme_minimal()
+
+cvdPlot(p_good)   # simulates deuteranopia, protanopia, tritanopia
+```
+
+## Output & Results
+
+`cvdPlot()` returns a four-panel composite showing the figure under normal vision, deuteranopia, protanopia, and tritanopia. A safely designed plot remains interpretable in all four panels; an unsafe one collapses to indistinguishable groups in at least one.
+
+## Interpretation
+
+A reporting sentence (methods or figure-preparation note): "All figures use the `viridis` palette for ordered fills and `RColorBrewer::Set2` for qualitative colours; categorical groups are encoded redundantly with shape so colour-blind readers can distinguish them. Plots were simulated under deuteranopia and protanopia (`colorBlindness::cvdPlot`) before submission." Mentioning the accessibility check pre-empts reviewer requests to redo the figures.
+
+## Practical Tips
+
+- Default to `viridis` or `cividis` for continuous scales; both are perceptually uniform and remain ordered under all common colour-blindness simulations.
+- For categorical groups, pair colour with shape (`shape = group`) or with linetype (`linetype = group`); colour alone is insufficient.
+- Avoid red-on-green for success/failure annotations; use blue-on-orange or a categorical palette like `Okabe-Ito`.
+- Use `colorBlindness::cvdPlot()` (or the `Color Oracle` desktop tool) on every figure before submission; simulating colour-vision deficiencies takes seconds and catches problems that the human eye cannot.
+- Beyond colour, ensure adequate contrast (WCAG AA minimum 4.5:1 for body text), avoid pure red or pure green for thin lines, and keep font sizes large enough to remain legible in greyscale photocopies.
+- For network or flow diagrams, prefer position and topology to colour as the primary information channel; colour should be reinforcement, not the only signal.
+
+## R Packages Used
+
+`viridis` for perceptually uniform sequential palettes, `RColorBrewer` for qualitative and diverging palettes (`brewer.pal`, `display.brewer.all(colorblindFriendly = TRUE)`), `colorBlindness` for `cvdPlot()` simulations, and `paletteer` for unified access to dozens of curated palettes from across the R ecosystem.

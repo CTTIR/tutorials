@@ -1,0 +1,73 @@
+---
+title: Parallel-Group RCT Design
+date: "2026-04-17"
+description: "The two-arm randomised controlled trial: structure, analysis, and reporting"
+categories:
+  - Clinical Biostatistics
+  - rct
+  - parallel-group
+  - design
+---
+
+## Introduction
+
+The parallel-group randomised controlled trial (RCT) is the gold standard for evaluating interventions. Participants are randomly allocated to one of two (or more) arms -- typically a new intervention vs control -- and followed for a pre-specified outcome. Randomisation balances known and unknown confounders in expectation; blinding further reduces bias.
+
+## Prerequisites
+
+Randomisation; hypothesis testing; sample-size calculation.
+
+## Theory
+
+Essential elements:
+- **Primary outcome** (continuous, binary, time-to-event) with a clinically meaningful effect size.
+- **Allocation ratio** (usually 1:1, occasionally 2:1 or 3:1 for rare interventions).
+- **Randomisation list** (pre-generated, concealed at allocation time).
+- **Blinding** (single, double, triple).
+- **Pre-registered statistical analysis plan**.
+
+Primary analysis is typically intent-to-treat (ITT), comparing groups as randomised.
+
+## Assumptions
+
+Participants are exchangeable post-randomisation; allocation is fully concealed; outcome assessment is blinded; follow-up is complete or MAR.
+
+## R Implementation
+
+```r
+library(pwr)
+
+# Sample-size for two-arm comparison of means
+# Effect: difference of 0.5 SD, alpha = 0.05, power = 0.80
+pwr.t.test(d = 0.5, sig.level = 0.05, power = 0.80,
+           type = "two.sample", alternative = "two.sided")
+
+# Simulate an RCT with continuous outcome
+set.seed(2026)
+n_per_arm <- 64
+arm <- rep(c("ctrl", "trt"), each = n_per_arm)
+y   <- rnorm(2 * n_per_arm, mean = ifelse(arm == "trt", 0.5, 0))
+
+# ITT analysis: two-sample t-test
+t.test(y ~ arm, var.equal = TRUE)
+
+# Adjusted analysis with a pre-specified covariate (ANCOVA)
+covar <- rnorm(2 * n_per_arm)
+summary(lm(y ~ arm + covar))$coefficients
+```
+
+## Output & Results
+
+Sample size ~64 per arm for 80 % power; ITT t-test recovers the effect; ANCOVA-adjusted analysis gives a similar point estimate with smaller SE when the covariate is prognostic.
+
+## Interpretation
+
+"The trial randomised 128 participants 1:1 to intervention vs control; the intervention arm showed a 0.52 SD improvement (95 % CI 0.18-0.86, p = 0.003) on the primary outcome, analysed by ANCOVA adjusting for baseline value."
+
+## Practical Tips
+
+- Register the protocol and SAP **before** enrolment (clinicaltrials.gov, EUDRACT).
+- Pre-specify the primary outcome and analysis; secondary outcomes are exploratory.
+- Blinding is protective; document how it was broken (unblinding events, assessment).
+- Report per CONSORT 2010 guidelines; flow diagram is mandatory.
+- ITT is the primary analysis; supportive per-protocol analyses are sensitivity.

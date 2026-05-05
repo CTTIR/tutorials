@@ -1,0 +1,67 @@
+---
+title: Transcript-to-Gene Summarisation
+date: "2026-04-17"
+description: Aggregating transcript-level estimates to gene level for standard differential expression
+categories:
+  - Bioinformatics
+  - tximport
+  - transcript
+  - gene-level
+---
+
+## Introduction
+
+Pseudo-alignment tools (Salmon, Kallisto) and EM-based quantifiers (RSEM) produce transcript-level (isoform-level) counts. Most differential-expression workflows operate at the gene level, so transcript counts must be aggregated to genes via a transcript-to-gene mapping derived from the annotation. The `tximport` package handles this aggregation cleanly and produces output ready for DESeq2, edgeR, or limma-voom; the related `tximeta` extends this with automatic metadata and reference-genome tracking.
+
+## Prerequisites
+
+A working understanding of transcript-level vs gene-level expression quantification, RNA-seq annotation files (GTF), and the difference between counts, TPM, and effective length.
+
+## Theory
+
+The simplest transcript-to-gene aggregation sums transcript counts within each gene: $\mathrm{gene\ count} = \sum_{\mathrm{transcripts \in gene}} \mathrm{transcript\ count}$. `tximport` adds two important refinements:
+
+- **Length-scaled TPM** (`countsFromAbundance = "lengthScaledTPM"`): combines transcript abundance and length information to produce gene-level counts that respect both isoform-resolution and gene-level interpretation.
+- **Effective-length offsets**: passes effective-length information to downstream DE tools (DESeq2 with `tximeta::tximeta()` integration) for accurate normalisation.
+
+Direct transcript-level DE (without aggregation) is supported by tools like swish (`fishpond`) and DRIMSeq for differential transcript usage; aggregation is the right choice when the question is about gene-level expression.
+
+## Assumptions
+
+The transcript-to-gene map matches the annotation used for transcript quantification; sample-file ordering is consistent with metadata.
+
+## R Implementation
+
+```r
+library(tximport); library(tximeta)
+
+# Example: salmon outputs
+# files <- list.files("salmon_out", pattern = "quant.sf", recursive = TRUE, full.names = TRUE)
+# tx2gene <- read.table("tx2gene.tsv", header = TRUE)
+#
+# txi <- tximport(files, type = "salmon", tx2gene = tx2gene,
+#                 countsFromAbundance = "lengthScaledTPM")
+#
+# txi$counts: gene x sample matrix
+```
+
+## Output & Results
+
+`tximport()` returns a list with `counts` (gene-by-sample matrix), `abundance` (gene-level TPM), and `length` (effective lengths used for downstream normalisation). The matrix is ready as input to `DESeq2::DESeqDataSetFromTximport()` or as a starting point for edgeR / limma workflows.
+
+## Interpretation
+
+A reporting sentence: "tximport aggregated 190{,}000 transcript-level Salmon estimates to 22{,}000 gene-level counts using a GENCODE v44 transcript-to-gene map; `countsFromAbundance = 'lengthScaledTPM'` produced gene counts that DESeq2 then analysed with effective-length offsets passed via the `txi$length` matrix." Always document the aggregation method and tx-to-gene source.
+
+## Practical Tips
+
+- `countsFromAbundance = "lengthScaledTPM"` is the standard for DE analysis; it scales raw counts by transcript length while preserving the count interpretation.
+- Use `tximeta` instead of raw `tximport` when possible — it automatically retrieves the transcript-to-gene map from the Salmon index's metadata, eliminating annotation-mismatch errors.
+- For differential transcript usage (DTU), use DRIMSeq or DEXSeq on the transcript-level matrix; aggregation collapses isoform-level information.
+- For differential transcript expression (DTE), use swish (`fishpond::swish`) on the transcript-level matrix with bootstrap inferential replicates from Salmon.
+- Verify that sample order in `files` matches the rows of your metadata table; off-by-one errors here corrupt the entire downstream analysis silently.
+- For very large studies, `tximport` reads files sequentially; parallelise with `BiocParallel` for substantial speedups.
+
+## R Packages Used
+
+`tximport` for the canonical aggregation; `tximeta` for metadata-aware aggregation that handles tx-to-gene mapping automatically; `fishpond` for swish-based DTE with bootstrap replicates; `DRIMSeq` and `DEXSeq` for differential transcript usage at the transcript level.

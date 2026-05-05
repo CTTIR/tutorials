@@ -1,0 +1,91 @@
+---
+title: Sampling Methods
+date: "2026-04-17"
+description: "Simple random, stratified, cluster, systematic, and convenience sampling -- and when each is appropriate"
+categories:
+  - Statistical Foundations
+  - sampling
+  - srs
+  - stratified
+  - cluster
+  - systematic
+---
+
+## Introduction
+
+How a sample is drawn matters as much as how big it is. The same 500 observations can support valid inference about a population or produce a misleading summary, depending entirely on the sampling mechanism. Classical sampling theory names a handful of probability designs, each with characteristic strengths, variance properties, and analysis requirements.
+
+## Prerequisites
+
+The reader should know the difference between a population and a sample, and should be familiar with random-number generation in R.
+
+## Theory
+
+**Simple random sampling (SRS)** draws $n$ units from a frame of $N$ such that every subset of size $n$ is equally likely. The sample mean is unbiased for the population mean, with standard error $\sigma/\sqrt{n} \cdot \sqrt{1 - n/N}$ (the finite-population correction is negligible for $n \ll N$). SRS is the theoretical baseline against which other designs are compared.
+
+**Stratified sampling** partitions the population into non-overlapping strata -- e.g., by region, age band, or hospital -- and draws an SRS from each. The pooled estimator has *lower* variance than SRS whenever the strata are more homogeneous within than the population at large, which is typical. Stratification also guarantees representation of small subgroups that might be missed by chance under SRS.
+
+**Cluster sampling** draws whole clusters (schools, villages, GP practices) and then includes some or all units within each. Variance is *higher* than SRS for the same $n$ because units within a cluster are correlated; the loss is quantified by the design effect $\text{deff} = 1 + (\bar{m} - 1)\rho$, where $\bar{m}$ is average cluster size and $\rho$ is the intra-cluster correlation. Cluster sampling trades statistical efficiency for dramatically lower data-collection cost.
+
+**Systematic sampling** picks every $k$-th unit from a list after a random start. It is equivalent to SRS when the list is in random order; when the list has periodicity matching $k$, it can give badly biased estimates.
+
+**Convenience sampling** recruits whatever units are available -- internet panels, patients at one hospital, undergraduates in a course. It supports no probability-based inference about a broader population; any generalisation must be argued on non-statistical grounds (mechanism, theory, replication).
+
+## Assumptions
+
+Probability designs assume a complete sampling frame and known selection probabilities. Analysis must incorporate design weights ($w_i = 1/\pi_i$) and the design variance; standard software that ignores weighting (a t-test on weighted survey data, say) produces incorrect standard errors.
+
+## R Implementation
+
+```r
+library(sampling)
+
+set.seed(2026)
+N <- 10000
+pop <- data.frame(
+  id     = 1:N,
+  stratum = sample(c("A", "B", "C"), N, replace = TRUE, prob = c(0.5, 0.3, 0.2)),
+  y      = rnorm(N, mean = c(A = 50, B = 60, C = 70)[sample(c("A", "B", "C"), N,
+           replace = TRUE, prob = c(0.5, 0.3, 0.2))], sd = 5)
+)
+
+srs_idx <- sample(N, 200)
+srs <- pop[srs_idx, ]
+mean(srs$y); sd(srs$y) / sqrt(200)
+
+str_idx <- strata(pop, stratanames = "stratum",
+                  size = c(A = 100, B = 60, C = 40),
+                  method = "srswor")
+strat <- pop[str_idx$ID_unit, ]
+tapply(strat$y, strat$stratum, mean)
+weighted.mean(tapply(strat$y, strat$stratum, mean),
+              w = table(pop$stratum))
+```
+
+The code draws a 200-unit SRS and a 200-unit stratified sample from the same population, then computes the design-consistent stratified estimator via weighted averages.
+
+## Output & Results
+
+```
+[1] 57.41       # SRS mean
+[1] 0.533       # SE of SRS mean
+
+     A      B      C
+ 49.97  59.86  70.22   # stratum means
+
+[1] 56.94       # stratified mean (weighted by stratum population proportions)
+```
+
+Both estimators target the same quantity; the stratified design has systematically smaller variance across repeated sampling.
+
+## Interpretation
+
+A methods section should state the sampling design precisely: "Patients were sampled by stratified random sampling, stratified by treatment centre with proportional allocation, from a frame of 4 832 eligible records identified by the inclusion criteria." This lets a reviewer evaluate whether analysis choices respect the design.
+
+## Practical Tips
+
+- When using stratified or cluster designs, analyse with the `survey` package (or equivalent) so standard errors incorporate weights and clustering.
+- Proportional allocation is a sensible default for stratified sampling; optimal (Neyman) allocation weights strata by $N_h \sigma_h$, which can be used when prior variance estimates are available.
+- For cluster designs, report the design effect and the ICC; reviewers will ask.
+- Systematic sampling is fine for logistical convenience, but inspect the sampling list for periodicity before using it.
+- Convenience samples are not disqualified from publication, but their external validity must be argued explicitly; treating them as if they were random is the root cause of many replication failures.

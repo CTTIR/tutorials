@@ -1,0 +1,105 @@
+---
+title: Conjugate Priors
+date: "2026-04-17"
+description: "When the prior and posterior share the same distributional family: the beta-binomial, normal-normal, and gamma-Poisson models"
+categories:
+  - Bayesian Statistics
+  - bayesian
+  - conjugate-priors
+  - beta-binomial
+  - posterior
+  - prior-selection
+---
+
+## Introduction
+
+Before MCMC made arbitrary Bayesian models tractable, conjugate priors provided the only route to a tractable posterior. A prior is **conjugate** to a likelihood if the resulting posterior belongs to the same distributional family as the prior -- the prior and posterior share a form, with updated parameters that have simple closed-form expressions. Conjugate pairs remain pedagogically central because they make the Bayesian update arithmetic, and they remain practically useful as building blocks within larger hierarchical models.
+
+## Prerequisites
+
+The reader should know Bayes' theorem and be comfortable with the beta, normal, and gamma distributions. Familiarity with basic R plotting is assumed.
+
+## Theory
+
+### Beta-Binomial
+
+For a binomial observation $Y \sim \text{Binomial}(n, \theta)$ with success probability $\theta$ and a beta prior $\theta \sim \text{Beta}(\alpha, \beta)$, the posterior is
+
+$$\theta \mid Y = y \;\sim\; \text{Beta}(\alpha + y, \beta + n - y).$$
+
+The update rule is nothing more than "add successes to the first shape parameter and failures to the second". The posterior mean is $(\alpha + y)/(\alpha + \beta + n)$, a weighted average of the prior mean $\alpha/(\alpha + \beta)$ and the observed proportion $y/n$, with weights determined by the prior's "effective sample size" $\alpha + \beta$.
+
+### Normal-Normal with known variance
+
+For observations $Y_1, \ldots, Y_n \overset{iid}{\sim} \mathcal{N}(\mu, \sigma^2)$ with $\sigma^2$ known, and a normal prior $\mu \sim \mathcal{N}(\mu_0, \tau_0^2)$, the posterior is
+
+$$\mu \mid y \;\sim\; \mathcal{N}(\mu_n, \tau_n^2),$$
+
+where the posterior precision is $1/\tau_n^2 = 1/\tau_0^2 + n/\sigma^2$, and the posterior mean is a precision-weighted average $\mu_n = \tau_n^2 (\mu_0/\tau_0^2 + n \bar{y}/\sigma^2)$.
+
+### Gamma-Poisson
+
+For independent counts $Y_i \sim \text{Poisson}(\lambda)$ and a gamma prior $\lambda \sim \text{Gamma}(\alpha, \beta)$ (shape-rate parameterisation), the posterior is
+
+$$\lambda \mid y \;\sim\; \text{Gamma}\!\left(\alpha + \sum y_i,\; \beta + n\right).$$
+
+Each of these updates can be memorised as "add the data to the prior parameters", with the precise form determined by the sufficient statistics of the likelihood.
+
+## Assumptions
+
+Conjugate analyses assume the same independence and distributional conditions as the corresponding likelihoods. In addition, they assume that the prior is genuinely an expression of prior belief, not a mathematical convenience chosen for conjugacy alone. An informative conjugate prior that contradicts the data produces a posterior that is a compromise between the two; if this is not what you intended, the prior was a bad choice.
+
+## R Implementation
+
+A visualisation of the beta-binomial update makes the idea concrete:
+
+```r
+library(ggplot2)
+
+alpha_0 <- 2
+beta_0  <- 2
+y       <- 8
+n       <- 10
+
+alpha_n <- alpha_0 + y
+beta_n  <- beta_0 + n - y
+
+theta <- seq(0, 1, length.out = 401)
+df <- data.frame(
+  theta = rep(theta, 3),
+  density = c(dbeta(theta, alpha_0, beta_0),
+              dbinom(y, n, theta) * n,
+              dbeta(theta, alpha_n, beta_n)),
+  kind = factor(rep(c("Prior", "Likelihood (scaled)", "Posterior"),
+                    each = 401),
+                levels = c("Prior", "Likelihood (scaled)", "Posterior"))
+)
+
+ggplot(df, aes(x = theta, y = density, colour = kind, linetype = kind)) +
+  geom_line(linewidth = 1) +
+  labs(x = expression(theta), y = "Density",
+       title = "Beta-Binomial update with y = 8 of n = 10") +
+  theme_minimal(base_size = 12)
+```
+
+A `Beta(2, 2)` prior (symmetric, weakly informative around 0.5) combined with 8 successes in 10 trials gives a `Beta(10, 4)` posterior concentrated around 0.71.
+
+## Output & Results
+
+Posterior summaries from the beta distribution are:
+
+- Mean: $(\alpha + y)/(\alpha + \beta + n) = 10/14 \approx 0.714$
+- 95% equal-tailed credible interval: `qbeta(c(0.025, 0.975), 10, 4)` $\approx (0.47, 0.91)$
+- Probability that $\theta > 0.5$: `1 - pbeta(0.5, 10, 4)` $\approx 0.95$.
+
+## Interpretation
+
+The posterior in a conjugate model is not an approximation; it is the exact posterior under the stated prior. A Bayesian reporting this analysis would write: "With a weakly informative $\text{Beta}(2, 2)$ prior and data of 8 successes in 10 trials, the posterior for $\theta$ is $\text{Beta}(10, 4)$, with posterior mean 0.71 (95% CrI 0.47 to 0.91). The posterior probability that $\theta$ exceeds 0.5 is 0.95."
+
+## Practical Tips
+
+- Report the prior explicitly so readers can judge its influence.
+- Use informative priors when justified by domain knowledge; use weakly informative priors as the default for exploratory analyses.
+- Conjugate updating extends to multi-parameter cases (normal-inverse-gamma for $(\mu, \sigma^2)$, Dirichlet-multinomial for categorical probabilities), but outside the exponential family it usually does not hold.
+- For small-sample binomial problems the beta-binomial is particularly useful: it avoids the ad-hoc continuity corrections of frequentist proportion tests and gives natural credible intervals.
+- When your likelihood is non-conjugate, do not force a conjugate prior on it; use MCMC or variational methods instead.

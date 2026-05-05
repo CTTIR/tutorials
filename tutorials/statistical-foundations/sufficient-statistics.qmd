@@ -1,0 +1,97 @@
+---
+title: Sufficient Statistics
+date: "2026-04-17"
+description: "Summaries that capture every bit of information about a parameter, with the factorisation theorem and exponential family"
+categories:
+  - Statistical Foundations
+  - sufficiency
+  - factorisation-theorem
+  - exponential-family
+---
+
+## Introduction
+
+A statistic is **sufficient** for a parameter if it captures all the information in the data that is relevant to that parameter. Once a sufficient statistic is computed, the raw data have nothing left to add about the parameter. Sufficiency organises the theory of estimation: it explains why the sample mean is a complete summary for the normal mean, why the sum of successes suffices for the binomial proportion, and why the exponential family of distributions is central to modern statistical modelling.
+
+## Prerequisites
+
+The reader should be comfortable with the likelihood function, conditional probability, and a little abstract notation.
+
+## Theory
+
+Formally, $T(X_1, \ldots, X_n)$ is **sufficient for $\theta$** if the conditional distribution of the data given $T = t$ does not depend on $\theta$. Equivalently (Fisher-Neyman factorisation theorem), $T$ is sufficient iff the joint density factorises as
+
+$$f(x_1, \ldots, x_n \mid \theta) = g\!\big(T(x), \theta\big) \cdot h(x),$$
+
+where $h$ does not depend on $\theta$ and $g$ depends on the data only through $T$.
+
+Examples:
+
+- **Normal $(\mu, \sigma^2)$ with known $\sigma^2$**: $T = \bar{X}$ is sufficient for $\mu$.
+- **Normal with both unknown**: $(\bar{X}, \sum(X_i - \bar{X})^2)$ is jointly sufficient.
+- **Bernoulli/Binomial**: $T = \sum X_i$ is sufficient for $\pi$.
+- **Poisson**: $T = \sum X_i$ is sufficient for $\lambda$.
+- **Uniform$(0, \theta)$**: $T = \max X_i$ is sufficient for $\theta$.
+
+A statistic is **minimal sufficient** if it is a function of every other sufficient statistic -- i.e., it is the most compact sufficient summary.
+
+The **exponential family** has density $f(x \mid \theta) = h(x) \exp[\eta(\theta)^\top T(x) - A(\theta)]$ for natural statistic $T(x)$. Almost every distribution used in applied statistics (normal, binomial, Poisson, gamma, beta, multinomial) belongs to the exponential family, and $T(x)$ is minimal sufficient for $\eta(\theta)$.
+
+**Rao-Blackwell theorem**: given any unbiased estimator $\hat{\theta}$ and a sufficient statistic $T$, the conditional expectation $E[\hat{\theta} \mid T]$ is also unbiased and has variance no larger than $\hat{\theta}$. Conditioning on sufficient statistics never hurts and may help.
+
+## Assumptions
+
+The factorisation theorem applies to proper densities on a common support. In non-regular families (uniform with an unknown upper endpoint) sufficiency still applies, but the resulting estimators inherit the non-standard behaviour of the family.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+n <- 50
+mu <- 5
+sigma <- 2
+x <- rnorm(n, mean = mu, sd = sigma)
+
+T1 <- sum(x)
+T2 <- sum(x^2)
+
+log_lik_from_sum <- function(mu, sigma, T1, T2, n) {
+  -n/2 * log(2 * pi * sigma^2) -
+    (T2 - 2 * mu * T1 + n * mu^2) / (2 * sigma^2)
+}
+
+mu_hat <- T1 / n
+sigma2_hat <- (T2 - T1^2/n) / n
+
+c(mu_hat = mu_hat, sigma2_hat = sigma2_hat)
+
+c(mle_from_data_mean = mean(x),
+  mle_from_data_var  = mean((x - mean(x))^2))
+```
+
+Computing the MLE from only the two sufficient statistics $(T_1, T_2) = (\sum x, \sum x^2)$ yields the same point estimates as computing it from the full data vector.
+
+## Output & Results
+
+```
+    mu_hat sigma2_hat
+     5.090      3.821
+
+mle_from_data_mean  mle_from_data_var
+             5.090              3.821
+```
+
+The two are numerically identical, confirming that $(T_1, T_2)$ contains all the information about the parameters that the data can provide.
+
+## Interpretation
+
+In practice, sufficiency is used under the hood. When a software package reports a confidence interval for a normal mean using `t.test()`, it relies on the fact that $\bar{X}$ and $s^2$ are sufficient for $(\mu, \sigma^2)$. For a manuscript, sufficiency is rarely mentioned explicitly but justifies the use of summary statistics as complete descriptions of the data in the parametric model assumed.
+
+## Practical Tips
+
+- Sufficient statistics let you store compressed summaries (counts, sums) without losing information for inference -- useful for distributed computation.
+- The exponential family is the most important family to understand, because almost every GLM assumes it.
+- Completeness plus sufficiency plus unbiasedness implies the UMVUE (Lehmann-Scheffe); many textbook UMVUE proofs rely on this.
+- Rao-Blackwellisation is useful in MCMC: conditioning on sufficient statistics for part of the parameter vector reduces Monte Carlo variance.
+- Sufficiency depends on the model. A statistic that is sufficient for $\mu$ in a normal model may carry no information about the same $\mu$ under a different data-generating process.

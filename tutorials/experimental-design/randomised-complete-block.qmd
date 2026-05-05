@@ -1,0 +1,92 @@
+---
+title: Randomised Complete Block Design
+date: "2026-04-17"
+description: "Blocking to control known nuisance variation, with construction, analysis, and interpretation in R"
+categories:
+  - Experimental Design
+  - rcbd
+  - blocking
+  - anova
+  - experimental-design
+---
+
+## Introduction
+
+A randomised complete block design (RCBD) is one of the most useful experimental designs in applied research. When a known source of variation -- day of measurement, animal cage, plate, subject -- is likely to influence the outcome, RCBD groups experimental units into homogeneous blocks and randomises treatments *within* each block. The block effect is thereby separated from the treatment effect, and the residual error is the within-block variability, which is typically much smaller than the pooled unblocked error.
+
+## Prerequisites
+
+The reader should have met the one-way ANOVA and the principle of randomisation. Familiarity with R's formula syntax is assumed.
+
+## Theory
+
+Let $y_{ij}$ be the response of the experimental unit receiving treatment $i$ in block $j$, for $i = 1, \ldots, t$ treatments and $j = 1, \ldots, b$ blocks. The additive RCBD model is
+
+$$y_{ij} = \mu + \tau_i + \beta_j + \varepsilon_{ij}, \qquad \varepsilon_{ij} \overset{iid}{\sim} \mathcal{N}(0, \sigma^2),$$
+
+where $\tau_i$ is the treatment effect (summing to zero) and $\beta_j$ is the block effect. Each treatment appears exactly once in each block -- that is the "complete" in RCBD.
+
+The ANOVA decomposes the total sum of squares into treatment, block, and residual components. The F-test for treatments has $t-1$ numerator and $(t-1)(b-1)$ denominator degrees of freedom. If blocking has captured real variation, the residual mean square is smaller than it would have been in a completely randomised design, and the test has higher power.
+
+The design assumes **no treatment-by-block interaction**. If an interaction exists (a treatment works better in some blocks than others), the additive model is misspecified. The Tukey one-degree-of-freedom test for non-additivity provides a partial check.
+
+## Assumptions
+
+1. **Additivity**: no treatment-by-block interaction.
+2. **Independence**: residuals are mutually independent.
+3. **Homoscedasticity**: residuals have constant variance across treatments and blocks.
+4. **Normality**: residuals are approximately normal.
+
+## R Implementation
+
+```r
+library(agricolae)
+library(emmeans)
+
+treatments <- LETTERS[1:4]
+blocks <- paste0("B", 1:5)
+
+set.seed(2026)
+design <- design.rcbd(trt = treatments, r = length(blocks),
+                      seed = 2026)
+print(design$book)
+
+design$book$y <- with(design$book,
+                      5 +
+                        as.numeric(factor(block)) * 0.8 +
+                        c(0, 1.2, 1.8, 0.4)[as.numeric(factor(treatments))] +
+                        rnorm(nrow(design$book), 0, 0.6))
+
+fit <- aov(y ~ block + treatments, data = design$book)
+summary(fit)
+
+emm <- emmeans(fit, ~ treatments)
+pairs(emm, adjust = "tukey")
+```
+
+`design.rcbd()` produces a randomised plan with each treatment appearing once per block. The simulated response includes a block effect and a treatment effect with the lowest for A, highest for C. `aov()` fits the additive RCBD model; `emmeans::pairs()` performs pairwise comparisons with Tukey adjustment.
+
+## Output & Results
+
+The ANOVA table:
+
+```
+            Df Sum Sq Mean Sq F value  Pr(>F)
+block        4 18.120   4.530  12.815 0.00015 ***
+treatments   3  9.452   3.151   8.916 0.00142 **
+Residuals   12  4.242   0.353
+```
+
+The block effect accounts for a substantial fraction of the variability -- confirming that blocking was worthwhile -- and the treatment effect is significant at $p = 0.0014$. Pairwise comparisons show C significantly higher than A ($p < 0.001$) and B ($p = 0.03$), and D not significantly different from A.
+
+## Interpretation
+
+For a manuscript: "Treatments were compared in a randomised complete block design with four treatments and five blocks. An additive ANOVA showed a significant treatment effect, F(3, 12) = 8.92, $p = 0.001$, after accounting for block variation (which itself was substantial, F(4, 12) = 12.82, $p < 0.001$). Tukey-adjusted pairwise comparisons indicated that treatment C produced significantly higher responses than treatments A and B (see Table X)."
+
+## Practical Tips
+
+- Block on variables that you expect to influence the outcome and that you cannot randomise out. Common choices: day of measurement, microtitre plate, cage, field plot, subject.
+- Do not include the block as a "predictor of interest" -- its role is to remove nuisance variation. Reporting its effect is informative but rarely the headline.
+- If you suspect treatment-by-block interaction, switch to a design that models it: a randomised complete block with replicates within blocks, or a factorial design with block as a factor.
+- When the number of treatments exceeds what fits in a block (e.g., 8 treatments but only 4 samples per plate), use an incomplete block design (BIBD).
+- Always include randomisation within each block -- the "R" in RCBD is essential for validity, even though the formula structure looks the same.

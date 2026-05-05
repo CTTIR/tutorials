@@ -1,0 +1,79 @@
+---
+title: VCF Manipulation
+date: "2026-04-17"
+description: "Reading, filtering, and subsetting VCF files in R and on the command line"
+categories:
+  - Bioinformatics
+  - vcf
+  - filtering
+  - variants
+---
+
+## Introduction
+
+VCF (Variant Call Format) is the standard tab-delimited format for representing genotype calls at genomic positions. Whether the data come from whole-genome sequencing, exome sequencing, genotyping arrays, or imputation, downstream analysis nearly always begins by reading, filtering, and subsetting a VCF. The `VariantAnnotation` Bioconductor package provides programmatic access in R; `bcftools` is the command-line workhorse for cohort-scale operations.
+
+## Prerequisites
+
+A working understanding of VCF format basics (CHROM, POS, REF, ALT, FILTER, INFO, FORMAT, per-sample GT), the difference between phased and unphased genotypes, and the typical variant-level QC metrics (QUAL, depth, missingness, allele frequency).
+
+## Theory
+
+A VCF row represents a variant at one genomic position; columns include INFO (variant-level annotations: allele frequency, depth, functional consequence) and per-sample FORMAT fields (genotype GT, depth DP, genotype quality GQ). Standard filtering steps:
+
+- **PASS filter**: keep only variants flagged `PASS` by the calling pipeline; non-PASS variants are typically calibration artefacts.
+- **Allele frequency**: minimum minor-allele frequency (MAF) threshold to retain common variants for association testing.
+- **Depth and missingness**: minimum per-sample depth and maximum site-level missingness.
+- **Hardy-Weinberg**: large deviations in unrelated controls indicate genotyping errors.
+- **Multi-allelic normalisation**: split multi-allelic sites into bi-allelic rows and left-align indels (`bcftools norm`).
+
+## Assumptions
+
+VCF is bgzipped (`.vcf.gz`) and tabix-indexed for random access; reference build matches the calling pipeline; sample identifiers are consistent across cohorts when merging.
+
+## R Implementation
+
+```r
+library(VariantAnnotation)
+
+vcf_file <- system.file("extdata", "chr22.vcf.gz", package = "VariantAnnotation")
+
+# Targeted reading (region + fields only; faster than full read)
+rng <- GRanges("22", IRanges(50301422, width = 50000))
+param <- ScanVcfParam(which = rng,
+                      info = c("AF", "DP"),
+                      geno = "GT")
+vcf_sub <- readVcf(vcf_file, "hg19", param = param)
+vcf_sub
+
+# Filter by MAF
+af <- unlist(info(vcf_sub)$AF)
+af <- pmin(af, 1 - af)
+vcf_common <- vcf_sub[af > 0.05, ]
+length(vcf_common)
+
+# Extract and reshape genotypes
+gt <- geno(vcf_common)$GT
+head(gt)
+```
+
+## Output & Results
+
+`readVcf()` returns a `VCF` Bioconductor object with structured slots for variant ranges, INFO fields, FORMAT fields, and sample information. Accessor functions (`info()`, `geno()`, `rowRanges()`) extract specific components, and indexing (`vcf[af > 0.05, ]`) filters by row.
+
+## Interpretation
+
+A reporting sentence: "After filtering to PASS variants with MAF > 5 %, missingness < 5 %, and Hardy-Weinberg $p > 10^{-6}$ in 1{,}532 unrelated controls, we retained 412{,}380 high-quality common autosomal variants for association testing." Always describe the filtering pipeline in detail; cohort-comparison studies require precisely matched filtering.
+
+## Practical Tips
+
+- For cohort-scale operations (millions of variants, thousands of samples), use `bcftools` at the command line; it is orders of magnitude faster than R-based reading and writing.
+- Use `ScanVcfParam()` to read only the regions and fields you need; full WGS VCFs can be tens of GB and reading them entirely is wasteful.
+- Filter by `FILTER == "PASS"` early; non-PASS variants accumulate in downstream analyses if not removed.
+- Normalise variants with `bcftools norm -m -any -f reference.fa` before merging cohorts; multi-allelic representations differ across callers and produce silent merge errors.
+- For association studies, export to PLINK or BGEN formats via `snpStats` or `plink2` for efficient large-scale regression.
+- For functional annotation (consequence prediction, conservation scores), use `VariantAnnotation::predictCoding()`, `Ensembl VEP`, or `SnpEff`.
+
+## R Packages Used
+
+`VariantAnnotation` for reading, writing, and accessor-based VCF manipulation; `Rsamtools` for tabix index handling; `snpStats` for PLINK-format export and SNP-level statistics; `bcftoolsR` and standalone `bcftools` for command-line operations; `vcfR` for an alternative interface focused on population genetics.

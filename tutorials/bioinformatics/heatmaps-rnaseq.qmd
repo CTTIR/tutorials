@@ -1,0 +1,79 @@
+---
+title: Heatmaps for RNA-seq
+date: "2026-04-17"
+description: Visualising expression patterns across genes and samples with clustering
+categories:
+  - Bioinformatics
+  - heatmap
+  - visualisation
+  - clustering
+---
+
+## Introduction
+
+Heatmaps compactly display an expression matrix as a colour grid with rows (genes) and columns (samples) optionally clustered hierarchically. For RNA-seq they are the standard visualisation for a differential-expression signature, a curated marker panel, or a pathway-of-interest gene set: colour intensity encodes scaled expression, dendrograms reveal structure, and annotation bars link sample columns to experimental metadata. Done well, a heatmap communicates more about the biological structure of an experiment than dozens of pages of statistical tables.
+
+## Prerequisites
+
+A working understanding of log-CPM or variance-stabilised counts, hierarchical clustering, and the role of row scaling (z-scoring) in making heatmaps interpretable.
+
+## Theory
+
+Raw counts are unsuitable for heatmaps because one strongly expressed gene dominates the colour range and obscures the pattern in lower-expression genes. The standard pre-processing is:
+
+1. **Log-transform** counts (or use VST/rlog from DESeq2).
+2. **Row z-score** each gene to unit variance and zero mean across samples; this scales each gene's display range comparably.
+3. **Cluster rows and columns** by hierarchical clustering, typically Euclidean distance with Ward or complete linkage.
+
+Annotation bars (sample group, batch, time point) overlay metadata on the column dendrogram, making it immediately visible whether sample clustering corresponds to biology or to technical artefacts.
+
+## Assumptions
+
+Row scaling assumes comparable behaviour of genes (one z-score unit means the same thing across genes); column clustering assumes samples are comparable after normalisation; the chosen distance metric and linkage match the cluster structure.
+
+## R Implementation
+
+```r
+library(pheatmap)
+
+set.seed(2026)
+n_genes <- 50; n_samples <- 20
+mat <- matrix(rnorm(n_genes * n_samples), n_genes, n_samples)
+rownames(mat) <- paste0("gene_", 1:n_genes)
+colnames(mat) <- paste0("S", 1:n_samples)
+
+# Introduce a DE pattern
+group <- rep(c("ctrl", "trt"), each = 10)
+mat[1:10, group == "trt"] <- mat[1:10, group == "trt"] + 3
+
+annot <- data.frame(group = factor(group))
+rownames(annot) <- colnames(mat)
+
+pheatmap(mat, scale = "row",
+         clustering_distance_rows = "euclidean",
+         clustering_method = "ward.D2",
+         annotation_col = annot,
+         color = colorRampPalette(c("#2A9D8F", "white", "#E76F51"))(50),
+         main = "Top DE genes (row-scaled z-scores)")
+```
+
+## Output & Results
+
+`pheatmap()` produces a coloured grid with row and column dendrograms, an annotation strip for the `group` factor, and a colour legend. The two sample clusters separate the control and treatment groups based on the 10 simulated DE genes; the row dendrogram groups the DE genes into a coherent block distinct from the noise rows.
+
+## Interpretation
+
+A reporting sentence (figure caption): "Row-scaled heatmap of the top 50 differentially-expressed genes (z-scores per row, blue-white-red diverging colour scale, Ward linkage on Euclidean distance); samples cluster into two distinct groups corresponding to the experimental conditions, and the top 10 row-cluster shows coherent up-regulation in the treatment group." Always describe the scaling, distance metric, and linkage method.
+
+## Practical Tips
+
+- Always row-scale (z-score) for DE heatmaps; otherwise high-expression genes swamp the colour range and the pattern in lower-expression genes is invisible.
+- Use `ComplexHeatmap::Heatmap()` for richer annotations, row/column splits by cluster, and multi-panel composition; `pheatmap` is simpler for one-off plots.
+- Truncate extreme values (e.g., cap z-scores at $\pm 3$) to prevent one outlier dominating the colour scale.
+- Annotate samples with batch, condition, and time-point information in column annotations; the visual separation should match the biology, not the technical structure.
+- Use variance-stabilised counts (DESeq2 `vst()` or `rlog()`) rather than raw log-CPM for more robust heatmaps when the dataset has wide expression range.
+- Save the figure at the final publication size (`ggsave()` if using `ggplot`, `pdf()`/`png()` for base plots); shrinking heatmaps in a word processor produces unreadable cell labels.
+
+## R Packages Used
+
+`pheatmap` for quick standard heatmaps; `ComplexHeatmap` for advanced layouts including multiple annotations, row/column splits, and composition with other panels; `DESeq2::vst()` and `rlog()` for variance-stabilising input transformations; `RColorBrewer` and `viridis` for colour palettes.

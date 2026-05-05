@@ -1,0 +1,73 @@
+---
+title: "Bayes' Theorem for Parameters"
+date: "2026-04-17"
+description: "Using Bayes' theorem to update beliefs about parameters given data"
+categories:
+  - Bayesian Statistics
+  - bayes-theorem
+  - posterior
+  - prior
+  - likelihood
+---
+
+## Introduction
+
+Bayesian inference is, mechanically, the application of Bayes' theorem to a parameter rather than to an event. The prior encodes whatever was believed before the data arrived, the likelihood is the data-generating model evaluated at the observed data, and the posterior is the updated belief. The conceptual leap from frequentist statistics is small but consequential: parameters are themselves random quantities whose posterior distribution can be summarised, predicted from, and acted upon, without invoking long-run sampling thought experiments.
+
+## Prerequisites
+
+A working understanding of Bayes' theorem for events, the concept of a likelihood function, and the difference between probability density and probability mass.
+
+## Theory
+
+For a parameter $\theta$ and data $y$, Bayes' theorem reads
+
+$$p(\theta \mid y) = \frac{p(y \mid \theta) p(\theta)}{p(y)} \propto p(y \mid \theta) p(\theta),$$
+
+where the four quantities are the posterior, the likelihood, the prior, and the marginal likelihood $p(y) = \int p(y \mid \theta) p(\theta) \, \mathrm d \theta$. The marginal likelihood appears as a normalisation constant from a single-model perspective but plays the central role in Bayes-factor-based model comparison. For closed-form (conjugate) priors, the posterior comes out in the same family as the prior with updated hyperparameters; otherwise MCMC produces draws from the un-normalised right-hand side.
+
+## Assumptions
+
+The prior reflects genuine pre-data information or a defensible weak-regularisation choice, the likelihood correctly captures the data-generating process, and posterior integrability is established (proper priors guarantee this; improper priors must be checked).
+
+## R Implementation
+
+```r
+# Beta-Binomial: prior Beta(2, 2), 8 successes in 10 trials
+prior_a <- 2; prior_b <- 2
+k <- 8; n <- 10
+post_a <- prior_a + k
+post_b <- prior_b + n - k
+
+theta <- seq(0, 1, length.out = 400)
+plot(theta, dbeta(theta, prior_a, prior_b), type = "l",
+     main = "Prior -> Posterior", ylab = "Density", col = "grey")
+lines(theta, dbeta(theta, k + 1, n - k + 1), col = "orange")  # likelihood scaled
+lines(theta, dbeta(theta, post_a, post_b), col = "steelblue", lwd = 2)
+legend("topleft", c("Prior", "Likelihood", "Posterior"),
+       col = c("grey", "orange", "steelblue"), lty = 1)
+
+# Posterior summaries
+c(mean = post_a / (post_a + post_b),
+  ci95 = qbeta(c(0.025, 0.975), post_a, post_b))
+```
+
+## Output & Results
+
+A three-curve plot showing the flat-ish prior, the peaked likelihood, and the posterior between them, plus a summary giving the posterior mean (0.71) and the 95 % equal-tailed credible interval ($\approx 0.47$ to $0.89$). The posterior is closer to the likelihood than to the prior because the data ($n=10$) carry more precision than the prior ($a + b = 4$ pseudo-observations).
+
+## Interpretation
+
+A reporting sentence: "Combining a Beta(2, 2) prior with 8 successes in 10 trials yielded a Beta(10, 4) posterior with mean 0.71 (95 % credible interval 0.47 to 0.89); the prior contributed the equivalent of about four pseudo-observations and the data dominated the posterior shape." Always disclose the prior; the same data with a different prior would lead to a slightly different posterior.
+
+## Practical Tips
+
+- For conjugate setups (Beta–Binomial, Normal–Normal, Gamma–Poisson, Dirichlet–Multinomial), the posterior is closed-form and arithmetic alone suffices; reach for MCMC only when conjugacy fails.
+- Always report a posterior summary that includes both a central tendency and an uncertainty measure; a posterior mean alone is no more informative than a frequentist point estimate.
+- Sensitivity to the prior matters most in small samples; if your conclusion changes with a wider or narrower prior, the data are weak and the analysis is genuinely prior-driven.
+- Posterior predictive draws (`rbeta(M, post_a, post_b)` followed by `rbinom(M, n_new, theta)`) deliver direct uncertainty intervals for future outcomes.
+- Visualising prior, likelihood, and posterior on the same plot is the single most useful pedagogical artefact when explaining Bayesian inference to non-statistical readers.
+
+## R Packages Used
+
+Base R for the conjugate update and plotting, `bayestestR` for tidy posterior summaries, and `brms` or `rstanarm` for non-conjugate problems where MCMC is required to obtain posterior draws.

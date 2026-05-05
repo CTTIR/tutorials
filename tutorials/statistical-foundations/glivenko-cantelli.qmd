@@ -1,0 +1,84 @@
+---
+title: The Glivenko-Cantelli Theorem
+date: "2026-04-17"
+description: "The uniform LLN for CDFs: the ECDF converges almost surely to the true CDF at every point simultaneously"
+categories:
+  - Statistical Foundations
+  - glivenko-cantelli
+  - ecdf
+  - uniform-convergence
+---
+
+## Introduction
+
+The Glivenko-Cantelli theorem is sometimes called the "fundamental theorem of statistics". It says that the empirical distribution function converges uniformly, almost surely, to the true CDF as the sample size grows. This is a stronger guarantee than pointwise convergence at every $x$: it says that the *worst-case* error over all $x$ vanishes. Every non-parametric inference built from the ECDF rests on this theorem.
+
+## Prerequisites
+
+The reader should know what a CDF is, what the ECDF is, and the difference between pointwise and uniform convergence.
+
+## Theory
+
+Let $X_1, X_2, \ldots$ be iid from a CDF $F$, and let $\hat{F}_n$ denote the ECDF computed from the first $n$ observations. The **Glivenko-Cantelli theorem** states that
+
+$$\sup_{x \in \mathbb{R}} |\hat{F}_n(x) - F(x)| \xrightarrow{a.s.} 0 \quad \text{as } n \to \infty.$$
+
+Equivalently, the supremum of the pointwise error -- the sup-norm error -- goes to zero almost surely.
+
+**Why uniform convergence matters.** The strong LLN gives $\hat{F}_n(x) \to F(x)$ almost surely at each fixed $x$. But a Borel-Cantelli-style argument is needed to upgrade this to a uniform statement: the same $n$ works for every $x$ simultaneously. For non-parametric statistics that involve an integral or a supremum over $x$ (like the Kolmogorov-Smirnov statistic), uniform convergence is exactly what is needed.
+
+**Generalisations.** Glivenko-Cantelli classes extend this result to richer families of events $\{\mathcal{A}_i\}$ whose empirical probabilities converge to their true probabilities uniformly over the class. This is the starting point for modern empirical process theory and the Vapnik-Chervonenkis machinery used in statistical learning.
+
+The DKW inequality (a finite-sample refinement) gives an explicit rate: the sup-norm error drops at rate $O_P(1/\sqrt{n})$.
+
+## Assumptions
+
+The classical theorem requires iid sampling. Extensions to stationary ergodic sequences hold, though the rate of uniform convergence can be slower.
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+set.seed(2026)
+n_vals <- round(10^seq(1, 4, by = 0.25))
+
+compute_sup <- function(n) {
+  x <- rnorm(n)
+  Fn <- ecdf(x)
+  grid <- seq(-5, 5, length.out = 2001)
+  max(abs(Fn(grid) - pnorm(grid)))
+}
+
+reps <- 200
+sup_errors <- sapply(n_vals, function(n) {
+  mean(replicate(reps, compute_sup(n)))
+})
+
+ggplot(data.frame(n = n_vals, sup_err = sup_errors),
+       aes(x = n, y = sup_err)) +
+  geom_line(colour = "steelblue") + geom_point() +
+  scale_x_log10() + scale_y_log10() +
+  labs(x = "n (log scale)",
+       y = "Expected sup-norm error (log scale)",
+       title = "Glivenko-Cantelli: uniform ECDF error as n grows") +
+  theme_minimal()
+```
+
+For each $n$, we compute the sup-norm error $\sup_x |\hat{F}_n(x) - F(x)|$ over a fine grid and average across replications.
+
+## Output & Results
+
+On the log-log plot, the sup-norm error drops as a straight line with slope approximately $-1/2$, confirming the $1/\sqrt{n}$ rate predicted by DKW. At $n = 10^4$, the expected sup-norm error is around 0.01; at $n = 100$, around 0.1.
+
+## Interpretation
+
+For a reader of a methods paper: Glivenko-Cantelli is rarely named, but it is the theorem invoked when any procedure "based on the ECDF" is claimed to be consistent. K-S goodness-of-fit, bootstrap consistency, and many non-parametric estimators rely on this theorem at the proof level.
+
+## Practical Tips
+
+- Glivenko-Cantelli is a pure convergence result; for quantitative error bounds, use DKW's finite-sample version.
+- The theorem holds on the real line; its multivariate extension requires that the class of events (rectangles, half-spaces) form a Glivenko-Cantelli class, which is automatic for low-dimensional CDFs but harder in complex function classes.
+- Uniform convergence is what makes bootstrap validity proofs work; without it, the bootstrap distribution might be close to the truth only at some $x$ but not all.
+- The uniform rate $1/\sqrt{n}$ is optimal without additional smoothness; with a smooth CDF, kernel-based smoothings can beat the ECDF rate pointwise.
+- Empirical process theory, built on Glivenko-Cantelli, is the right language for thinking about non-parametric and semi-parametric asymptotics.

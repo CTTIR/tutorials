@@ -1,0 +1,114 @@
+---
+title: "Effect Sizes: Overview"
+date: "2026-04-17"
+description: Why effect sizes matter and which measures apply to which tests
+categories:
+  - Inferential Statistics
+  - effect-size
+  - cohen-d
+  - eta-squared
+  - reporting
+---
+
+## Introduction
+
+A p-value tells you how surprising the data are under the null; an effect size tells you how large the departure is. Publication guidelines (APA, CONSORT, etc.) require both. Large samples can make trivial effects statistically significant, and small samples can leave clinically meaningful effects undetected; the effect size is what distinguishes the two.
+
+## Prerequisites
+
+Hypothesis testing, common statistical tests.
+
+## Theory
+
+**Standardised mean differences** (Cohen's $d$ family):
+
+- $d$ = (mean difference) / (pooled SD). For two-sample t-tests.
+- Hedges' $g$: small-sample-corrected $d$.
+- $d_z$: paired-sample version using SD of differences.
+
+**Variance-explained**:
+
+- $\eta^2 = \text{SSB} / \text{SST}$: proportion of variance explained by a factor.
+- Partial $\eta_p^2$: appropriate for factorial designs.
+- $\omega^2$: unbiased variant; preferred in small samples.
+- Cohen's $f = \sqrt{\eta^2 / (1 - \eta^2)}$: alternative metric used in power calculations.
+
+**Correlations**: Pearson's $r$, Spearman's $\rho$, Kendall's $\tau$ are their own effect sizes.
+
+**Categorical / contingency**: phi $\phi$ (2x2), Cramer's $V$, odds ratio, risk ratio, risk difference.
+
+**Rank-based**: rank-biserial correlation for Mann-Whitney and Wilcoxon.
+
+Cohen's (1988) conventional thresholds:
+
+| Measure | Small | Medium | Large |
+|---|---|---|---|
+| Cohen's $d$ | 0.20 | 0.50 | 0.80 |
+| $r$ | 0.10 | 0.30 | 0.50 |
+| $\eta^2$ | 0.01 | 0.06 | 0.14 |
+| $\phi, V$ | 0.10 | 0.30 | 0.50 |
+| OR | 1.5 | 2.5 | 4.3 |
+
+Conventions are starting points; context always dominates.
+
+## Assumptions
+
+Each effect size inherits the assumptions of its associated test; reporting an effect size on a misspecified analysis gives a misleading magnitude.
+
+## R Implementation
+
+```r
+library(effectsize); library(rstatix)
+set.seed(2026)
+
+df <- data.frame(
+  group = factor(rep(c("A", "B"), each = 40)),
+  y = c(rnorm(40, 50, 8), rnorm(40, 55, 8))
+)
+
+# For a t-test
+cohens_d(y ~ group, data = df)
+hedges_g(y ~ group, data = df)
+
+# For an ANOVA
+fit <- aov(y ~ group, data = df)
+eta_squared(fit)
+omega_squared(fit)
+
+# For a Mann-Whitney
+rank_biserial(y ~ group, data = df)
+
+# For a chi-squared contingency
+tab <- matrix(c(30, 10, 20, 40), 2, 2)
+cramers_v(tab)
+```
+
+## Output & Results
+
+```
+Cohen's d | 95% CI
+---------------------
+-0.66     | [-1.12, -0.20]
+
+Hedges' g: -0.65
+
+Eta2 | 95% CI
+-----------------
+0.10 | [0.02, 1.00]
+
+Omega2: 0.09
+
+Cramer's V: 0.35 (medium to large)
+```
+
+## Interpretation
+
+"Group B had a higher mean by 5.2 units (SD 8); Cohen's $d$ = 0.66 (95 % CI 0.20 to 1.12), a medium-to-large effect. The two-sample t-test was significant, $t(78) = 2.97$, $p = 0.004$."
+
+## Practical Tips
+
+- Always report an effect size and its CI alongside the p-value.
+- Use unbiased measures ($\omega^2$, Hedges' $g$) in small samples.
+- Cohen's thresholds are conventions; disciplinary norms can differ (e.g., $r = 0.10$ is "noteworthy" in economics).
+- Standardised effect sizes ease comparison across studies; raw effects (mean differences, percentages) are often more interpretable clinically.
+- Software (`effectsize`, `rstatix`) computes CIs; report them rather than just point estimates.

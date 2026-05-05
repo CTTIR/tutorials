@@ -1,0 +1,66 @@
+---
+title: Taguchi Methods
+date: "2026-04-17"
+description: Orthogonal-array designs and signal-to-noise optimisation for quality engineering
+categories:
+  - Experimental Design
+  - taguchi
+  - orthogonal-array
+  - quality
+---
+
+## Introduction
+
+Taguchi methods (1950s-60s) apply orthogonal-array experiments to optimise product and process design for minimum variability. Central ideas: loss functions defining quality as deviation from target, signal-to-noise (SNR) ratios summarising mean and variance jointly, and compact orthogonal arrays for efficient screening.
+
+## Prerequisites
+
+Fractional factorial designs; signal-to-noise.
+
+## Theory
+
+**Quality loss** $L(y) = k(y - \tau)^2$ for target $\tau$ -- quality decreases quadratically with deviation.
+
+**SNR**:
+- Smaller-is-better: $\text{SNR} = -10 \log_{10}(\sum y_i^2 / n)$.
+- Larger-is-better: $\text{SNR} = -10 \log_{10}(\sum 1/y_i^2 / n)$.
+- Nominal-is-best: $\text{SNR} = 10 \log_{10}(\bar{y}^2 / s^2)$.
+
+Taguchi arrays (L4, L8, L9, L16) are Plackett-Burman-style orthogonal arrays with Japanese quality-engineering conventions.
+
+## Assumptions
+
+Main effects dominate (sparsity); variance reduction via control factor choice (robust design).
+
+## R Implementation
+
+```r
+library(qualityTools)
+
+set.seed(2026)
+# L8 array (2-level, 7 factors)
+ta <- taguchiDesign("L8_2^7")
+summary(ta)
+
+# Simulate responses
+ta$y <- rnorm(8, mean = 10 + 2 * as.numeric(ta$A) +
+                          1.5 * as.numeric(ta$B), sd = 0.5)
+effectPlot(ta, response = "y",
+           main = "Taguchi main-effects plot (L8)")
+```
+
+## Output & Results
+
+L8 orthogonal array and main-effects plot showing the average response at each factor's two levels.
+
+## Interpretation
+
+"The L8 design screened 7 factors in 8 runs; the main-effects plot identified factors A and B as dominant, with the optimal settings maximising (or minimising) the target response."
+
+## Practical Tips
+
+- Taguchi arrays are essentially Plackett-Burman designs; modern DoE uses statistical fractional factorials with aliasing awareness.
+- SNR metrics conflate mean and variance; modern practice separates them via dual-response surface methods.
+- Taguchi's three-stage design (system, parameter, tolerance) is a useful framework; the specific SNR tools are debated.
+- Orthogonal arrays are efficient for screening; interactions must be explicitly assigned to specific columns.
+- For manufacturing and quality engineering, Taguchi remains a widely-used vocabulary; modern methods supersede the specifics.

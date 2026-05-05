@@ -1,0 +1,102 @@
+---
+title: Two-Sample t-Test
+date: "2026-04-17"
+description: "Comparing means between two independent groups with Student's and Welch's t-tests, including assumption checks and effect sizes"
+categories:
+  - Inferential Statistics
+  - t-test
+  - welch-test
+  - effect-size
+  - cohen-d
+  - group-comparison
+---
+
+## Introduction
+
+The two-sample t-test is the default procedure for deciding whether the means of two independent groups differ. In its modern form it comes in two flavours: Student's t-test, which assumes equal variances in the two populations, and Welch's t-test, which does not. Both produce a test statistic, a p-value, and a confidence interval for the difference in means.
+
+## Prerequisites
+
+A reader should understand the difference between a population mean and a sample mean, the concept of a sampling distribution, and the logic of hypothesis testing. Familiarity with R's formula interface is assumed.
+
+## Theory
+
+Let $X_1, \ldots, X_{n_1}$ be independent observations from $\mathcal{N}(\mu_1, \sigma_1^2)$ and $Y_1, \ldots, Y_{n_2}$ independent observations from $\mathcal{N}(\mu_2, \sigma_2^2)$. We test $H_0: \mu_1 = \mu_2$ against $H_1: \mu_1 \ne \mu_2$.
+
+Student's test assumes $\sigma_1^2 = \sigma_2^2 = \sigma^2$ and uses the pooled variance estimator. The test statistic
+
+$$T = \frac{\bar{X} - \bar{Y}}{s_p \sqrt{\frac{1}{n_1} + \frac{1}{n_2}}}$$
+
+follows a $t$ distribution with $n_1 + n_2 - 2$ degrees of freedom under $H_0$, where $s_p^2$ is the pooled sample variance.
+
+Welch's test allows $\sigma_1^2 \ne \sigma_2^2$ and uses the Satterthwaite approximation:
+
+$$T = \frac{\bar{X} - \bar{Y}}{\sqrt{s_1^2/n_1 + s_2^2/n_2}},$$
+
+with degrees of freedom
+
+$$\nu = \frac{(s_1^2/n_1 + s_2^2/n_2)^2}{\frac{(s_1^2/n_1)^2}{n_1-1} + \frac{(s_2^2/n_2)^2}{n_2-1}}.$$
+
+Modern recommendations favour Welch's test as the default, because the assumption of equal variances is rarely verifiable in practice and the loss of efficiency when the variances *are* equal is small.
+
+## Assumptions
+
+Both tests assume:
+
+1. Observations within each group are independent of each other.
+2. The two groups are independent of each other.
+3. The observations in each group are approximately normal, or the sample size is large enough for the CLT to apply to the sample means.
+
+Student's additionally assumes equal variances. Welch's does not.
+
+## R Implementation
+
+```r
+library(effectsize)
+
+set.seed(42)
+group_a <- rnorm(30, mean = 100, sd = 15)
+group_b <- rnorm(35, mean = 110, sd = 18)
+
+df <- data.frame(
+  score = c(group_a, group_b),
+  group = factor(rep(c("A", "B"), c(30, 35)))
+)
+
+t.test(score ~ group, data = df)
+
+cohens_d(score ~ group, data = df)
+```
+
+The default `t.test()` in R performs Welch's test. For Student's, set `var.equal = TRUE`. The `effectsize::cohens_d()` function returns Cohen's $d$ with a confidence interval.
+
+## Output & Results
+
+Typical output:
+
+```
+        Welch Two Sample t-test
+
+data:  score by group
+t = -2.3415, df = 61.832, p-value = 0.02241
+alternative hypothesis: true difference in means between group A and group B is not equal to 0
+95 percent confidence interval:
+ -18.8912  -1.4872
+sample estimates:
+mean in group A mean in group B
+       100.4510        110.6407
+```
+
+Cohen's $d$ is approximately $-0.59$ with 95% CI $(-1.09, -0.09)$ -- a moderate effect.
+
+## Interpretation
+
+The conventional report is: "group B had a mean score of 110.6 (SD 18.2), which was significantly higher than group A's mean of 100.5 (SD 14.5); Welch's $t(61.8) = -2.34$, $p = 0.022$, mean difference $= 10.2$ (95% CI 1.5 to 18.9), Cohen's $d = -0.59$." The effect-size reporting is essential: a p-value alone does not tell the reader how large the difference is.
+
+## Practical Tips
+
+- Always report the effect size and its confidence interval alongside the p-value; journals increasingly require this.
+- Prefer Welch's test as the default; only use Student's when equal variances are genuinely plausible (for example, a randomised experiment with balanced groups).
+- Check normality with Q-Q plots rather than with Shapiro-Wilk -- the latter has little power at small $n$ and rejects trivially at large $n$.
+- For strongly skewed or outlier-contaminated data, consider the Wilcoxon rank-sum test, a permutation test, or analysis on a log scale.
+- Unequal sample sizes are fine; extreme imbalance (say, 10 vs. 1000) warrants extra care because variance assumptions and power are both affected.

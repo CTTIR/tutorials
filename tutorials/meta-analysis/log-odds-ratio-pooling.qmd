@@ -1,0 +1,75 @@
+---
+title: Pooling Log-Odds Ratios
+date: "2026-04-17"
+description: Fixed and random-effects meta-analysis of binary outcomes on the log scale
+categories:
+  - Meta-Analysis
+  - log-or
+  - pooling
+  - binary
+---
+
+## Introduction
+
+For binary outcomes, the odds ratio (OR) is the most widely reported effect measure across case-control studies, randomised trials with binary endpoints, and observational comparative studies. Because the OR is bounded below at zero with a long right tail, its sampling distribution is markedly skewed and inverse-variance pooling on the natural scale would be poorly behaved. The standard approach is therefore to pool on the log scale, where the distribution is approximately Normal, and back-transform the pooled estimate and its confidence interval to the OR scale for reporting. Pooling on the log scale stabilises variance, allows symmetric confidence intervals on the analysis scale, and keeps the multiplicative-on-back-transform interpretation that clinicians and epidemiologists expect.
+
+## Prerequisites
+
+A working understanding of odds ratios as a measure of association in 2×2 tables, inverse-variance meta-analytic weighting, and the distinction between fixed-effect and random-effects models.
+
+## Theory
+
+For a study with $a_i, b_i, c_i, d_i$ in the four cells of the exposure-by-outcome 2×2 table, the per-study log-OR and its variance are
+
+$$\log \mathrm{OR}_i = \log \frac{a_i d_i}{b_i c_i}, \qquad \mathrm{Var}(\log \mathrm{OR}_i) = \frac{1}{a_i} + \frac{1}{b_i} + \frac{1}{c_i} + \frac{1}{d_i}.$$
+
+A fixed-effect pool is $\hat\theta = \sum w_i \theta_i / \sum w_i$ with $w_i = 1/\mathrm{Var}(\log\mathrm{OR}_i)$. A random-effects pool adds the between-study variance $\tau^2$ to each study's weight, widening the confidence interval to reflect between-study uncertainty about the underlying effect. Both pools are fit on the log scale and back-transformed via $\exp(\cdot)$ for reporting.
+
+## Assumptions
+
+Studies are independent; the log-OR is approximately Normal (typically holds when each cell has ≥5 events); the within-study variance is accurately estimated; the pooled population is reasonably homogeneous (fixed-effect) or, more commonly, is heterogeneous with effects drawn from a Normal distribution around a common mean (random-effects).
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+k <- 10
+df <- data.frame(
+  ai = rpois(k, 30), bi = rpois(k, 170),
+  ci = rpois(k, 20), di = rpois(k, 180)
+)
+
+es <- escalc(measure = "OR", ai = ai, bi = bi,
+             ci = ci, di = di, data = df)
+
+fe <- rma(yi, vi, data = es, method = "FE")
+re <- rma(yi, vi, data = es, method = "REML")
+
+cat("FE pooled OR:", round(exp(fe$b), 2),
+    " 95% CI:", paste(round(exp(c(fe$ci.lb, fe$ci.ub)), 2), collapse = "-"), "\n")
+cat("RE pooled OR:", round(exp(re$b), 2),
+    " 95% CI:", paste(round(exp(c(re$ci.lb, re$ci.ub)), 2), collapse = "-"), "\n")
+```
+
+## Output & Results
+
+`escalc(measure = "OR")` computes the per-study log-OR and its variance, applying continuity correction to zero cells when needed. `rma()` fits the meta-analysis on the log scale; back-transformation via `exp()` yields the pooled OR and its confidence interval on the natural scale. The random-effects model additionally returns $\tau^2$ and $I^2$ describing between-study heterogeneity.
+
+## Interpretation
+
+A reporting sentence: "Random-effects meta-analysis of 10 studies (REML, total $n = 4{,}000$) gave a pooled odds ratio of 1.56 (95 % CI 1.31 to 1.87) with modest between-study heterogeneity ($I^2 = 22 \%$, $\tau^2 = 0.01$); the fixed-effect estimate was almost identical (1.54), confirming that heterogeneity did not materially shift the central effect." Always report both the pooled estimate and the heterogeneity metrics; readers cannot judge the pool without them.
+
+## Practical Tips
+
+- Always pool on the log scale; ORs are multiplicative and pooling on the natural scale produces biased and asymmetrically distributed estimates.
+- Apply a continuity correction (typically add 0.5 to every cell of a study with any zero cell) for studies with zero events; `metafor::escalc()` handles this automatically by default.
+- Choose between fixed-effect and random-effects models based on the substantive research question and expected sources of heterogeneity, not on the $Q$-test $p$-value alone — $I^2$ and $\tau^2$ are more informative about the magnitude of heterogeneity.
+- Always report heterogeneity statistics ($\tau^2$, $I^2$, and the prediction interval) alongside the pooled point estimate.
+- Apply the Hartung–Knapp–Sidik–Jonkman adjustment for random-effects pooling with small $k$ (usually fewer than 20 studies); it produces wider, more conservative CIs that better match coverage in simulations.
+- Mantel–Haenszel pooling (`metafor::rma.mh()`) is preferable for sparse-data settings with many zero cells, where continuity correction biases the standard inverse-variance pool.
+
+## R Packages Used
+
+`metafor::escalc()` and `rma()` for the canonical log-OR pooling workflow; `metafor::rma.mh()` for Mantel–Haenszel pooling and `rma.peto()` for the Peto OR method on rare events; `meta::metabin()` as the alternative interface with cleaner forest-plot defaults; `metafor` Hartung–Knapp via `test = "knha"`.

@@ -1,0 +1,89 @@
+---
+title: Cross-Tabulations
+date: "2026-04-17"
+description: Two-way and higher-dimensional tables for joint distributions of categorical variables
+categories:
+  - Descriptive Statistics
+  - cross-tab
+  - contingency-table
+  - joint-distribution
+---
+
+## Introduction
+
+A cross-tabulation shows the joint distribution of two categorical variables. It is the first look at whether the variables are associated and is the input to chi-squared, Fisher's exact, and other tests of independence.
+
+## Prerequisites
+
+The reader should know what a one-way frequency table is.
+
+## Theory
+
+For two categorical variables $X$ with $r$ levels and $Y$ with $c$ levels, the cross-tabulation is an $r \times c$ table whose $(i, j)$-th cell holds the count of observations with $X = i$ and $Y = j$. Typically reported forms:
+
+- **Joint counts**: raw $n_{ij}$.
+- **Row percentages**: $100 \cdot n_{ij} / \sum_j n_{ij}$. Answers "given $X = i$, what is the distribution of $Y$?"
+- **Column percentages**: $100 \cdot n_{ij} / \sum_i n_{ij}$. Answers "given $Y = j$, what is the distribution of $X$?"
+- **Overall percentages**: $100 \cdot n_{ij} / n$. Joint probabilities.
+
+## Assumptions
+
+Purely descriptive; no distributional assumption.
+
+## R Implementation
+
+```r
+library(dplyr)
+library(janitor)
+library(gtsummary)
+
+set.seed(2026)
+cohort <- tibble::tibble(
+  sex   = factor(sample(c("Female", "Male"), 300, replace = TRUE)),
+  arm   = factor(sample(c("Placebo", "Active"), 300, replace = TRUE)),
+  event = factor(sample(c("Yes", "No"), 300, replace = TRUE, prob = c(0.25, 0.75)))
+)
+
+# Base R
+table(cohort$arm, cohort$event)
+
+# Percentages
+addmargins(prop.table(table(cohort$arm, cohort$event), margin = 1), margin = 2)
+
+# Tidy with janitor
+cohort |>
+  tabyl(arm, event) |>
+  adorn_percentages("row") |>
+  adorn_pct_formatting(digits = 1) |>
+  adorn_ns()
+
+# gtsummary
+cohort |>
+  tbl_cross(row = arm, col = event, percent = "row", margin = "column")
+
+# Three-way via xtabs
+xtabs(~ sex + arm + event, data = cohort)
+```
+
+## Output & Results
+
+A typical 2x2 table:
+
+|  | Event: No | Event: Yes | Total |
+|---|---|---|---|
+| Placebo | 118 (78.7%) | 32 (21.3%) | 150 |
+| Active  | 104 (69.3%) | 46 (30.7%) | 150 |
+
+Row percentages show the event rate within each arm; column percentages would instead show what fraction of events came from each arm.
+
+## Interpretation
+
+For association analysis, report counts and one of row, column, or joint percentages -- the one that matches the causal direction of your research question. "Among placebo patients, 21.3% experienced an event" is a row-percentage statement appropriate when arm precedes event.
+
+## Practical Tips
+
+- Always state whether percentages are row, column, or overall; it is a common source of reader confusion.
+- Sparse cells (count < 5) motivate Fisher's exact test rather than chi-squared.
+- For three-way or higher tables, consider log-linear models (`loglm` in `MASS`).
+- `gtsummary::tbl_cross()` produces publication-ready output directly from a data frame.
+- Report totals on the margins; they let readers check arithmetic quickly.

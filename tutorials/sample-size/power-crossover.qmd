@@ -1,0 +1,69 @@
+---
+title: Power for Crossover Trials
+date: "2026-04-17"
+description: "Sample size for 2x2 crossover designs, exploiting within-subject comparison"
+categories:
+  - "Sample Size & Power"
+  - power
+  - crossover
+  - 2x2
+  - carryover
+---
+
+## Introduction
+
+In a crossover trial, each subject receives multiple treatments in sequence with a washout period between. The paired comparison cancels between-subject variability, often requiring far fewer subjects than parallel-group trials. The classic 2x2 crossover has two treatments and two periods.
+
+## Prerequisites
+
+Paired t-test, power analysis, crossover design basics.
+
+## Theory
+
+In a 2x2 crossover, the period-adjusted within-subject difference has variance $\sigma_w^2$, typically estimated from prior crossover data. Sample size is analogous to the paired t-test with $\sigma_d = \sigma_w \sqrt{2}$:
+
+$$n \approx 2 \sigma_w^2 (z_{1-\alpha/2} + z_{1-\beta})^2 / \delta^2.$$
+
+Compared to parallel-group with pooled $\sigma$: approximately half the subjects for the same $\delta$ when $\sigma_w < \sigma_{\text{between}}$.
+
+Carryover effects invalidate the simple formula; a washout period is planned to eliminate them.
+
+## Assumptions
+
+- No carryover; washout adequate.
+- Period effects modelled if present.
+- Within-subject variance known or estimable.
+
+## R Implementation
+
+```r
+library(PowerTOST); library(pwr)
+
+# 2x2 crossover bioequivalence: CV within = 20%, ratio = 0.95
+sampleN.TOST(CV = 0.20, theta0 = 0.95,
+             theta1 = 0.80, theta2 = 1.25,
+             alpha = 0.05, targetpower = 0.80,
+             design = "2x2")
+
+# Therapeutic crossover: mean difference = 5, sigma_w = 10
+n_pair <- 2 * (qnorm(0.975) + qnorm(0.80))^2 * 10^2 / 5^2
+n_pair
+# Equivalent paired-t calculation
+pwr.t.test(d = 5 / 10, type = "paired", power = 0.80)
+```
+
+## Output & Results
+
+Bioequivalence 2x2 at 20 % CV, ratio 0.95: 20 subjects. Therapeutic 5-unit effect with $\sigma_w = 10$: 34 subjects.
+
+## Interpretation
+
+"The 2x2 crossover trial requires 20 subjects for 80 % power to establish bioequivalence within the 80-125 % range, assuming a 20 % within-subject CV and a true ratio of 0.95."
+
+## Practical Tips
+
+- Crossover saves subjects but doubles measurement commitment per subject; adherence matters.
+- Washout must be long enough to eliminate pharmacokinetic and physiological carryover.
+- More than two periods (Latin squares, Williams designs) can be more efficient but require careful balancing.
+- Exclude subjects with missing period data (or use mixed models).
+- For strictly sequential effects (learning, fatigue), random order assignment and period-as-factor in the model help.

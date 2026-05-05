@@ -1,0 +1,75 @@
+---
+title: Meta-Regression
+date: "2026-04-17"
+description: Explaining between-study heterogeneity with study-level covariates
+categories:
+  - Meta-Analysis
+  - meta-regression
+  - moderator
+  - heterogeneity
+---
+
+## Introduction
+
+Meta-regression extends the random-effects meta-analysis by allowing study-level covariates — moderators such as publication year, mean participant age, average dose, or risk-of-bias score — to enter the model as predictors of the underlying effect. The fitted slope quantifies how much the true study effect changes per unit of moderator, and a residual between-study variance $\tau^2$ describes whatever heterogeneity the moderator did not explain. Meta-regression is the appropriate tool whenever the candidate moderator is continuous, and is generally more powerful than dichotomising into subgroups, which discards information and can produce a categorisation-dependent answer. It is now standard practice for any meta-analysis with $k \geq 10$ studies and a pre-specified hypothesis about effect modification.
+
+## Prerequisites
+
+A working understanding of random-effects meta-analysis (notably the role of $\tau^2$), ordinary linear regression, and the difference between fixed-effect, random-effects, and mixed-effects models in the meta-analytic context.
+
+## Theory
+
+The mixed-effects meta-regression model is
+
+$$y_i = \beta_0 + \beta_1 x_i + u_i + \varepsilon_i, \qquad u_i \sim N(0, \tau^2), \quad \varepsilon_i \sim N(0, s_i^2),$$
+
+where $u_i$ is between-study residual heterogeneity and $\varepsilon_i$ is within-study sampling error with known variance $s_i^2$. REML estimates $\tau^2$ jointly with the regression coefficients; Wald or likelihood-ratio tests assess moderator effects. The pseudo-$R^2 = 1 - \tau^2_{\text{residual}}/\tau^2_{\text{null}}$ summarises the proportion of between-study variance explained by the moderator and is the analogue of the regression $R^2$.
+
+## Assumptions
+
+The moderator is pre-specified rather than data-mined; the functional form (linear unless explicitly modelled otherwise) is correct; the residual heterogeneity is normal; and there are sufficient studies — a frequently-cited rule of thumb is at least ten studies per moderator coefficient — to support reliable estimation.
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+k <- 15
+year <- sample(1995:2023, k, replace = TRUE)
+mean_age <- runif(k, 40, 70)
+
+yi <- 0.5 - 0.02 * (year - 1995) + rnorm(k, 0, 0.15)
+vi <- 1 / sample(50:250, k, replace = TRUE)
+
+df <- data.frame(yi, vi, year, mean_age)
+
+res1 <- rma(yi, vi, mods = ~ year, data = df, method = "REML")
+summary(res1)
+
+res2 <- rma(yi, vi, mods = ~ year + mean_age, data = df, method = "REML")
+summary(res2)
+
+cat("R^2:", round(res1$R2, 3), "\n")
+```
+
+## Output & Results
+
+`rma()` with a `mods` formula returns moderator coefficients with confidence intervals and $p$-values, the residual heterogeneity statistics ($\tau^2$, $I^2$, residual $Q_E$), an omnibus moderator test ($Q_M$), and the pseudo-$R^2$ summarising explained heterogeneity. Reporting all four elements — slope, residual $\tau^2$, $Q_M$, and $R^2$ — is standard practice.
+
+## Interpretation
+
+A reporting sentence: "Year of publication significantly moderated the pooled effect (slope $-0.017$, 95 % CI $-0.029$ to $-0.005$, $p = 0.01$): each additional year reduced the standardised mean difference by 0.017 units. Meta-regression explained 52 % of the between-study variance ($R^2$); residual heterogeneity remained moderate ($I^2_{\text{residual}} = 21 \%$). The temporal trend was pre-specified in the PROSPERO protocol." Always report both the slope and the residual heterogeneity to convey what the moderator did and did not explain.
+
+## Practical Tips
+
+- Restrict to roughly one moderator per ten studies; meta-regression overfits aggressively because between-study sample sizes are tiny by regression standards.
+- Pre-specify all moderators in the PROSPERO protocol; post-hoc moderators are at best exploratory and should be flagged as such in reporting.
+- Centre continuous moderators (e.g., year minus mean year) so the intercept has a meaningful interpretation as the effect at the mean moderator value.
+- For small $k$, permutation tests via `permutest()` provide more conservative inference than the Wald-based default and are widely recommended.
+- Beware ecological fallacy: a study-level moderator effect does not imply the same effect at the individual-participant level; that requires IPD meta-analysis.
+- Plot bubble plots (`metafor::regplot()`) showing study effects, moderator value, and weighted regression line; they make the moderator relationship visible and reveal influential outliers.
+
+## R Packages Used
+
+`metafor::rma()` with `mods = ~ ...` for the canonical mixed-effects meta-regression; `metafor::regplot()` for bubble plots; `metafor::permutest()` for permutation-based inference under small $k$; `meta::metareg()` for the alternative `meta`-package interface; `robumeta` for robust-variance meta-regression with dependent effect sizes.

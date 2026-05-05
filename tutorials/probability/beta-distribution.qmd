@@ -1,0 +1,98 @@
+---
+title: The Beta Distribution
+date: "2026-04-17"
+description: "Distribution over [0, 1] for proportions and probabilities; conjugate prior for the binomial"
+categories:
+  - Probability Theory
+  - beta
+  - proportion
+  - conjugate-prior
+---
+
+## Introduction
+
+The beta distribution is the flexible family of probabilities on the unit interval $[0, 1]$. It is the natural distribution for proportions, success probabilities, and measurements bounded between two fixed limits. In Bayesian inference, it is the conjugate prior for the binomial and Bernoulli likelihoods.
+
+## Prerequisites
+
+Continuous distributions, Bayesian inference basics.
+
+## Theory
+
+A beta random variable with shape parameters $a > 0$ and $b > 0$ has PDF
+
+$$f(x) = \frac{1}{B(a, b)} x^{a-1} (1-x)^{b-1}, \qquad 0 \leq x \leq 1,$$
+
+where $B(a, b) = \Gamma(a) \Gamma(b) / \Gamma(a + b)$ is the beta function.
+
+Moments:
+
+- $E[X] = a / (a + b)$.
+- $\mathrm{Var}(X) = ab / [(a + b)^2 (a + b + 1)]$.
+
+Special cases:
+
+- $a = b = 1$: Uniform$(0, 1)$.
+- $a = b = 0.5$: Jeffreys prior for the binomial probability.
+- $a, b > 1$: unimodal density with mode $(a - 1)/(a + b - 2)$.
+- $a < 1$ and $b < 1$: bimodal (poles at 0 and 1).
+
+**Conjugacy**: given a Bernoulli/Binomial likelihood with success probability $\theta$ and a Beta$(a, b)$ prior on $\theta$, the posterior after observing $k$ successes in $n$ trials is Beta$(a + k, b + n - k)$.
+
+## Assumptions
+
+The variable must be bounded between 0 and 1. For probabilities near 0 or 1, the distribution can have a pole; use care when simulating.
+
+## R Implementation
+
+```r
+curve(dbeta(x, 2, 5),  from = 0, to = 1, col = "steelblue", lwd = 2,
+      main = "Beta densities", ylab = "f(x)")
+curve(dbeta(x, 5, 2),  add = TRUE, col = "#F4A261", lwd = 2)
+curve(dbeta(x, 0.5, 0.5), add = TRUE, col = "#6A4C93", lwd = 2)
+curve(dbeta(x, 2, 2),  add = TRUE, col = "#2A9D8F", lwd = 2)
+legend("top", legend = c("Beta(2,5)", "Beta(5,2)", "Beta(0.5,0.5)", "Beta(2,2)"),
+       col = c("steelblue", "#F4A261", "#6A4C93", "#2A9D8F"), lwd = 2)
+
+# Moments
+a <- 2; b <- 5
+c(mean = a / (a + b), var = a * b / ((a + b)^2 * (a + b + 1)))
+
+X <- rbeta(1e5, a, b)
+c(emp_mean = mean(X), emp_var = var(X))
+
+# Bayesian update example
+prior_a <- 2; prior_b <- 2
+k <- 15; n <- 20
+post_a <- prior_a + k; post_b <- prior_b + n - k
+c(posterior_mean = post_a / (post_a + post_b),
+  posterior_95_CI_lower = qbeta(0.025, post_a, post_b),
+  posterior_95_CI_upper = qbeta(0.975, post_a, post_b))
+```
+
+## Output & Results
+
+```
+   mean      var
+ 0.2857   0.0255
+
+ emp_mean   emp_var
+   0.286     0.025
+
+posterior_mean posterior_95_CI_lower posterior_95_CI_upper
+         0.708                  0.504                  0.871
+```
+
+Empirical moments match theoretical. The Bayesian update with a Beta(2,2) prior and 15 successes in 20 trials gives a posterior mean of 0.71 with a 95% credible interval of (0.50, 0.87).
+
+## Interpretation
+
+Beta distributions appear everywhere in Bayesian analysis of proportions. Reporting "posterior probability of success 0.71 (95% credible interval 0.50 to 0.87)" is a beta-based statement.
+
+## Practical Tips
+
+- For weakly informative priors, Beta(1, 1) (uniform) or Beta(0.5, 0.5) (Jeffreys) are common defaults.
+- Very large $a$ and $b$ correspond to strongly informative priors; check the prior predictive distribution to verify plausibility.
+- Beta regression (`betareg`) models proportions in $(0, 1)$ as a function of covariates.
+- Values exactly at 0 or 1 are problematic; transform via $(x (n - 1) + 0.5) / n$ or use zero-one-inflated beta.
+- For a quick-look sanity check, a beta with $a = b$ is symmetric and centred at 0.5, scaling by $(a + b)$ as a concentration parameter.

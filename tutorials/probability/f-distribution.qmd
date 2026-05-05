@@ -1,0 +1,104 @@
+---
+title: The F Distribution
+date: "2026-04-17"
+description: Ratio of two independent scaled chi-squared random variables; foundation of ANOVA and variance tests
+categories:
+  - Probability Theory
+  - f-distribution
+  - anova
+  - variance-ratio
+---
+
+## Introduction
+
+The F distribution arises as the ratio of two independent scaled chi-squared random variables. It is the reference distribution for the F-statistic in ANOVA, for tests of variance equality between two normal samples, and for omnibus tests in linear regression. Its shape is controlled by two degree-of-freedom parameters, one for the numerator and one for the denominator.
+
+## Prerequisites
+
+Chi-squared distribution.
+
+## Theory
+
+If $U \sim \chi^2_{d_1}$ and $V \sim \chi^2_{d_2}$ are independent, then
+
+$$F = \frac{U/d_1}{V/d_2} \sim F_{d_1, d_2}.$$
+
+The numerator df is $d_1$; the denominator df is $d_2$.
+
+Moments (when they exist):
+
+- $E[F] = d_2 / (d_2 - 2)$ for $d_2 > 2$.
+- $\mathrm{Var}(F) = \frac{2 d_2^2 (d_1 + d_2 - 2)}{d_1 (d_2 - 2)^2 (d_2 - 4)}$ for $d_2 > 4$.
+
+Relationships to other distributions:
+
+- $1/F_{d_1, d_2} \sim F_{d_2, d_1}$.
+- $t_\nu^2 \sim F_{1, \nu}$.
+- As $d_2 \to \infty$, $d_1 \cdot F_{d_1, d_2} \to \chi^2_{d_1}$.
+
+**One-way ANOVA**: with $k$ groups and $n$ total observations, the F-statistic
+
+$$F = \frac{\text{MS}_{\text{between}}}{\text{MS}_{\text{within}}}$$
+
+follows $F_{k-1, n-k}$ under the null of equal means.
+
+**Variance ratio test**: for two independent normal samples with variances $\sigma_1^2 = \sigma_2^2$,
+
+$$F = s_1^2 / s_2^2 \sim F_{n_1 - 1, n_2 - 1}.$$
+
+## Assumptions
+
+Independence between $U$ and $V$; normality of the underlying data for the derived sample statistics.
+
+## R Implementation
+
+```r
+# PDF visualisation
+x <- seq(0, 5, length.out = 400)
+plot(x, df(x, 5, 20), type = "l", col = "#2A9D8F", lwd = 2,
+     main = "F(5, 20) density", ylab = "f(x)")
+lines(x, df(x, 5, 5),   col = "#F4A261", lwd = 2)
+lines(x, df(x, 20, 20), col = "#6A4C93", lwd = 2)
+legend("topright", c("F(5,20)", "F(5,5)", "F(20,20)"),
+       col = c("#2A9D8F", "#F4A261", "#6A4C93"), lwd = 2)
+
+# Verify construction
+n <- 1e5; d1 <- 4; d2 <- 10
+U <- rchisq(n, df = d1); V <- rchisq(n, df = d2)
+F_sim <- (U/d1) / (V/d2)
+c(emp_mean = mean(F_sim), theoretical = d2 / (d2 - 2))
+
+# F-statistic from ANOVA
+set.seed(2026)
+df <- data.frame(y = c(rnorm(30, 50, 8), rnorm(30, 55, 8), rnorm(30, 53, 8)),
+                 g = factor(rep(c("A", "B", "C"), each = 30)))
+anova(lm(y ~ g, data = df))
+```
+
+## Output & Results
+
+```
+emp_mean theoretical
+    1.252      1.250
+
+Analysis of Variance Table
+
+Response: y
+          Df Sum Sq Mean Sq F value  Pr(>F)
+g          2  394.7   197.3    3.57 0.03218 *
+Residuals 87 4811.2    55.3
+```
+
+The empirical F ratio recovers the theoretical mean, and the ANOVA F-statistic of 3.57 on (2, 87) df has p-value 0.032.
+
+## Interpretation
+
+Almost every ANOVA and linear-model-comparison result in applied statistics is reported as an F-statistic with numerator and denominator df. Reporting "F(2, 87) = 3.57, p = 0.032" is a standard form.
+
+## Practical Tips
+
+- Order the df correctly: F(df1, df2) is not the same as F(df2, df1) in general.
+- For two-sided variance tests, some software uses max/min of $s_1^2/s_2^2$ to avoid ambiguity.
+- Non-central F (with non-centrality parameter $\lambda$) governs power calculations for ANOVA.
+- The F-distribution is highly sensitive to non-normality; for skewed data prefer Welch's ANOVA or non-parametric alternatives.
+- `qf(0.95, d1, d2)` gives the critical value for a one-sided 5% test.

@@ -1,0 +1,83 @@
+---
+title: "Sequence Alignment: Overview"
+date: "2026-04-17"
+description: "Global vs local alignment, scoring matrices, and the core algorithms"
+categories:
+  - Bioinformatics
+  - alignment
+  - needleman-wunsch
+  - smith-waterman
+---
+
+## Introduction
+
+Sequence alignment is the foundational operation of bioinformatics: comparing DNA, RNA, or protein sequences to find similarities, detect mutations, identify conserved regions, or annotate functional domains. The two canonical algorithms are Needleman-Wunsch (global, full-length alignment) and Smith-Waterman (local, best-matching subregion). All modern aligners — BWA, Bowtie, BLAST, minimap2 — are heuristic approximations to these dynamic-programming gold standards, optimised for speed at the cost of theoretical optimality.
+
+## Prerequisites
+
+A working understanding of DNA and protein sequences, the FASTA format, and basic dynamic programming as the algorithmic technique behind alignment.
+
+## Theory
+
+**Global alignment** (Needleman-Wunsch) finds the optimal alignment across the entire length of both sequences. Appropriate when the sequences are believed to be homologous over their full length, e.g. comparing two complete protein sequences from related species.
+
+**Local alignment** (Smith-Waterman) finds the optimal alignment of a substring of each sequence. Appropriate when only a region is conserved, e.g. searching for a domain match within a longer protein.
+
+**Scoring schemes** combine match rewards, mismatch penalties, and gap penalties. For proteins, substitution matrices encode biological similarity:
+
+- **BLOSUM62**: derived from blocks of distantly related proteins; the BLAST default.
+- **PAM250**: derived from closely related proteins; appropriate for close evolutionary distances.
+
+Affine gap penalties (gap-opening + gap-extension) better model real biological gaps than constant penalties.
+
+## Assumptions
+
+Sequences are biologically comparable (same molecule type, similar functional category); the chosen scoring scheme reflects the evolutionary distance involved.
+
+## R Implementation
+
+```r
+library(Biostrings)
+
+s1 <- DNAString("ATCGATCGTACGTACG")
+s2 <- DNAString("ATCAATCATACGTGG")
+
+# Global alignment
+ga <- pairwiseAlignment(s1, s2, type = "global", substitutionMatrix = nucleotideSubstitutionMatrix(),
+                        gapOpening = 10, gapExtension = 4)
+ga
+
+# Local alignment
+la <- pairwiseAlignment(s1, s2, type = "local",
+                        substitutionMatrix = nucleotideSubstitutionMatrix(),
+                        gapOpening = 10, gapExtension = 4)
+la
+
+# Protein alignment with BLOSUM62
+p1 <- AAString("ACDEFGHI")
+p2 <- AAString("ACDFGHI")
+data(BLOSUM62)
+pairwiseAlignment(p1, p2, substitutionMatrix = BLOSUM62, type = "global",
+                  gapOpening = 10, gapExtension = 4)
+```
+
+## Output & Results
+
+`pairwiseAlignment()` returns an object with the aligned sequences (with gaps inserted), the alignment score, and percent identity. Subset accessors (`pattern()`, `subject()`, `score()`, `pid()`) extract specific components.
+
+## Interpretation
+
+A reporting sentence: "Needleman-Wunsch global alignment of two 16-bp DNA sequences scored 6 (13/16 matches, two mismatches and a single-base gap); Smith-Waterman local alignment returned the best-matching 13-character substring with no gaps. The protein alignment with BLOSUM62 highlighted the conserved core (8/9 identity) despite the single deletion." Always state the scoring scheme and gap penalties.
+
+## Practical Tips
+
+- Choose the scoring scheme to match the question: BLOSUM for distant protein relatives, PAM for close ones; for nucleotide alignment, simple match/mismatch is usually adequate.
+- For short-read alignment (NGS), use BWA, Bowtie2, or minimap2 — they are heuristic but vastly faster than Needleman-Wunsch on millions of reads.
+- For multiple sequence alignment (MSA), use the `msa` package which wraps Clustal Omega, ClustalW, and MUSCLE; or external tools (MAFFT, T-Coffee) for very large alignments.
+- Affine gap penalties (gap-open and gap-extension) better model biological gaps than constant penalties; the BLAST default is gap-open 10, gap-extension 4 for nucleotides.
+- For long reads (PacBio, Nanopore), use minimap2 — it is designed for the higher error rates and longer alignment lengths.
+- For sequence search rather than pairwise comparison, BLAST and DIAMOND scale to large databases via heuristic seeding.
+
+## R Packages Used
+
+`Biostrings` for `pairwiseAlignment()`, BLOSUM/PAM matrices, and sequence-handling classes; `msa` for multiple sequence alignment; `Rsamtools` and `GenomicAlignments` for BAM-aware alignment workflows; `Rsubread` for short-read alignment integrated with the broader RNA-seq Bioconductor workflow.

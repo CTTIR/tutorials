@@ -1,0 +1,77 @@
+---
+title: Sensitivity Analyses in Clinical Trials
+date: "2026-04-17"
+description: Exploring robustness of conclusions to assumptions about missing data and model choice
+categories:
+  - Clinical Biostatistics
+  - sensitivity
+  - tipping-point
+  - mnar
+---
+
+## Introduction
+
+Sensitivity analyses complement the primary analysis by varying key assumptions -- missing-data mechanism, model form, inclusion criteria -- to assess how robust conclusions are. Tipping-point analyses identify how extreme assumptions must be before the primary conclusion flips, providing a concrete interpretation.
+
+## Prerequisites
+
+Primary analysis; missing-data mechanisms; multiple imputation.
+
+## Theory
+
+**Tipping-point analysis** under MI: impute missing outcomes in the experimental arm with an increasing shift $\delta$ (less favourable); re-pool. The smallest $\delta$ that makes the treatment effect no longer significant is the "tipping point". A large tipping point means the conclusion is robust.
+
+**Other sensitivity analyses**: different imputation methods, PP vs ITT, different covariate adjustments, varying inclusion criteria, alternative parametric models.
+
+## Assumptions
+
+Sensitivity analyses are pre-specified; tipping points are interpreted clinically, not mechanically.
+
+## R Implementation
+
+```r
+library(mice)
+
+set.seed(2026)
+n <- 200
+arm <- factor(rep(c("ctrl", "trt"), each = n/2))
+baseline <- rnorm(n, 5, 1)
+outcome  <- 0.6 * baseline + ifelse(arm == "trt", 0.8, 0) +
+            rnorm(n, 0, 1)
+outcome[sample(n, 40)] <- NA
+
+df <- data.frame(arm, baseline, outcome)
+
+# Base analysis under MAR
+imp <- mice(df, m = 20, method = "pmm", printFlag = FALSE)
+summary(pool(with(imp, lm(outcome ~ arm + baseline))))$estimate[2]
+
+# Tipping-point analysis: penalise imputed trt-arm outcomes by delta
+deltas <- seq(0, 2, by = 0.25)
+effs <- sapply(deltas, function(d) {
+  imp2 <- imp
+  for (k in 1:20) {
+    idx <- which(is.na(df$outcome) & df$arm == "trt")
+    imp2$imp$outcome[[k]][df$arm[idx] == "trt"] <-
+      imp2$imp$outcome[[k]][df$arm[idx] == "trt"] - d
+  }
+  summary(pool(with(imp2, lm(outcome ~ arm + baseline))))$estimate[2]
+})
+data.frame(delta = deltas, trt_effect = round(effs, 3))
+```
+
+## Output & Results
+
+Treatment effect declines linearly with $\delta$; the tipping point is where the effect crosses zero (or loses significance).
+
+## Interpretation
+
+"A delta shift of 1.6 on the imputed intervention-arm outcomes was required to eliminate significance; clinically this would require intervention dropouts to fare 1.6 SD worse than MAR predicts. The primary conclusion is robust to plausible MNAR mechanisms."
+
+## Practical Tips
+
+- Pre-specify all sensitivity analyses in the SAP; post-hoc analyses are exploratory.
+- Tipping points are most informative when expressed on the clinical scale.
+- ICH E9 R1 promotes sensitivity-analysis thinking tied to the estimand.
+- Running many sensitivity analyses is fine; interpret them holistically.
+- Reporting a tipping-point figure in the primary paper is increasingly standard for high-missingness trials.

@@ -1,0 +1,311 @@
+---
+title: Data Visualisation
+description: "Publication-quality graphics in R with ggplot2, from the grammar of graphics through colour, annotation, layout, and interactivity"
+---
+
+A good figure answers a question at a glance; a bad one hides the answer behind decoration. This area teaches the grammar of graphics as implemented in `ggplot2`, and builds out from there to every common plot type, colour palette choice, annotation technique, and multi-panel composition used in life-science publications.
+
+Every tutorial uses the same dataset-to-figure workflow: read the data, wrangle it into the tidy shape a plotting call expects, choose geoms and aesthetics deliberately, tune scales and themes for legibility, and export at a resolution suitable for submission.
+
+## Topics covered
+
+- The grammar of graphics: data, mappings, geoms, stats, scales, coordinates, facets, themes
+- Univariate plots: histograms, density plots, ECDFs, boxplots, violin plots, dotplots, raincloud plots
+- Bivariate plots: scatter plots with regression lines, 2D density, hexbin, contour
+- Categorical plots: bar charts, stacked and dodged bars, Cleveland dot plots, heatmaps
+- Time-series plots: line plots, ribbon bands for uncertainty, calendar heatmaps
+- Statistical plots: forest plots, funnel plots, Bland-Altman plots, ROC curves, survival curves
+- Multi-panel layouts: `facet_wrap`, `facet_grid`, and the `patchwork` package for arbitrary compositions
+- Colour theory: perceptually uniform palettes (`viridis`), colour-blind-safe choices, diverging scales
+- Typography, annotation, labelling, and manuscript-ready export (`ggsave`, size and DPI conventions)
+- Interactive graphics with `plotly`, `ggiraph`, and `htmlwidgets` for HTML reports
+
+The emphasis throughout is on figures that stand alone: legible axes, informative legends, captions that tell the reader what to see.
+
+<!-- card-grid-injected -->
+
+## Tutorials
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Aesthetics and Geoms](aesthetics-and-geoms.qmd)
+The two ggplot2 building blocks: what data to map (aesthetics) and how to draw it (geoms)
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Annotations and Labels](annotations-and-labels.qmd)
+Adding text, arrows, rectangles, and repelling labels to ggplot2 figures
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bar Charts](bar-charts.qmd)
+Counts per category and summarised values per category
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bland-Altman Plots](bland-altman-plots.qmd)
+Mean-vs-difference plot for comparing two measurement methods
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Boxplots](boxplots.qmd)
+Five-number summary display: Tukey boxplots with whiskers and outlier rules
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Bubble Plots](bubble-plots.qmd)
+Scatter plots with a third variable encoded by point size
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Colour Palettes](colour-palettes.qmd)
+Discrete, continuous, perceptually uniform, and diverging palettes for ggplot2
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Colour-Blind-Safe Plots](colour-blind-safe-plots.qmd)
+Designing plots that remain readable to viewers with colour-vision deficiencies
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Contour Plots](contour-plots.qmd)
+Isolines of a 2D scalar field or density
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Correlation Heatmaps](correlation-heatmaps.qmd)
+Visualising a correlation matrix with colour-encoded cells and significance markers
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Density Plots](density-plots.qmd)
+Smooth distribution display via kernel density estimation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Dot Plots](dot-plots.qmd)
+Cleveland dot plots and Wilkinson dot plots for compact distributional displays
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Facets and Panels](facets-and-panels.qmd)
+Creating small multiples via facet_wrap and facet_grid
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Forest Plots (Visualisation)](forest-plots-viz.qmd)
+Point estimates and confidence intervals stacked across studies or subgroups
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Funnel Plots (Visualisation)](funnel-plots-viz.qmd)
+Study effect vs. precision plot used to detect publication bias in meta-analysis
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Heatmaps](heatmaps.qmd)
+Matrix displays with colour-encoded cell values, optionally with row/column ordering
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Hexbin Plots](hexbin-plots.qmd)
+Binning the 2D plane into hexagons and colouring by count, for large bivariate data
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Histograms](histograms.qmd)
+Univariate distribution display via binned frequencies or densities
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Interactive Plots with ggiraph](interactive-ggiraph.qmd)
+Interactive SVG-based ggplot extensions with per-element hover, click, and selection
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Interactive Plots with plotly](interactive-plotly.qmd)
+Converting ggplot objects to interactive HTML plots via ggplotly()
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Line Plots](line-plots.qmd)
+Connecting ordered observations with lines for time-series and trajectory displays
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Pairs Plots](pairs-plots.qmd)
+Scatterplot matrices for exploring pairwise relationships among several continuous variables
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Patchwork: Multi-Plot Composition](patchwork-composition.qmd)
+Composing multiple ggplot objects into a single figure with the patchwork package
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [ROC Curves](roc-curves-plot.qmd)
+Sensitivity vs 1-specificity plots for diagnostic tests and binary classifiers
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Raincloud Plots](raincloud-plots.qmd)
+Half-violin + jittered raw points + boxplot: a comprehensive distribution display
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Ridge Plots](ridge-plots.qmd)
+Stacked density curves across groups, also called 'joy plots'
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Saving and Exporting Figures](ggsave-and-export.qmd)
+Exporting ggplot figures to PDF, PNG, SVG, and TIFF with the right dimensions and DPI
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Scales and Coordinates](scales-and-coordinates.qmd)
+Controlling how data values are mapped to visual values (scales) and how the plot area is organised (coordinates)
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Scatter Plots](scatter-plots.qmd)
+The bivariate continuous default: geom_point with overplotting strategies and trend lines
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Stacked and Dodged Bars](stacked-dodged-bars.qmd)
+Two-factor bar charts: stacking for composition, dodging for side-by-side comparison
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Survival Curves](survival-curves-plot.qmd)
+Publication-quality Kaplan-Meier plots with risk tables and log-rank annotation
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [The Grammar of Graphics](grammar-of-graphics.qmd)
+Understanding ggplot2 as a layered grammar: data, mappings, geoms, stats, scales, coordinates, facets, and themes
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Time Series Plots](time-series-plots.qmd)
+Dated line plots with forecast bands and decomposition displays
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [Violin Plots](violin-plots.qmd)
+Symmetric kernel density plots for comparing distributions across groups
+:::
+
+::: {.card}
+::: {.kicker}
+TUTORIAL
+:::
+### [ggplot2 Themes](ggplot-themes.qmd)
+Visual styling of plots via complete themes and fine-grained theme() elements
+:::
+
+:::

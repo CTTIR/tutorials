@@ -1,0 +1,69 @@
+---
+title: Bayesian Meta-Analysis
+date: "2026-04-17"
+description: Hierarchical meta-analysis with explicit prior on between-study heterogeneity
+categories:
+  - Bayesian Statistics
+  - bayesian-meta-analysis
+  - random-effects
+  - tau
+---
+
+## Introduction
+
+Meta-analysis with $k$ studies is awkward for frequentist random-effects estimators when $k$ is small: REML and DerSimonian-Laird both rely on asymptotic approximations that break down when only five or six studies contribute, and the between-study variance $\tau^2$ can collapse to zero or be wildly imprecise. A Bayesian formulation puts an explicit prior on $\tau$ and propagates uncertainty into both the pooled effect and the prediction interval for a new study, which is exactly the inferential question that drives most meta-analyses in clinical and biomedical work.
+
+## Prerequisites
+
+A working understanding of fixed- and random-effects meta-analysis, exchangeability assumptions, and hierarchical Bayesian models. Familiarity with `brms` formula syntax accelerates the implementation step.
+
+## Theory
+
+The hierarchical model is
+
+$$y_i \sim \mathcal N(\theta_i, s_i^2), \qquad \theta_i \sim \mathcal N(\mu, \tau^2),$$
+
+where $y_i$ and $s_i$ are the observed effect estimate and its standard error from study $i$, $\theta_i$ is the latent study-specific effect, $\mu$ is the population effect, and $\tau$ is the between-study standard deviation. Typical priors are weakly informative: $\mu \sim \mathcal N(0, 2)$ on the standardised-mean-difference scale and $\tau \sim \mathrm{half\text{-}Normal}(0, 0.5)$ or $\mathrm{half\text{-}Cauchy}(0, 0.3)$. The half-Cauchy gives the heavier tail favoured when very large heterogeneity is plausible. The posterior delivers $\mu$, $\tau$, every $\theta_i$ shrunk toward $\mu$, and a predictive distribution $\mathcal N(\mu, \tau^2)$ for the next study.
+
+## Assumptions
+
+Exchangeable studies, accurate within-study standard errors $s_i$, and proper priors. The within-study sampling distribution is taken as known; if $s_i$ are themselves estimated from few patients, an additional level of hierarchy is needed.
+
+## R Implementation
+
+```r
+library(brms)
+
+studies <- data.frame(
+  yi = c(0.2, 0.3, -0.05, 0.4, 0.25),
+  sei = c(0.10, 0.15, 0.08, 0.12, 0.20)
+)
+
+fit <- brm(yi | se(sei) ~ 1 + (1 | seq_len(nrow(studies))),
+           data = studies,
+           prior = prior(normal(0, 1), class = "Intercept") +
+                   prior(cauchy(0, 0.5), class = "sd"),
+           chains = 4, iter = 4000, refresh = 0)
+
+summary(fit)
+```
+
+## Output & Results
+
+`summary(fit)` returns the pooled effect (`Intercept`) and the between-study SD (`sd(seq_len(...))`) with 95 % credible intervals, $\hat R$, and ESS. Per-study posterior means come from `ranef(fit)`; the predictive distribution for a future study is `posterior_predict()` with `re_formula = NA`.
+
+## Interpretation
+
+A reporting sentence: "A Bayesian random-effects meta-analysis with a half-Cauchy(0, 0.5) prior on $\tau$ pooled the five studies to an effect of 0.23 (95 % credible interval 0.07 to 0.39); the between-study heterogeneity was small ($\tau = 0.09$, 95 % CrI 0.01 to 0.25), and the 95 % predictive interval for a future trial was $-0.05$ to $0.51$." Reporting the predictive interval together with the pooled estimate avoids the false sense of precision that a credible interval on $\mu$ alone can convey.
+
+## Practical Tips
+
+- With $k < 10$ studies, the prior on $\tau$ matters substantially; a half-$t(3, 0, 1)$ or half-Normal(0, 0.5) is a reasonable compromise between letting the data speak and avoiding implausible values.
+- Always report the prior in the methods section and conduct a sensitivity analysis with at least one wider and one tighter prior on $\tau$.
+- For binary outcomes, fit on the log-odds-ratio or risk-ratio scale rather than risk differences; the Normal-Normal hierarchy is more reasonable on the log scale.
+- The `bayesmeta` package provides closed-form computations for simple models and is faster than MCMC when the prior is conjugate.
+- For network meta-analysis with multiple treatments, switch to `gemtc` or `multinma`; the random-effects machinery generalises but the implementation is non-trivial.
+
+## R Packages Used
+
+`brms` for the hierarchical Bayesian fit with study-level standard errors, `bayesmeta` for closed-form alternatives, `bayesplot` for diagnostic plots, and `gemtc` / `multinma` for the network-meta extension.

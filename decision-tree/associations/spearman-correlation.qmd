@@ -76,15 +76,3 @@ Spearman's $\rho$ is its own effect size. Cohen's thresholds: small 0.10, medium
 ----
 
 *Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
-
-::: {.vgwort-pixel}
-```{=html}
-<!-- VG Wort Zählmarke — public ID: 005bb10183c941189b747b5eda4db425 -->
-<img src="https://vg09.met.vgwort.de/na/005bb10183c941189b747b5eda4db425"
-     width="1" height="1" alt=""
-     loading="eager"
-     fetchpriority="high"
-     decoding="async"
-     style="position:absolute;visibility:hidden;" />
-```
-:::

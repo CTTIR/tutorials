@@ -1,0 +1,63 @@
+---
+title: Factorial Trials
+date: "2026-04-17"
+description: Simultaneously evaluating multiple interventions via a factorial design
+categories:
+  - Clinical Biostatistics
+  - factorial
+  - interaction
+  - design
+---
+
+## Introduction
+
+Factorial trials test two or more interventions in a single experiment: participants are randomised to each factor independently, producing 2x2 (or higher) cells. The design is efficient if the interventions act independently (no interaction); otherwise the interaction itself becomes the primary finding.
+
+## Prerequisites
+
+ANOVA; interactions.
+
+## Theory
+
+In a 2x2 design, four cells: control, A only, B only, A + B. Main effects are estimated by averaging over the other factor; the interaction compares observed A + B effect to the sum of individual effects.
+
+If interaction is negligible, factorial is efficient: same power as two separate trials with half the total sample size.
+
+## Assumptions
+
+Treatments do not interact (or the interaction is the inferential target); randomisation is to each factor independently; outcome is measured under identical conditions across cells.
+
+## R Implementation
+
+```r
+set.seed(2026)
+n_per_cell <- 40
+A <- factor(rep(c("no", "yes"), each = 2 * n_per_cell))
+B <- factor(rep(rep(c("no", "yes"), each = n_per_cell), 2))
+
+# Simulate additive effects, mild positive interaction
+y <- rnorm(4 * n_per_cell) +
+     ifelse(A == "yes", 0.5, 0) +
+     ifelse(B == "yes", 0.3, 0) +
+     ifelse(A == "yes" & B == "yes", 0.2, 0)
+
+fit <- lm(y ~ A * B)
+summary(fit)$coefficients
+anova(fit)
+```
+
+## Output & Results
+
+Main-effect estimates for A and B plus the interaction term. The interaction is small, consistent with the simulated +0.2.
+
+## Interpretation
+
+"The factorial analysis estimated a main effect of A = 0.48, B = 0.31, with a small positive interaction (0.22, p = 0.14). Main-effect analyses are interpretable in the absence of significant interaction."
+
+## Practical Tips
+
+- Pre-specify the interaction test and its interpretation; a non-significant test does not guarantee additivity.
+- Factorial trials are under-powered for interactions unless specifically designed for them.
+- Report both main effects (averaged over the other factor) and cell means.
+- Partial factorial ('unbalanced') designs drop problematic cells -- useful when certain combinations are unethical or impractical.
+- For > 3 factors, fractional factorial designs (Taguchi) reduce cell count at the cost of confounding higher-order interactions.

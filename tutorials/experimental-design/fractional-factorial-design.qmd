@@ -1,0 +1,70 @@
+---
+title: Fractional Factorial Designs
+date: "2026-04-17"
+description: "A fraction of a 2^k design: economical screening with acceptable confounding"
+categories:
+  - Experimental Design
+  - fractional
+  - screening
+  - confounding
+---
+
+## Introduction
+
+Fractional factorial designs run only a carefully chosen subset of a full $2^k$ factorial, accepting controlled confounding (also called aliasing) among effects in exchange for dramatic reductions in run count. They are the standard screening tool in industrial DoE: when many candidate factors must be evaluated and only a few are expected to matter, a fractional factorial sifts the active factors from the inert ones at a fraction of the cost of a full factorial. The trade-off is that some pairs (or larger groups) of effects share their estimating contrast and cannot be disentangled from the data alone, so design selection requires careful attention to which aliasing patterns are scientifically tolerable.
+
+## Prerequisites
+
+A working understanding of full $2^k$ factorial designs, the concept of confounding among effect contrasts, and the Box–Hunter–Hunter sparsity-of-effects principle.
+
+## Theory
+
+A $2^{k-p}$ design uses $2^{k-p}$ runs — a $1/2^p$-fraction of the corresponding full $2^k$. The choice of $p$ generators (defining relations among the factor columns) determines which effects are aliased with which. The design's **resolution** is the length of the shortest word in the defining relation:
+
+- **Resolution III**: main effects are aliased with two-factor interactions; suitable for early screening only, where interactions are assumed negligible.
+- **Resolution IV**: main effects are clear of two-factor interactions, but two-factor interactions alias with each other.
+- **Resolution V**: main effects and two-factor interactions are all clear of each other; only three-factor and higher interactions are aliased.
+
+Higher resolution generally requires more runs; the design choice is a balance between run economy and inferential cleanliness.
+
+## Assumptions
+
+The sparsity-of-effects principle holds: lower-order effects (main, two-factor) dominate higher-order interactions, so aliasing among higher-order effects is acceptable. Each run is independent, residual error is approximately Normal with constant variance, and the chosen resolution is appropriate to the scientific question.
+
+## R Implementation
+
+```r
+library(FrF2)
+
+frac <- FrF2(nruns = 16, nfactors = 5, resolution = 5, randomize = TRUE)
+design.info(frac)$aliased
+
+set.seed(2026)
+for (v in LETTERS[1:5]) frac[[v]] <- as.numeric(as.character(frac[[v]]))
+frac$y <- 10 + 2 * frac$A + 1.5 * frac$B - 0.8 * frac$C +
+          0.6 * frac$A * frac$B + rnorm(16, 0, 0.5)
+
+fit <- lm(y ~ (A + B + C + D + E)^2, data = frac)
+summary(fit)
+```
+
+## Output & Results
+
+`FrF2()` constructs the fractional factorial layout with the requested resolution; `design.info()` documents the alias structure explicitly so users see which effects are confounded with which. The regression fit returns coefficients for all main effects and two-factor interactions (the latter representing the joint estimate of any aliased pair), supporting standard $t$-tests on each.
+
+## Interpretation
+
+A reporting sentence: "The $2^{5-1}$ resolution-V design used 16 runs — half of the full 32-run factorial — with main effects clear of all two-factor interactions and only the highest-order alias chain $ABCDE = I$. Significant effects were A (2.0, $p < 0.001$), B (1.5, $p = 0.001$), C ($-0.8$, $p = 0.02$), and the AB interaction (0.6, $p = 0.04$); factors D and E were inactive. The active subset $\{A, B, C\}$ will be followed up in a full factorial with replicated centre points to characterise curvature." Always document the alias structure.
+
+## Practical Tips
+
+- Use resolution IV or V for screening whenever enough runs are available; resolution III is acceptable only for very early screening when interactions are confidently negligible and clean main-effect estimates are not essential.
+- Resolution III Plackett–Burman designs are more economical (any number of factors that is a multiple of 4) but confound main effects with two-factor interactions; follow them up with a fold-over fraction or a higher-resolution design before drawing causal conclusions.
+- Fold-over designs convert a resolution III into a resolution IV by adding a mirror-image fraction with all factor signs reversed; this de-aliases main effects from two-factor interactions at the cost of doubling the run count.
+- After the screening step, follow up with a full factorial or response-surface design on the small subset of active factors identified; the classical industrial DoE workflow is "screen $\to$ characterise $\to$ optimise" in three sequential stages.
+- Include centre points in fractional factorials whenever feasible; they enable a curvature test against the average of the factorial corners and provide pure-error degrees of freedom for lack-of-fit testing.
+- Always document the alias chain in the methods section; reviewers will check it, and an undocumented aliasing pattern is a recurring source of misinterpreted DoE results.
+
+## R Packages Used
+
+`FrF2` for canonical fractional-factorial construction with resolution control, alias-structure documentation, and Daniel-plot diagnostics; `DoE.base` for general orthogonal-array construction including fractional factorials; `BsMD` for Bayesian screening of fractional designs; `unrepx` for unreplicated-design effect identification (Lenth, half-Normal, Box-Meyer); `daewr` for textbook companion datasets.

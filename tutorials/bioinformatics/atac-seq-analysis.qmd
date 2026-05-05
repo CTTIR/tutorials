@@ -1,0 +1,78 @@
+---
+title: ATAC-Seq Analysis
+date: "2026-04-17"
+description: Chromatin accessibility profiling via ATAC-seq peak calling and differential analysis
+categories:
+  - Bioinformatics
+  - atac-seq
+  - chromatin
+  - accessibility
+---
+
+## Introduction
+
+ATAC-seq (Assay for Transposase-Accessible Chromatin using sequencing) measures genome-wide chromatin accessibility by tagging accessible DNA regions with a hyperactive Tn5 transposase. Peaks in the resulting alignment density correspond to open chromatin — regulatory elements such as promoters and enhancers — and differential accessibility analysis between conditions reveals cell-state-specific regulatory changes. ATAC-seq has largely replaced DNase-seq for accessibility profiling because of its lower input requirement (10{,}000 cells vs millions) and simpler protocol.
+
+## Prerequisites
+
+A working understanding of read alignment, BAM files, peak-calling concepts (typically MACS2), and regulatory genomics (promoters, enhancers, transcription factor binding).
+
+## Theory
+
+The standard ATAC-seq pipeline:
+
+1. **QC**: TSS enrichment score, fragment-length distribution with characteristic nucleosomal peaks (mono-, di-, tri-nucleosomal at approximately 150, 300, 450 bp).
+2. **Duplicate and mitochondrial-read removal**: typical mitochondrial fraction is 20–50 % of reads and must be removed before peak calling.
+3. **Peak calling**: MACS2 with Tn5-specific flags (`--nomodel --shift -75 --extsize 150`) treats each end of the fragment as a Tn5 cut site.
+4. **Consensus peak set**: combine peaks across replicates and conditions for joint quantitative analysis.
+5. **Differential accessibility**: DiffBind, edgeR, or DESeq2 on peak-level read counts.
+6. **Peak annotation**: ChIPseeker assigns peaks to nearest gene and annotates promoter vs distal categories.
+
+## Assumptions
+
+Tn5 tagmentation is approximately uniform across accessible regions; sequencing depth is sufficient ($> 50$ million reads per sample is typical); mitochondrial reads have been removed before peak calling.
+
+## R Implementation
+
+```r
+library(ATACseqQC); library(ChIPseeker)
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+
+# Fragment-length diagnostic from an example ATAC bam shipped with ATACseqQC
+bam <- system.file("extdata", "GL1.bam", package = "ATACseqQC")
+# fragSize <- fragSizeDist(bam, bamFiles.labels = "example")
+
+# Peak annotation example with a toy peak GRanges
+set.seed(2026)
+peaks <- GRanges(
+  seqnames = rep("chr1", 50),
+  ranges = IRanges(start = sort(sample(1e7:1.05e7, 50)),
+                   width = 500)
+)
+anno <- annotatePeak(peaks,
+                     TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene,
+                     level = "gene",
+                     verbose = FALSE)
+as.data.frame(anno)[1:5, c("seqnames", "start", "annotation", "geneId")]
+```
+
+## Output & Results
+
+`ATACseqQC::fragSizeDist()` produces the diagnostic fragment-size distribution; visible peaks at the nucleosomal lengths confirm successful tagmentation. `ChIPseeker::annotatePeak()` assigns each peak to the nearest gene and categorises it as promoter, intronic, intergenic, etc.
+
+## Interpretation
+
+A reporting sentence: "ATAC-seq on CD8 and regulatory T cells (n = 4 per group) identified 25{,}412 reproducible peaks at IDR < 0.05; ChIPseeker annotation showed 35 % promoter-proximal and 65 % distal-regulatory locations. Differential accessibility analysis identified 1{,}240 peaks at FDR < 0.05, enriched for AP-1 family motifs (Jun, Fos)." Always report TSS enrichment, peak counts, and the consensus peak strategy.
+
+## Practical Tips
+
+- Remove duplicates and mitochondrial reads with `samtools markdup` and chromosome filtering before peak calling; mitochondrial reads dominate ATAC libraries and confound peak calling if retained.
+- Check TSS enrichment score (computed by `ATACseqQC` or by `chrom.sizes`-aware tools); scores above 7 are typical for fresh tissue, scores above 4 are acceptable for frozen samples.
+- For differential accessibility, define a consensus peak set across replicates (DiffBind-style) and quantify all samples on the same regions; calling peaks separately per sample produces unstable comparisons.
+- Motif enrichment via `chromVAR` provides per-sample transcription-factor activity scores; pair with differential accessibility to identify TFs driving the observed changes.
+- For single-cell ATAC-seq (scATAC-seq), use `Signac` (Seurat-flavoured) or `ArchR`; the workflow differs substantially from bulk ATAC.
+- Use BlackList regions (ENCODE) to exclude artefact-prone genomic regions before downstream analysis.
+
+## R Packages Used
+
+`ATACseqQC` for fragment-size distribution and TSS enrichment QC; `ChIPseeker` for peak annotation; `DiffBind` for differential-binding analysis; `chromVAR` for motif accessibility scores; `Signac` and `ArchR` for single-cell ATAC-seq; `Rsubread` and `GenomicAlignments` for upstream alignment and quantification.

@@ -1,0 +1,73 @@
+---
+title: Structural Variant Detection
+date: "2026-04-17"
+description: "Detecting deletions, duplications, inversions, and translocations from WGS"
+categories:
+  - Bioinformatics
+  - SV
+  - manta
+  - delly
+---
+
+## Introduction
+
+Structural variants (SVs) -- deletions, duplications, inversions, translocations, and complex rearrangements -- are genomic events $\geq$ 50 bp. They often have larger phenotypic impact than single-nucleotide variants but are harder to call because they involve breakpoints across long distances. Short-read callers like Manta and Delly, plus long-read callers (Sniffles, pbsv), are standard.
+
+## Prerequisites
+
+BAM files from high-coverage WGS; reference genome.
+
+## Theory
+
+Short-read SV callers combine three signals:
+- **Read pairs** with abnormal insert size or orientation.
+- **Split reads** whose two halves map to distant loci.
+- **Read-depth** anomalies (CNV overlap).
+
+Long-read callers directly observe breakpoint-spanning reads, dramatically improving resolution of repeat-rich SVs.
+
+## Assumptions
+
+Sequencing depth is adequate ($\geq$ 30x WGS); insert-size distribution is approximately normal; reference matches the sample ancestry.
+
+## R Implementation
+
+Manta/Delly run on the command line producing VCF; R ingests and annotates:
+
+```r
+library(VariantAnnotation)
+library(StructuralVariantAnnotation)
+
+# Use a VariantAnnotation-shipped VCF as a proxy
+vcf_file <- system.file("extdata", "chr22.vcf.gz", package = "VariantAnnotation")
+vcf <- readVcf(vcf_file, "hg19")
+vcf_sv <- vcf[1:10, ]   # illustrative subset; treat as SV records
+
+# breakpointRanges builds a GRanges of breakpoints from SV VCF INFO fields
+gr <- breakpointRanges(vcf_sv)
+length(gr)
+head(as.data.frame(gr))
+```
+
+Example command-line calls:
+
+```
+manta configManta.py --bam sample.bam --reference ref.fa --runDir manta_out
+delly call -g ref.fa -o sample.bcf sample.bam
+```
+
+## Output & Results
+
+A VCF of SV calls with type (DEL, DUP, INV, INS, BND), coordinates, and supporting-read counts; annotation against genes yields per-gene SV impact.
+
+## Interpretation
+
+"WGS SV calling identified 4,120 events (2,800 deletions, 1,100 duplications, 180 inversions, 40 translocations) per sample. The germline 17q12 deletion spans RCAD and was concordant with the clinical suspicion."
+
+## Practical Tips
+
+- Use **two** callers and intersect (high-precision) or union (high-sensitivity); any single caller misses events.
+- Filter by breakpoint support; single-read evidence is almost always false.
+- Long-read WGS resolves complex rearrangements that short reads cannot; use for structural-disease phenotyping.
+- Tumour SV calling requires matched normal to remove germline events; somatic callers: Manta + DELLY (cancer mode), GRIDSS.
+- Annotate breakpoints with `StructuralVariantAnnotation` to identify gene fusions and breakpoint-disrupted regions.

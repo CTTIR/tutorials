@@ -1,0 +1,114 @@
+---
+title: The Probability Mass Function
+date: "2026-04-17"
+description: The function that assigns probability to each value of a discrete random variable
+categories:
+  - Probability Theory
+  - pmf
+  - discrete
+  - distribution
+---
+
+## Introduction
+
+For a discrete random variable, the probability mass function (PMF) gives the probability that the variable takes each specific value. It is the discrete analogue of the density function, and the probability of any event reduces to summing the PMF over the relevant values.
+
+## Prerequisites
+
+Discrete random variables and basic probability.
+
+## Theory
+
+For a discrete random variable $X$ with countable support $\{x_1, x_2, \ldots\}$, the PMF is
+
+$$p_X(x) = P(X = x), \qquad x \in \mathbb{R}.$$
+
+A valid PMF satisfies:
+
+1. $p_X(x) \geq 0$ for all $x$.
+2. $\sum_x p_X(x) = 1$ (total probability is 1).
+3. $p_X(x) = 0$ for $x$ outside the support.
+
+The probability of an event is a sum over the PMF:
+
+$$P(X \in A) = \sum_{x \in A} p_X(x).$$
+
+The CDF is the running cumulative sum:
+
+$$F_X(x) = P(X \leq x) = \sum_{x_i \leq x} p_X(x_i).$$
+
+Expected value and variance follow the usual formulas:
+
+$$E[X] = \sum_x x \, p_X(x), \qquad \mathrm{Var}(X) = \sum_x (x - E[X])^2 \, p_X(x).$$
+
+Common discrete PMFs in R use the `d<name>()` family: `dbinom`, `dpois`, `dgeom`, `dhyper`, `dnbinom`, `dmultinom`.
+
+## Assumptions
+
+The variable must be discrete. Assigning a PMF to a continuous variable produces a degenerate object (zero at every point, failing normalisation).
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+# Binomial PMF for n = 10 trials, p = 0.3
+n <- 10; p <- 0.3
+k <- 0:n
+pmf <- dbinom(k, size = n, prob = p)
+
+data.frame(k, pmf)
+
+# Verify normalisation
+sum(pmf)
+
+# Compute probabilities of events via sums
+sum(pmf[k >= 3 & k <= 5])        # P(3 <= X <= 5)
+sum(pmf[k %in% c(0, n)])          # P(X = 0 or X = n)
+
+# Expected value and variance
+sum(k * pmf)
+sum((k - sum(k * pmf))^2 * pmf)
+
+ggplot(data.frame(k, pmf), aes(k, pmf)) +
+  geom_col(fill = "#2A9D8F") +
+  scale_x_continuous(breaks = k) +
+  labs(x = "k", y = "P(X = k)",
+       title = "Binomial(10, 0.3) PMF") +
+  theme_minimal()
+```
+
+## Output & Results
+
+```
+   k         pmf
+1  0 0.028247525
+2  1 0.121060821
+3  2 0.233474440
+4  3 0.266827932
+5  4 0.200120949
+6  5 0.102919345
+7  6 0.036756909
+8  7 0.009001692
+9  8 0.001446773
+10 9 0.000137781
+11 10 0.0000059049
+
+[1] 1            # normalisation
+[1] 0.5695       # P(3 <= X <= 5)
+[1] 0.0283       # P(X = 0 or X = 10)
+[1] 3            # E[X] = np
+[1] 2.1          # Var(X) = np(1-p)
+```
+
+## Interpretation
+
+A PMF table or bar chart is the natural display of a discrete distribution. For a manuscript, reporting "the number of responders out of 10 was binomially distributed with $p = 0.3$" conveys the full PMF implicitly.
+
+## Practical Tips
+
+- Make sure the PMF sums to exactly 1 when you define a custom distribution; normalise explicitly.
+- For mixtures of Poissons, Bernoullis, and similar, sums of PMFs computed componentwise give the mixture PMF.
+- Use `choose(n, k) * p^k * (1 - p)^(n - k)` for symbolic verification of the binomial PMF.
+- Numerical underflow can corrupt PMFs at extreme values; work on the log scale (`dbinom(k, ..., log = TRUE)`) when $n$ is large.
+- Histograms of samples approximate the PMF in finite samples; for a true PMF-bar-chart, use `geom_col()` at the exact support values.

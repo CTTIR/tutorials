@@ -1,0 +1,78 @@
+---
+title: Trim-and-Fill
+date: "2026-04-17"
+description: Adjusting the pooled estimate for apparent funnel asymmetry
+categories:
+  - Meta-Analysis
+  - trim-and-fill
+  - publication-bias
+  - sensitivity
+---
+
+## Introduction
+
+Trim-and-fill, introduced by Duval and Tweedie in 2000, is the most widely used algorithmic approach for adjusting a pooled meta-analytic estimate when the funnel plot looks asymmetric. The idea is intuitive: if some smaller studies on the side opposite the dominant tail of the funnel appear to be missing — possibly because they were never published, never indexed, or never reached the systematic-review screening stage — the procedure imputes mirror-image counterparts and re-pools the augmented set. The difference between the unadjusted and adjusted estimates quantifies how sensitive the conclusion is to the presence of these hypothetical missing studies. Crucially, trim-and-fill is a sensitivity analysis, not a method of bias correction in the strict statistical sense; it cannot recover the true unbiased effect.
+
+## Prerequisites
+
+Familiarity with funnel plots, the small-study-effect concept, the inverse-variance random-effects pool, and the distinction between sensitivity analysis and bias correction.
+
+## Theory
+
+The algorithm proceeds iteratively:
+
+1. Estimate the number of asymmetric studies in the dominant tail using one of three rank-based estimators ($L_0$, $R_0$, $Q_0$).
+2. Trim those studies from the dominant side and re-estimate the pooled effect; this estimate becomes the new symmetry centre.
+3. Fill the analysis by reflecting the trimmed studies across the new centre to the opposite side.
+4. Re-pool with the augmented dataset to obtain the adjusted estimate.
+
+Iterating to convergence yields the final imputed studies and adjusted pooled estimate. The number of imputed studies is itself an interpretable summary: zero imputations indicate no detectable asymmetry, and a large number indicates substantial sensitivity.
+
+## Assumptions
+
+The observed funnel asymmetry is attributable to selection or publication bias rather than to true between-study heterogeneity correlated with study size; the underlying effect distribution is mirror-symmetric around the true effect; and the pooled model is otherwise correctly specified.
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+k <- 18
+yi <- rnorm(k, 0.35, 0.25)
+vi <- 1 / sample(15:300, k, replace = TRUE)
+
+keep <- !(sqrt(vi) > 0.1 & abs(yi) < 0.15)
+yi_b <- yi[keep]; vi_b <- vi[keep]
+
+res <- rma(yi_b, vi_b, method = "REML")
+tf  <- trimfill(res)
+
+data.frame(method = c("Original", "Trim-and-fill"),
+           estimate = round(c(res$b, tf$b), 3),
+           ci = c(sprintf("[%.2f, %.2f]", res$ci.lb, res$ci.ub),
+                  sprintf("[%.2f, %.2f]", tf$ci.lb, tf$ci.ub)))
+
+funnel(tf, main = "Trim-and-fill adjusted funnel")
+```
+
+## Output & Results
+
+`trimfill()` returns the number of imputed studies, the adjusted pooled estimate with its confidence interval, and an augmented dataset suitable for plotting on a funnel diagram. Reporting both the original pool and the adjusted pool side by side — together with the count of imputations — lets readers see exactly how much the conclusion shifts when the missing studies are introduced.
+
+## Interpretation
+
+A reporting sentence: "Trim-and-fill (Duval and Tweedie, $L_0$ estimator) imputed four potentially missing studies on the left side of the funnel; the adjusted standardised mean difference was 0.18 (95 % CI 0.03 to 0.33), notably attenuated from the unadjusted estimate of 0.32 (0.21 to 0.43). The result suggests the pooled conclusion is sensitive to plausible publication bias, and Egger's regression and PET-PEESE were reported as triangulating sensitivity analyses." Always report the unadjusted estimate as primary and the adjusted estimate as sensitivity.
+
+## Practical Tips
+
+- Trim-and-fill is a sensitivity analysis, not a proof of publication bias; report it as such, and never use the adjusted estimate as the primary effect.
+- The method performs poorly when funnel asymmetry is driven by genuine between-study heterogeneity correlated with study size; in such settings it can spuriously imply bias.
+- Apply alongside Egger's regression test and PET-PEESE for triangulation; consistent signals strengthen the bias interpretation, divergent signals warn against over-interpretation.
+- Report both original and adjusted estimates with their CIs and the count of imputed studies; an imputation count of zero indicates the funnel was already symmetric and no adjustment was needed.
+- The $L_0$ estimator (default in `metafor`) is the most widely used; $R_0$ is more conservative; $Q_0$ is rarely used in practice. Sensitivity to estimator choice should be noted when results are borderline.
+- Selection-model approaches (such as Vevea–Hedges weight-function models) and PET-PEESE are increasingly preferred over trim-and-fill in methodological literature; consider them when the small-study effect is consequential to your conclusion.
+
+## R Packages Used
+
+`metafor::trimfill()` for the canonical implementation with all three estimators and `funnel()` overlay; `meta::trimfill()` for the alternative interface within the `meta` ecosystem; `metasens` for trim-and-fill alongside copas and limit-meta-analysis bias-adjustment methods; `weightr` and `puniform` for selection-model alternatives that handle complex bias mechanisms.

@@ -1,0 +1,88 @@
+---
+title: "Stan: Introduction"
+date: "2026-04-17"
+description: "Writing probabilistic models in Stan's data-parameters-model blocks"
+categories:
+  - Bayesian Statistics
+  - stan
+  - rstan
+  - cmdstanr
+---
+
+## Introduction
+
+Stan is a probabilistic programming language with an R-like syntax that compiles to highly optimised C++. Writing a model directly in Stan gives you full control over the likelihood, the prior, and any reparameterisation that improves sampling — control that the higher-level wrappers `brms` and `rstanarm` deliberately abstract away. The cost is verbosity, but the payoff is a transparent specification: every line in the `model` block contributes a term to the log-posterior, and a Stan program can be archived as the canonical statement of an analysis.
+
+## Prerequisites
+
+A working understanding of Bayesian inference, the difference between a prior and a likelihood, and the basics of Hamiltonian Monte Carlo. You also need a working C++ toolchain (Rtools on Windows, build-essential on Linux) so that `rstan` or `cmdstanr` can compile the model.
+
+## Theory
+
+A Stan program is organised into blocks evaluated in a specific order:
+
+- `data`: variables that come from the user, dimensioned and constrained.
+- `transformed data` (optional): deterministic transformations of the data computed once at compile time.
+- `parameters`: continuous unknowns to be inferred. Constraints (`<lower=0>`) are reparameterised internally, which is why discrete parameters have to be marginalised out.
+- `transformed parameters` (optional): deterministic functions of parameters, recomputed at every leapfrog step.
+- `model`: contributions to the log-posterior — both priors on parameters and the likelihood given the data.
+- `generated quantities` (optional): posterior predictive draws, log-likelihoods for LOO-CV, or any deterministic quantity to monitor.
+
+The default sampler is the No-U-Turn variant of HMC, which adapts step size and mass matrix during a warm-up phase before producing draws.
+
+## Assumptions
+
+Continuous parameters or correctly marginalised discrete latent states. The posterior must be log-concave only locally, but pathological geometry (funnels, ridges, multimodality) often shows up as divergent transitions and demands reparameterisation.
+
+## R Implementation
+
+```stan
+// Stan model: linear regression
+data {
+  int<lower=1> N;
+  vector[N] x;
+  vector[N] y;
+}
+parameters {
+  real alpha;
+  real beta;
+  real<lower=0> sigma;
+}
+model {
+  alpha ~ normal(0, 10);
+  beta  ~ normal(0, 2.5);
+  sigma ~ exponential(1);
+  y ~ normal(alpha + beta * x, sigma);
+}
+```
+
+```r
+library(rstan)
+
+set.seed(2026)
+d <- list(N = 100, x = rnorm(100), y = rnorm(100, 2 + 1.5 * rnorm(100), 1))
+
+# Assume the Stan code is saved to "model.stan"
+# fit <- stan("model.stan", data = d, chains = 4, iter = 2000)
+# print(fit, pars = c("alpha", "beta", "sigma"))
+```
+
+## Output & Results
+
+`print(fit)` returns posterior mean, standard error of the mean, posterior standard deviation, 2.5 / 25 / 50 / 75 / 97.5 % quantiles, effective sample size, and $\hat R$ for every monitored parameter. Diagnostics also include divergent-transition counts, maximum tree depth saturation, and energy diagnostics — any of which, if non-zero, signals geometry trouble.
+
+## Interpretation
+
+Compared with `lm()` or `glmer()` style output, Stan output is more verbose but more explicit: there is no implicit prior, no black-box optimisation, and the credible interval has a direct probability interpretation conditional on the model. A reporting sentence: "A Stan-compiled linear regression with weakly informative priors estimated the slope at 1.49 (95 % CrI 1.30 to 1.69), with $\hat R = 1.00$ and $n_{\text{eff}} > 3{,}500$ for every parameter."
+
+## Practical Tips
+
+- Use `brms::stancode()` or `rstanarm::stan_glm` source as templates — they are well-engineered models you can copy and modify.
+- Reparameterise hierarchical models in non-centred form ($\theta_j = \mu + \tau \cdot \tilde\theta_j$ with $\tilde\theta_j \sim \mathcal N(0,1)$) to eliminate funnel-shaped divergences.
+- Prefer `cmdstanr` over `rstan` for new projects: it tracks upstream Stan releases, has a cleaner API, and avoids the binary-compatibility surprises that plague R-package builds.
+- Vectorise statements (`y ~ normal(mu, sigma)` over `for` loops); the compiler optimises vectorised forms more aggressively.
+- Place posterior predictive draws in `generated quantities`, not the `model` block, so they do not enter the log-density evaluation and slow sampling.
+
+## R Packages Used
+
+`rstan` or `cmdstanr` to compile and sample from Stan programs, `posterior` for working with draw arrays, `bayesplot` for diagnostic and posterior plots, and `loo` for leave-one-out cross-validation.

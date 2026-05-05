@@ -1,0 +1,70 @@
+---
+title: The Runs Test
+date: "2026-04-17"
+description: Testing randomness of a binary or dichotomised sequence via run lengths
+categories:
+  - Inferential Statistics
+  - runs-test
+  - randomness
+  - sequence
+---
+
+## Introduction
+
+The runs test is a non-parametric test of randomness in a sequence of binary outcomes (or continuous outcomes that have been dichotomised against a reference such as the median). A "run" is a maximal subsequence of identical symbols — for example, in the sequence HHTTTHHH the runs are HH, TTT, HHH, three runs in total. Under genuine randomness the number of runs follows a known distribution; too few runs indicate clustering of like outcomes (suggesting positive autocorrelation or a structural break), while too many runs indicate alternation (negative autocorrelation). The runs test is widely used in quality-control charts to detect assignable causes, in regression diagnostics to flag autocorrelated residuals, and in randomness testing of sequences from random-number generators or dice-rolling sequences.
+
+## Prerequisites
+
+A working understanding of binary sequences, the concept of independent identically distributed observations, and the role of randomness diagnostics in time-ordered or sequence data.
+
+## Theory
+
+For a binary sequence with $n_1$ successes and $n_2$ failures, the expected number of runs under the null hypothesis of randomness is
+
+$$E[R] = \frac{2 n_1 n_2}{n_1 + n_2} + 1, \qquad \mathrm{Var}(R) = \frac{2 n_1 n_2 (2 n_1 n_2 - n_1 - n_2)}{(n_1 + n_2)^2 (n_1 + n_2 - 1)}.$$
+
+The standardised statistic $Z = (R - E[R])/\sqrt{\mathrm{Var}(R)}$ is approximately standard Normal for moderate $n$ (typically $n_1, n_2 \geq 10$). For continuous data, dichotomising against the sample median and applying the same test is the standard adaptation, though continuous-specific alternatives such as the Durbin-Watson test are usually more powerful for regression residuals.
+
+## Assumptions
+
+The sequence is binary or has been dichotomised in a pre-specified way, observations under the null are independent and identically distributed Bernoulli, and the sample size is large enough for the Normal approximation. Tied values at the dichotomisation cut-off must be handled deliberately — dropped, or broken randomly with appropriate caution.
+
+## R Implementation
+
+```r
+library(tseries); library(randtests)
+set.seed(2026)
+
+random_seq <- rbinom(50, 1, 0.5)
+runs.test(factor(random_seq))
+
+clustered <- rep(c(0, 1), each = 25)
+runs.test(factor(clustered))
+
+alternating <- rep(c(0, 1), times = 25)
+runs.test(factor(alternating))
+
+x <- rnorm(50) + seq(0, 2, length.out = 50)
+runs.test(factor(as.integer(x > median(x))))
+```
+
+## Output & Results
+
+The four examples illustrate the four distinct patterns the test detects: a truly random sequence ($z = -0.23$, $p = 0.82$), a strongly clustered sequence ($z = -6.85$, $p < 0.001$), an alternating sequence ($z = 6.85$, $p < 0.001$), and a trended continuous sequence dichotomised at the median ($z = -3.12$, $p = 0.002$). The sign of $z$ distinguishes clustering (negative) from alternation (positive).
+
+## Interpretation
+
+A reporting sentence: "The runs test applied to the residuals of the regression model showed no significant departure from randomness ($Z = -0.23$, $p = 0.82$), supporting the assumption of independent residuals along the observation order. For comparison, the test applied to a deliberately clustered binary sequence yielded $Z = -6.85$ ($p < 0.001$), and to an alternating sequence $Z = +6.85$ ($p < 0.001$), illustrating the test's sensitivity to both directions of non-randomness." Always describe whether departures are toward clustering or alternation.
+
+## Practical Tips
+
+- Use the runs test as a quick-and-dirty diagnostic for autocorrelation or trend in residuals from regression or quality-control monitoring; for regression-specific autocorrelation diagnostics, the Durbin-Watson test or Breusch-Godfrey test on continuous residuals is more powerful and should be preferred.
+- For continuous sequences, dichotomising at the median loses substantial information; the test becomes a relatively weak diagnostic compared with continuous-specific alternatives, but it remains useful for quick visual inspection of long sequences.
+- Ties at the median require deliberate handling: dropping tied values reduces the effective sample size and is the standard recommendation; breaking ties randomly inflates the apparent randomness and should be done only with explicit caution.
+- The Wald-Wolfowitz generalisation extends the runs concept to two-sample comparisons of distributions via run counts after merging and ranking; it is a non-parametric alternative to the two-sample $t$-test or Mann-Whitney test in some specialised settings.
+- In statistical-process-control charts, runs tests are used to detect assignable causes — systematic shifts, trends, or oscillations — in a time-ordered sequence of measurements; Western Electric and Nelson rules are operational implementations of runs-test logic.
+- For very long sequences ($n > 1000$), the Normal approximation is excellent and exact tables are unnecessary; for very short sequences ($n < 20$), use the exact distribution implemented in `randtests::runs.test()`.
+
+## R Packages Used
+
+`tseries::runs.test()` and `randtests::runs.test()` for the canonical Wald-Wolfowitz runs test; `randtests` for an extensive collection of randomness tests including Bartels rank-test, turning-point test, and rank-version variants; `lawstat::runs.test()` for an alternative implementation; `lmtest::dwtest()` and `lmtest::bgtest()` for continuous-residual autocorrelation diagnostics complementing the runs test.

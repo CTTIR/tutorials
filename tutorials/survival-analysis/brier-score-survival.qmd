@@ -1,0 +1,68 @@
+---
+title: The Brier Score for Survival
+date: "2026-04-17"
+description: Time-dependent prediction loss combining calibration and discrimination
+categories:
+  - Survival Analysis
+  - brier-score
+  - prediction-loss
+  - calibration
+---
+
+## Introduction
+
+The Brier score for survival is a prediction-loss metric that combines calibration and discrimination into one number, evaluated at a chosen time horizon $t$. It generalises the binary Brier score to right-censored data via inverse-probability-of-censoring weights, so a model that predicts a survival probability $\hat S_i(t)$ for each subject can be assessed against the actual observed status at $t$. Unlike the C-index, which captures only ranking, the Brier score penalises miscalibrated probabilities — a model that ranks well but consistently overpredicts survival will score worse on Brier than on concordance.
+
+## Prerequisites
+
+A working understanding of survival predictions, calibration vs discrimination, censoring, and the binary Brier score $(\hat p - y)^2$.
+
+## Theory
+
+At time $t$, the censoring-weighted Brier score is
+
+$$\mathrm{BS}(t) = \frac{1}{n} \sum_{i=1}^n w_i(t) \bigl(Y_i(t) - \hat S_i(t)\bigr)^2,$$
+
+where $Y_i(t) = \mathbf 1\{T_i > t\}$ is the observed survival indicator (when defined) and $w_i(t)$ is an inverse-probability-of-censoring weight that adjusts for the missing $Y_i(t)$ when subject $i$ is censored before $t$. The integrated Brier score (IBS, also called the continuous ranked probability score for survival) averages $\mathrm{BS}(t)$ over a follow-up window and gives a single-number summary suited to model selection.
+
+A useful reference is the Brier score of the marginal Kaplan-Meier estimator (no covariates); a model that delivers a lower IBS than the null KM has produced informative predictions.
+
+## Assumptions
+
+The censoring weights $w_i(t)$ are correctly estimated, typically via the Kaplan-Meier of the censoring distribution, which assumes non-informative censoring conditional on covariates.
+
+## R Implementation
+
+```r
+library(pec); library(survival)
+
+data(lung)
+fit <- coxph(Surv(time, status) ~ age + sex, data = lung, x = TRUE, y = TRUE)
+pec_out <- pec(list(fit), data = lung,
+               formula = Surv(time, status) ~ 1,
+               times = seq(100, 800, by = 100))
+
+plot(pec_out)
+crps(pec_out)
+```
+
+## Output & Results
+
+`pec()` returns time-dependent Brier scores at the requested horizons together with the null KM benchmark. `crps()` returns the integrated Brier score (continuous ranked probability score) over the requested window. The plot overlays the model and reference Brier curves; a model curve below the KM curve at every $t$ represents predictive improvement throughout follow-up.
+
+## Interpretation
+
+A reporting sentence: "The Cox model achieved an integrated Brier score of 0.16 over 100–800 days, compared to 0.21 for the null Kaplan-Meier; predictive improvement was largest between 200 and 500 days, where the model's time-specific Brier was about 30 % below the reference." Pair the IBS with a C-index; together they cover both calibration and discrimination.
+
+## Practical Tips
+
+- Compare the model to the null KM at every time point you report; without that reference, an absolute Brier score is hard to interpret.
+- Time-dependent Brier curves reveal when the model is most and least informative; this often identifies follow-up windows where extra covariates would help.
+- For honest assessment, use cross-validation: `pec(..., splitMethod = "cv10")` performs 10-fold CV and adjusts for optimism.
+- Integrated Brier (IBS) is a single-number summary suited to model ranking; report it alongside per-time-point Brier curves for transparency.
+- Complement with calibration plots (predicted vs observed survival probabilities at $t$) and the C-index; the three together give a full predictive-performance picture.
+- Brier-score weights depend on a censoring model; if censoring depends on covariates, fit a Cox model for the censoring time and use it instead of the marginal KM.
+
+## R Packages Used
+
+`pec` for `pec()`, `crps()`, and prediction-error curves; `riskRegression` for unified discrimination, calibration, and Brier metrics with bootstrap CIs; `survival` for the Cox fit; `timeROC` for time-dependent AUCs that complement the Brier-score view.

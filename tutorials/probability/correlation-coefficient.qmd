@@ -1,0 +1,98 @@
+---
+title: The Correlation Coefficient
+date: "2026-04-17"
+description: "Standardised covariance bounded in [-1, 1], measuring the strength of linear association"
+categories:
+  - Probability Theory
+  - correlation
+  - pearson
+  - linear-association
+---
+
+## Introduction
+
+The correlation coefficient rescales covariance into a unitless number between $-1$ and $+1$, making comparisons across different measurement scales meaningful. A correlation of $+1$ means perfect positive linear dependence, $-1$ perfect negative, and $0$ no linear association. It is the single most reported bivariate summary in applied research.
+
+## Prerequisites
+
+Variance and covariance.
+
+## Theory
+
+For random variables $X, Y$ with finite non-zero variances,
+
+$$\rho(X, Y) = \frac{\mathrm{Cov}(X, Y)}{\sigma_X \sigma_Y}.$$
+
+Cauchy-Schwarz guarantees $\rho \in [-1, 1]$. Equality at $\pm 1$ occurs if and only if $Y = aX + b$ almost surely with $\mathrm{sign}(a) = \mathrm{sign}(\rho)$.
+
+The sample correlation coefficient (Pearson's $r$) is the plug-in estimator using sample covariance and SDs:
+
+$$r = \frac{\sum (x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum (x_i - \bar{x})^2 \sum (y_i - \bar{y})^2}}.$$
+
+**Key caveats**:
+
+- $\rho = 0$ does **not** imply independence unless $(X, Y)$ is jointly normal.
+- $\rho$ measures only the *linear* component of association; non-linear dependence is invisible to it.
+- Outliers affect $r$ disproportionately; a robust alternative is the Spearman rank correlation.
+
+## Assumptions
+
+- Both variances finite and non-zero.
+- Linearity is the interpretive assumption: $\rho$ captures only linear dependence.
+
+## R Implementation
+
+```r
+library(mvtnorm)
+set.seed(2026)
+
+# Simulate bivariate normals at several correlation levels
+rho_grid <- c(-0.8, -0.3, 0, 0.3, 0.8)
+n <- 500
+results <- sapply(rho_grid, function(rho) {
+  Sigma <- matrix(c(1, rho, rho, 1), 2, 2)
+  XY <- rmvnorm(n, sigma = Sigma)
+  cor(XY[, 1], XY[, 2])
+})
+data.frame(true = rho_grid, empirical = round(results, 3))
+
+# Zero correlation does not imply independence
+X <- rnorm(1e4)
+Y <- X^2 - 1      # quadratic, mean zero
+cor(X, Y)
+
+# Outlier sensitivity
+X <- rnorm(100); Y <- 0.3 * X + rnorm(100)
+c(no_outlier = cor(X, Y),
+  with_outlier = cor(c(X, 20), c(Y, -20)))
+```
+
+## Output & Results
+
+```
+  true  empirical
+1 -0.8     -0.790
+2 -0.3     -0.307
+3  0.0     -0.023
+4  0.3      0.309
+5  0.8      0.815
+
+[1] 0.005          # zero Pearson despite clear dependence
+
+no_outlier with_outlier
+     0.309       -0.059
+```
+
+Sample correlations recover the population values within Monte Carlo error. The $X, X^2 - 1$ example shows zero correlation with obvious dependence. A single outlying point flips the sign of a small-sample correlation.
+
+## Interpretation
+
+Reported in a paper as "r = .68 (95% CI .56-.77), $p < .001$", the correlation conveys both direction and magnitude of linear association. Always accompany $r$ with a scatter plot to verify linearity; never report $r$ alone.
+
+## Practical Tips
+
+- Use Pearson only for roughly linear relationships between continuous variables.
+- For monotone non-linear association, use Spearman's rho or Kendall's tau.
+- A 95% CI for $\rho$ uses the Fisher z-transformation: atanh($r$) has an approximately normal sampling distribution.
+- Correlation does not imply causation; confounders can create strong associations between unrelated variables.
+- In multivariate data, a single correlation matrix can be visualised with `corrplot::corrplot()` or `ggcorrplot::ggcorrplot()`; always plot the matrix and the pairwise scatters.

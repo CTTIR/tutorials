@@ -1,0 +1,74 @@
+---
+title: Dirichlet Regression
+date: "2026-04-17"
+description: "Regression for compositional outcomes: vectors of proportions summing to 1"
+categories:
+  - "Regression & Modelling"
+  - dirichlet
+  - compositional
+  - multivariate-proportion
+---
+
+## Introduction
+
+Dirichlet regression models compositional outcomes — vectors of proportions that sum to 1, such as relative cell-type composition in a tissue, time budgets across activities, microbial relative abundances, or budget shares across categories. The Dirichlet distribution is the multivariate generalisation of the Beta and lives on the unit simplex; Dirichlet regression places covariate effects on each component while preserving the unit-sum constraint inherent in compositional data.
+
+## Prerequisites
+
+A working understanding of beta regression, the unit simplex, and compositional data as fundamentally different from independent proportions.
+
+## Theory
+
+A composition $Y = (Y_1, \dots, Y_k)$ with $\sum_j Y_j = 1$ and $Y_j > 0$ follows a Dirichlet distribution $\mathrm{Dir}(\alpha_1, \dots, \alpha_k)$. Dirichlet regression parameterises the component means as
+
+$$\mu_j = \frac{\exp(x^\top \beta_j)}{\sum_l \exp(x^\top \beta_l)},$$
+
+with $\alpha_j = \mu_j \phi$ where $\phi$ is a precision parameter. The structure mirrors multinomial logistic regression, with one reference component fixed for identifiability and the other $k - 1$ sets of coefficients estimated.
+
+For very small samples or high precision, the Dirichlet can be unstable; weakly informative Bayesian priors (`brms` with `family = dirichlet()`) are an alternative.
+
+## Assumptions
+
+Components sum to 1 with all components strictly positive (zeros require perturbation or zero-inflated extensions); independent observations; the Dirichlet variance structure is appropriate for the data.
+
+## R Implementation
+
+```r
+library(DirichletReg)
+
+set.seed(2026)
+n <- 150
+x <- rnorm(n)
+a1 <- exp(0.3 * x); a2 <- exp(-0.2 * x); a3 <- exp(0.5 * x)
+Y <- t(apply(cbind(a1, a2, a3), 1,
+             function(a) {
+               phi <- 20
+               rd <- rgamma(length(a), a * phi, 1)
+               rd / sum(rd)
+             }))
+
+d <- data.frame(Y = DR_data(as.data.frame(Y)), x = x)
+fit <- DirichReg(Y ~ x, data = d)
+summary(fit)
+```
+
+## Output & Results
+
+`DirichReg()` returns coefficients per non-reference component on the multinomial logit scale plus the precision parameter. Predictions back on the simplex come from `predict()`; they always satisfy the unit-sum constraint by construction.
+
+## Interpretation
+
+A reporting sentence: "Dirichlet regression showed that $x$ positively associated with components 1 and 3 (multinomial-logit slopes 0.5 and 0.7 vs the reference) and negatively with component 2 ($-0.4$); predicted compositions at $x = -1, 0, +1$ shifted from (0.30, 0.40, 0.30) to (0.33, 0.30, 0.37) to (0.36, 0.22, 0.42), preserving the unit-sum constraint." Always communicate compositional results as predicted compositions; raw multinomial-logit coefficients are difficult to interpret.
+
+## Practical Tips
+
+- Exact zeros or exact ones in the composition need perturbation before fitting; `compositions::clr()` and `zCompositions::cmultRepl()` provide standard zero-replacement algorithms.
+- For compositional data with many components ($k > 6$), consider aggregating to fewer meaningful categories or using additive-log-ratio (ALR) or centred-log-ratio (CLR) transformations followed by ordinary multivariate regression.
+- For zero-inflated compositions (many exact zeros), use zero-inflated Dirichlet or Zadeh-Aitchison ZI-logratio models.
+- Interpretation is cleanest via predicted compositions plotted against covariate values; raw coefficients on the multinomial-logit scale are rarely communicative.
+- For paired or longitudinal compositional data, a paired Dirichlet model or a mixed-effects extension is needed; ordinary Dirichlet regression assumes independence across observations.
+- For Bayesian Dirichlet regression with weakly informative priors, `brms(family = dirichlet())` provides a familiar interface.
+
+## R Packages Used
+
+`DirichletReg` for the canonical `DirichReg()` implementation; `compositions` and `zCompositions` for compositional data pre-processing; `brms` for Bayesian Dirichlet regression; `aldex2` for differential-abundance compositional analysis in microbiome work.

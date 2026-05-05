@@ -1,0 +1,73 @@
+---
+title: Central Composite Designs
+date: "2026-04-17"
+description: "Response-surface designs combining factorial, axial, and centre points"
+categories:
+  - Experimental Design
+  - ccd
+  - rsm
+  - axial
+---
+
+## Introduction
+
+The central composite design (CCD), introduced by Box and Wilson in 1951, is the workhorse of response-surface methodology and arguably the most influential design construction in industrial statistics. It augments a $2^k$ factorial with axial (or star) points placed along each factor axis at distance $\alpha$ from the design centre and a number of replicated centre points. Together these three components — factorial, axial, centre — provide enough information to fit a full second-order polynomial response surface in $k$ factors with substantially fewer runs than a $3^k$ full factorial would require, while still supporting estimation of curvature, lack-of-fit testing, and prediction-variance characterisation across the design region.
+
+## Prerequisites
+
+A working understanding of two-level factorial designs, polynomial regression for response-surface modelling, and the concept of design rotatability — that prediction variance depends only on radial distance from the centre.
+
+## Theory
+
+A CCD has three components:
+
+- **Factorial**: $2^k$ runs at the corners of the unit cube ($\pm 1$ in each factor).
+- **Axial**: $2k$ runs at $(\pm\alpha, 0, \dots, 0), (0, \pm\alpha, 0, \dots, 0), \ldots, (0, \ldots, 0, \pm\alpha)$.
+- **Centre**: replicated $(0, 0, \ldots, 0)$ runs supplying pure-error estimation.
+
+The choice of $\alpha$ determines the design's properties: rotatable CCDs use $\alpha = \sqrt[4]{2^k}$ (giving constant prediction variance at fixed distance from the centre), face-centred CCDs use $\alpha = 1$ (staying within the original $\pm 1$ cube, useful when factor extremes are constrained), and orthogonal CCDs choose $\alpha$ to make the columns of the second-order design matrix orthogonal.
+
+## Assumptions
+
+The response is well modelled by a second-order polynomial within the design region, the residual error is approximately Normal with constant variance, and the centre-point replicates provide a valid pure-error estimate against which lack-of-fit can be tested.
+
+## R Implementation
+
+```r
+library(rsm)
+
+ccd <- ccd(~ x1 + x2, n0 = c(3, 3), alpha = "rotatable",
+           randomize = FALSE)
+ccd
+
+set.seed(2026)
+ccd$y <- 10 + 2 * ccd$x1 + 1.5 * ccd$x2 - 1.2 * ccd$x1^2 -
+         0.8 * ccd$x2^2 + 0.6 * ccd$x1 * ccd$x2 +
+         rnorm(nrow(ccd), 0, 0.5)
+
+fit <- rsm(y ~ SO(x1, x2), data = ccd)
+summary(fit)
+
+steepest(fit, dist = 1.0)
+```
+
+## Output & Results
+
+`ccd()` constructs the layout, and `rsm()` fits the second-order model with stationary-point analysis, eigenvalue decomposition, and a lack-of-fit test against the pure-error replicates. The `steepest()` function traces the path of steepest ascent, useful when the stationary point lies outside the design region and follow-up experimentation is needed in the optimal direction.
+
+## Interpretation
+
+A reporting sentence: "The 14-run rotatable CCD with three centre points identified a concave response surface with stationary point at $(x_1, x_2) = (0.83, 0.69)$, predicted optimum 12.3. Quadratic terms in both factors were significant ($p < 0.01$), confirming curvature; the interaction term was marginal ($p = 0.07$). The lack-of-fit test was non-significant ($p = 0.31$), supporting the second-order model. Path-of-steepest-ascent analysis was unnecessary because the optimum lay inside the design region." Always run a lack-of-fit test and report the canonical-form classification.
+
+## Practical Tips
+
+- Rotatable CCDs give equal prediction variance at fixed distance from the centre and are the default RSM choice; the rotatability property is what makes CCDs ideal for sequential exploration of the response surface.
+- Face-centred CCDs ($\alpha = 1$) are useful when factor levels cannot exceed the original cube — common when factor ranges are determined by safety or feasibility limits — at the cost of slightly reduced prediction-variance properties.
+- Include 3–5 replicated centre points for pure-error degrees of freedom and curvature testing; fewer than 3 leaves the lack-of-fit test underpowered.
+- After fitting, use `contour()` and `persp()` plots to visualise the response surface; engineers and scientists overwhelmingly prefer surface plots to coefficient tables when interpreting RSM results.
+- Follow up the second-order fit with canonical analysis to classify the stationary point as a maximum, minimum, or saddle (eigenvalue signs of the quadratic-form matrix); a saddle point usually means the optimum lies outside the design region and additional runs are warranted.
+- For more than three factors, consider sequential experimentation: a fractional factorial first to screen for active factors, then a CCD or BBD on the active subset to characterise curvature.
+
+## R Packages Used
+
+`rsm::ccd()` and `rsm::rsm()` for canonical CCD construction, second-order fitting, canonical analysis, and steepest-ascent paths; `qualityTools::rsmDesign()` for an alternative interface; `Vdgraph` for variance-dispersion graphs comparing rotatable, face-centred, and orthogonal CCD variants; `daewr` for textbook companion datasets and `DoE.wrapper` for higher-level DoE workflow integration.

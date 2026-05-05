@@ -1,0 +1,71 @@
+---
+title: "Time Series: Introduction"
+date: "2026-04-17"
+description: "Trend, seasonality, cyclicality, and noise: the four components of a time series"
+categories:
+  - Time Series Analysis
+  - time-series
+  - trend
+  - seasonality
+  - decomposition
+---
+
+## Introduction
+
+A time series is a sequence of observations indexed by time. Time-series analysis decomposes the series into four interpretable components — trend, seasonality, cyclicality, and noise — and models each. The decomposition framework underpins virtually every classical method: ARIMA models the noise after differencing out trend and seasonality; ETS captures all four components in a state-space form; Bayesian structural time series isolates them as latent processes. Understanding the four-component vocabulary is the foundational step before reaching for any specific model.
+
+## Prerequisites
+
+A working understanding of basic statistics, the `ts` class in R, and the difference between cross-sectional and longitudinal data structures.
+
+## Theory
+
+The classical additive decomposition is
+
+$$y_t = T_t + S_t + C_t + \varepsilon_t,$$
+
+with components: trend $T$ (long-term level change), seasonal $S$ (regular fixed-period variation, e.g. monthly cycle), cycle $C$ (irregular longer-than-seasonal swings, e.g. business cycles), and noise $\varepsilon$ (residual stochastic variation). The multiplicative form $y_t = T_t \cdot S_t \cdot C_t \cdot \varepsilon_t$ applies when seasonal amplitude grows with the level; it is additive on the log scale.
+
+In practice, the cycle is often combined with the trend (giving "trend-cycle" as one component), leaving three components in most decomposition implementations: trend-cycle, seasonal, and remainder.
+
+## Assumptions
+
+Time order is preserved (no shuffling); regular sampling intervals (irregular sampling requires `zoo` / `xts` or modelling the spacing); the chosen decomposition (additive vs multiplicative) matches the data.
+
+## R Implementation
+
+```r
+library(forecast)
+
+data(AirPassengers)
+plot(AirPassengers, main = "Monthly airline passengers")
+
+# Classical decomposition
+dec <- decompose(AirPassengers, type = "multiplicative")
+plot(dec)
+
+# STL: loess-based decomposition
+stl_dec <- stl(log(AirPassengers), s.window = "periodic")
+plot(stl_dec)
+```
+
+## Output & Results
+
+`decompose()` returns the classical additive or multiplicative decomposition; `stl()` returns the loess-based seasonal-trend decomposition. The four-panel plot shows observed, trend, seasonal, and remainder components stacked vertically.
+
+## Interpretation
+
+A reporting sentence: "The monthly air-passenger series exhibited a clear upward trend (approximately 5 % per year), a stable annual seasonal cycle peaking in summer, and noise that grew with the level (motivating the log transformation). STL decomposition on the log scale produced trend, seasonal, and approximately white-noise remainder components." When introducing a time series, describe each component visible in the data.
+
+## Practical Tips
+
+- Log-transform series whose variance grows with the level; the resulting decomposition on the log scale is additive and well-behaved.
+- STL (`stl()`) is more robust than classical `decompose()`; the latter is sensitive to outliers and assumes fixed seasonal patterns.
+- After decomposition, examine the remainder series with ACF / PACF plots and Ljung-Box; substantial autocorrelation indicates missed structure.
+- The modern tidy workflow uses `tsibble` for time-aware tibbles, `feasts` for decomposition and diagnostics, and `fable` for forecasting; together they replace much of the older `forecast` workflow.
+- For irregular sampling intervals, use `zoo` or `xts` time series; classical decomposition assumes regular sampling.
+- For multiple seasonalities (e.g. weekly + yearly in retail data), `forecast::mstl()` produces a multi-layer decomposition that single-seasonal STL cannot.
+
+## R Packages Used
+
+Base R `ts()`, `decompose()`, and `stl()`; `forecast` for the broader classical workflow including `auto.arima`, `forecast`, `mstl`; `tsibble`, `feasts`, `fable` for the modern tidyverts ecosystem; `zoo` and `xts` for irregularly-spaced time series.

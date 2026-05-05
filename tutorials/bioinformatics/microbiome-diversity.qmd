@@ -1,0 +1,79 @@
+---
+title: Microbiome Diversity Metrics
+date: "2026-04-17"
+description: Alpha and beta diversity measures for community comparison
+categories:
+  - Bioinformatics
+  - diversity
+  - shannon
+  - unifrac
+  - microbiome
+---
+
+## Introduction
+
+Diversity metrics summarise microbial community composition. **Alpha diversity** measures richness and evenness within a sample; **beta diversity** measures compositional dissimilarity between samples. Both are essential for comparing communities and detecting treatment, disease, or niche effects.
+
+## Prerequisites
+
+ASV or OTU count table; phylogenetic tree (for UniFrac); sample metadata.
+
+## Theory
+
+**Alpha diversity**:
+- **Richness** (# ASVs observed).
+- **Shannon index** $H = -\sum p_i \log p_i$ -- evenness-weighted.
+- **Simpson** $1 - \sum p_i^2$ -- inverse concentration.
+- **Faith's PD** -- phylogenetic tree branch length sum.
+
+**Beta diversity**:
+- **Bray-Curtis** -- abundance-weighted Manhattan dissimilarity.
+- **Jaccard** -- presence/absence.
+- **UniFrac (weighted / unweighted)** -- phylogeny-aware.
+
+Permutational MANOVA (`adonis2`) tests whether group membership explains beta diversity.
+
+## Assumptions
+
+Counts are non-negative; rarefaction or equivalent normalisation is applied before alpha diversity if depths vary widely; phylogenetic tree matches ASV labels.
+
+## R Implementation
+
+```r
+library(vegan)
+
+set.seed(2026)
+n_samples <- 20; n_asv <- 50
+counts <- matrix(rpois(n_asv * n_samples, lambda = 10),
+                 n_samples, n_asv)   # samples x ASVs
+
+# Inject group differences
+group <- factor(rep(c("ctrl", "case"), each = 10))
+counts[group == "case", 1:15] <- counts[group == "case", 1:15] + 20
+
+shannon <- diversity(counts, index = "shannon")
+simpson <- diversity(counts, index = "simpson")
+richness <- rowSums(counts > 0)
+
+by(shannon, group, median)
+
+bray <- vegdist(counts, method = "bray")
+adonis_res <- adonis2(bray ~ group, permutations = 999)
+adonis_res
+```
+
+## Output & Results
+
+Shannon / Simpson / richness per sample (group medians printed), and a PERMANOVA on Bray-Curtis showing whether group explains dissimilarity.
+
+## Interpretation
+
+"Case samples had lower Shannon diversity (median 2.1 vs 2.9, Wilcoxon p = 0.004) and PERMANOVA on Bray-Curtis revealed significant community-level differences ($R^2$ = 0.18, p = 0.001)."
+
+## Practical Tips
+
+- Rarefy to equal depth before alpha diversity to avoid depth-driven confounding; alternatively use rarefaction curves to confirm coverage.
+- `phyloseq::estimate_richness` computes many alpha metrics in one call.
+- Weighted UniFrac captures abundance-weighted phylogenetic distance; unweighted is presence-only.
+- PERMANOVA is sensitive to dispersion heterogeneity; run `betadisper` to confirm equal dispersion before interpreting.
+- PCoA visualisation on the beta dissimilarity matrix complements PERMANOVA.

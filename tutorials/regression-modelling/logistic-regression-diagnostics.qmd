@@ -1,0 +1,70 @@
+---
+title: Logistic Regression Diagnostics
+date: "2026-04-17"
+description: "Calibration plots, Hosmer-Lemeshow, deviance residuals, and influence for GLM"
+categories:
+  - "Regression & Modelling"
+  - logistic-diagnostics
+  - calibration
+  - hosmer-lemeshow
+---
+
+## Introduction
+
+Logistic regression diagnostics fall into three families that probe different aspects of model adequacy: calibration (do predicted probabilities match observed event rates across the probability range?), discrimination (how well does the model separate cases from controls?), and the functional form of continuous predictors (is linearity on the logit scale a reasonable assumption?). All three should be checked before reporting hazard ratios or recommending a clinical prediction model.
+
+## Prerequisites
+
+A working understanding of logistic regression, the logit link, and the distinction between calibration and discrimination as separate aspects of predictive performance.
+
+## Theory
+
+- **Calibration plot**: observed event proportion against predicted probability, typically binned into deciles; perfect calibration lies on the identity line. Deviations indicate over- or under-prediction at specific probability ranges.
+- **Hosmer-Lemeshow test**: chi-squared comparison of observed vs. expected counts in deciles of predicted probability. Has known weaknesses (low power, bin-choice dependence) and should not be relied upon alone.
+- **Deviance residuals**: approximately Normal under the model; plotted against the fitted logit, they reveal mean-structure misspecification.
+- **DFBETA / Cook's distance**: influence diagnostics from `influence.measures()` flag observations that disproportionately affect coefficients.
+- **Functional form** (linearity on the logit): component-plus-residual plots or `mgcv::gam` with smooth terms expose non-linearity in continuous predictors.
+
+## Assumptions
+
+Standard logistic-regression assumptions: binary outcome, independent observations, linearity on the logit scale, and no severe multicollinearity.
+
+## R Implementation
+
+```r
+library(ResourceSelection); library(performance)
+
+d <- mtcars
+d$am <- factor(d$am)
+fit <- glm(am ~ wt + hp, data = d, family = binomial)
+
+# Hosmer-Lemeshow
+hoslem.test(as.numeric(d$am) - 1, fitted(fit))
+
+# Calibration plot via performance
+check_model(fit)
+
+# Deviance residuals
+resid(fit, type = "deviance") |> plot()
+```
+
+## Output & Results
+
+`hoslem.test()` returns the chi-squared statistic and $p$-value. `performance::check_model()` produces a multi-panel diagnostic figure including calibration, posterior predictive checks, residual plots, and influence diagnostics. Deviance residuals plotted against fitted values reveal mean-structure problems.
+
+## Interpretation
+
+A reporting sentence: "Calibration plots showed observed and expected event probabilities aligned across deciles, with the Hosmer-Lemeshow test not rejecting adequate calibration ($\chi^2_8 = 5.4$, $p = 0.72$); deviance residuals were approximately Normal with no systematic pattern against fitted logit, supporting the linearity assumption for both continuous predictors." Always pair Hosmer-Lemeshow with a calibration plot; the test alone is unreliable.
+
+## Practical Tips
+
+- Hosmer-Lemeshow has well-known weaknesses (low power, sensitive to bin choice); prefer calibration plots and the Brier score for primary calibration assessment.
+- For non-linearity in continuous predictors, add restricted cubic splines (`rms::rcs(x, 4)`) or fit a `mgcv::gam` with `s(x)` and compare AICs.
+- Outliers in logistic regression are jointly driven by leverage and residual; use `influence.measures(fit)` and `dfbetas(fit)` to identify candidate points and run sensitivity analyses with them removed.
+- Report both discrimination (AUC) and calibration; they are independent aspects of model quality and a model can be excellent on one and poor on the other.
+- For small samples, the Hosmer-Lemeshow test can fail to reject simply because of low power; visual calibration is more informative.
+- The `rms::val.prob()` function gives a comprehensive calibration summary including intercept, slope, and bias-corrected $E_{\max}$.
+
+## R Packages Used
+
+`ResourceSelection::hoslem.test()` for the Hosmer-Lemeshow test; `performance::check_model()` for an integrated multi-panel diagnostic; `pROC` for ROC and AUC; `rms::val.prob()` for calibration intercept and slope; `mgcv::gam()` for non-linearity testing via smooth terms.

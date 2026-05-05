@@ -1,0 +1,70 @@
+---
+title: Fine-Gray Subdistribution Hazards
+date: "2026-04-17"
+description: Regression directly targeting cumulative incidence in competing-risks data
+categories:
+  - Survival Analysis
+  - fine-gray
+  - subdistribution-hazards
+  - competing-risks
+---
+
+## Introduction
+
+In competing-risks data, two questions often co-exist: "what is this covariate's mechanistic effect on the event of interest" and "what is its effect on the population-level probability of experiencing that event by time $t$?" Cause-specific Cox regression answers the first; Fine-Gray subdistribution-hazards regression answers the second. The two questions can disagree dramatically — a covariate can leave the cause-specific hazard unchanged while still raising or lowering the cumulative incidence because it changes the competing-event hazard. Reporting only one when both are relevant is a common analytical mistake.
+
+## Prerequisites
+
+A working understanding of competing-risks data, cumulative incidence functions, and the cause-specific vs subdistribution-hazards distinction.
+
+## Theory
+
+The subdistribution hazard for cause 1 is
+
+$$h_1^{\text{sub}}(t \mid x) = \lim_{\Delta t \to 0} \frac{\mathrm P\bigl(t \le T < t + \Delta t, \ C = 1 \mid T \ge t \text{ or } (T < t \text{ and } C \neq 1), \ x\bigr)}{\Delta t}.$$
+
+The risk set keeps subjects who have already experienced a competing event, with diminishing weights. Under the Fine-Gray model
+
+$$h_1^{\text{sub}}(t \mid x) = h_{10}(t) \exp(x^\top \beta),$$
+
+the exponentiated coefficient $\exp(\beta_j)$ is a *subdistribution hazard ratio* and maps directly onto changes in cumulative incidence: a $\mathrm{sHR} > 1$ means higher cumulative incidence of cause 1 per unit of covariate. The model is fitted by a modified partial likelihood with inverse-probability-of-censoring weights.
+
+## Assumptions
+
+Proportional subdistribution hazards (an analogue of proportional cause-specific hazards), independent censoring (or correctly weighted), and accurate cause classification.
+
+## R Implementation
+
+```r
+library(cmprsk)
+
+set.seed(2026)
+t_time <- rexp(300, 0.3)
+cause  <- sample(0:2, 300, replace = TRUE, prob = c(0.3, 0.5, 0.2))
+x1     <- rnorm(300); x2 <- rbinom(300, 1, 0.5)
+
+fg <- crr(ftime = t_time, fstatus = cause, cov1 = cbind(x1, x2),
+          failcode = 1, cencode = 0)
+summary(fg)
+```
+
+## Output & Results
+
+`crr()` returns subdistribution coefficients on the log-sHR scale, standard errors, $p$-values, and (after `summary()`) exponentiated subdistribution hazard ratios with confidence intervals. The output structure matches Cox regression but the interpretation refers to cumulative incidence rather than cause-specific hazard.
+
+## Interpretation
+
+A reporting sentence: "Fine-Gray subdistribution-hazards regression for cause 1 estimated $\mathrm{sHR} = 1.45$ for $x_1$ (95 % CI 1.10 to 1.90), meaning a 45 % higher cumulative incidence of cause 1 per unit increase in $x_1$; a cause-specific Cox model on the same data gave HR 1.32, indicating that part of the effect on cumulative incidence comes via the competing-event hazard." Always report both subdistribution and cause-specific HRs when they differ; they answer different questions.
+
+## Practical Tips
+
+- Subdistribution hazard ratios do *not* equal cause-specific hazard ratios; treating them as interchangeable is a common error.
+- Use cause-specific Cox for *etiologic* questions ("what affects the disease mechanism?"); use Fine-Gray for *prognostic* / prediction questions ("what affects the probability of disease over time?").
+- For prediction tools (nomograms, risk calculators), Fine-Gray is the correct framework because absolute risk depends on cumulative incidence.
+- Report both approaches when both questions matter; transparency about the difference prevents readers from misinterpreting one as the other.
+- `riskRegression::FGR()` offers a modern alternative with cleaner diagnostics and better small-sample handling.
+- Check proportional subdistribution hazards via `crskdiag` or simulated residual plots; the assumption can fail even when proportional cause-specific hazards holds.
+
+## R Packages Used
+
+`cmprsk` for `crr()` and `cuminc()`; `riskRegression` for `FGR()`, `CSC()` (cause-specific Cox), and unified prediction interfaces; `tidycmprsk` for tidy-style competing-risks workflows; `survival` for Cox regression on cause-specific hazards as the complementary fit.

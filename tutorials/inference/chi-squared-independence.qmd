@@ -1,0 +1,90 @@
+---
+title: Chi-Squared Test of Independence
+date: "2026-04-17"
+description: Testing association between two categorical variables via observed vs. expected counts under independence
+categories:
+  - Inferential Statistics
+  - chi-squared
+  - independence
+  - contingency
+  - cramer-v
+---
+
+## Introduction
+
+The chi-squared test of independence asks whether two categorical variables in a contingency table are associated. Under the null of independence, cell counts follow a predictable pattern determined by the row and column margins; large departures constitute evidence of association.
+
+## Prerequisites
+
+Contingency tables, goodness-of-fit chi-squared.
+
+## Theory
+
+For an $r \times c$ table with observed counts $O_{ij}$, row totals $R_i$, column totals $C_j$, and grand total $n$, the expected count under independence is
+
+$$E_{ij} = R_i C_j / n.$$
+
+Test statistic:
+
+$$\chi^2 = \sum_{i, j} \frac{(O_{ij} - E_{ij})^2}{E_{ij}} \sim \chi^2_{(r-1)(c-1)} \quad \text{under } H_0.$$
+
+Effect sizes:
+
+- 2x2: Phi $\phi = \sqrt{\chi^2 / n}$, equivalent to the Matthews correlation.
+- $r \times c$: Cramer's $V = \sqrt{\chi^2 / [n \min(r - 1, c - 1)]}$; range $[0, 1]$.
+- Thresholds: 0.10 / 0.30 / 0.50 for small / medium / large.
+
+## Assumptions
+
+- Independent observations.
+- Expected counts $\geq 5$ in every cell (else Fisher's exact or Monte Carlo chi-squared).
+
+## R Implementation
+
+```r
+library(vcd); library(effectsize)
+
+tab <- matrix(c(42, 38, 65,
+                28, 55, 50,
+                18, 32, 40), nrow = 3, byrow = TRUE,
+              dimnames = list(Stage = c("I", "II", "III"),
+                              Site  = c("A", "B", "C")))
+tab
+
+chi <- chisq.test(tab)
+chi
+chi$expected
+chi$stdres     # standardised residuals
+
+# Effect sizes
+cramers_v(tab)
+assocstats(tab)
+
+# Mosaic plot of residuals
+mosaic(tab, shade = TRUE, legend = TRUE)
+```
+
+## Output & Results
+
+```
+        Pearson's Chi-squared test
+X-squared = 8.92, df = 4, p-value = 0.063
+
+Cramer's V | 95% CI
+-----------------------
+0.128      | [0.00, 0.21]
+```
+
+Borderline rejection at $\alpha = 0.05$. Small effect by Cramer's V. Standardised residuals identify which cells drive the pattern.
+
+## Interpretation
+
+"Stage and site were not significantly associated ($\chi^2(4) = 8.92$, p = 0.063, Cramer's V = 0.13)." Report counts and row/column percentages alongside the test.
+
+## Practical Tips
+
+- For 2x2 tables with any expected count below 5, use Fisher's exact test.
+- For larger tables with sparse cells, use `simulate.p.value = TRUE` for a Monte Carlo p-value.
+- Report effect size (Cramer's V) alongside the test; significance alone is uninformative for large $n$.
+- Yates' continuity correction is available but rarely necessary; omit it via `correct = FALSE`.
+- For ordered categorical variables, use the Cochran-Armitage trend test or the linear-by-linear association test.

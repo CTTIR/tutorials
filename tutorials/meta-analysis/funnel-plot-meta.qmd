@@ -1,0 +1,68 @@
+---
+title: Funnel Plots
+date: "2026-04-17"
+description: Visual inspection for small-study effects and publication bias
+categories:
+  - Meta-Analysis
+  - funnel-plot
+  - publication-bias
+  - asymmetry
+---
+
+## Introduction
+
+The funnel plot, introduced by Light and Pillemer in 1984, is the classical visual diagnostic for publication bias and small-study effects in meta-analysis. Each study contributes a single point whose horizontal coordinate is the effect estimate and whose vertical coordinate is precision (typically standard error or its inverse). Under the null of no bias and homogeneous true effect, the plot resembles a symmetric inverted funnel: large, precise studies cluster near the pooled estimate at the top and smaller, less precise studies fan out symmetrically below. Asymmetry — a visible empty zone in one of the two lower corners — is the canonical visual red flag that smaller studies with effects in one direction may be missing from the synthesis, often because they were never published.
+
+## Prerequisites
+
+A working understanding of pooled meta-analysis, the relationship between sample size and standard error, and the small-study-effect concept that links study size to the magnitude of reported effects.
+
+## Theory
+
+The horizontal axis carries the effect estimate on its analysis scale (log-OR, log-RR, SMD); the vertical axis carries precision, typically standard error inverted so that large, precise studies sit at the top. Pseudo-confidence-interval lines fan out symmetrically from the pooled estimate, giving the funnel its name. Under symmetry, small studies scatter on both sides; an empty lower corner suggests small studies with null or opposite-direction effects may be missing from the synthesis, the visual signature of publication bias.
+
+A central conceptual point: asymmetry indicates a small-study effect, of which publication bias is one possible cause among several. Treating asymmetry as a synonym for bias is a common interpretive error.
+
+## Assumptions
+
+Studies are independent; under the null of no bias the effect estimates scatter symmetrically around the true pooled effect; precision is well measured. The interpretation requires enough studies that asymmetry is detectable above sampling noise — typically at least ten.
+
+## R Implementation
+
+```r
+library(metafor)
+
+set.seed(2026)
+k <- 20
+yi <- rnorm(k, 0.4, 0.2)
+vi <- 1 / sample(20:300, k, replace = TRUE)
+
+keep <- !(sqrt(vi) > 0.1 & abs(yi) < 0.2)
+yi_biased <- yi[keep]; vi_biased <- vi[keep]
+
+res_biased <- rma(yi_biased, vi_biased, method = "REML")
+funnel(res_biased, main = "Funnel plot (potentially biased)")
+
+regtest(res_biased, model = "lm")
+```
+
+## Output & Results
+
+`funnel()` renders the canonical scatter with pseudo-CI lines. Visual asymmetry — typically an empty lower corner — combined with a significant Egger or Harbord regression test on the same data quantifies the impression. Reporting both views together (visual plus formal test) is the standard approach because the two are complementary diagnostics rather than redundant.
+
+## Interpretation
+
+A reporting sentence: "The funnel plot was visibly asymmetric with an empty region in the small-study, low-effect quadrant; Egger's regression test confirmed asymmetry (intercept 1.28, $p = 0.02$). Publication bias is a plausible explanation, but true heterogeneity correlated with study size cannot be ruled out; trim-and-fill and PET-PEESE sensitivity analyses are reported in the supplement and showed an attenuated but still positive pooled effect." Always describe both the visual pattern and the formal-test result, and acknowledge alternative explanations.
+
+## Practical Tips
+
+- Funnel plots require at least ten studies for meaningful interpretation; with fewer studies, the visual is dominated by sampling noise and asymmetry impressions are unreliable.
+- Asymmetry has many possible causes besides publication bias: true between-study heterogeneity correlated with size, selective outcome reporting, methodological quality differences, or chance with small $k$. Discuss each explicitly when reporting an asymmetric funnel.
+- Combine visual inspection with at least one formal test: Egger's regression for continuous outcomes, Harbord's modification for binary outcomes (log-OR), and Peters's test for rare events.
+- For binary outcomes, plot log(OR) versus standard error on the log scale; raw OR funnels are intrinsically asymmetric for mathematical reasons unrelated to bias.
+- Include sensitivity analyses — trim-and-fill, PET-PEESE, or Vevea–Hedges weight-function selection models — when asymmetry is detected; the difference between adjusted and unadjusted estimates is what readers actually need.
+- Contour-enhanced funnel plots (Peters et al., 2008) overlay significance contours and help distinguish missingness near the null (suggestive of publication bias) from missingness elsewhere (suggestive of other explanations).
+
+## R Packages Used
+
+`metafor::funnel()` for the canonical and contour-enhanced funnel plot, with `regtest()` for Egger/Harbord/Peters tests; `meta::funnel()` as the alternative interface; `metafor::trimfill()` for trim-and-fill adjustment; `metasens` for limit-meta-analysis and Copas-model bias adjustment alongside the funnel; `metaviz` for ggplot-based publication-ready funnel-plot output.

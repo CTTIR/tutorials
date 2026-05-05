@@ -1,0 +1,98 @@
+---
+title: The Geometric Distribution
+date: "2026-04-17"
+description: "Number of Bernoulli trials until the first success, with the memoryless property"
+categories:
+  - Probability Theory
+  - geometric
+  - memoryless
+  - waiting-time
+---
+
+## Introduction
+
+The geometric distribution counts the number of Bernoulli trials required to obtain the first success. It is the discrete analogue of the exponential waiting-time distribution and shares the memoryless property: the probability of further trials to success does not depend on how many have already been tried.
+
+## Prerequisites
+
+Bernoulli trials.
+
+## Theory
+
+Two conventions exist. Let $X$ be the number of Bernoulli$(p)$ trials *up to and including* the first success:
+
+$$P(X = k) = (1 - p)^{k - 1} p, \qquad k = 1, 2, 3, \ldots$$
+
+Alternatively, $Y$ is the number of failures *before* the first success:
+
+$$P(Y = k) = (1 - p)^k p, \qquad k = 0, 1, 2, \ldots$$
+
+R uses the second convention (`rgeom`, `dgeom` return $Y$, i.e., failures before first success).
+
+Moments for the first convention ($X$ = trials until first success):
+
+- $E[X] = 1/p$, $\mathrm{Var}(X) = (1 - p)/p^2$.
+
+For $Y$ (R's convention): $E[Y] = (1 - p)/p$, $\mathrm{Var}(Y) = (1 - p)/p^2$.
+
+**Memoryless property**: $P(X > m + n \mid X > m) = P(X > n)$. Having waited $m$ trials without success does not change the distribution of further waiting time.
+
+## Assumptions
+
+Independent Bernoulli trials with constant probability $p$.
+
+## R Implementation
+
+```r
+p <- 0.3
+
+# R's convention: Y = failures before first success
+Y <- rgeom(1e5, p)
+c(mean_Y = mean(Y), theoretical = (1 - p) / p)
+
+# Number of trials to first success X = Y + 1
+X <- Y + 1
+c(mean_X = mean(X), theoretical = 1 / p)
+
+# PMF comparison
+k <- 0:15
+data.frame(k, pmf_Y = dgeom(k, p))
+
+# Memoryless: P(Y > 5 + 3 | Y > 5) = P(Y > 3)
+Y_past_5 <- Y[Y > 5]
+c(conditional = mean(Y_past_5 > 5 + 3),
+  unconditional = mean(Y > 3))
+```
+
+## Output & Results
+
+```
+   mean_Y theoretical
+    2.334       2.333
+
+   mean_X theoretical
+    3.334       3.333
+
+    k      pmf_Y
+1   0     0.3000
+2   1     0.2100
+3   2     0.1470
+...
+
+conditional  unconditional
+     0.3441         0.3430
+```
+
+The memoryless property holds empirically: conditional probability of further 3 failures, given already 5 failures, equals the unconditional probability of at least 3 failures.
+
+## Interpretation
+
+The geometric distribution is the baseline model for "time to event" in the discrete case: cycles to pregnancy in IVF, attempts before a successful procedure, trials before a rare positive test. Memorylessness is a strong assumption that often fails in real data where fatigue or learning changes $p$ over time.
+
+## Practical Tips
+
+- Check which convention (trials vs. failures) is expected when comparing to textbook formulas.
+- Memorylessness is testable empirically: compare the distribution of residual trials given survival to each time.
+- For non-memoryless discrete waiting times, the negative binomial (shape $> 1$) captures over-dispersion relative to geometric.
+- The geometric converges to the exponential when discretising time with fine intervals.
+- In clinical or biological settings, censoring is common; naive `rgeom` ignores right-censoring -- use survival methods for realistic data.

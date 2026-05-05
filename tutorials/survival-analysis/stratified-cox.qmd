@@ -1,0 +1,64 @@
+---
+title: Stratified Cox Models
+date: "2026-04-17"
+description: Stratum-specific baseline hazards when proportional hazards fails across groups
+categories:
+  - Survival Analysis
+  - stratified-cox
+  - non-proportional
+  - baseline
+---
+
+## Introduction
+
+A stratified Cox model is the standard fix when the proportional-hazards assumption fails across the levels of a categorical covariate but holds within them. Stratification estimates a separate baseline hazard $h_{0s}(t)$ for each stratum while constraining the covariate effects $\beta$ to be common across strata. The cost is that you cannot estimate the effect of the stratifier itself — its baselines are absorbed — but the gain is honest hazard-ratio estimation for the rest of the covariates without forcing PH across the problematic dimension.
+
+## Prerequisites
+
+A working understanding of Cox proportional-hazards regression, the diagnostic role of Schoenfeld residuals, and the concept of stratification as an alternative to direct adjustment.
+
+## Theory
+
+The stratified Cox model is
+
+$$h(t \mid x, \text{stratum} = s) = h_{0s}(t) \exp(x^\top \beta).$$
+
+The partial likelihood is summed across strata: each stratum contributes the standard Cox partial-likelihood term over its own risk sets, and the resulting score equations determine $\hat\beta$. Because the stratum baselines are unrestricted, no assumption is made about how $h_{0s}(t)$ relates across $s$. The trade-off is that the effect of being in stratum $s$ versus another stratum cannot be estimated within the model — that contrast is precisely the term absorbed into the separate baselines.
+
+## Assumptions
+
+Proportional hazards within each stratum (so the common $\beta$ is meaningful), independent observations, and non-informative censoring.
+
+## R Implementation
+
+```r
+library(survival)
+
+data(lung)
+# If ph.ecog violates PH, stratify on it
+fit <- coxph(Surv(time, status) ~ age + sex + strata(ph.ecog), data = lung)
+summary(fit)
+
+cox.zph(fit)
+```
+
+## Output & Results
+
+`summary(fit)` lists hazard ratios for non-stratified covariates with confidence intervals and Wald tests; the stratifier appears nowhere because its effect is absorbed into the per-stratum baselines. `cox.zph()` checks PH for the remaining covariates within strata.
+
+## Interpretation
+
+A reporting sentence: "After Schoenfeld residuals indicated a PH violation for ECOG performance status (per-covariate $p < 0.01$), we fit a Cox model stratified on ECOG; the resulting hazard ratios for age (HR 1.02 per year, 95 % CI 1.01 to 1.03) and sex (HR 0.60 for female vs male, 95 % CI 0.42 to 0.85) are pooled across strata." When the stratifier is itself of clinical interest, supplement the model with stratum-specific Kaplan-Meier curves so readers can see the absorbed effect.
+
+## Practical Tips
+
+- Stratify on a covariate when its PH fails and you do not need its hazard-ratio estimate; if you do need it, switch to a time-varying coefficient via `tt()` or `survSplit()` instead.
+- Many small strata reduce the effective sample size for $\hat\beta$; pool levels (e.g. ECOG 0 vs 1+) when raw stratification leaves few events per stratum.
+- Interactions between stratum and other covariates allow different $\beta$ per stratum, generalising the model toward fully separate fits per stratum at the cost of degrees of freedom.
+- Predictions and survival curves are stratum-specific; report which baseline is used for any predicted survival probability.
+- Always verify that PH still holds for the unstratified covariates after stratification; failure there motivates additional stratification or a switch to time-varying effects.
+- For continuous covariates that violate PH, stratification requires categorisation (typically into quartiles), which loses information; time-varying coefficients are usually preferable.
+
+## R Packages Used
+
+`survival` for `coxph()` with `strata()`; `survminer::ggcoxzph()` for PH diagnostics within strata; `flexsurv` for parametric alternatives that can accommodate non-proportional hazards directly; `timereg` for additive hazards models when stratification is too coarse.

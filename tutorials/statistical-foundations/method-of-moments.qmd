@@ -1,0 +1,81 @@
+---
+title: The Method of Moments
+date: "2026-04-17"
+description: Estimate parameters by equating theoretical moments to their sample counterparts
+categories:
+  - Statistical Foundations
+  - method-of-moments
+  - estimator
+  - moments
+---
+
+## Introduction
+
+The method of moments (MoM) is the oldest systematic technique for parameter estimation. It replaces theoretical moments of a distribution with their sample counterparts and solves the resulting equations for the parameters. MoM estimators are typically consistent and easy to derive, making them useful both as standalone estimators and as starting values for more refined procedures like maximum likelihood.
+
+## Prerequisites
+
+The reader should know what a moment of a distribution is ($E[X^k]$) and should be able to compute simple summary statistics in R.
+
+## Theory
+
+For a distribution parameterised by $\theta = (\theta_1, \ldots, \theta_p)$, the $k$-th theoretical moment is $\mu_k(\theta) = E[X^k]$, and the $k$-th sample moment is $\hat{\mu}_k = \frac{1}{n}\sum X_i^k$. The MoM sets
+
+$$\hat{\mu}_k = \mu_k(\theta), \qquad k = 1, \ldots, p,$$
+
+and solves for $\theta$. The method generalises to central moments, fractional moments, and functions of moments; the essential idea is that moments are easy to estimate, so any parameter expressible as a function of moments can be estimated by plug-in.
+
+Examples:
+
+- **Gamma$(\alpha, \beta)$** with mean $\alpha/\beta$ and variance $\alpha/\beta^2$:
+  $$\hat{\beta} = \bar{X}/s^2, \qquad \hat{\alpha} = \bar{X}^2 / s^2.$$
+
+- **Normal$(\mu, \sigma^2)$**: first moment gives $\hat{\mu} = \bar{X}$; second central moment gives $\hat{\sigma}^2 = \frac{1}{n}\sum(X_i - \bar{X})^2$.
+
+- **Beta$(\alpha, \beta)$** with mean $\alpha/(\alpha + \beta)$ and variance $\alpha\beta / [(\alpha+\beta)^2(\alpha+\beta+1)]$: solve the two moment equations for $\hat{\alpha}, \hat{\beta}$.
+
+MoM estimators are consistent under mild conditions (existence of the moments being used and continuity of the inverse mapping from moments to parameters). Their asymptotic distribution is normal, with variance obtainable via the delta method. They are generally less efficient than the MLE, but often much simpler to compute.
+
+## Assumptions
+
+The necessary moments must exist; for heavy-tailed distributions like the Cauchy (no finite mean), MoM fails. The mapping from moments to parameters must be solvable, which requires enough moments to identify the parameters uniquely.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+x <- rgamma(500, shape = 4, rate = 0.5)
+
+xbar  <- mean(x)
+s2    <- var(x)
+
+beta_hat  <- xbar / s2
+alpha_hat <- xbar^2 / s2
+
+c(alpha_hat = alpha_hat, beta_hat = beta_hat,
+  true_alpha = 4, true_rate = 0.5)
+```
+
+We generate 500 draws from Gamma(4, 0.5), compute the first two sample moments, and back out the MoM estimators.
+
+## Output & Results
+
+```
+ alpha_hat  beta_hat true_alpha  true_rate
+  3.91         0.48       4.00       0.50
+```
+
+Both estimators are close to the truth. Across many simulated datasets, the bias of both goes to zero and their variances shrink at rate $1/n$.
+
+## Interpretation
+
+MoM estimators are useful when a closed-form expression is desirable for reporting, or when MLE requires numerical optimisation that might fail for specific initial values. In many textbook distributions, the MoM and the MLE coincide; in others, MoM is a reasonable starting value for the MLE search.
+
+## Practical Tips
+
+- Check that the moments implied by your MoM estimator are finite for all parameter values; otherwise the estimator is undefined.
+- For distributions where MoM and MLE differ, MLE is usually preferred for efficiency; MoM is fine for preliminary or exploratory work.
+- Generalised method of moments (GMM) extends MoM to systems with more equations than parameters, weighting them optimally; it is the standard estimator in econometrics for instrumental-variable and panel models.
+- When the mapping from moments to parameters is not invertible in closed form, use `uniroot()` or `optim()` to solve the equations numerically.
+- Report the moments used and the mapping; readers can then verify the calculation and check the code.

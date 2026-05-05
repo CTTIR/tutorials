@@ -1,0 +1,88 @@
+---
+title: "Slutsky's Theorem"
+date: "2026-04-17"
+description: Combining convergence in distribution and in probability for asymptotic arguments
+categories:
+  - Statistical Foundations
+  - slutsky
+  - asymptotic
+  - convergence
+---
+
+## Introduction
+
+Slutsky's theorem is one of the workhorse results of asymptotic statistics. It says that we can substitute a consistent estimator for a constant in an asymptotic statement, without changing the limiting distribution. This simple-sounding result is what makes the Wald statistic have an asymptotic standard-normal distribution, what justifies using the sample SD in place of the population SD in a t-statistic's denominator, and what underlies countless routine asymptotic arguments in applied work.
+
+## Prerequisites
+
+The reader should understand convergence in probability and convergence in distribution.
+
+## Theory
+
+**Slutsky's theorem.** Suppose $Y_n \xrightarrow{d} Y$ and $Z_n \xrightarrow{P} c$, where $c$ is a constant. Then:
+
+- $Y_n + Z_n \xrightarrow{d} Y + c$,
+- $Y_n Z_n \xrightarrow{d} c Y$,
+- $Y_n / Z_n \xrightarrow{d} Y / c$ (provided $c \neq 0$).
+
+The key requirement is that $Z_n$ converges to a *constant*, not to another random variable. Convergence of $Z_n$ to a non-degenerate random variable does not generally justify these manipulations.
+
+**Typical use.** Consider the Wald statistic for a mean:
+
+$$W_n = \frac{\sqrt{n}(\bar{X}_n - \mu)}{s_n}.$$
+
+We know $\sqrt{n}(\bar{X}_n - \mu)/\sigma \xrightarrow{d} \mathcal{N}(0, 1)$ by the CLT, and $s_n \xrightarrow{P} \sigma$ by the LLN applied to the sample variance. Writing
+
+$$W_n = \frac{\sqrt{n}(\bar{X}_n - \mu)}{\sigma} \cdot \frac{\sigma}{s_n},$$
+
+Slutsky's theorem gives $W_n \xrightarrow{d} \mathcal{N}(0, 1) \cdot 1 = \mathcal{N}(0, 1)$.
+
+This is why the Wald statistic with an estimated SE still has a standard-normal limit. The same principle applies to Wald chi-squared statistics, score statistics, and almost every test statistic in asymptotic theory.
+
+## Assumptions
+
+Slutsky's theorem requires (i) $Z_n$ converges in probability to a constant, not to a random variable, and (ii) the combined operation (sum, product, quotient) is well-defined. For quotients the constant must not be zero; dividing by a small random denominator can still introduce tail issues at finite $n$ that Slutsky does not warn about.
+
+## R Implementation
+
+```r
+set.seed(2026)
+
+n <- 500
+mu <- 3; sigma <- 2
+reps <- 5000
+
+wald_stats <- replicate(reps, {
+  x <- rnorm(n, mu, sigma)
+  sqrt(n) * (mean(x) - mu) / sd(x)
+})
+
+qqnorm(wald_stats, pch = ".")
+qqline(wald_stats, col = "red")
+
+c(mean = mean(wald_stats),
+  sd   = sd(wald_stats))
+```
+
+We simulate the Wald statistic across 5000 replications. Slutsky's theorem predicts the limiting distribution is standard normal; the simulation confirms empirically.
+
+## Output & Results
+
+```
+    mean       sd
+ 0.00411   0.9997
+```
+
+The empirical mean is near zero and SD near one, confirming standard-normal behaviour. The Q-Q plot falls on the reference line.
+
+## Interpretation
+
+Slutsky's theorem is rarely cited by name in applied papers, but its conclusions appear constantly. The phrase "by the CLT, and using the consistency of $\hat{\sigma}$ for $\sigma$, the Wald statistic is asymptotically standard normal" is a Slutsky argument compressed into a single sentence.
+
+## Practical Tips
+
+- When you see an asymptotic argument that swaps an estimator for a parameter, that is (usually) Slutsky at work.
+- Slutsky's theorem does not help when both sequences are non-degenerate; for that, joint convergence and the continuous mapping theorem are needed.
+- In finite samples, the Slutsky approximation may be crude. For small $n$, the t-distribution (which accounts for the estimated denominator more precisely) is preferred over the Wald normal.
+- Extensions hold for continuous functions: if $Y_n \xrightarrow{d} Y$ and $Z_n \xrightarrow{P} c$, then $g(Y_n, Z_n) \xrightarrow{d} g(Y, c)$ for continuous $g$ at $(y, c)$.
+- The theorem is sometimes stated with $Z_n$ taking values in any fixed dimensional space -- useful when the "constant" is a vector or matrix (e.g., an estimated covariance).

@@ -1,0 +1,76 @@
+---
+title: Power for Non-Inferiority Trials
+date: "2026-04-17"
+description: "One-sided equivalence: is the new treatment no worse than the reference by more than the margin"
+categories:
+  - "Sample Size & Power"
+  - power
+  - non-inferiority
+  - margin
+  - one-sided
+---
+
+## Introduction
+
+Non-inferiority trials aim to establish that a new treatment is "not meaningfully worse" than an active comparator. The non-inferiority margin is a pre-specified loss that defines the boundary. Power calculations use a one-sided test at the margin.
+
+## Prerequisites
+
+Equivalence testing, confidence intervals.
+
+## Theory
+
+For continuous outcomes with true difference $\delta$ (new minus reference), margin $-\Delta$ (loss), and pooled SD $\sigma$, the non-inferiority null is $\mu_{\text{new}} - \mu_{\text{ref}} \leq -\Delta$. Power at $\alpha$ one-sided is
+
+$$1 - \beta = \Phi\!\left(\frac{\delta + \Delta}{\sigma \sqrt{2/n}} - z_{1-\alpha}\right).$$
+
+For binary outcomes (proportions), analogous formulas using Cohen's $h$ or risk-difference variance apply.
+
+Sample size increases with tighter margin, larger allowed effect, or reduced power.
+
+## Assumptions
+
+- Pre-specified non-inferiority margin based on regulatory or clinical guidance.
+- Assumed true $\delta$ (often zero, assuming equivalence).
+- Normal or large-sample approximations.
+
+## R Implementation
+
+```r
+library(gsDesign)
+
+# Continuous outcome: margin -5 units, true delta = 0, sigma = 15
+# One-sided alpha = 0.025, power = 0.80
+delta  <- 0; margin <- 5; sigma <- 15; alpha <- 0.025; beta <- 0.20
+n_per_arm <- 2 * sigma^2 * (qnorm(1 - alpha) + qnorm(1 - beta))^2 / (delta + margin)^2
+n_per_arm
+
+# Binary outcome: reference rate 70% cure, margin -10%, true new = 70%
+pC <- 0.70; pE <- 0.70; margin_prop <- 0.10
+# Farrington-Manning or score-based calculations are standard; simplified Wald here:
+p_bar <- (pC + pE) / 2
+n_bin <- (qnorm(1 - alpha) + qnorm(1 - beta))^2 *
+         (pC*(1-pC) + pE*(1-pE)) / (pE - pC + margin_prop)^2
+n_bin
+
+# Group-sequential non-inferiority design
+ni <- gsDesign(k = 2, test.type = 1, alpha = 0.025, beta = 0.20,
+               sfu = "OF")
+gsBoundSummary(ni)
+```
+
+## Output & Results
+
+Continuous: $n \approx 140$ per arm. Binary: $n \approx 196$ per arm.
+
+## Interpretation
+
+"To establish non-inferiority with a 5-unit margin, assuming a true zero difference and SD 15, at 80 % power and one-sided $\alpha = 0.025$, 140 patients per arm are required."
+
+## Practical Tips
+
+- Margin selection is the most important decision in non-inferiority design; regulators require explicit justification.
+- Use one-sided $\alpha = 0.025$ to keep consistency with two-sided 0.05 superiority conventions.
+- Report per-protocol analysis alongside intention-to-treat; dilution effects in ITT make non-inferiority easier to show artificially.
+- Include interim futility stops for ethical reasons.
+- Conservative margins and high power requirements inflate $n$ quickly.

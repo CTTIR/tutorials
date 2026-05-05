@@ -1,0 +1,89 @@
+---
+title: Permutation Tests
+date: "2026-04-17"
+description: Exact or Monte Carlo p-values via resampling under exchangeability
+categories:
+  - Inferential Statistics
+  - permutation
+  - randomisation
+  - exact
+  - resampling
+---
+
+## Introduction
+
+A permutation test evaluates a null hypothesis by comparing the observed test statistic to its distribution under random permutations of the group labels (or other exchangeable structure). It makes no distributional assumption about the data, only about **exchangeability** under the null.
+
+## Prerequisites
+
+Hypothesis testing, ranks (helpful).
+
+## Theory
+
+Under $H_0$, group labels are exchangeable -- the joint distribution of $(X_1, \ldots, X_n)$ is invariant under permutations of the labels. The p-value is the proportion of permuted test statistics at least as extreme as the observed one:
+
+$$p = \frac{1 + \#\{T^{(b)} \geq T_{\text{obs}}\}}{B + 1},$$
+
+where $T^{(b)}$ is the statistic from the $b$-th permutation out of $B$ random permutations, plus the observed. Exact permutation tests use all $n!$ permutations; for large $n$, Monte Carlo permutation with $B = 1000$ or more suffices.
+
+Permutation tests can use **any test statistic** -- difference of means, t-statistic, ratio of medians, area under an ROC. The choice of statistic determines what aspect of the distribution the test is sensitive to.
+
+## Assumptions
+
+- Exchangeability under $H_0$ (independent observations with equal distribution for group-based tests).
+- Independence across observations.
+
+No normality, no variance homogeneity, no distributional model.
+
+## R Implementation
+
+```r
+library(coin); library(perm)
+set.seed(2026)
+
+group1 <- c(rlnorm(20, 1, 0.4), 30)   # one extreme value
+group2 <- rlnorm(25, 1.2, 0.4)
+
+# Manual permutation test on difference of means
+obs_diff <- mean(group1) - mean(group2)
+pooled   <- c(group1, group2)
+n1       <- length(group1)
+B        <- 10000
+
+perm_diffs <- replicate(B, {
+  shuffled <- sample(pooled)
+  mean(shuffled[1:n1]) - mean(shuffled[(n1+1):length(shuffled)])
+})
+p_perm <- (1 + sum(abs(perm_diffs) >= abs(obs_diff))) / (B + 1)
+c(obs_diff = obs_diff, p_perm = p_perm)
+
+# coin package: permutation version of many standard tests
+oneway_test(y ~ group,
+            data = data.frame(y = c(group1, group2),
+                              group = factor(rep(c("A", "B"), c(n1, length(group2))))),
+            distribution = approximate(nresample = 10000))
+```
+
+## Output & Results
+
+```
+obs_diff    p_perm
+  0.841     0.123
+
+Approximative Two-Sample Fisher-Pitman Permutation Test
+Z = 1.56, p = 0.13
+```
+
+Permutation test gives p = 0.12, robust to the outlier that would distort a t-test.
+
+## Interpretation
+
+"A Monte Carlo permutation test (10 000 resamples) comparing the two groups' mean differences gave p = 0.12, providing no evidence of a group effect."
+
+## Practical Tips
+
+- Permutation tests are exact in small samples where combinatorial enumeration is feasible.
+- Monte Carlo permutation uses random resampling; $B = 1000$-10 000 gives stable p-values.
+- The statistic can be any function of the data; this flexibility is the main appeal over parametric tests.
+- For paired data, permute within pairs (sign flips) rather than labels.
+- For regression, permute residuals (or bootstrap them) rather than raw responses.

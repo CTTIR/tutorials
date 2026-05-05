@@ -1,0 +1,82 @@
+---
+title: "Post-Hoc Power: A Controversy"
+date: "2026-04-17"
+description: Why computing power from the observed effect is circular and uninformative
+categories:
+  - "Sample Size & Power"
+  - post-hoc-power
+  - observed-power
+  - critique
+---
+
+## Introduction
+
+Post-hoc power -- also called "observed power" -- is the calculation of power using the observed effect size from the study that just ran. It is common in some fields (especially when a study fails to reject) and near-universally criticised by statisticians.
+
+## Prerequisites
+
+Power analysis, hypothesis testing.
+
+## Theory
+
+**Why it's problematic**:
+
+- Observed power is a monotone function of the p-value: smaller $p$ always yields higher observed power. It conveys no information beyond the p-value itself (Hoenig and Heisey 2001).
+- For non-significant results, observed power is bounded above by about 50 % (exactly 50 % when $p = \alpha$).
+- It cannot tell you whether the original design was underpowered for a clinically important effect; it only restates how surprising the data were under the null.
+
+**Legitimate alternatives**:
+
+- **Sensitivity analysis**: compute power for a pre-specified clinically important effect, given $n$.
+- **Confidence intervals** on the observed effect: communicate the range of effects consistent with the data.
+- **Minimum detectable effect** (MDE): the smallest effect detectable at the study's $n$ and power target, before the study ran.
+
+## Assumptions
+
+None; the issue is epistemological.
+
+## R Implementation
+
+```r
+library(pwr)
+
+# Simulated study that fails to reject
+set.seed(2026)
+x <- rnorm(30, 0.2, 1)
+t_res <- t.test(x)
+c(t = t_res$statistic, p = t_res$p.value)
+
+# Post-hoc power (what many people do)
+d_obs <- mean(x) / sd(x)
+pwr.t.test(n = 30, d = d_obs, sig.level = 0.05, type = "one.sample")$power
+
+# Better: 95% CI for the mean and MDE
+c(CI_lower = t_res$conf.int[1], CI_upper = t_res$conf.int[2])
+pwr.t.test(n = 30, power = 0.80, type = "one.sample", sig.level = 0.05)$d
+```
+
+## Output & Results
+
+```
+       t         p
+   1.11      0.277      # non-significant
+
+Observed power: 0.19     # uninformative
+
+95% CI: (-0.18, 0.58)
+MDE at n = 30: d = 0.52  # effect >= this detectable with 80% power
+```
+
+The CI and MDE together say: the effect could be anywhere from -0.18 to 0.58 SD; to detect a medium effect ($d = 0.52$) with 80 % power, $n = 30$ is adequate, so a negative finding here is informative.
+
+## Interpretation
+
+Do not report observed power. Report the confidence interval on the observed effect (communicates uncertainty directly) and, if relevant, the MDE at the design stage (communicates what the study was equipped to detect).
+
+## Practical Tips
+
+- Reviewers who request post-hoc power should be politely redirected to CI-based reporting.
+- "We had low power because the effect turned out to be small" is circular; "our CI cannot rule out a clinically meaningful effect" is informative.
+- Pre-registered power calculations are immune to this critique; they are design-stage, not data-driven.
+- For replication studies, the effect of interest is from the original study, not the replication sample.
+- When a study is genuinely underpowered, the honest conclusion is "inconclusive", not "no effect".

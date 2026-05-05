@@ -1,0 +1,71 @@
+---
+title: MANOVA
+date: "2026-04-17"
+description: "Multivariate analysis of variance: testing group differences across multiple correlated outcomes jointly"
+categories:
+  - Multivariate Statistics
+  - manova
+  - wilks-lambda
+  - multivariate-test
+---
+
+## Introduction
+
+MANOVA — multivariate analysis of variance — tests whether group means differ across several dependent variables simultaneously, accounting for the correlations among the outcomes. It is more powerful than running separate one-way ANOVAs when outcomes are correlated, because it pools information across the response set instead of testing each in isolation. It also controls Type I error at the family-wise level for the joint hypothesis, removing the need for multiple-comparison correction across a battery of univariate ANOVAs.
+
+## Prerequisites
+
+A working understanding of one-way ANOVA, multivariate Normal distributions, and covariance matrices.
+
+## Theory
+
+MANOVA decomposes the total cross-product matrix into hypothesis ($H$) and error ($E$) components and constructs four standard multivariate test statistics from their joint structure:
+
+- **Wilks' lambda**: $\Lambda = |E| / |H + E|$, the classical choice; small values reject the null.
+- **Pillai's trace**: $V = \mathrm{tr}(H (H + E)^{-1})$, robust to covariance heterogeneity and the recommended default.
+- **Hotelling–Lawley trace**: $T = \mathrm{tr}(H E^{-1})$, more powerful when one dimension dominates.
+- **Roy's greatest root**: $\theta = $ largest eigenvalue of $H E^{-1}$, most powerful when group differences are concentrated in one direction but liberal otherwise.
+
+All four test the same omnibus null hypothesis but have slightly different operating characteristics under non-Normality and unequal covariances.
+
+## Assumptions
+
+Multivariate Normal within groups, homogeneous covariance matrices across groups (Box's M test), and independent observations.
+
+## R Implementation
+
+```r
+fit <- manova(cbind(Sepal.Length, Sepal.Width, Petal.Length, Petal.Width) ~
+              Species, data = iris)
+summary(fit)                     # Pillai default
+summary(fit, test = "Wilks")
+summary(fit, test = "Hotelling-Lawley")
+
+# Follow-up univariate ANOVAs
+summary.aov(fit)
+
+# car Anova for Type II/III
+library(car)
+Manova(lm(cbind(Sepal.Length, Sepal.Width) ~ Species, data = iris))
+```
+
+## Output & Results
+
+`summary(fit)` returns the Pillai trace by default, with $F$ approximation, degrees of freedom, and $p$-value. Specifying other tests via the `test` argument produces Wilks, Hotelling-Lawley, and Roy variants. `summary.aov(fit)` runs follow-up univariate ANOVAs on each outcome.
+
+## Interpretation
+
+A reporting sentence: "MANOVA showed a significant multivariate species effect (Wilks' $\Lambda = 0.02$, $F(8, 288) = 199$, $p < 0.001$, multivariate $\eta^2 = 0.86$); univariate follow-up ANOVAs confirmed significant species differences on each of the four flower dimensions ($p < 0.001$ for each), with petal length carrying the strongest effect ($\eta^2 = 0.94$)." Always pair MANOVA with both univariate follow-ups and a multivariate effect-size measure.
+
+## Practical Tips
+
+- Pillai's trace is the recommended default — it is the most robust to covariance heterogeneity and unequal sample sizes.
+- For a significant MANOVA, follow up with univariate ANOVAs on each outcome to identify which dimensions drive the effect; corrected $p$-values (Bonferroni or Holm) are appropriate at this stage.
+- Test homogeneity of covariance with Box's M (`biotools::boxM`) before relying on Wilks; a significant Box's M motivates Pillai.
+- For unequal sample sizes and multifactorial designs, use `car::Manova()` with explicit Type II or Type III sums of squares; base R's `summary.manova` defaults to sequential (Type I).
+- Discriminant analysis follows naturally as a post-MANOVA exploration; the linear discriminants visualise where the multivariate group differences live.
+- For few groups with many highly-correlated outcomes, MANOVA is more powerful than Bonferroni-corrected univariate tests; for many groups with few outcomes, separate ANOVAs may be more interpretable.
+
+## R Packages Used
+
+Base R `manova()` and `summary.manova()`; `car::Manova()` for Type II / III sums of squares; `biotools::boxM()` for the homogeneity-of-covariance test; `MASS::lda()` for discriminant-analysis follow-up; `heplots` for visualising hypothesis-error decompositions.

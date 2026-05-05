@@ -1,0 +1,66 @@
+---
+title: The Ljung-Box Test
+date: "2026-04-17"
+description: Portmanteau test for remaining autocorrelation in residuals across multiple lags
+categories:
+  - Time Series Analysis
+  - ljung-box
+  - portmanteau
+  - residual-autocorrelation
+---
+
+## Introduction
+
+The Ljung-Box test is the standard portmanteau test for residual autocorrelation in time-series models. After fitting an ARIMA, ETS, or other time-series model, the question is whether the residuals are white noise; the Ljung-Box test pools sample autocorrelations over the first several lags into a single chi-squared statistic. A non-significant result supports model adequacy; a significant result indicates missed dynamics that should motivate refining the model.
+
+## Prerequisites
+
+A working understanding of autocorrelation functions, ARIMA models, and the white-noise assumption on time-series residuals.
+
+## Theory
+
+$$Q = n(n + 2) \sum_{k=1}^h \frac{\hat\rho_k^2}{n - k} \sim \chi^2_{h - p - q} \text{ under white noise},$$
+
+where $\hat\rho_k$ is the sample ACF at lag $k$, $h$ is the maximum lag, and $p + q$ is the number of ARMA parameters fit. The `fitdf` argument in `Box.test()` adjusts the degrees of freedom for parameters estimated from the data; for residuals from raw data (no model fitted), set `fitdf = 0`.
+
+The Ljung-Box improves on the older Box-Pierce statistic by introducing the small-sample correction $n(n+2)$ that prevents under-rejection at small $n$. For seasonal models, the maximum lag should span at least one seasonal period.
+
+## Assumptions
+
+Residuals are iid under the null; the maximum lag $h$ is small relative to the series length $n$.
+
+## R Implementation
+
+```r
+set.seed(2026)
+x <- arima.sim(list(ar = 0.5), n = 200)
+fit <- arima(x, order = c(1, 0, 0))
+e <- residuals(fit)
+
+# Ljung-Box at lag 20, 1 parameter fit
+Box.test(e, lag = 20, type = "Ljung-Box", fitdf = 1)
+
+# On an unfit series (no fitdf adjustment)
+Box.test(x, lag = 20, type = "Ljung-Box")
+```
+
+## Output & Results
+
+`Box.test()` returns the chi-squared statistic and the $p$-value at the chosen lag. Pair with the ACF and PACF plots of residuals for a visual confirmation; isolated significant autocorrelations may not move the omnibus test but are still substantively meaningful.
+
+## Interpretation
+
+A reporting sentence: "Residuals from the AR(1) fit gave a Ljung-Box statistic at lag 20 of $Q = 18.9$ on 19 degrees of freedom ($p = 0.45$), consistent with white noise. The ACF and PACF of residuals showed no isolated significant lags, supporting model adequacy." Always pair the test result with the lag chosen and the parameters subtracted.
+
+## Practical Tips
+
+- Choose the maximum lag $h$ around $\min(10, n/5)$ or based on domain knowledge; for monthly data with annual seasonality, $h \ge 24$ is sensible.
+- Use `fitdf = p + q` for ARMA($p$, $q$) fitted models; the test ignores the parameter cost otherwise and is anti-conservative.
+- For seasonal models, set the maximum lag to at least one full seasonal period to detect missed seasonal autocorrelation.
+- Rejection at any lag indicates missed dynamics; re-examine the model order, add seasonal terms, or consider a different family (state-space, GARCH).
+- `forecast::checkresiduals()` shows the Ljung-Box result alongside ACF and time-series plots, integrating numerical and visual diagnostics.
+- The Ljung-Box is sensitive to autocorrelation but not to non-stationarity or distributional assumptions; complement with KPSS / ADF and a residual normality plot.
+
+## R Packages Used
+
+Base R `Box.test()` for the canonical implementation; `forecast::checkresiduals()` for an integrated diagnostic with time-series and ACF plots; `feasts::ljung_box()` for the modern tidyverts interface; `astsa::sarima()` provides automatic Ljung-Box reporting in its diagnostic output.

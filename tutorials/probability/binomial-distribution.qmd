@@ -1,0 +1,109 @@
+---
+title: The Binomial Distribution
+date: "2026-04-17"
+description: The count of successes in n independent Bernoulli trials with common probability p
+categories:
+  - Probability Theory
+  - binomial
+  - count
+  - normal-approximation
+---
+
+## Introduction
+
+The binomial distribution counts the number of successes in $n$ independent trials, each with the same probability $p$. It is the most common discrete distribution in applied statistics: responder counts in a trial, positive test results in a screen, correct classifications in an evaluation.
+
+## Prerequisites
+
+Bernoulli trials, basic combinatorics.
+
+## Theory
+
+If $X = \sum_{i=1}^n B_i$ where $B_i$ are iid Bernoulli$(p)$, then $X \sim \mathrm{Binomial}(n, p)$.
+
+PMF: $P(X = k) = \binom{n}{k} p^k (1 - p)^{n - k}$ for $k = 0, 1, \ldots, n$.
+
+Moments:
+
+- $E[X] = np$.
+- $\mathrm{Var}(X) = np(1 - p)$.
+
+**Normal approximation**: $\mathrm{Binomial}(n, p) \approx \mathcal{N}(np, np(1 - p))$ when $np \geq 10$ and $n(1 - p) \geq 10$. Continuity-corrected: $P(X \leq k) \approx \Phi\!\big((k + 0.5 - np)/\sqrt{np(1-p)}\big)$.
+
+**Poisson approximation**: for large $n$ and small $p$ with $np = \lambda$ moderate, $\mathrm{Binomial}(n, p) \approx \mathrm{Poisson}(\lambda)$.
+
+Relationship to other distributions:
+
+- Sum of independent binomials with same $p$: binomial with sum of $n$'s.
+- Conditional on total successes, two independent binomials have a hypergeometric distribution of one.
+
+## Assumptions
+
+- Fixed number of trials $n$.
+- Independent trials.
+- Constant success probability $p$.
+
+Violations produce overdispersion (for varying $p$) or correlation (for dependent trials).
+
+## R Implementation
+
+```r
+library(ggplot2)
+
+n <- 20; p <- 0.35
+
+k <- 0:n
+pmf <- dbinom(k, n, p)
+
+data.frame(k, pmf = round(pmf, 4))
+
+# Moments
+c(mean = n * p, var = n * p * (1 - p))
+mean(rbinom(1e5, n, p)); var(rbinom(1e5, n, p))
+
+# Normal approximation
+x <- seq(0, n, length.out = 400)
+norm_approx <- dnorm(x, mean = n * p, sd = sqrt(n * p * (1 - p)))
+
+ggplot() +
+  geom_col(data = data.frame(k, pmf), aes(k, pmf), fill = "#2A9D8F") +
+  geom_line(data = data.frame(x, norm_approx), aes(x, norm_approx),
+            colour = "#F4A261", linewidth = 1) +
+  labs(x = "k", y = "probability",
+       title = "Binomial(20, 0.35) with normal approximation") +
+  theme_minimal()
+
+# Interval probability and quantile
+pbinom(10, n, p)        # P(X <= 10)
+qbinom(0.025, n, p)     # 2.5th percentile
+```
+
+## Output & Results
+
+```
+    k    pmf
+1   0 0.0020
+2   1 0.0219
+...
+20 20 0.0000
+
+    mean     var
+     7.0     4.55
+
+[1] 0.9468     # P(X <= 10)
+[1]      3     # 2.5th percentile
+```
+
+The normal approximation tracks the PMF closely at $n = 20$, $p = 0.35$ where $np = 7$ and $n(1 - p) = 13$.
+
+## Interpretation
+
+Binomial reasoning pervades applied statistics: one-proportion tests, two-proportion tests, logistic regression, and every chi-squared-style comparison. Reporting a proportion with a Wilson 95% CI is reporting a binomial inference.
+
+## Practical Tips
+
+- For small $n$ or extreme $p$, use the exact binomial test / Clopper-Pearson interval instead of normal-based inference.
+- Overdispersion relative to binomial signals either varying $p$ across trials or correlation among trials; the beta-binomial is a common remedy.
+- `dbinom(k, n, p, log = TRUE)` gives log-probabilities, useful for likelihoods with many observations.
+- Compound inferences (e.g., comparing two binomial proportions) have their own CIs; prefer score intervals (`prop.test`) over Wald.
+- In R the order of arguments is `dbinom(x, size, prob)` where `size` is $n$ and `prob` is $p$; mixing them up is a common bug.
