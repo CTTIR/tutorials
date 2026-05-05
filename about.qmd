@@ -49,6 +49,74 @@ All tutorials use **R** as the primary programming language. To follow along, yo
 
 These tutorials are maintained by **R. Heller**. For more information, visit the [main website](https://r-heller.github.io/website/).
 
+## References
+
+The following sources informed the methodological choices, worked examples, and recommendations across the tutorial collection. Full BibTeX entries are available in [`references.bib`](https://github.com/CTTIR/tutorials/blob/main/references.bib).
+
+### Books
+
+- Agresti, A. (2010). *Analysis of Ordinal Categorical Data* (2nd ed.). Wiley.
+- Agresti, A. (2013). *Categorical Data Analysis* (3rd ed.). Wiley.
+- Cohen, J. (1988). *Statistical Power Analysis for the Behavioral Sciences* (2nd ed.). Lawrence Erlbaum.
+- Faraway, J. J. (2015). *Linear Models with R* (2nd ed.). Chapman and Hall/CRC.
+- Field, A. (2018). *Discovering Statistics Using IBM SPSS Statistics* (5th ed.). SAGE.
+- Fox, J., & Weisberg, S. (2019). *An R Companion to Applied Regression* (3rd ed.). SAGE.
+- Harrell, F. E. (2015). *Regression Modeling Strategies* (2nd ed.). Springer.
+- Hollander, M., Wolfe, D. A., & Chicken, E. (2014). *Nonparametric Statistical Methods* (3rd ed.). Wiley.
+- Hosmer, D. W., Lemeshow, S., & Sturdivant, R. X. (2013). *Applied Logistic Regression* (3rd ed.). Wiley.
+- Kaufman, L., & Rousseeuw, P. J. (2009). *Finding Groups in Data: An Introduction to Cluster Analysis*. Wiley.
+- Maxwell, S. E., Delaney, H. D., & Kelley, K. (2017). *Designing Experiments and Analyzing Data* (3rd ed.). Routledge.
+- Rousseeuw, P. J., & Leroy, A. M. (2005). *Robust Regression and Outlier Detection*. Wiley.
+
+### Articles
+
+- Agresti, A., & Coull, B. A. (1998). Approximate is better than "exact" for interval estimation of binomial proportions. *The American Statistician*, 52(2), 119–126.
+- Bakeman, R. (2005). Recommended effect size statistics for repeated measures designs. *Behavior Research Methods*, 37(3), 379–384.
+- Bishara, A. J., & Hittner, J. B. (2012). Testing the significance of a correlation with nonnormal data. *Psychological Methods*, 17(3), 399–417.
+- Conover, W. J., Johnson, M. E., & Johnson, M. M. (1981). A comparative study of tests for homogeneity of variances. *Technometrics*, 23(4), 351–361.
+- Delacre, M., Lakens, D., & Leys, C. (2017). Why psychologists should by default use Welch's t-test. *International Review of Social Psychology*, 30(1), 92–101.
+- Dinno, A. (2015). Nonparametric pairwise multiple comparisons in independent groups using Dunn's test. *The Stata Journal*, 15(1), 292–300.
+- Divine, G., Norton, H. J., Hunt, R., & Dienemann, J. (2013). A review of analysis and sample size calculation considerations for Wilcoxon tests. *Anesthesia and Analgesia*, 117(3), 699–710.
+- Fabrigar, L. R., Wegener, D. T., MacCallum, R. C., & Strahan, E. J. (1999). Evaluating the use of exploratory factor analysis in psychological research. *Psychological Methods*, 4(3), 272–299.
+- Ghasemi, A., & Zahediasl, S. (2012). Normality tests for statistical analysis: A guide for non-statisticians. *International Journal of Endocrinology and Metabolism*, 10(2), 486–489.
+- Gueorguieva, R., & Krystal, J. H. (2004). Move over ANOVA: Progress in analyzing repeated-measures data. *Archives of General Psychiatry*, 61(3), 310–317.
+- Kendall, M. G. (1938). A new measure of rank correlation. *Biometrika*, 30(1–2), 81–93.
+- Kerby, D. S. (2014). The simple difference formula: An approach to teaching nonparametric correlation. *Comprehensive Psychology*, 3.
+- Newson, R. (2002). Parameters behind "nonparametric" statistics. *The Stata Journal*, 2(1), 45–64.
+- Sharpe, D. (2015). Chi-square test is statistically significant: Now what? *Practical Assessment, Research and Evaluation*, 20(8).
+
+### Software
+
+- Kassambara, A. (2023). *rstatix: Pipe-friendly framework for basic statistical tests*.
+- Patil, I. (2021). Visualizations with statistical details: The ggstatsplot approach. *Journal of Open Source Software*, 6(61), 3167.
+- Rosseel, Y. (2012). lavaan: An R package for structural equation modeling. *Journal of Statistical Software*, 48(2), 1–36.
+- Sjoberg, D. D., Whiting, K., Curry, M., Lavery, J. A., & Larmarange, J. (2021). Reproducible summary tables with the gtsummary package. *The R Journal*, 13(1), 570–580.
+- Wickham, H., et al. (2019). Welcome to the tidyverse. *Journal of Open Source Software*, 4(43), 1686.
+
+## Acknowledgements
+
+This tutorial collection builds on the work of the wider R, Quarto, and statistical-computing communities. Particular thanks to:
+
+- The **R Core Team** and **CRAN** maintainers for the language and package ecosystem that underpins every example.
+- The **Posit / Quarto** team for the publishing system used to render this site.
+- The authors of the **tidyverse**, **rstatix**, **ggstatsplot**, **lavaan**, **gtsummary**, and the many Bioconductor packages cited in individual tutorials.
+- The textbook authors listed above, whose pedagogy shaped how methods are introduced and compared here.
+- Readers and contributors who reported issues, suggested corrections, and proposed new topics through the project's GitHub repository.
+
+## Citation
+
+If you use this tutorial collection in teaching, research, or other written work, please cite it as:
+
+```bibtex
+@misc{heller2026tutorials,
+  author       = {Heller, R.},
+  title        = {{\#}tutorials: Comprehensive Tutorials in Statistics and Bioinformatics with {R}},
+  year         = {2026},
+  howpublished = {\url{https://cttir.github.io/tutorials/}},
+  note         = {CTTIR project}
+}
+```
+
 ::: {.vgwort-pixel}
 ```{=html}
 <!-- VG Wort Zählmarke — public ID: 0015a195ffc14c80a3fcdf264e8c509f -->
