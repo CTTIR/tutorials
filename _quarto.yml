@@ -109,6 +109,19 @@ format:
           <link rel="preconnect" href="https://fonts.googleapis.com">
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
           <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+          <script>
+          // Clear stale localStorage from before dark-mode-by-default so returning
+          // visitors get the new default. Runs once per browser, gated by a versioned
+          // flag — users who explicitly toggle after this point are respected.
+          (function(){
+            try {
+              if (!localStorage.getItem("quarto-color-scheme-reset-v1")) {
+                localStorage.removeItem("quarto-color-scheme");
+                localStorage.setItem("quarto-color-scheme-reset-v1", "1");
+              }
+            } catch (e) {}
+          })();
+          </script>
           <script defer data-domain="cttir.github.io/tutorials" src="https://analytics.hellebo.de/js/script.file-downloads.outbound-links.js"></script>
           <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
     include-after-body:

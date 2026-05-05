@@ -180,6 +180,11 @@ hr { border: none; border-top: 1px solid var(--rule); margin: 2.5rem 0; }
 }
 #TOC a:hover, #TOC a.active { color: var(--accent); }
 
+/* When `title-block-style: none` is set, Quarto still emits an empty/duplicate
+   title-block-header (without the `default` modifier). Hide it so landing
+   pages render only their hand-rolled hero block. */
+#title-block-header.quarto-title-block:not(.default) { display: none; }
+
 /* Hero block on landing pages. */
 .hero {
   padding: 2.5rem 0 2rem 0;
