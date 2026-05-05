@@ -87,6 +87,20 @@ python scripts/build_manifest.py    # writes js/tutorials-manifest.json
   decision-tree coverage map, and `ORIGINALITY.md` for the originality
   statement.
 
+## Citation
+
+If you use this tutorial collection in teaching, research, or other written work, please cite it as:
+
+```bibtex
+@misc{heller2026tutorials,
+  author       = {Heller, R.},
+  title        = {{\#}tutorials: Comprehensive Tutorials in Statistics and Bioinformatics with {R}},
+  year         = {2026},
+  howpublished = {\url{https://cttir.github.io/tutorials/}},
+  note         = {CTTIR project}
+}
+```
+
 ## Licence
 
 MIT. See `LICENSE`.
