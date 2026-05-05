@@ -1,0 +1,51 @@
+---
+title: PCA Explorer
+date: "2026-04-17"
+description: "Upload or simulate data and watch PCA loadings, scores, and biplots update with every choice of scaling and component count"
+categories:
+  - Multivariate Statistics
+  - shiny
+  - pca
+  - biplot
+  - dimensionality-reduction
+---
+
+## Purpose
+
+The PCA Explorer demystifies principal component analysis by making every step of the procedure observable. Readers choose (or upload) a dataset, pick scaling and centring conventions, and watch the scree plot, loading matrix, and biplot populate. The app also overlays new observations onto the existing component space to illustrate projection -- the key operation in any downstream use of PCA.
+
+## User inputs
+
+- Dataset (built-in such as `iris`, `mtcars`, or user-uploaded CSV/Excel)
+- Variable selection for analysis and for grouping (colour)
+- Centring and scaling toggles
+- Number of components to display (1 to min($n$, $p$))
+- Loading-pair selector for the biplot (PC1 vs. PC2, PC1 vs. PC3, etc.)
+
+## Outputs
+
+- Scree plot with cumulative variance explained
+- Loading matrix as a heatmap
+- Score plot (observations in component space) coloured by the grouping variable
+- Biplot combining scores and loading arrows
+- Reconstruction panel: original data vs. low-rank reconstruction at the current $k$
+
+## Didactic value
+
+The app makes vivid what PCA actually does: it finds the orthogonal directions of maximum variance, not the directions most relevant to some downstream task. By switching scaling on and off with a single toggle, readers see that PCA on unscaled data with heterogeneous units is almost always misleading. By reconstructing at low rank, readers see how much information the first few components preserve.
+
+## Embedded in
+
+- `multivariate/principal-component-analysis.md`
+- `multivariate/factor-analysis.md`
+- `bioinformatics/rnaseq-quality-control.md`
+
+## Source code
+
+Local: `apps/08-pca-explorer/`
+
+Run with:
+
+```r
+shiny::runApp("apps/08-pca-explorer")
+```

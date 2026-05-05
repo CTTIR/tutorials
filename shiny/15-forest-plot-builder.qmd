@@ -1,0 +1,52 @@
+---
+title: Forest Plot Builder
+date: "2026-04-17"
+description: "Paste study-level effect sizes and standard errors; get a fixed-effect and random-effects meta-analysis with forest, funnel, and influence diagnostics"
+categories:
+  - Meta-Analysis
+  - shiny
+  - meta-analysis
+  - forest-plot
+  - funnel-plot
+  - heterogeneity
+---
+
+## Purpose
+
+Meta-analysis software is full of sensible defaults that obscure the modelling choices a reviewer will scrutinise: fixed vs. random, which tau-squared estimator, which confidence interval adjustment, which publication-bias assessment. The Forest Plot Builder exposes each choice and shows how the summary estimate and its uncertainty move in response.
+
+## User inputs
+
+- Effect-size metric (mean difference, SMD, log-RR, log-OR, log-HR, Pearson $r$)
+- Data entry: paste a table of study-level estimates with standard errors (or 2x2 counts for binary outcomes)
+- Model: fixed-effect, random-effects with choice of tau-squared estimator (DL, REML, PM, SJ)
+- Adjustment: Hartung-Knapp, Knapp-Hartung, Sidik-Jonkman
+- Sensitivity: leave-one-out, influence diagnostics
+
+## Outputs
+
+- Forest plot with study-level and pooled estimates, customisable ordering and columns
+- Heterogeneity statistics: $Q$, $I^2$, $\tau^2$, $H^2$, 95% prediction interval
+- Funnel plot with Egger's and Begg's tests
+- Leave-one-out summary: how much each study moves the pooled estimate
+- Cumulative meta-analysis ordered by year
+
+## Didactic value
+
+Switching from fixed-effect to random-effects on a highly heterogeneous dataset shows the confidence interval widen dramatically -- a concrete demonstration of why the "wrong" model underestimates uncertainty. The leave-one-out view teaches sensitivity analysis as a practice, not an abstract nod in the methods section.
+
+## Embedded in
+
+- `meta-analysis/fixed-vs-random-effects.md`
+- `meta-analysis/forest-plots.md`
+- `meta-analysis/heterogeneity.md`
+
+## Source code
+
+Local: `apps/15-forest-plot-builder/`
+
+Run with:
+
+```r
+shiny::runApp("apps/15-forest-plot-builder")
+```

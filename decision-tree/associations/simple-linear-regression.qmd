@@ -1,0 +1,110 @@
+---
+title: Simple Linear Regression
+date: "2026-04-17"
+description: Modelling a continuous outcome as a linear function of a single continuous predictor
+categories:
+  - simple-linear-regression
+  - ols
+  - residuals
+  - diagnostics
+---
+
+## Research question
+
+Simple linear regression models the conditional mean of a continuous outcome $y$ as a linear function of a single continuous predictor $x$. Biomedical example: does body-mass index predict systolic blood pressure in a cohort of 120 adult outpatients? The regression gives an estimated slope (mmHg per unit BMI), its standard error, a 95 % confidence interval, and an explanation for the proportion of variance in SBP accounted for by BMI.
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Linear relationship between $x$ and $E[y \mid x]$ | residual-vs-fitted plot |
+| Independent residuals | design; `car::durbinWatsonTest()` for time-ordered data |
+| Homoscedasticity (constant variance of residuals) | residual-vs-fitted; `ncvTest()` |
+| Approximately normal residuals | Q-Q plot of residuals |
+| No extreme high-leverage or high-influence points | `cooks.distance`, leverage $h_{ii}$ |
+
+## Hypotheses
+
+$$H_0: \beta_1 = 0 \qquad H_1: \beta_1 \ne 0$$
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(car); library(broom); library(ggstatsplot)
+set.seed(42)
+
+cohort <- tibble(
+  bmi = rnorm(120, 27, 4.5),
+  sbp = 100 + 1.3 * bmi + rnorm(120, 0, 10)
+)
+
+fit <- lm(sbp ~ bmi, data = cohort)
+
+# Coefficients with CIs
+broom::tidy(fit, conf.int = TRUE)
+
+# Model summary
+broom::glance(fit)
+
+# Diagnostics
+par(mfrow = c(2, 2)); plot(fit); par(mfrow = c(1, 1))
+
+ncvTest(fit)                    # heteroscedasticity
+shapiro.test(residuals(fit))    # normality of residuals
+
+# Cook's distance
+cooks <- cooks.distance(fit)
+which(cooks > 4 / nrow(cohort))
+
+# Inline plot with regression line and stats
+ggscatterstats(data = cohort, x = bmi, y = sbp, type = "parametric",
+               xlab = "BMI (kg/m^2)", ylab = "Systolic BP (mmHg)")
+```
+
+## Interpreting the output
+
+The tidy output reports intercept, slope, standard errors, t statistics, p-values, and confidence intervals. A slope of 1.31 (95 % CI 1.02-1.60) mmHg per kg/m^2 with $t(118) = 9.1$, $p < .001$ indicates a significant positive linear relationship. $R^2 = 0.41$: BMI explains 41 % of the variance in SBP linearly.
+
+Diagnostic plots should show no systematic pattern in residuals, a roughly straight Q-Q line, and no single influential point with Cook's distance $> 1$.
+
+## Effect size
+
+The slope coefficient is the natural effect size. Standardised: $\beta^* = \beta_1 \cdot \mathrm{SD}(x) / \mathrm{SD}(y)$. For models, $R^2$ summarises variance explained; Cohen's $f^2 = R^2 / (1 - R^2)$ has thresholds 0.02 / 0.15 / 0.35.
+
+## Reporting (APA 7)
+
+> Body-mass index significantly predicted systolic blood pressure (b = 1.31, SE = 0.14, t(118) = 9.14, p < .001, 95 % CI [1.02, 1.60]). For every 1 kg/m^2 increase in BMI, SBP was higher by 1.3 mmHg. The model accounted for 41 % of the variance in SBP (R^2 = .41, F(1, 118) = 83.5, p < .001).
+
+## Common pitfalls
+
+- Predicting outside the range of the observed $x$ (extrapolation).
+- Interpreting the intercept at $x = 0$ when $x = 0$ is physiologically impossible.
+- Ignoring diagnostic plots and reporting only the p-value.
+- Reporting $R^2$ as if it were a measure of fit quality on new data; cross-validate for predictive use.
+
+## Parametric vs. non-parametric alternative
+
+- When normality of residuals fails, a bootstrap CI on the slope is an assumption-light alternative.
+- Non-parametric rank regression (e.g., Theil-Sen, `mblm::mblm()`) is a robust alternative.
+
+## Further reading
+
+- [Multiple linear regression](/decision-tree/associations/multiple-regression.qmd)
+- [Pearson correlation](/decision-tree/associations/pearson-correlation.qmd)
+- Fox, J., & Weisberg, S. (2019). *An R Companion to Applied Regression* (3rd ed.).
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 005b45f911b24292b5e251c88ce2e934 -->
+<img src="https://vg09.met.vgwort.de/na/005b45f911b24292b5e251c88ce2e934"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

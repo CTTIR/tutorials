@@ -1,0 +1,34 @@
+aesthetics-and-geoms|Aesthetics and Geoms|mapping data to visuals; layer grammar
+scales-and-coordinates|Scales and Coordinates|position; colour; log scales
+facets-and-panels|Facets and Panels|facet_wrap vs facet_grid
+ggplot-themes|ggplot2 Themes|complete themes; customisation
+colour-palettes|Colour Palettes|viridis; Brewer; discrete vs continuous
+colour-blind-safe-plots|Colour-Blind-Safe Plots|safe palettes; simulation
+histograms|Histograms|bin choice; geom_histogram
+density-plots|Density Plots|bandwidth; geom_density
+boxplots|Boxplots|Tukey; notched; outliers
+violin-plots|Violin Plots|density by group
+raincloud-plots|Raincloud Plots|combined half-violin + point + boxplot
+scatter-plots|Scatter Plots|geom_point; overplotting strategies
+bubble-plots|Bubble Plots|size aesthetic; perception caveats
+line-plots|Line Plots|ordered x; time series
+bar-charts|Bar Charts|counts; stat_count; summaries
+stacked-dodged-bars|Stacked and Dodged Bars|position dodges and stacks
+dot-plots|Dot Plots|Cleveland; geom_dotplot
+heatmaps|Heatmaps|geom_tile; hierarchical ordering
+contour-plots|Contour Plots|2D density; geom_contour
+hexbin-plots|Hexbin Plots|geom_hex; large-n scatter
+ridge-plots|Ridge Plots|ggridges; stacked densities
+pairs-plots|Pairs Plots|GGally; scatterplot matrix
+correlation-heatmaps|Correlation Heatmaps|corrplot; ggcorrplot
+forest-plots-viz|Forest Plots (Visualisation)|meta-analysis-style display
+funnel-plots-viz|Funnel Plots (Visualisation)|publication bias display
+bland-altman-plots|Bland-Altman Plots|limits of agreement display
+roc-curves-plot|ROC Curves|plotROC; pROC
+survival-curves-plot|Survival Curves|ggsurvplot; risk tables
+time-series-plots|Time Series Plots|dates; forecasts with bands
+annotations-and-labels|Annotations and Labels|ggtext; ggrepel
+patchwork-composition|Patchwork: Multi-Plot Composition|pipe operator; compose layouts
+interactive-plotly|Interactive Plots with plotly|ggplotly; tooltips
+interactive-ggiraph|Interactive Plots with ggiraph|interactive SVG
+ggsave-and-export|Saving and Exporting Figures|ggsave; DPI; units

@@ -1,0 +1,54 @@
+---
+title: References
+description: Bibliography and R package citations for the decision-tree section
+---
+
+## Textbooks and foundational references
+
+- Agresti, A. (2013). *Categorical Data Analysis* (3rd ed.). Wiley. -- Reference for contingency tables, logistic regression, and ordinal models.
+- Cohen, J. (1988). *Statistical Power Analysis for the Behavioral Sciences* (2nd ed.). Lawrence Erlbaum. -- Source for conventional effect-size thresholds (small, medium, large).
+- Faraway, J. J. (2015). *Linear Models with R* (2nd ed.). Chapman & Hall / CRC.
+- Field, A. (2018). *Discovering Statistics Using IBM SPSS Statistics* (5th ed.). SAGE. -- Assumption-checking conventions and post-hoc decisions.
+- Fox, J., & Weisberg, S. (2019). *An R Companion to Applied Regression* (3rd ed.). SAGE.
+- Hollander, M., Wolfe, D. A., & Chicken, E. (2014). *Nonparametric Statistical Methods* (3rd ed.). Wiley.
+- Kabacoff, R. I. (2015). *R in Action* (2nd ed.). Manning.
+- Kirk, R. E. (2013). *Experimental Design: Procedures for the Behavioral Sciences* (4th ed.). SAGE.
+
+## R package citations
+
+Every method page uses one or more of the following packages. Cite them in any publication that uses their functionality.
+
+- Wickham, H., et al. (2019). Welcome to the tidyverse. *Journal of Open Source Software*, 4(43), 1686.
+- Kassambara, A. (2023). `rstatix`: Pipe-friendly framework for basic statistical tests. R package.
+- Fox, J., & Weisberg, S. (2019). `car`: Companion to Applied Regression. R package.
+- Robinson, D., Hayes, A., & Couch, S. (2024). `broom`: Convert statistical objects into tidy tibbles. R package.
+- Sjoberg, D. D., Whiting, K., Curry, M., Lavery, J. A., & Larmarange, J. (2021). Reproducible summary tables with the `gtsummary` package. *The R Journal*, 13(1), 570--580.
+- Patil, I. (2021). Visualisations with statistical details: The `ggstatsplot` approach. *Journal of Open Source Software*, 6(61), 3167.
+- Revelle, W. (2023). `psych`: Procedures for personality and psychological research. R package.
+- Rosseel, Y. (2012). `lavaan`: An R package for structural equation modeling. *Journal of Statistical Software*, 48(2), 1--36.
+- Kassambara, A., & Mundt, F. (2020). `factoextra`: Extract and visualize the results of multivariate data analyses. R package.
+- Maechler, M., Rousseeuw, P., Struyf, A., Hubert, M., & Hornik, K. (2023). `cluster`: Cluster analysis basics and extensions. R package.
+
+## Reporting conventions
+
+All reporting sentences in this section follow APA 7 style (American Psychological Association, 2019). Decimal places follow the journal convention in each subfield; in the examples we use two decimal places for test statistics and effect sizes, three for p-values except when $p < .001$.
+
+## Dependency lock
+
+The example R code is pinned to specific package versions in `renv.lock` at the repository root. A clean install of R 4.4 with `renv::restore()` reproduces all examples exactly.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00f1d0d167ad464d925b4ab2cddd76a5 -->
+<img src="https://vg09.met.vgwort.de/na/00f1d0d167ad464d925b4ab2cddd76a5"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

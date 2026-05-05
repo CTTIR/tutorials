@@ -1,0 +1,52 @@
+---
+title: Design of Experiments Lab
+date: "2026-04-17"
+description: "Construct factorial, fractional-factorial, and response-surface designs with live randomisation plans and analysis-ready templates"
+categories:
+  - Experimental Design
+  - shiny
+  - design-of-experiments
+  - factorial
+  - response-surface
+---
+
+## Purpose
+
+Statistical experimental design lives or dies on structural clarity: which factors, which levels, which interactions of interest, which blocks to protect against. The Design of Experiments Lab provides an interactive canvas for specifying these, reviewing the resulting design matrix, and generating a ready-to-run randomisation plan with analysis stub code.
+
+## User inputs
+
+- Design family: full factorial, fractional factorial, central composite, Box-Behnken, split-plot
+- Number and levels of factors (numeric or categorical) with named levels
+- Resolution target for fractional factorials
+- Blocking variable(s) with number of blocks
+- Replication: fully replicated, partially replicated, or single-run
+- Randomisation seed for reproducibility
+
+## Outputs
+
+- The design matrix with factor columns, block column, and run order
+- Alias structure for fractional factorials, displayed as a human-readable list
+- An analysis stub in R: `lm()` or `aov()` call with the appropriate formula
+- A printable worksheet for the bench or field team with one row per run
+- Expected power for user-specified effect sizes on main effects and interactions
+
+## Didactic value
+
+The app forces the reader to confront a trade-off at every step: more runs for higher resolution; blocking to protect against day effects at the cost of orthogonality with some interactions; the confounding pattern of a $2^{7-3}$ fractional factorial made visible. Seeing the aliases spelled out ("$ABC = DE$") is the fastest path to understanding what "resolution IV" really means.
+
+## Embedded in
+
+- `experimental-design/factorial-designs.md`
+- `experimental-design/fractional-factorial-designs.md`
+- `experimental-design/response-surface-methodology.md`
+
+## Source code
+
+Local: `apps/16-design-of-experiments-lab/`
+
+Run with:
+
+```r
+shiny::runApp("apps/16-design-of-experiments-lab")
+```

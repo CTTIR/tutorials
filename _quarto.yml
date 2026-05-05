@@ -1,0 +1,138 @@
+project:
+  type: website
+  output-dir: docs
+  resources:
+    - "js/**"
+    - "css/**"
+    - "images/**"
+    - "CNAME"
+
+execute:
+  freeze: auto
+
+website:
+  title: "#tutorials"
+  description: "Comprehensive tutorials in statistics and bioinformatics with R code examples"
+  site-url: "https://r-heller.github.io/tutorials/"
+  navbar:
+    title: "#tutorials"
+    left:
+      - href: overview.qmd
+        text: "Overview"
+      - text: "Tutorials"
+        menu:
+          - href: tutorials.qmd
+            text: "All tutorials (A-Z)"
+          - text: "---"
+          - href: tutorials/statistical-foundations/index.qmd
+            text: "Statistical Foundations"
+          - href: tutorials/descriptive-statistics/index.qmd
+            text: "Descriptive Statistics"
+          - href: tutorials/probability/index.qmd
+            text: "Probability Theory"
+          - href: tutorials/inference/index.qmd
+            text: "Inferential Statistics"
+          - href: tutorials/sample-size/index.qmd
+            text: "Sample Size & Power"
+          - href: tutorials/visualisation/index.qmd
+            text: "Data Visualisation"
+          - href: tutorials/regression-modelling/index.qmd
+            text: "Regression & Modelling"
+          - href: tutorials/multivariate/index.qmd
+            text: "Multivariate Methods"
+          - href: tutorials/time-series/index.qmd
+            text: "Time-Series Analysis"
+          - href: tutorials/bayesian/index.qmd
+            text: "Bayesian Statistics"
+          - href: tutorials/survival-analysis/index.qmd
+            text: "Survival Analysis"
+          - href: tutorials/bioinformatics/index.qmd
+            text: "Bioinformatics"
+          - href: tutorials/machine-learning/index.qmd
+            text: "Machine Learning"
+          - href: tutorials/clinical-biostatistics/index.qmd
+            text: "Clinical Biostatistics"
+          - href: tutorials/meta-analysis/index.qmd
+            text: "Meta-Analysis"
+          - href: tutorials/experimental-design/index.qmd
+            text: "Experimental Design"
+      - text: "Applications"
+        menu:
+          - href: decision-tree/index.qmd
+            text: "Decision Tree"
+          - href: decision-tree/decision-assistant.qmd
+            text: "Decision Assistant (wizard)"
+          - href: decision-tree/decision-tree.qmd
+            text: "Decision Tree (chart)"
+          - text: "---"
+          - href: shiny/index.qmd
+            text: "Shiny Apps (overview)"
+      - href: about.qmd
+        text: "About"
+    right:
+      - text: "Rechtliches"
+        menu:
+          - href: impressum.qmd
+            text: "Impressum"
+          - href: datenschutz.qmd
+            text: "Datenschutzerklärung"
+          - href: haftungsausschluss.qmd
+            text: "Haftungsausschluss"
+      - icon: github
+        href: https://github.com/r-heller/tutorials
+  page-navigation: true
+  page-footer:
+    left: "#tutorials · MIT"
+    center:
+      - text: "Overview"
+        href: overview.qmd
+      - text: "All tutorials"
+        href: tutorials.qmd
+      - text: "About"
+        href: about.qmd
+      - text: "Impressum"
+        href: impressum.qmd
+      - text: "Datenschutz"
+        href: datenschutz.qmd
+      - text: "Haftungsausschluss"
+        href: haftungsausschluss.qmd
+      - text: "Kontakt"
+        href: "mailto:58561665+r-heller@users.noreply.github.com"
+    right: "Built with [Quarto](https://quarto.org)"
+
+filters:
+  - scripts/vgwort.lua
+
+format:
+  html:
+    theme:
+      light: [flatly, assets/light.scss]
+      dark:  [darkly, assets/dark.scss]
+    toc: true
+    toc-depth: 3
+    toc-location: right
+    code-copy: true
+    code-overflow: wrap
+    link-external-newwindow: true
+    include-in-header:
+      - text: |
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+          <script defer data-domain="r-heller.github.io/tutorials" src="https://analytics.hellebo.de/js/script.file-downloads.outbound-links.js"></script>
+          <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+    include-after-body:
+      - text: |
+          <script>
+          (function(){
+            var p = window.location.pathname;
+            var i = p.indexOf("/tutorials/");
+            var root = i >= 0 ? p.slice(0, i) : "";
+            var s = document.createElement("script");
+            s.defer = true;
+            s.src = root + "/js/related.js";
+            document.head.appendChild(s);
+          })();
+          </script>
+
+editor: source

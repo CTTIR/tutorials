@@ -1,0 +1,27 @@
+---
+title: Central Tendency Tests
+description: Comparing means or medians across two or more independent or paired groups
+---
+
+Comparing central tendency -- means for metric, approximately normal data; medians for ordinal or skewed data -- is the most common task in applied clinical statistics. The tests below cover every combination of group structure (two vs. three or more, independent vs. paired) and distributional assumption (parametric vs. non-parametric).
+
+## Method pages
+
+### Two groups
+- [Independent-samples t-test](/decision-tree/differences/central-tendency/independent-t-test.qmd) (with Welch's variant)
+- [Paired-samples t-test](/decision-tree/differences/central-tendency/paired-t-test.qmd)
+- [Mann-Whitney U test](/decision-tree/differences/central-tendency/mann-whitney-u.qmd)
+- [Wilcoxon signed-rank test](/decision-tree/differences/central-tendency/wilcoxon-signed-rank.qmd)
+- [Sign test](/decision-tree/differences/central-tendency/sign-test.qmd)
+
+### Three or more groups
+- [One-way ANOVA](/decision-tree/differences/central-tendency/one-way-anova.qmd)
+- [Factorial ANOVA](/decision-tree/differences/central-tendency/factorial-anova.qmd)
+- [One-way repeated-measures ANOVA](/decision-tree/differences/central-tendency/rm-anova-one-way.qmd)
+- [Factorial / mixed repeated-measures ANOVA](/decision-tree/differences/central-tendency/rm-anova-factorial.qmd)
+- [Kruskal-Wallis test](/decision-tree/differences/central-tendency/kruskal-wallis.qmd)
+- [Friedman test](/decision-tree/differences/central-tendency/friedman.qmd)
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*

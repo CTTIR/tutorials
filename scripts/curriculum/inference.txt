@@ -1,0 +1,44 @@
+p-values-explained|P-Values Explained|definition; common misinterpretations
+null-alternative-hypotheses|Null and Alternative Hypotheses|setup; one- vs two-sided
+type-i-type-ii-errors|Type I and Type II Errors|alpha; beta; power; tradeoff
+one-sample-t-test|One-Sample t-Test|mean vs reference; assumptions
+paired-t-test|Paired t-Test|dependent samples; difference scores
+welch-t-test|Welch's t-Test|unequal variances; Satterthwaite df
+one-sample-z-test|One-Sample z-Test|known variance; rare in practice
+one-proportion-test|One-Proportion Test|exact binomial; score CI
+two-proportion-test|Two-Proportion Test|z-test; chi-squared equivalence
+chi-squared-goodness-of-fit|Chi-Squared Goodness-of-Fit Test|observed vs expected frequencies
+chi-squared-independence|Chi-Squared Test of Independence|contingency tables; df
+fisher-exact-test|Fisher's Exact Test|small tables; hypergeometric
+mcnemar-test|McNemar's Test|paired binary data; discordant pairs
+cochran-mantel-haenszel|Cochran-Mantel-Haenszel Test|stratified 2x2 tables
+one-way-anova|One-Way ANOVA|between-groups; F test
+two-way-anova|Two-Way ANOVA|two factors; interaction
+repeated-measures-anova|Repeated-Measures ANOVA|within-subjects; sphericity
+mixed-anova|Mixed ANOVA|between and within factors together
+post-hoc-tests-tukey|Post-Hoc Tests with Tukey HSD|pairwise comparisons
+bonferroni-correction|Bonferroni Correction|FWER; conservative
+holm-correction|Holm's Step-Down Correction|sequential; more powerful than Bonferroni
+benjamini-hochberg-fdr|Benjamini-Hochberg FDR|false discovery rate control
+benjamini-yekutieli|Benjamini-Yekutieli FDR|dependence-robust FDR control
+pearson-correlation-test|Pearson Correlation Test|t test on correlation
+spearman-correlation-test|Spearman Rank Correlation Test|monotonic associations
+kendall-tau|Kendall's Tau|concordant vs discordant pairs
+mann-whitney-u|Mann-Whitney U Test|two-group rank test
+wilcoxon-signed-rank|Wilcoxon Signed-Rank Test|paired rank test
+kruskal-wallis|Kruskal-Wallis Test|non-parametric ANOVA
+friedman-test|Friedman Test|non-parametric repeated measures
+permutation-tests|Permutation Tests|exchangeability; resampling
+bootstrap-introduction|The Bootstrap: Introduction|resampling for SE and CI
+bootstrap-confidence-intervals|Bootstrap Confidence Intervals|percentile; BCa; basic
+jackknife|The Jackknife|leave-one-out resampling
+anderson-darling-test|Anderson-Darling Test|tail-sensitive normality test
+kolmogorov-smirnov-test|Kolmogorov-Smirnov Test|CDF-based goodness of fit
+shapiro-wilk-test|Shapiro-Wilk Normality Test|most powerful small-sample test
+levene-test|Levene's Test of Variances|deviation from group median/mean
+bartlett-test|Bartlett's Test|equal variances under normality
+sign-test|The Sign Test|median; simple non-parametric
+runs-test|The Runs Test|randomness in sequences
+equivalence-tost|Equivalence Testing with TOST|two one-sided tests
+multiple-comparisons-overview|Multiple Comparisons: Overview|FWER vs FDR choice
+effect-sizes-overview|Effect Sizes: Overview|why report; common measures

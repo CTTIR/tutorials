@@ -1,0 +1,29 @@
+completely-randomized-design|Completely Randomised Design|simplest comparative design
+latin-square|Latin Square Designs|blocking in two directions
+graeco-latin-square|Graeco-Latin Square Designs|three nuisance factors
+factorial-2k|2^k Factorial Designs|main effects and interactions
+factorial-3k|3^k Factorial Designs|three-level factors
+fractional-factorial-design|Fractional Factorial Designs|screening; economy of runs
+resolution-aliasing|Resolution and Aliasing|confounding structure
+plackett-burman|Plackett-Burman Designs|two-level main-effect screening
+central-composite-design|Central Composite Designs|RSM; axial and factorial points
+box-behnken-design|Box-Behnken Designs|three-level RSM
+split-plot-design|Split-Plot Designs|hard-to-change factors
+strip-plot-design|Strip-Plot Designs|two hard-to-change factors
+crossover-designs|Crossover Designs|carryover; washout; AB/BA
+balanced-incomplete-block|Balanced Incomplete Block Designs|BIBD; lambda parameter
+repeated-measures-design|Repeated-Measures Designs|within-subject factor
+optimal-design-d-a-i|Optimal Designs: D, A, I|efficiency criteria
+blocking-principles|Principles of Blocking|local control of variability
+randomization-in-design|Randomisation in Design|purpose; procedures
+power-in-doe|Power Analysis for DOE|detecting main effects and interactions
+response-surface-methodology|Response Surface Methodology|second-order models
+steepest-ascent|Method of Steepest Ascent|path exploration
+desirability-function|Desirability Functions|multi-response optimisation
+mixture-designs-simplex|Simplex Lattice Mixture Designs|component proportions
+mixture-centroid|Simplex Centroid Designs|full mixture exploration
+constrained-mixture|Constrained Mixture Designs|lower/upper bounds
+robust-parameter-design|Robust Parameter Design|Taguchi philosophy
+taguchi-methods|Taguchi Methods|signal-to-noise optimisation
+signal-to-noise-ratio|Signal-to-Noise Ratios|smaller-is-better; larger-is-better; nominal-is-best
+orthogonal-arrays|Orthogonal Arrays|Taguchi arrays; L4; L8; L16

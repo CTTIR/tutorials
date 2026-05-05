@@ -1,0 +1,122 @@
+---
+title: One-Way ANOVA
+date: "2026-04-17"
+description: "Comparing means across three or more independent groups, with Welch's and Brown-Forsythe adjustments and Tukey post-hoc tests"
+categories:
+  - anova
+  - one-way
+  - tukey
+  - welch
+  - levene
+---
+
+## Research question
+
+One-way ANOVA tests whether the means of a continuous outcome differ across three or more independent groups. Biomedical examples: (1) do mean HbA1c values differ across four antidiabetic regimens?; (2) does mean tumour volume after 14 days differ across three doses of an experimental compound in a xenograft model?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Independent observations across and within groups | design |
+| Outcome approximately normal within each group (or large $n$) | `shapiro_test()` by group, Q-Q plots |
+| Homogeneity of variances | `leveneTest()` or `rstatix::levene_test()` |
+| No extreme outliers | boxplot per group |
+
+When variance homogeneity fails, use Welch's ANOVA (`oneway.test(var.equal = FALSE)`) or the Brown-Forsythe F-test. When normality fails, use the [Kruskal-Wallis test](/decision-tree/differences/central-tendency/kruskal-wallis.qmd).
+
+## Hypotheses
+
+$$H_0: \mu_1 = \mu_2 = \ldots = \mu_k \qquad H_1: \text{at least one } \mu_i \text{ differs}$$
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(car); library(effectsize); library(ggstatsplot)
+set.seed(42)
+
+# 40 patients per arm across four regimens; HbA1c at 24 weeks
+hba1c <- tibble(
+  regimen = factor(rep(c("Metformin", "SGLT2i", "GLP1-RA", "Combo"),
+                        each = 40),
+                   levels = c("Metformin", "SGLT2i", "GLP1-RA", "Combo")),
+  hba1c   = c(rnorm(40, 7.4, 0.7), rnorm(40, 7.0, 0.7),
+              rnorm(40, 6.8, 0.7), rnorm(40, 6.5, 0.7))
+)
+
+# Assumption checks
+hba1c |> group_by(regimen) |> shapiro_test(hba1c)
+leveneTest(hba1c ~ regimen, data = hba1c)
+
+# Standard one-way ANOVA
+aov_res <- hba1c |> anova_test(hba1c ~ regimen, detailed = TRUE)
+aov_res
+
+# Welch adjustment (used when variances differ)
+oneway.test(hba1c ~ regimen, data = hba1c, var.equal = FALSE)
+
+# Effect size: eta-squared and omega-squared
+effectsize::eta_squared(aov(hba1c ~ regimen, data = hba1c))
+effectsize::omega_squared(aov(hba1c ~ regimen, data = hba1c))
+
+# Tukey HSD post-hoc
+hba1c |> tukey_hsd(hba1c ~ regimen)
+
+# Visualisation with inline stats
+ggbetweenstats(data = hba1c, x = regimen, y = hba1c,
+               pairwise.display = "significant",
+               xlab = "Regimen", ylab = "HbA1c (%)")
+```
+
+## Interpreting the output
+
+The omnibus $F(3, 156) \approx 15.3$, $p < .001$ rejects the null of equal means. $\eta^2 \approx 0.23$ is a large effect by Cohen's convention. Tukey HSD identifies which pairs differ after controlling the family-wise error rate at 0.05; in the example, every pairwise difference except Metformin vs. SGLT2i reaches significance.
+
+## Effect size
+
+| Measure | Formula | Small | Medium | Large |
+|---|---|---|---|---|
+| Eta-squared $\eta^2$ | $SS_\text{between} / SS_\text{total}$ | 0.01 | 0.06 | 0.14 |
+| Omega-squared $\omega^2$ | unbiased variant of $\eta^2$ | 0.01 | 0.06 | 0.14 |
+| Cohen's $f$ | $\sqrt{\eta^2 / (1 - \eta^2)}$ | 0.10 | 0.25 | 0.40 |
+
+$\omega^2$ is preferred in small samples because $\eta^2$ is upwardly biased.
+
+## Reporting (APA 7)
+
+> HbA1c at 24 weeks differed significantly across the four regimens, F(3, 156) = 15.28, p < .001, omega-squared = .21. Tukey HSD post-hoc tests indicated that the Combo arm was lower than all others, and the Metformin arm was higher than SGLT2i, GLP1-RA, and Combo (all adjusted p < .05).
+
+## Common pitfalls
+
+- Running multiple t-tests instead of an omnibus ANOVA inflates the family-wise error rate.
+- Interpreting a significant omnibus result as "all groups differ"; only post-hoc tests identify specific pairs.
+- Ignoring the Type I / II / III sum-of-squares distinction; in balanced designs all three agree, but in unbalanced designs they differ. `rstatix` uses Type II by default; `car::Anova()` lets you choose.
+- Reporting p-values without effect sizes.
+
+## Parametric vs. non-parametric alternative
+
+- Non-parametric alternative: [Kruskal-Wallis test](/decision-tree/differences/central-tendency/kruskal-wallis.qmd).
+- For within-subjects designs: [one-way repeated-measures ANOVA](/decision-tree/differences/central-tendency/rm-anova-one-way.qmd).
+- For two groups: [independent-samples t-test](/decision-tree/differences/central-tendency/independent-t-test.qmd).
+
+## Further reading
+
+- [Factorial ANOVA](/decision-tree/differences/central-tendency/factorial-anova.qmd)
+- [Hypotheses, significance, and power](/decision-tree/foundations/hypotheses-significance.qmd)
+- Maxwell, S. E., Delaney, H. D., & Kelley, K. (2017). *Designing Experiments and Analyzing Data* (3rd ed.). Routledge.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 007e6cdc6ee243a8b67a834e26bc9a66 -->
+<img src="https://vg09.met.vgwort.de/na/007e6cdc6ee243a8b67a834e26bc9a66"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

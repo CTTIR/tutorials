@@ -1,0 +1,106 @@
+---
+title: Wilcoxon Signed-Rank Test
+date: "2026-04-17"
+description: Non-parametric comparison of paired measurements on an ordinal or non-normal continuous outcome
+categories:
+  - wilcoxon-signed-rank
+  - paired
+  - non-parametric
+  - ranks
+---
+
+## Research question
+
+The Wilcoxon signed-rank test is the non-parametric counterpart of the paired t-test. Use it when two dependent measurements per unit are compared and the differences are non-normal or ordinal. Biomedical examples: (1) do patient-rated sleep-quality scores (5-point Likert) improve from baseline to week 8 of cognitive-behavioural therapy for insomnia?; (2) do log-transformed viral loads differ between two time points when the paired differences remain skewed?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Paired observations per unit | design |
+| Differences symmetric around their median (strict interpretation) | histogram of differences |
+| Differences at least ordinal | scale check |
+
+If differences are badly asymmetric, a sign test gives a weaker but assumption-light alternative.
+
+## Hypotheses
+
+Let $D_i = X_i - Y_i$. Under the symmetry assumption,
+
+$$H_0: \text{median}(D) = 0 \qquad H_1: \text{median}(D) \ne 0$$
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(effectsize); library(ggstatsplot)
+set.seed(42)
+
+# 32 patients; sleep quality (0-20) pre and post CBT-I
+sleep <- tibble(
+  id   = 1:32,
+  pre  = sample(3:14, 32, replace = TRUE),
+  post = NA_integer_
+) |>
+  mutate(post = pmin(20L, pmax(0L, pre + sample(-1:7, 32, replace = TRUE))))
+
+long <- sleep |> pivot_longer(c(pre, post), names_to = "time", values_to = "score") |>
+  mutate(time = factor(time, levels = c("pre", "post")))
+
+diffs <- sleep$post - sleep$pre
+hist(diffs, main = "Differences: post - pre", xlab = "Change in score")
+
+# Wilcoxon signed-rank test
+long |> wilcox_test(score ~ time, paired = TRUE, detailed = TRUE)
+
+# Effect size
+long |> wilcox_effsize(score ~ time, paired = TRUE)
+
+# Visualisation
+ggwithinstats(data = long, x = time, y = score, type = "nonparametric",
+              xlab = "Time", ylab = "Sleep-quality score")
+```
+
+## Interpreting the output
+
+With $V$ = 456 and $p < .001$, the median difference is significantly non-zero. The rank-biserial correlation for paired data $r \approx 0.76$ indicates a large change. The boxplot of `long` shows the post distribution shifted upward and slightly less skewed than pre.
+
+## Effect size
+
+For paired ranks, the rank-biserial correlation is computed from the ratio of positive to total rank sums. Cohen's thresholds (adapted): small 0.10, medium 0.30, large 0.50.
+
+## Reporting (APA 7)
+
+> Sleep-quality scores improved significantly from baseline to week 8 (Wilcoxon signed-rank V = 456, p < .001, rank-biserial r = .76). Median scores rose from 7.5 to 13.0.
+
+## Common pitfalls
+
+- Including pairs with zero differences: R's default drops them, which is appropriate for Wilcoxon; the sign test keeps them under a different convention.
+- Reporting mean differences when the median is the correct summary given skew.
+- Using the rank-sum (Mann-Whitney) call on paired data by forgetting `paired = TRUE`.
+
+## Parametric vs. non-parametric alternative
+
+- Parametric counterpart: [paired t-test](/decision-tree/differences/central-tendency/paired-t-test.qmd).
+- Even more assumption-light: [sign test](/decision-tree/differences/central-tendency/sign-test.qmd).
+- For three or more repeated measures: [Friedman test](/decision-tree/differences/central-tendency/friedman.qmd).
+
+## Further reading
+
+- [Normality checks](/decision-tree/foundations/normality.qmd)
+- Kerby, D. S. (2014). The simple difference formula: An approach to teaching nonparametric correlation. *Comprehensive Psychology*, 3.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 009c8115a1b44cdaa5845dd89ba4c34c -->
+<img src="https://vg09.met.vgwort.de/na/009c8115a1b44cdaa5845dd89ba4c34c"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

@@ -1,0 +1,39 @@
+kolmogorov-axioms|Kolmogorov's Axioms of Probability|probability space; sigma-algebra
+sample-space-events|Sample Space and Events|union; intersection; complement; De Morgan
+conditional-probability|Conditional Probability|P of A given B; product rule
+independence|Independence|pairwise and mutual independence
+bayes-theorem|Bayes' Theorem|prior; likelihood; posterior; inverse probability
+law-of-total-probability|Law of Total Probability|partition; marginalisation
+random-variables|Random Variables|definition; measurable functions
+discrete-vs-continuous|Discrete vs Continuous Variables|distinction; mixtures
+probability-mass-function|The Probability Mass Function|PMF properties; support
+probability-density-function|The Probability Density Function|PDF; integration to probability
+cumulative-distribution-function|The Cumulative Distribution Function|CDF; right-continuity
+expectation|Expectation of a Random Variable|definition; linearity
+variance-covariance-of-rv|Variance and Covariance|definition; properties
+correlation-coefficient|The Correlation Coefficient|Pearson; bounds; interpretation
+joint-distributions|Joint Distributions|2D PDFs; independence
+marginal-distributions|Marginal Distributions|marginalising out variables
+conditional-distributions|Conditional Distributions|conditional density and mean
+bernoulli-distribution|The Bernoulli Distribution|single trial; parameter p
+binomial-distribution|The Binomial Distribution|sum of Bernoullis; n and p
+poisson-distribution|The Poisson Distribution|rate lambda; count data
+geometric-distribution|The Geometric Distribution|trials to first success; memoryless
+negative-binomial-distribution|The Negative Binomial Distribution|overdispersed counts; Gamma-Poisson
+hypergeometric-distribution|The Hypergeometric Distribution|sampling without replacement
+multinomial-distribution|The Multinomial Distribution|multi-category trials
+uniform-distribution|The Uniform Distribution|continuous uniform; discrete uniform
+exponential-distribution|The Exponential Distribution|memoryless; waiting times
+gamma-distribution|The Gamma Distribution|shape and rate; sum of exponentials
+beta-distribution|The Beta Distribution|probabilities; Bayesian priors
+chi-squared-distribution|The Chi-Squared Distribution|sum of squared normals
+t-distribution|Student's t-Distribution|heavier tails; degrees of freedom
+f-distribution|The F Distribution|ratio of chi-squareds; ANOVA
+weibull-distribution|The Weibull Distribution|flexible hazard shapes; reliability
+lognormal-distribution|The Log-Normal Distribution|multiplicative processes
+multivariate-normal|The Multivariate Normal Distribution|covariance matrix; density
+copulas-introduction|Copulas: An Introduction|Sklar's theorem; dependence modelling
+transformations-of-rv|Transformations of Random Variables|change of variables; Jacobian
+convolutions|Convolutions of Distributions|density of a sum
+hazard-function|The Hazard Function|instantaneous rate; survival connection
+survival-function|The Survival Function|1 minus CDF; role in survival analysis

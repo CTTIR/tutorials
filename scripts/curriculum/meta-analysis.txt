@@ -1,0 +1,24 @@
+effect-size-conversion|Converting Between Effect Sizes|d to r; OR to d
+smd-hedges-g|Standardised Mean Difference: Hedges' g|small-sample correction
+log-odds-ratio-pooling|Pooling Log-Odds Ratios|inverse variance; fixed/random
+risk-ratio-pooling|Pooling Risk Ratios|log transformation; weights
+correlation-pooling|Pooling Correlation Coefficients|Fisher z transform
+heterogeneity-q-i2|Quantifying Heterogeneity: Q and I^2|interpretation; thresholds
+tau-squared-estimation|Tau-Squared Estimation|DL; REML; PM; SJ
+prediction-interval-meta|Prediction Intervals in Meta-Analysis|what future study implies
+forest-plot-meta|Forest Plots in Meta-Analysis|study weights; pooled diamond
+funnel-plot-meta|Funnel Plots|publication bias inspection
+egger-test|Egger's Test for Funnel Asymmetry|regression-based test
+trim-and-fill|Trim-and-Fill|imputed missing studies
+selection-models-bias|Selection Models for Publication Bias|weighted-distribution models
+cumulative-meta-analysis|Cumulative Meta-Analysis|ordered by year or precision
+leave-one-out|Leave-One-Out Meta-Analysis|influence analysis
+subgroup-meta-analysis|Subgroup Meta-Analysis|between-subgroup tests
+meta-regression|Meta-Regression|study-level moderators
+ipd-meta-analysis|Individual Participant Data Meta-Analysis|two-stage vs one-stage
+network-meta-analysis-intro|Network Meta-Analysis: Introduction|indirect comparisons
+nma-consistency|NMA Consistency and Inconsistency|loop-specific tests
+nma-league-tables|NMA League Tables|pairwise estimates grid
+nma-sucra|SUCRA Rankings|ranking probabilities
+diagnostic-test-meta|Meta-Analysis of Diagnostic Accuracy|bivariate model; HSROC
+bivariate-sroc|Bivariate SROC Curves|sensitivity-specificity hierarchical model

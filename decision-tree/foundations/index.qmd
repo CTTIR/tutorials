@@ -1,0 +1,20 @@
+---
+title: Foundations
+description: "The concepts every decision rests on: measurement scales, descriptives, normality, outliers, and the logic of hypothesis testing"
+---
+
+Before choosing a test, you need to know four things about your data: what **scale** each variable lives on, what its **distribution** looks like, whether it has **outliers**, and what **hypothesis** your design is built to test. This section covers those prerequisites.
+
+## Pages in this section
+
+- [Measurement scales](/decision-tree/foundations/measurement-scales.qmd) -- nominal, ordinal, interval, ratio, and what each permits.
+- [Descriptive univariate statistics](/decision-tree/foundations/descriptive-univariate.qmd) -- mean, median, mode, and dispersion measures.
+- [Normality checks](/decision-tree/foundations/normality.qmd) -- Shapiro-Wilk, Kolmogorov-Smirnov, and graphical diagnostics.
+- [Outliers](/decision-tree/foundations/outliers.qmd) -- detection with boxplots, IQR fences, Grubbs, and Mahalanobis distance.
+- [Hypotheses, significance, power](/decision-tree/foundations/hypotheses-significance.qmd) -- H0 / H1, alpha / beta, effect size, confidence intervals.
+
+Every subsequent method page assumes fluency with these ideas, so a first-time reader should work through them in order.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*

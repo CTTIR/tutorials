@@ -1,0 +1,168 @@
+---
+title: Independent-Samples t-Test
+date: "2026-04-17"
+description: "Comparing the means of two independent groups on a continuous outcome, with Student's and Welch's variants"
+categories:
+  - t-test
+  - welch
+  - cohen-d
+  - group-comparison
+  - parametric
+---
+
+## Research question
+
+The independent-samples t-test addresses questions of the form "does the mean of a continuous outcome differ between two independent groups?". Two biomedical examples:
+
+1. **Randomised trial.** In a phase II RCT, does a new oral antidiabetic agent lower fasting plasma glucose more than placebo after 12 weeks in patients with newly diagnosed type 2 diabetes?
+2. **Observational biomarker study.** In a cross-sectional cohort, do serum interleukin-6 levels differ between patients with active rheumatoid arthritis and age-matched healthy controls?
+
+Both questions compare two independent groups on a continuous outcome and can be answered -- when the assumptions hold -- with an independent-samples t-test. Welch's variant is preferred as the default because it drops the equal-variance requirement without meaningful loss of power when variances happen to be equal.
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Independence of observations within and between groups | study design; each subject contributes one measurement |
+| Outcome is approximately normal within each group (or $n$ large enough for CLT) | `rstatix::shapiro_test()`, Q-Q plot per group |
+| Homogeneity of variances (Student's version only) | `car::leveneTest()` or `rstatix::levene_test()` |
+| No extreme outliers driving the mean | boxplot per group; `rstatix::identify_outliers()` |
+
+When variances look unequal or the test is close, switch to Welch's variant (R's default). When normality clearly fails, switch to the [Mann-Whitney U test](/decision-tree/differences/central-tendency/mann-whitney-u.qmd).
+
+## Hypotheses
+
+$$H_0: \mu_1 = \mu_2 \qquad H_1: \mu_1 \ne \mu_2$$
+
+One-sided forms are permitted only when pre-specified in the protocol.
+
+## R code
+
+```r
+library(tidyverse)
+library(rstatix)
+library(car)
+library(broom)
+library(effectsize)
+library(ggstatsplot)
+
+set.seed(42)
+
+# Simulated phase II diabetes trial
+# 48 patients per arm; 12-week change in fasting plasma glucose (mmol/L)
+trial <- tibble(
+  patient_id = sprintf("P%03d", 1:96),
+  arm = factor(rep(c("Placebo", "Active"), each = 48),
+               levels = c("Placebo", "Active")),
+  fpg_change = c(
+    rnorm(48, mean = -0.3, sd = 1.4),   # placebo: small, noisy drop
+    rnorm(48, mean = -1.6, sd = 1.5)    # active: larger drop
+  )
+)
+
+# 1. Inspect
+trial |>
+  group_by(arm) |>
+  get_summary_stats(fpg_change, type = "common")
+
+# 2. Assumption checks
+trial |>
+  group_by(arm) |>
+  shapiro_test(fpg_change)              # normality per group
+
+leveneTest(fpg_change ~ arm, data = trial)   # equal variances
+
+trial |>
+  group_by(arm) |>
+  identify_outliers(fpg_change)          # extreme-outlier check
+
+# 3. The test (Welch's by default)
+welch <- trial |>
+  t_test(fpg_change ~ arm, var.equal = FALSE, detailed = TRUE)
+welch
+
+# For comparison: Student's version (only if variances are equal)
+student <- trial |>
+  t_test(fpg_change ~ arm, var.equal = TRUE, detailed = TRUE)
+student
+
+# 4. Effect size (Cohen's d with Hedges' g correction for small samples)
+effectsize::cohens_d(fpg_change ~ arm, data = trial)
+effectsize::hedges_g(fpg_change ~ arm, data = trial)
+
+# 5. Visualisation with inline statistics
+ggbetweenstats(
+  data    = trial,
+  x       = arm,
+  y       = fpg_change,
+  type    = "parametric",
+  var.equal = FALSE,
+  bf.message = FALSE,
+  xlab    = "Treatment arm",
+  ylab    = "12-week change in fasting plasma glucose (mmol/L)",
+  title   = "Welch's t-test: active agent vs. placebo"
+)
+```
+
+## Interpreting the output
+
+- **Point estimates.** The placebo arm had a mean FPG change of about $-0.27$ mmol/L; the active arm about $-1.52$ mmol/L. The raw difference in means is $-1.25$ mmol/L, favouring active treatment.
+- **Test statistic.** Welch's $t \approx -4.2$ on about $94$ degrees of freedom. The exact $df$ is non-integer because the Satterthwaite formula combines the two group variances.
+- **p-value.** $p < .001$: under $H_0$, a difference of this magnitude (or larger) would occur by chance in fewer than one in a thousand repetitions.
+- **Confidence interval.** The 95 % CI for the difference in means is roughly $[-1.84, -0.66]$ mmol/L. Because the interval excludes zero, the test rejects $H_0$ at the $\alpha = 0.05$ level; because the entire interval is clinically meaningful (>0.5 mmol/L), the result is not just statistically but also practically significant.
+
+## Effect size
+
+Cohen's $d = (\bar{x}_1 - \bar{x}_2) / s_{\text{pooled}}$ is the standardised mean difference. Hedges' $g$ applies a small-sample correction that pulls $d$ slightly toward zero and is preferred when $n_1 + n_2 < 50$.
+
+| Magnitude | $|d|$ threshold |
+|---|---|
+| Small | 0.20 |
+| Medium | 0.50 |
+| Large | 0.80 |
+
+For this example, $d \approx 0.86$, which exceeds Cohen's "large" threshold -- a clinically substantial separation between arms.
+
+## Reporting (APA 7)
+
+> After 12 weeks, the active agent produced a greater reduction in fasting plasma glucose than placebo (Welch's t(93.7) = -4.22, p < .001, d = 0.86, 95 % CI for the mean difference [-1.84, -0.66] mmol/L). On average, patients receiving the active agent decreased by 1.25 mmol/L more than those on placebo.
+
+## Common pitfalls
+
+- **Student's vs. Welch's.** R's `t.test()` and `rstatix::t_test()` default to Welch. The difference matters when variances differ and group sizes are unequal; Student's test can be both anti-conservative or overly conservative depending on direction. Default to Welch unless equal variances are guaranteed by the design.
+- **Testing and reporting the wrong null.** If the protocol specifies a one-sided hypothesis (new drug no worse than placebo), report the one-sided test; if two-sided, do not switch after seeing the data.
+- **Small-sample optimism.** With $n < 15$ per group, a t-test on skewed or heavy-tailed data can yield misleading p-values. Run the Shapiro-Wilk or a rank-based sensitivity analysis.
+- **Outliers.** A single extreme value can flip the sign of the mean difference in small samples. Check boxplots; consider a trimmed-mean or rank-based alternative.
+- **Paired data masquerading as independent.** Repeated measurements from the same patient are not independent; use the [paired t-test](/decision-tree/differences/central-tendency/paired-t-test.qmd) instead.
+
+## Parametric vs. non-parametric alternative
+
+When normality fails and the sample is too small for the CLT to rescue the test:
+
+- [Mann-Whitney U test](/decision-tree/differences/central-tendency/mann-whitney-u.qmd) -- rank-based two-group comparison.
+- Bootstrap confidence interval for the mean difference.
+
+When the design is paired rather than independent, use the [paired t-test](/decision-tree/differences/central-tendency/paired-t-test.qmd) or the [Wilcoxon signed-rank test](/decision-tree/differences/central-tendency/wilcoxon-signed-rank.qmd).
+
+## Further reading
+
+- [Sample size for two-sample t-test](/tutorials/sample-size/power-two-sample-t.qmd)
+- [One-way ANOVA](/decision-tree/differences/central-tendency/one-way-anova.qmd) (three or more groups)
+- [Hypotheses, significance, and power](/decision-tree/foundations/hypotheses-significance.qmd)
+- Delacre, M., Lakens, D., & Leys, C. (2017). Why psychologists should by default use Welch's t-test. *International Review of Social Psychology*, 30(1), 92-101.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 006dba099ff54eddaf1e04e4c53b625c -->
+<img src="https://vg09.met.vgwort.de/na/006dba099ff54eddaf1e04e4c53b625c"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

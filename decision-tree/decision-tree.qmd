@@ -1,0 +1,191 @@
+---
+title: Static Decision Tree
+description: "A single-page, colour-coded flowchart covering every supported statistical test"
+---
+
+<link rel="stylesheet" href="../css/decision-tree.css">
+
+The flowchart below covers every test in this section. **Click a test node** to open its method page. Colours encode the scale level of the outcome; a dashed border indicates a non-parametric test. Use the **zoom controls** (or mouse-wheel + Ctrl) to enlarge the diagram, and **drag** to pan.
+
+<div class="dt-legend">
+  <div class="dt-legend-item"><span class="dt-swatch nominal"></span>Nominal outcome</div>
+  <div class="dt-legend-item"><span class="dt-swatch ordinal"></span>Ordinal outcome</div>
+  <div class="dt-legend-item"><span class="dt-swatch metric"></span>Interval / ratio outcome</div>
+  <div class="dt-legend-item"><span class="dt-swatch interdep"></span>Interdependence (no outcome)</div>
+  <div class="dt-legend-item"><span class="dt-swatch param-border"></span>Parametric (solid border)</div>
+  <div class="dt-legend-item"><span class="dt-swatch nonparam-border"></span>Non-parametric (dashed border)</div>
+</div>
+
+<div class="dt-zoom-toolbar" role="toolbar" aria-label="Decision tree zoom controls">
+  <button type="button" class="dt-zoom-btn" data-dt-zoom="in" aria-label="Zoom in">+</button>
+  <button type="button" class="dt-zoom-btn" data-dt-zoom="out" aria-label="Zoom out">&minus;</button>
+  <button type="button" class="dt-zoom-btn" data-dt-zoom="reset" aria-label="Reset zoom">Reset</button>
+  <button type="button" class="dt-zoom-btn" data-dt-zoom="fit" aria-label="Fit width">Fit</button>
+  <button type="button" class="dt-zoom-btn" data-dt-zoom="fullscreen" aria-label="Toggle fullscreen">Fullscreen</button>
+  <span class="dt-zoom-readout" aria-live="polite">100%</span>
+</div>
+
+<div class="dt-diagram-viewport" id="dt-diagram-viewport">
+
+```{mermaid}
+%%{init: {"securityLevel": "loose", "flowchart": {"htmlLabels": true, "useMaxWidth": true}}}%%
+flowchart TD
+    START["Research question"]:::root --> Q2{"Differences or<br/>associations?"}
+    START --> Q_INT{"Exploratory<br/>structure?"}
+
+    Q2 -->|Differences| QD1{"Kind of difference?"}
+    Q2 -->|Associations| QA1{"Variable count?"}
+
+    QD1 -->|Central tendency| QD2{"Outcome scale?"}
+    QD1 -->|Variances| VAR["Variance tests<br/>(chi-sq, F, Levene)"]:::metric
+    QD1 -->|Proportions| QDPROP{"Single variable vs. expected?"}
+
+    QDPROP -->|Dichotomous| BIN["Binomial test"]:::nominal
+    QDPROP -->|Categorical| CHI_GOF["Chi-sq goodness-of-fit"]:::nominal
+
+    QD2 -->|Interval/ratio| QD3{"Number of groups?"}
+    QD2 -->|Ordinal| QD6{"Groups &amp; pairing?"}
+    QD2 -->|Nominal| QDPROP
+
+    QD3 -->|2 groups| QD4{"Independent/paired?"}
+    QD3 -->|3+ groups| QD5{"Factors &amp; design?"}
+
+    QD4 -->|Indep. normal| TT["Independent t-test"]:::metric
+    QD4 -->|Indep. non-normal| MWU["Mann-Whitney U"]:::metric_np
+    QD4 -->|Paired normal| PT["Paired t-test"]:::metric
+    QD4 -->|Paired non-normal| WSR["Wilcoxon signed-rank"]:::metric_np
+    QD4 -->|Paired sign only| SGN["Sign test"]:::metric_np
+
+    QD5 -->|1 between normal| OWA["One-way ANOVA"]:::metric
+    QD5 -->|2+ between normal| FA["Factorial ANOVA"]:::metric
+    QD5 -->|1 within normal| RM1["One-way rmANOVA"]:::metric
+    QD5 -->|Mixed design| RMM["Factorial/mixed rmANOVA"]:::metric
+    QD5 -->|Indep. non-normal| KW["Kruskal-Wallis"]:::metric_np
+    QD5 -->|Paired non-normal| FR["Friedman"]:::metric_np
+
+    QD6 -->|2 indep.| MWU
+    QD6 -->|2 paired| WSR
+    QD6 -->|&gt;2 indep.| KW
+    QD6 -->|&gt;2 paired| FR
+
+    QA1 -->|Two variables| QA2{"Scale levels?"}
+    QA1 -->|More than two| QA5{"DV scale?"}
+
+    QA2 -->|Both nominal| CHIC["Chi-sq contingency"]:::nominal
+    QA2 -->|Both ordinal| SPE["Spearman"]:::ordinal_np
+    QA2 -->|Ord + interval| SPE
+    QA2 -->|Interval linear| PEA["Pearson"]:::metric
+    QA2 -->|Interval directed| SLR["Simple linear regression"]:::metric
+    QA2 -->|Interval non-norm| KEN["Kendall tau"]:::metric_np
+
+    QA5 -->|Interval| MLR["Multiple linear regression"]:::metric
+    QA5 -->|Dichotomous| LOG["Logistic regression"]:::nominal
+    QA5 -->|Ordinal| ORL["Ordinal logistic regression"]:::ordinal
+    QA5 -->|Nominal k+| MNL["Multinomial logistic regression"]:::nominal
+
+    Q_INT -->|Reduce variables| FAC["Factor analysis"]:::interdep
+    Q_INT -->|Group cases| QCL{"Scale/size?"}
+
+    QCL -->|Mixed/small| HCL["Hierarchical clustering"]:::interdep
+    QCL -->|Metric/large| KMC["K-means"]:::interdep
+    QCL -->|Mixed/xlarge| TSC["Two-step clustering"]:::interdep
+
+    click TT      "differences/central-tendency/independent-t-test.html"      "Open: Independent t-test"            _self
+    click MWU     "differences/central-tendency/mann-whitney-u.html"           "Open: Mann-Whitney U"                _self
+    click PT      "differences/central-tendency/paired-t-test.html"            "Open: Paired t-test"                 _self
+    click WSR     "differences/central-tendency/wilcoxon-signed-rank.html"     "Open: Wilcoxon signed-rank"          _self
+    click SGN     "differences/central-tendency/sign-test.html"                "Open: Sign test"                     _self
+    click OWA     "differences/central-tendency/one-way-anova.html"            "Open: One-way ANOVA"                 _self
+    click FA      "differences/central-tendency/factorial-anova.html"          "Open: Factorial ANOVA"               _self
+    click RM1     "differences/central-tendency/rm-anova-one-way.html"         "Open: One-way rmANOVA"               _self
+    click RMM     "differences/central-tendency/rm-anova-factorial.html"       "Open: Factorial/mixed rmANOVA"       _self
+    click KW      "differences/central-tendency/kruskal-wallis.html"           "Open: Kruskal-Wallis"                _self
+    click FR      "differences/central-tendency/friedman.html"                 "Open: Friedman"                      _self
+    click VAR     "differences/variances.html"                                 "Open: Variance tests"                _self
+    click BIN     "differences/proportions/binomial-test.html"                 "Open: Binomial test"                 _self
+    click CHI_GOF "differences/proportions/chi-square-goodness-of-fit.html"    "Open: Chi-sq goodness-of-fit"        _self
+    click CHIC    "associations/chi-square-contingency.html"                   "Open: Chi-sq contingency"            _self
+    click SPE     "associations/spearman-correlation.html"                     "Open: Spearman correlation"          _self
+    click PEA     "associations/pearson-correlation.html"                      "Open: Pearson correlation"           _self
+    click KEN     "associations/kendall-tau.html"                              "Open: Kendall tau"                   _self
+    click SLR     "associations/simple-linear-regression.html"                 "Open: Simple linear regression"      _self
+    click MLR     "associations/multiple-regression.html"                      "Open: Multiple linear regression"    _self
+    click LOG     "associations/logistic-regression.html"                      "Open: Logistic regression"           _self
+    click ORL     "associations/ordinal-logistic-regression.html"              "Open: Ordinal logistic regression"   _self
+    click MNL     "associations/multinomial-logistic-regression.html"          "Open: Multinomial logistic regression" _self
+    click FAC     "interdependence/factor-analysis.html"                       "Open: Factor analysis"               _self
+    click HCL     "interdependence/cluster-analysis.html"                      "Open: Hierarchical clustering"       _self
+    click KMC     "interdependence/cluster-analysis.html"                      "Open: K-means"                       _self
+    click TSC     "interdependence/cluster-analysis.html"                      "Open: Two-step clustering"           _self
+
+    classDef metric fill:#2A9D8F,stroke:#1d6e65,color:#fff
+    classDef metric_np fill:#2A9D8F,stroke:#1d6e65,color:#fff,stroke-dasharray:6 4
+    classDef nominal fill:#F4A261,stroke:#b4743f,color:#000
+    classDef ordinal fill:#E9C46A,stroke:#a88a42,color:#000
+    classDef ordinal_np fill:#E9C46A,stroke:#a88a42,color:#000,stroke-dasharray:6 4
+    classDef interdep fill:#6A4C93,stroke:#4a3468,color:#fff
+    classDef root fill:#ffffff,stroke:#333,color:#000,font-weight:bold
+```
+
+</div>
+
+<script src="../js/decision-tree-zoom.js" defer></script>
+
+## Tabular alternative (screen-reader friendly)
+
+<table class="dt-alt-table">
+<thead><tr><th>Scenario</th><th>Recommended test</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>2 independent groups, metric outcome, normal, equal variances</td><td><a href="differences/central-tendency/independent-t-test.html">Independent t-test</a></td><td>Welch variant is default in R</td></tr>
+<tr><td>2 independent groups, metric outcome, normal, unequal variances</td><td><a href="differences/central-tendency/independent-t-test.html">Welch's t-test</a></td><td>Same page as independent t-test</td></tr>
+<tr><td>2 independent groups, non-normal or ordinal</td><td><a href="differences/central-tendency/mann-whitney-u.html">Mann-Whitney U</a></td><td>Rank-based</td></tr>
+<tr><td>2 paired groups, metric outcome, normal differences</td><td><a href="differences/central-tendency/paired-t-test.html">Paired t-test</a></td><td>Normality on differences</td></tr>
+<tr><td>2 paired groups, non-normal or ordinal</td><td><a href="differences/central-tendency/wilcoxon-signed-rank.html">Wilcoxon signed-rank</a></td><td>Rank-based</td></tr>
+<tr><td>2 paired groups, direction only</td><td><a href="differences/central-tendency/sign-test.html">Sign test</a></td><td>Assumption-light; lower power</td></tr>
+<tr><td>3+ groups, 1 between factor, normal</td><td><a href="differences/central-tendency/one-way-anova.html">One-way ANOVA</a></td><td>Welch variant if variances differ</td></tr>
+<tr><td>3+ groups, 2+ between factors, normal</td><td><a href="differences/central-tendency/factorial-anova.html">Factorial ANOVA</a></td><td>Type III SS recommended</td></tr>
+<tr><td>3+ repeated measurements, normal</td><td><a href="differences/central-tendency/rm-anova-one-way.html">One-way rmANOVA</a></td><td>Sphericity via Mauchly; GG correction</td></tr>
+<tr><td>Mixed between x within design, normal</td><td><a href="differences/central-tendency/rm-anova-factorial.html">Factorial/mixed rmANOVA</a></td><td>Interaction is often primary</td></tr>
+<tr><td>3+ groups, non-normal or ordinal</td><td><a href="differences/central-tendency/kruskal-wallis.html">Kruskal-Wallis</a></td><td>Dunn post-hoc with Bonferroni</td></tr>
+<tr><td>3+ repeated measurements, non-normal or ordinal</td><td><a href="differences/central-tendency/friedman.html">Friedman</a></td><td>Pairwise Wilcoxon post-hoc</td></tr>
+<tr><td>Single proportion vs. expected</td><td><a href="differences/proportions/binomial-test.html">Binomial test</a></td><td>Exact</td></tr>
+<tr><td>Categorical variable vs. expected distribution</td><td><a href="differences/proportions/chi-square-goodness-of-fit.html">Chi-squared goodness-of-fit</a></td><td>Expected counts >= 5</td></tr>
+<tr><td>Single variance vs. reference</td><td><a href="differences/variances.html">Chi-squared variance test</a></td><td>Normality required</td></tr>
+<tr><td>Two variances</td><td><a href="differences/variances.html">F-test</a></td><td>Normality required</td></tr>
+<tr><td>Three or more variances</td><td><a href="differences/variances.html">Levene's test</a></td><td>Median-based is robust</td></tr>
+<tr><td>Two nominal variables</td><td><a href="associations/chi-square-contingency.html">Chi-squared contingency</a></td><td>Fisher's exact if sparse</td></tr>
+<tr><td>Two ordinal or one ordinal plus one continuous</td><td><a href="associations/spearman-correlation.html">Spearman correlation</a></td><td>Rank-based</td></tr>
+<tr><td>Two continuous, linear, bivariate normal</td><td><a href="associations/pearson-correlation.html">Pearson correlation</a></td><td>Linearity matters</td></tr>
+<tr><td>Two continuous, tied or small n</td><td><a href="associations/kendall-tau.html">Kendall's tau</a></td><td>Use tau-b with ties</td></tr>
+<tr><td>Two continuous, directed (IV -> DV)</td><td><a href="associations/simple-linear-regression.html">Simple linear regression</a></td><td>OLS with diagnostics</td></tr>
+<tr><td>Continuous DV, 2+ predictors</td><td><a href="associations/multiple-regression.html">Multiple linear regression</a></td><td>VIF, residual plots</td></tr>
+<tr><td>Dichotomous DV, 1+ predictors</td><td><a href="associations/logistic-regression.html">Logistic regression</a></td><td>Odds ratios, McFadden R^2</td></tr>
+<tr><td>Ordinal DV, 1+ predictors</td><td><a href="associations/ordinal-logistic-regression.html">Ordinal logistic regression</a></td><td>Proportional odds</td></tr>
+<tr><td>Nominal DV (k+), 1+ predictors</td><td><a href="associations/multinomial-logistic-regression.html">Multinomial logistic regression</a></td><td>Relative-risk ratios</td></tr>
+<tr><td>Reduce variables (find latent dimensions)</td><td><a href="interdependence/factor-analysis.html">Exploratory factor analysis</a></td><td>Parallel analysis for k</td></tr>
+<tr><td>Group cases, mixed types or small n</td><td><a href="interdependence/cluster-analysis.html">Hierarchical cluster analysis</a></td><td>Dendrogram, Ward linkage</td></tr>
+<tr><td>Group cases, metric, large n</td><td><a href="interdependence/cluster-analysis.html">K-means</a></td><td>Elbow + silhouette</td></tr>
+<tr><td>Group cases, mixed types, very large n</td><td><a href="interdependence/cluster-analysis.html">Two-step cluster analysis</a></td><td>Gower + PAM</td></tr>
+</tbody>
+</table>
+
+## Print / export
+
+- **PDF export.** Use your browser's print-to-PDF at A3 landscape; the Mermaid chart fits on a single page with readable labels.
+- **A4 print.** A portrait A4 print is readable but the left-most branch (differences) and right-most branch (interdependence) may wrap. Use the tabular alternative above for compact printing.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 005df2fd6d374f5cadc53c29b5bd62c5 -->
+<img src="https://vg09.met.vgwort.de/na/005df2fd6d374f5cadc53c29b5bd62c5"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

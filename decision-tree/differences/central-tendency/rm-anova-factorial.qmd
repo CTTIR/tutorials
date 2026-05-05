@@ -1,0 +1,117 @@
+---
+title: Factorial / Mixed Repeated-Measures ANOVA
+date: "2026-04-17"
+description: Combining within-subjects factors with between-subjects factors in a single ANOVA
+categories:
+  - mixed-anova
+  - rmanova
+  - within-between
+  - sphericity
+---
+
+## Research question
+
+Use a mixed repeated-measures ANOVA when a design combines a within-subjects factor (measurements over time) with a between-subjects factor (treatment arm, sex, disease stage). Biomedical example: in a 2-arm trial with measurements at baseline, week 4, and week 12, does the treatment arm (active vs. placebo) interact with time on fasting plasma glucose?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Independent between-subjects groups, within-subjects measurements correlated | design |
+| Outcome approximately normal per cell | `shapiro_test()` by arm x time |
+| Sphericity of the within-subjects factor | Mauchly's test on the within factor |
+| Homogeneity of variance across between-subjects levels at each time | `leveneTest()` per time |
+| No extreme outliers | boxplot by arm x time |
+
+## Hypotheses
+
+For a Group x Time design:
+
+$$H_0^{\text{Time}}, \quad H_0^{\text{Group}}, \quad H_0^{\text{Group x Time}} : \text{no interaction}$$
+
+The interaction is usually the hypothesis of primary interest in clinical trials with repeated measures.
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(afex); library(effectsize); library(ggstatsplot)
+set.seed(42)
+
+# 30 per arm; FPG at 3 time points
+fpg <- expand_grid(
+  id   = 1:60,
+  time = factor(c("baseline", "wk4", "wk12"), levels = c("baseline", "wk4", "wk12"))
+) |>
+  mutate(arm  = factor(rep(rep(c("Placebo", "Active"), each = 3), 30),
+                        levels = c("Placebo", "Active")),
+         base = rep(rnorm(60, 8.2, 1.0), each = 3),
+         fpg  = base + case_when(
+           arm == "Placebo" & time == "baseline" ~ 0,
+           arm == "Placebo" & time == "wk4"      ~ rnorm(n(), -0.3, 0.6),
+           arm == "Placebo" & time == "wk12"     ~ rnorm(n(), -0.5, 0.7),
+           arm == "Active"  & time == "baseline" ~ 0,
+           arm == "Active"  & time == "wk4"      ~ rnorm(n(), -1.1, 0.6),
+           arm == "Active"  & time == "wk12"     ~ rnorm(n(), -1.9, 0.8)
+         ))
+
+# Assumptions
+fpg |> group_by(arm, time) |> shapiro_test(fpg)
+
+# Mixed ANOVA
+mix <- anova_test(data = fpg, dv = fpg, wid = id, between = arm, within = time)
+get_anova_table(mix, correction = "auto")
+
+# If interaction is significant, test the simple effect of time within each arm
+fpg |> group_by(arm) |> anova_test(dv = fpg, wid = id, within = time)
+
+# And the simple effect of arm at each time
+fpg |> group_by(time) |> anova_test(dv = fpg, wid = id, between = arm)
+
+ggbetweenstats(data = fpg |> filter(time == "wk12"), x = arm, y = fpg,
+               xlab = "Arm at week 12", ylab = "FPG (mmol/L)")
+```
+
+## Interpreting the output
+
+The key test is the Group x Time interaction. A significant interaction, $F(2, 116) \approx 15$, $p < .001$, $\eta_G^2 \approx 0.16$, indicates that the change in FPG over time differed between arms. Simple-effects analyses show: within the active arm, FPG declined substantially across time; within the placebo arm, the decline was minimal. At week 12, the active arm's FPG was significantly lower than placebo's.
+
+## Effect size
+
+Generalised eta-squared ($\eta_G^2$) is preferred for mixed designs. Thresholds (adapted): small 0.01, medium 0.06, large 0.14.
+
+## Reporting (APA 7)
+
+> A 2 (arm) x 3 (time) mixed ANOVA showed a significant arm x time interaction on fasting plasma glucose, F(2, 116) = 14.9, p < .001, eta_G^2 = .16. Simple-effects analyses confirmed a steeper decline in the active arm than in placebo; at week 12, the active arm was 1.6 mmol/L lower than placebo, F(1, 58) = 48.1, p < .001.
+
+## Common pitfalls
+
+- Ignoring the interaction when it is the primary clinical question; report it first.
+- Reporting pooled main effects of group or time when the interaction is significant without interpreting the pattern.
+- Treating missing time points as "drop out and lose the whole case"; use a mixed model via `lme4::lmer()` for unbalanced data.
+- Using multiple paired t-tests without a corrected family-wise alpha.
+
+## Parametric vs. non-parametric alternative
+
+For non-normal data, use aligned-rank transform ANOVA (`ARTool::art`) or a robust variant (`WRS2::bwtrim`). For unbalanced designs, prefer a linear mixed model.
+
+## Further reading
+
+- [One-way repeated-measures ANOVA](/decision-tree/differences/central-tendency/rm-anova-one-way.qmd)
+- [Factorial ANOVA](/decision-tree/differences/central-tendency/factorial-anova.qmd) (between factors only)
+- Gueorguieva, R., & Krystal, J. H. (2004). Move over ANOVA: Progress in analyzing repeated-measures data. *Archives of General Psychiatry*, 61(3), 310-317.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 0089a115dead42b3a39d1383873d2812 -->
+<img src="https://vg09.met.vgwort.de/na/0089a115dead42b3a39d1383873d2812"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

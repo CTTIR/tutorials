@@ -1,0 +1,114 @@
+---
+title: Binary Logistic Regression
+date: "2026-04-17"
+description: "Modelling a dichotomous outcome; odds ratios, confidence intervals, McFadden R-squared, and calibration"
+categories:
+  - logistic-regression
+  - odds-ratio
+  - binary-outcome
+  - mcfadden
+---
+
+## Research question
+
+Logistic regression models the probability of a binary outcome as a logit-linear function of predictors. Biomedical example: in patients admitted with acute pancreatitis, does an admission lactate level predict in-hospital mortality after adjusting for age, Ranson's score, and comorbidities?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Binary outcome (0 / 1) | data check |
+| Independent observations | design |
+| Linearity of continuous predictors on the logit | Box-Tidwell test; splines; `car::crPlots()` |
+| No severe multicollinearity | `car::vif()` |
+| No complete separation | warnings from `glm()`; Firth correction via `logistf` if needed |
+
+## Hypotheses
+
+For each coefficient: $H_0: \beta_j = 0$ (equivalently $OR_j = 1$) vs. $H_1: \beta_j \ne 0$.
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(broom); library(performance)
+library(gtsummary); library(pROC)
+set.seed(42)
+
+# 260 pancreatitis admissions
+pan <- tibble(
+  age       = rnorm(260, 58, 14),
+  ranson    = sample(0:8, 260, replace = TRUE),
+  comorb    = sample(0:4, 260, replace = TRUE),
+  lactate   = rlnorm(260, log(2.0), 0.5),
+  lp        = -5 + 0.02 * age + 0.4 * ranson + 0.2 * comorb + 0.8 * log(lactate)
+) |>
+  mutate(death = rbinom(260, 1, plogis(lp))) |>
+  select(-lp)
+
+fit <- glm(death ~ age + ranson + comorb + lactate, data = pan, family = binomial)
+
+# Coefficients with odds ratios
+broom::tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+
+# Pseudo R-squareds
+performance::r2(fit)
+
+# Discrimination: ROC AUC
+roc_obj <- roc(pan$death, fitted(fit), quiet = TRUE)
+auc(roc_obj); ci.auc(roc_obj)
+
+# Calibration
+check_model(fit, check = c("pp_check", "binned_residuals"))
+
+tbl_regression(fit, exponentiate = TRUE) |>
+  add_global_p() |> add_glance_source_note()
+```
+
+## Interpreting the output
+
+Exponentiated coefficients are odds ratios. For lactate, OR $\approx 2.4$ (95 % CI 1.6-3.5), $p < .001$: a one-unit increase in log-lactate more than doubles the odds of in-hospital mortality. The McFadden pseudo-$R^2 \approx 0.23$ indicates good fit. ROC AUC $= 0.82$ (95 % CI 0.77-0.87) reflects strong discrimination.
+
+## Effect size
+
+- **Odds ratio** per predictor (exponentiated coefficient). Interpretive thresholds depend on context; OR = 1 is no effect.
+- **McFadden's $R^2$**: values 0.2-0.4 are considered excellent fit.
+- **AUC**: 0.7-0.8 acceptable, 0.8-0.9 excellent, > 0.9 outstanding.
+
+## Reporting (APA 7)
+
+> In a multivariable logistic regression, higher admission lactate independently predicted in-hospital mortality in acute pancreatitis (OR = 2.37, 95 % CI 1.58-3.54, p < .001) after adjustment for age, Ranson's score, and number of comorbidities. The model discriminated well (AUC = 0.82, 95 % CI 0.77-0.87; McFadden's R^2 = .23).
+
+## Common pitfalls
+
+- **Complete separation**: a predictor perfectly predicts the outcome; `glm()` returns gigantic SEs. Use Firth correction (`logistf::logistf()`).
+- **Small events-per-variable (EPV) ratio**: fewer than 10 events per predictor inflates Type I error. Consider penalised regression.
+- Reporting only ORs without CIs.
+- Using the Hosmer-Lemeshow test for calibration; it is known to have low power and arbitrary binning. Prefer `performance::check_model()` calibration diagnostics.
+
+## Parametric vs. non-parametric alternative
+
+- Penalised: ridge / lasso logistic regression via `glmnet`.
+- Probit regression: `glm(..., family = binomial(link = "probit"))`.
+- For ordered outcomes, use [ordinal logistic regression](/decision-tree/associations/ordinal-logistic-regression.qmd).
+- For unordered multi-category outcomes, use [multinomial logistic regression](/decision-tree/associations/multinomial-logistic-regression.qmd).
+
+## Further reading
+
+- [Chi-squared contingency test](/decision-tree/associations/chi-square-contingency.qmd) (bivariate association for categorical data)
+- Hosmer, D. W., Lemeshow, S., & Sturdivant, R. X. (2013). *Applied Logistic Regression* (3rd ed.).
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00326516423c4b749f7eecbf2b163e5a -->
+<img src="https://vg09.met.vgwort.de/na/00326516423c4b749f7eecbf2b163e5a"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

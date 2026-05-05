@@ -1,0 +1,190 @@
+---
+title: "#tutorials"
+description: "Comprehensive tutorials in statistics and bioinformatics with R"
+toc: false
+---
+
+::: {.hero}
+::: {.kicker}
+569 PAGES · SIXTEEN TOPIC AREAS
+:::
+# #tutorials
+::: {.lead}
+Comprehensive tutorials covering probability, inference, regression, Bayesian statistics, survival analysis, bioinformatics, and machine learning, with runnable R examples throughout.
+:::
+:::
+
+## Explore by topic
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+31 TUTORIALS
+:::
+### [Statistical Foundations](tutorials/statistical-foundations/index.qmd)
+Foundational concepts: probability, sampling, inference framework.
+:::
+
+::: {.card}
+::: {.kicker}
+25 TUTORIALS
+:::
+### [Descriptive Statistics](tutorials/descriptive-statistics/index.qmd)
+Summarising and exploring data before modelling.
+:::
+
+::: {.card}
+::: {.kicker}
+40 TUTORIALS
+:::
+### [Probability Theory](tutorials/probability/index.qmd)
+Axioms, distributions, expectations, and the algebra of random variables.
+:::
+
+::: {.card}
+::: {.kicker}
+45 TUTORIALS
+:::
+### [Inferential Statistics](tutorials/inference/index.qmd)
+Hypothesis tests, confidence intervals, and the logic of inference.
+:::
+
+::: {.card}
+::: {.kicker}
+30 TUTORIALS
+:::
+### [Sample Size & Power](tutorials/sample-size/index.qmd)
+Planning studies with adequate statistical power.
+:::
+
+::: {.card}
+::: {.kicker}
+35 TUTORIALS
+:::
+### [Data Visualisation](tutorials/visualisation/index.qmd)
+Publication-quality graphics with ggplot2 and friends.
+:::
+
+::: {.card}
+::: {.kicker}
+51 TUTORIALS
+:::
+### [Regression & Modelling](tutorials/regression-modelling/index.qmd)
+Linear models, GLMs, mixed models, and beyond.
+:::
+
+::: {.card}
+::: {.kicker}
+30 TUTORIALS
+:::
+### [Multivariate Methods](tutorials/multivariate/index.qmd)
+PCA, clustering, factor analysis, discriminant analysis.
+:::
+
+::: {.card}
+::: {.kicker}
+30 TUTORIALS
+:::
+### [Time-Series Analysis](tutorials/time-series/index.qmd)
+ARIMA, state-space, spectral, and forecasting methods.
+:::
+
+::: {.card}
+::: {.kicker}
+35 TUTORIALS
+:::
+### [Bayesian Statistics](tutorials/bayesian/index.qmd)
+Bayesian inference, MCMC, and probabilistic programming.
+:::
+
+::: {.card}
+::: {.kicker}
+30 TUTORIALS
+:::
+### [Survival Analysis](tutorials/survival-analysis/index.qmd)
+Censored time-to-event data: Kaplan-Meier, Cox, AFT, competing risks.
+:::
+
+::: {.card}
+::: {.kicker}
+50 TUTORIALS
+:::
+### [Bioinformatics](tutorials/bioinformatics/index.qmd)
+Genomics pipelines from FASTQ to differential expression and beyond.
+:::
+
+::: {.card}
+::: {.kicker}
+46 TUTORIALS
+:::
+### [Machine Learning](tutorials/machine-learning/index.qmd)
+Tree ensembles, neural networks, calibration, interpretability.
+:::
+
+::: {.card}
+::: {.kicker}
+36 TUTORIALS
+:::
+### [Clinical Biostatistics](tutorials/clinical-biostatistics/index.qmd)
+RCT design, adaptive trials, diagnostic accuracy, agreement.
+:::
+
+::: {.card}
+::: {.kicker}
+25 TUTORIALS
+:::
+### [Meta-Analysis](tutorials/meta-analysis/index.qmd)
+Effect-size pooling, heterogeneity, bias, network meta-analysis.
+:::
+
+::: {.card}
+::: {.kicker}
+30 TUTORIALS
+:::
+### [Experimental Design](tutorials/experimental-design/index.qmd)
+Factorials, response surfaces, mixture designs, robust design.
+:::
+
+:::
+
+## Applications
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+INTERACTIVE
+:::
+### [Decision Tree](decision-tree/index.qmd)
+Interactive wizard and static chart guiding the choice of statistical test.
+:::
+
+::: {.card}
+::: {.kicker}
+APPS
+:::
+### [Shiny Apps](shiny/index.qmd)
+Sixteen interactive Shiny applications, one per topic area.
+:::
+
+:::
+
+## Browse
+
+- [Overview &mdash; filter by label, explore the tag network](overview.qmd)
+- [All tutorials (A&ndash;Z)](tutorials.qmd)
+- [About](about.qmd) · [Impressum](impressum.qmd)
+
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00f694c3171a431daf5faadea52cfd42 -->
+<img src="https://vg09.met.vgwort.de/na/00f694c3171a431daf5faadea52cfd42"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

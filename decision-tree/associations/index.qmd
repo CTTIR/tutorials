@@ -1,0 +1,25 @@
+---
+title: Associations Between Variables
+description: Tests and models that quantify how two or more variables move together
+---
+
+When the question is "do these variables go together?" rather than "do these groups differ?", the analysis is an association: correlation, contingency, or regression. The choice between them depends on the scale level of each variable, the number of variables, and whether a directional model is intended.
+
+## Method pages
+
+### Two variables
+- [Chi-squared contingency test](/decision-tree/associations/chi-square-contingency.qmd) -- two nominal variables, with Fisher's exact test for small cells.
+- [Spearman rank correlation](/decision-tree/associations/spearman-correlation.qmd) -- monotonic association, ordinal or non-normal.
+- [Pearson correlation](/decision-tree/associations/pearson-correlation.qmd) -- linear association, continuous bivariate normal.
+- [Kendall's tau](/decision-tree/associations/kendall-tau.qmd) -- rank association, robust to ties and small samples.
+- [Simple linear regression](/decision-tree/associations/simple-linear-regression.qmd) -- directed relationship from one continuous predictor.
+
+### More than two variables
+- [Multiple linear regression](/decision-tree/associations/multiple-regression.qmd) -- continuous outcome with several predictors.
+- [Binary logistic regression](/decision-tree/associations/logistic-regression.qmd) -- dichotomous outcome.
+- [Ordinal logistic regression](/decision-tree/associations/ordinal-logistic-regression.qmd) -- ordered categorical outcome.
+- [Multinomial logistic regression](/decision-tree/associations/multinomial-logistic-regression.qmd) -- unordered categorical outcome with three or more levels.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*

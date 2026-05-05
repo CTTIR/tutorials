@@ -1,0 +1,113 @@
+---
+title: Factorial ANOVA
+date: "2026-04-17"
+description: Testing main effects and interactions across two or more between-subjects factors on a continuous outcome
+categories:
+  - factorial-anova
+  - interaction
+  - main-effect
+  - type-iii-ss
+---
+
+## Research question
+
+Factorial ANOVA extends one-way ANOVA to two or more between-subjects factors, estimating each factor's main effect and any interaction between them. Biomedical example: does post-operative opioid consumption depend on surgical approach (open vs. laparoscopic) and on a nerve-block protocol (standard vs. enhanced), and is the block's effect larger for one approach than the other?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Independent observations across cells | design |
+| Outcome approximately normal within each cell | `shapiro_test()` by cell or on residuals |
+| Homogeneity of variances across cells | `leveneTest()` |
+| Balanced or close-to-balanced design for clean Type III SS | check cell sizes |
+
+## Hypotheses
+
+For a 2x2 design with factors A and B:
+
+$$H_0^A: \text{no main effect of A}, \quad H_0^B: \text{no main effect of B}, \quad H_0^{AB}: \text{no AxB interaction}$$
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(car); library(effectsize); library(ggstatsplot)
+set.seed(42)
+
+# 2x2 design: 25 per cell; 24-h morphine equivalent dose (mg)
+op <- tibble(
+  approach = factor(rep(c("Open", "Laparoscopic"), each = 50)),
+  block    = factor(rep(rep(c("Standard", "Enhanced"), each = 25), 2)),
+  morphine = c(rnorm(25, 52, 10), rnorm(25, 38, 9),
+               rnorm(25, 30, 8),  rnorm(25, 24, 7))
+)
+
+# Cell summaries
+op |> group_by(approach, block) |> get_summary_stats(morphine, type = "common")
+
+# Factorial ANOVA (Type III SS for balanced interpretation)
+aov_fac <- op |> anova_test(morphine ~ approach * block, type = 3, detailed = TRUE)
+aov_fac
+
+# Effect sizes (partial eta-squared)
+effectsize::eta_squared(aov(morphine ~ approach * block, data = op), partial = TRUE)
+
+# Simple effects (if interaction is significant)
+op |> group_by(approach) |> anova_test(morphine ~ block)
+
+ggbetweenstats(data = op, x = block, y = morphine, grouping.var = approach,
+               pairwise.display = "significant",
+               plot.type = "box",
+               xlab = "Nerve-block protocol", ylab = "24-h morphine (mg eq.)")
+```
+
+## Interpreting the output
+
+The ANOVA table reports three F statistics:
+
+- Main effect of approach: F(1, 96) = 51.2, p < .001, partial eta-squared = 0.35.
+- Main effect of block: F(1, 96) = 40.8, p < .001, partial eta-squared = 0.30.
+- Approach x block interaction: F(1, 96) = 4.9, p = .03, partial eta-squared = 0.05.
+
+Both main effects are large; the small-to-medium interaction indicates that the block's benefit is somewhat larger for open surgery than for laparoscopic surgery. Simple-effects analyses confirm this direction.
+
+## Effect size
+
+Partial eta-squared is the default for factorial designs: $\eta_p^2 = SS_\text{effect} / (SS_\text{effect} + SS_\text{error})$. Cohen's thresholds (adapted): small 0.01, medium 0.06, large 0.14. Generalised eta-squared is preferred when the design mixes between and within factors.
+
+## Reporting (APA 7)
+
+> A 2 (approach) x 2 (block) factorial ANOVA showed main effects of surgical approach, F(1, 96) = 51.2, p < .001, eta_p^2 = .35, and nerve-block protocol, F(1, 96) = 40.8, p < .001, eta_p^2 = .30. A small interaction, F(1, 96) = 4.9, p = .03, eta_p^2 = .05, indicated that enhanced block reduced morphine requirements more for open than for laparoscopic surgery.
+
+## Common pitfalls
+
+- Type I vs. Type II vs. Type III sums of squares: in unbalanced designs, results depend on the type. Pre-specify Type III and use `car::Anova(..., type = 3)` or `rstatix::anova_test(..., type = 3)` with proper contrasts.
+- Reporting main effects when the interaction is significant without interpreting the pattern.
+- Fitting a factorial model when one factor has cells with very small $n$; power for the interaction collapses.
+- Not checking residual assumptions on the full model rather than each cell.
+
+## Parametric vs. non-parametric alternative
+
+Non-parametric factorial designs use aligned-rank transform ANOVA (`ARTool::art`) or a robust alternative (`WRS2::t2way`) when normality fails.
+
+## Further reading
+
+- [One-way ANOVA](/decision-tree/differences/central-tendency/one-way-anova.qmd)
+- [Factorial / mixed repeated-measures ANOVA](/decision-tree/differences/central-tendency/rm-anova-factorial.qmd)
+- Field, A., Miles, J., & Field, Z. (2012). *Discovering Statistics Using R*. SAGE.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 005ea2aea838417aa297f6770b7cd953 -->
+<img src="https://vg09.met.vgwort.de/na/005ea2aea838417aa297f6770b7cd953"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

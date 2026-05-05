@@ -1,0 +1,17 @@
+---
+title: Proportions and Frequencies
+description: Tests for single categorical outcomes against expected proportions or distributions
+---
+
+When the outcome of interest is a proportion (success rate, event rate, prevalence) or a category (disease stage, response class), tests of differences compare observed frequencies against expectations.
+
+## Method pages
+
+- [Binomial test](/decision-tree/differences/proportions/binomial-test.qmd) -- single dichotomous variable against an expected proportion.
+- [Chi-squared goodness-of-fit](/decision-tree/differences/proportions/chi-square-goodness-of-fit.qmd) -- single categorical variable against an expected distribution; includes the Kolmogorov-Smirnov alternative for continuous variables.
+
+For association between two categorical variables, see the [chi-squared contingency test](/decision-tree/associations/chi-square-contingency.qmd) in the associations section.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*

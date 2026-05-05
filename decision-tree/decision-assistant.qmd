@@ -1,0 +1,47 @@
+---
+title: Interactive Decision Assistant
+description: A click-through wizard that routes you from research question to recommended statistical test
+---
+
+Answer three to five questions about your research design. The wizard responds with a recommended test, a one-paragraph rationale, and a link to the full method page. Every recommendation is traceable: the breadcrumb at the top shows the path you took, and the URL encodes the path so you can bookmark or share it.
+
+```{=html}
+<div id="wizard-root" role="application" aria-label="Statistical test decision assistant">
+  <noscript>
+    <div class="wizard-noscript">
+      <p><strong>JavaScript is required</strong> for the interactive wizard.
+      Use the <a href="../decision-tree.html">static decision tree</a>
+      instead.</p>
+    </div>
+  </noscript>
+</div>
+<link rel="stylesheet" href="../css/wizard.css">
+<script src="../js/wizard.js" defer></script>
+```
+
+
+## How to use it
+
+1. Start with the first question and pick the option that matches your design.
+2. Use **Back** to revisit a decision; the wizard preserves the prior path.
+3. Use **Start over** to reset.
+4. Click the recommendation link at the end to open the full method page with R code.
+5. The URL updates on every choice; copy it to share the exact path.
+
+## When the wizard is not enough
+
+The wizard is opinionated about the most common paths in clinical and biomedical research. For cases not covered -- multilevel models, survival analysis, Bayesian inference, time-series methods -- consult the [main tutorial index](/tutorials/) for the relevant section.
+
+## Accessibility
+
+- Keyboard navigation: arrow keys move focus between options; Enter selects.
+- Screen-reader friendly via `radiogroup` ARIA semantics and `aria-live` recommendation panel.
+- Works on mobile down to 375 px width.
+
+## Alternative view
+
+If you prefer a single-page overview, see the [static decision tree](/decision-tree/decision-tree.qmd).
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*

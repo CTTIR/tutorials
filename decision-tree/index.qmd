@@ -1,0 +1,91 @@
+---
+title: Statistical Test Decision Tree
+description: "An English-language decision guide for choosing the right statistical test, with R code and biomedical examples for every method"
+---
+
+Choosing the right statistical test is the hinge between a defensible analysis and a reviewer's rejection. This section offers three ways to reach the correct test for a given research question:
+
+- An **[interactive decision assistant](/decision-tree/decision-assistant.qmd)** -- a click-through wizard that routes you from research question to recommended test in three to five questions.
+- A **[static decision tree](/decision-tree/decision-tree.qmd)** -- a single colour-coded flowchart covering every supported test, suitable for printing.
+- **Method pages** for every test in the tree, each laid out in the same ten-section template: research question, assumptions, hypotheses, R code, output interpretation, effect size, APA 7 reporting sentence, pitfalls, alternatives, further reading.
+
+## Sections
+
+- **[Foundations](/decision-tree/foundations/index.qmd)** -- measurement scales, descriptive statistics, normality checks, outlier handling, hypothesis testing basics.
+- **[Differences](/decision-tree/differences/index.qmd)** -- comparing groups on means, medians, variances, or proportions.
+- **[Associations](/decision-tree/associations/index.qmd)** -- quantifying how variables move together: correlation and regression families.
+- **[Interdependence](/decision-tree/interdependence/index.qmd)** -- exploratory structure discovery: factor analysis, cluster analysis.
+
+## How to use this section
+
+If you already know what you are comparing and how, jump to the relevant method page. If you need help deciding, use the wizard; it asks only the questions that change the recommendation. The static tree is the reference map -- useful once you have worked through the wizard a few times and want a single-page overview.
+
+Every example uses R (with `tidyverse`, `rstatix`, `car`, `broom`, `gtsummary`, `ggstatsplot`, `psych`, `lavaan`, `factoextra`, and `cluster`) and simulated biomedical data. No SPSS, no Python, no Stata.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+<!-- card-grid-injected -->
+
+## Sections
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+5 pages
+:::
+### [Foundations](foundations/index.qmd)
+:::
+
+::: {.card}
+::: {.kicker}
+1 pages
+:::
+### [Differences Between Groups](differences/index.qmd)
+:::
+
+::: {.card}
+::: {.kicker}
+9 pages
+:::
+### [Associations Between Variables](associations/index.qmd)
+:::
+
+::: {.card}
+::: {.kicker}
+2 pages
+:::
+### [Interdependence Analysis](interdependence/index.qmd)
+:::
+
+::: {.card}
+::: {.kicker}
+TOOL
+:::
+### [Interactive Wizard](decision-assistant.qmd)
+Answer a few questions and be routed to the appropriate test.
+:::
+
+::: {.card}
+::: {.kicker}
+TOOL
+:::
+### [Static Decision Tree](decision-tree.qmd)
+Visual Mermaid chart of the same routing logic.
+:::
+
+:::
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00e4b6c5b215467598294f333eebbd11 -->
+<img src="https://vg09.met.vgwort.de/na/00e4b6c5b215467598294f333eebbd11"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

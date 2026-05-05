@@ -1,0 +1,50 @@
+---
+title: CLT Explorer
+date: "2026-04-17"
+description: "Interactive Shiny app for visualising the central limit theorem across distributions, sample sizes, and statistics"
+categories:
+  - Statistical Foundations
+  - shiny
+  - central-limit-theorem
+  - sampling-distribution
+  - simulation
+---
+
+## Purpose
+
+The CLT Explorer gives a visual answer to the question every introductory statistics student eventually asks: *why does the sampling distribution of the mean end up looking normal even when the raw data do not?* The app lets a reader pick a source distribution (uniform, exponential, bimodal, Cauchy, and others), select a sample size, and watch the sampling distribution of the chosen statistic build up as thousands of samples are drawn in real time.
+
+## User inputs
+
+- Source distribution with parameters (mean, variance, skewness, kurtosis where applicable)
+- Sample size $n$ from 1 to 1000
+- Number of replicate samples from 100 to 100000
+- Statistic of interest (mean, median, trimmed mean, standardised mean)
+- Overlay: theoretical normal curve implied by the CLT
+
+## Outputs
+
+- Histogram of the raw source distribution (top panel)
+- Histogram of the sampling distribution of the chosen statistic (middle panel)
+- Q-Q plot of the sampling distribution against the normal (bottom panel)
+- Summary table: simulated mean and SE vs. theoretical mean and SE
+
+## Didactic value
+
+The app makes visible what chapters of textbook prose describe in words: that the CLT is about the sampling distribution of a statistic, not the distribution of the data, and that its approach to normality depends on both $n$ and the shape of the source. The Cauchy distribution is included deliberately, so that readers can see that the CLT does not apply when the assumptions (finite variance) fail.
+
+## Embedded in
+
+- `statistical-foundations/central-limit-theorem.md`
+- `statistical-foundations/sampling-distributions.md`
+- `inference/one-sample-t-test.md`
+
+## Source code
+
+Local: `apps/01-clt-explorer/`
+
+Run with:
+
+```r
+shiny::runApp("apps/01-clt-explorer")
+```

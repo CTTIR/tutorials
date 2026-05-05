@@ -1,0 +1,45 @@
+supervised-learning-overview|Supervised Learning: Overview|loss; generalisation; bias-variance
+train-test-split|Train-Test Splits|holdout; stratification
+nested-cv|Nested Cross-Validation|honest tuning; outer loop
+bias-variance-tradeoff|The Bias-Variance Tradeoff|decomposition; flexibility
+decision-trees-cart|Decision Trees (CART)|splits; pruning; rpart
+random-forest|Random Forests|bagging; mtry; OOB error
+extremely-randomized-trees|Extremely Randomised Trees|Extra Trees; randomisation
+gradient-boosting|Gradient Boosting|stagewise fitting; learning rate
+xgboost|XGBoost|regularised boosting; early stopping
+lightgbm|LightGBM|histogram-based boosting
+catboost|CatBoost|categorical-aware boosting
+bagging|Bagging|bootstrap aggregation
+stacking-ensembles|Stacking Ensembles|meta-learner over base models
+svm-linear|Linear Support Vector Machines|soft margin; C parameter
+svm-kernel|Kernel SVMs|RBF; polynomial; kernel trick
+knn-classification|k-Nearest Neighbours Classification|distance metrics; k choice
+knn-regression|k-Nearest Neighbours Regression|local averaging
+naive-bayes|Naive Bayes|conditional independence; priors
+linear-discriminant-ml|Linear Discriminant as ML|classifier with shared covariance
+logistic-regression-ml|Logistic Regression as ML|linear classifier; regularisation
+neural-networks-intro|Neural Networks: Introduction|perceptron; layers; activation
+feedforward-networks-torch|Feedforward Networks in torch|R torch; training loop
+cnn-introduction|Convolutional Neural Networks: Introduction|filters; pooling
+rnn-lstm-intro|RNNs and LSTMs: Introduction|sequence modelling
+transformer-overview|Transformers: Overview|self-attention; seq2seq
+regularization-ridge-lasso-ml|Regularisation in ML|L2; L1; elastic net
+dropout-early-stopping|Dropout and Early Stopping|generalisation techniques
+recipes-preprocessing|Preprocessing with recipes|tidymodels; leak-free steps
+feature-engineering|Feature Engineering|transformations; interactions
+feature-selection|Feature Selection|filter; wrapper; embedded
+smote-imbalanced|SMOTE for Imbalanced Classes|synthetic minority oversampling
+class-weights-imbalanced|Class Weights for Imbalanced Data|loss-based weighting
+calibration-plots|Calibration Plots|reliability diagrams
+platt-scaling|Platt Scaling|logistic recalibration
+isotonic-regression|Isotonic Regression Calibration|monotone calibration
+variable-importance|Variable Importance|permutation; impurity
+partial-dependence-plots|Partial Dependence Plots|marginal effect visualisations
+shap-values|SHAP Values|Shapley values for ML
+lime-explanations|LIME Explanations|local linear surrogates
+clustering-kmeans-ml|k-Means as an ML Tool|feature clustering
+clustering-dbscan-ml|DBSCAN as an ML Tool|density-based anomaly detection
+anomaly-detection|Anomaly Detection|one-class SVM; autoencoders
+isolation-forest|Isolation Forest|tree-based anomaly detection
+tidymodels-workflow|A Complete tidymodels Workflow|recipes + parsnip + workflows
+mlr3-workflow|A Complete mlr3 Workflow|tasks; learners; resamplings

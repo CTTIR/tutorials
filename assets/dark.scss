@@ -1,0 +1,44 @@
+/*-- scss:defaults --*/
+
+// Bootstrap variables — dark palette.
+$primary:               #79b8ff;
+$body-bg:               #1d1f21;
+$body-color:            #e8e8e8;
+$link-color:            #79b8ff;
+$link-hover-color:      #b8d4fd;
+$border-color:          #2d3035;
+$secondary-bg:          #26292c;
+$tertiary-bg:           #26292c;
+$headings-color:        #e8e8e8;
+
+$navbar-dark-color:        #e8e8e8;
+$navbar-dark-hover-color:  #79b8ff;
+$navbar-dark-active-color: #79b8ff;
+
+$dropdown-bg:               #26292c;
+$dropdown-link-color:       #e8e8e8;
+$dropdown-link-hover-bg:    #1f3a5f;
+$dropdown-link-hover-color: #ffffff;
+
+$font-family-sans-serif: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+$font-family-monospace:  "JetBrains Mono", "Fira Code", "SFMono-Regular", Menlo, Consolas, monospace;
+$headings-font-weight:   600;
+$border-radius:          6px;
+
+/*-- scss:rules --*/
+
+:root {
+  --bg:           #1d1f21;
+  --fg:           #e8e8e8;
+  --fg-alt:       #a8a8a8;
+  --rule:         #2d3035;
+  --surface:      #26292c;
+  --accent:       #79b8ff;
+  --accent-hover: #b8d4fd;
+  --accent-soft:  #1f3a5f;
+  --code-bg:      #2a2d31;
+  --code-fg:      #e8e8e8;
+  --shadow-md:    0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+@import "shared";

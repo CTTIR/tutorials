@@ -1,0 +1,101 @@
+---
+title: Chi-Squared Goodness-of-Fit Test
+date: "2026-04-17"
+description: Comparing observed frequencies to an expected distribution for a single categorical variable; with Kolmogorov-Smirnov note for continuous data
+categories:
+  - chi-square
+  - goodness-of-fit
+  - categorical
+  - kolmogorov-smirnov
+---
+
+## Research question
+
+The chi-squared goodness-of-fit test compares observed counts in each category to an expected distribution. Biomedical examples: (1) in a paediatric ICU audit, are the observed frequencies of admission causes (respiratory, cardiac, sepsis, trauma, other) different from the national reference distribution reported in a 2023 registry?; (2) does the distribution of ABO blood groups in a local donor pool match the national population (A 37 %, B 10 %, AB 3 %, O 50 %)?
+
+For continuous variables tested against a theoretical distribution (e.g., is a biomarker normal?), the Kolmogorov-Smirnov test is the standard non-parametric choice; a brief note is included below.
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Independent observations | design |
+| Categorical outcome with $k$ mutually exclusive categories | scale level |
+| Expected frequency in each cell >= 5 | `expected <- p0 * sum(observed); all(expected >= 5)` |
+
+When expected frequencies are too small, use Fisher's exact test or combine sparse categories.
+
+## Hypotheses
+
+$$H_0: \text{the observed distribution matches the expected}\qquad H_1: \text{it does not}$$
+
+## R code
+
+```r
+library(tidyverse); library(rstatix)
+
+## Scenario: ABO blood-group comparison
+observed <- c(A = 154, B = 46, AB = 18, O = 182)
+expected_p <- c(A = 0.37, B = 0.10, AB = 0.03, O = 0.50)
+
+chi <- chisq.test(x = observed, p = expected_p)
+chi
+
+chi$expected
+chi$residuals   # standardised residuals
+
+## Tidy workflow with rstatix
+tibble(group = names(observed), observed = as.integer(observed)) |>
+  rstatix::chisq_test(observed ~ group, p = expected_p)
+
+## Kolmogorov-Smirnov, one-sample: is a biomarker standard normal?
+set.seed(42)
+biomarker <- rnorm(80, mean = 0, sd = 1)
+ks.test(biomarker, "pnorm", mean = 0, sd = 1)
+```
+
+## Interpreting the output
+
+For the ABO example, $\chi^2(3) \approx 3.9$, $p = .27$: the donor-pool distribution is consistent with the national reference. The standardised residuals are all within $\pm 2$, indicating no single category drives the comparison.
+
+For the KS example, $D \approx 0.08$, $p = .66$: no evidence against normality of the biomarker at $n = 80$.
+
+## Effect size
+
+Cohen's $w = \sqrt{\chi^2 / n}$. Thresholds: small 0.10, medium 0.30, large 0.50. For the ABO example, $w \approx 0.09$ -- below the small threshold, consistent with the non-significant result.
+
+## Reporting (APA 7)
+
+> The ABO blood-group distribution in the donor pool did not differ from the national reference (chi-squared(3) = 3.94, p = .27, Cohen's w = .09).
+
+## Common pitfalls
+
+- Expected frequencies below 5 invalidate the chi-squared approximation; use `fisher.test()` instead.
+- Specifying the expected proportions with small rounding errors that do not sum to 1; R warns but still computes.
+- Interpreting a large $\chi^2$ without examining the standardised residuals to identify which categories drive it.
+
+## Parametric vs. non-parametric alternative
+
+The chi-squared goodness-of-fit is the default categorical-variable test. For continuous variables, the Kolmogorov-Smirnov and Anderson-Darling tests are the standard one-sample alternatives against a specified distribution.
+
+## Further reading
+
+- [Binomial test](/decision-tree/differences/proportions/binomial-test.qmd) (dichotomous variable)
+- [Chi-squared contingency test](/decision-tree/associations/chi-square-contingency.qmd) (two categorical variables)
+- Sharpe, D. (2015). Chi-square test is statistically significant: Now what? *Practical Assessment, Research & Evaluation*, 20(8).
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00acacd7e7b54536a93513977accca09 -->
+<img src="https://vg09.met.vgwort.de/na/00acacd7e7b54536a93513977accca09"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

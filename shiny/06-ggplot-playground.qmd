@@ -1,0 +1,49 @@
+---
+title: ggplot2 Playground
+date: "2026-04-17"
+description: "Build a ggplot layer by layer with live R code output, so every aesthetic choice becomes visible"
+categories:
+  - Data Visualisation
+  - shiny
+  - ggplot2
+  - grammar-of-graphics
+---
+
+## Purpose
+
+Most readers learn `ggplot2` by adapting existing plots, which means they miss the layered logic of the grammar of graphics. The ggplot2 Playground forces the layered mental model: pick a dataset, map a variable to each aesthetic, add geoms one at a time, tune scales, and watch the plot assemble. At every step, the R code that reproduces the current plot is shown in a copy-ready panel.
+
+## User inputs
+
+- Dataset (built-in or user-uploaded CSV)
+- Aesthetic mappings (x, y, colour, size, shape, alpha) by dropdown
+- Geom toggles (point, line, bar, histogram, boxplot, smooth, density, text)
+- Scale options: colour palette, axis transformations, limits
+- Facet options: facet_wrap, facet_grid, free vs. fixed scales
+- Theme options: complete theme, font size, legend position
+
+## Outputs
+
+- The current plot, updating on every input change
+- A syntax-highlighted R code panel showing the exact `ggplot()` call that produced it
+- An export button producing PNG, SVG, or PDF at manuscript resolution
+
+## Didactic value
+
+The app foregrounds the grammar: adding a geom *extends* the plot; adding a mapping *connects data to geometry*; adding a scale *shapes how the mapping is rendered*. By the third or fourth plot, the reader can predict what a given code change will produce, which is the goal of learning `ggplot2`.
+
+## Embedded in
+
+- `visualisation/grammar-of-graphics.md`
+- `visualisation/aesthetics-and-geoms.md`
+- Every plot-type tutorial as a "try it yourself" coda
+
+## Source code
+
+Local: `apps/06-ggplot-playground/`
+
+Run with:
+
+```r
+shiny::runApp("apps/06-ggplot-playground")
+```

@@ -1,0 +1,29 @@
+censoring-types|Censoring Types|right; left; interval; informative vs not
+hazard-survival-cumulative|Hazard, Survival, and Cumulative Hazard|mathematical relationships
+nelson-aalen-estimator|The Nelson-Aalen Estimator|cumulative hazard estimation
+log-rank-test-details|Log-Rank Test: Details|observed vs expected; strata
+weighted-log-rank|Weighted Log-Rank Tests|Peto-Peto; Fleming-Harrington
+cox-proportional-hazards|Cox Proportional Hazards Regression|partial likelihood; HRs
+cox-assumptions-check|Checking Cox Assumptions|proportional hazards; linearity
+schoenfeld-residuals|Schoenfeld Residuals|testing proportional hazards
+time-varying-covariates|Time-Varying Covariates|counting process data layout
+stratified-cox|Stratified Cox Models|non-proportional strata
+accelerated-failure-time|Accelerated Failure Time Models|log-time regression
+parametric-survival-weibull|Parametric Survival: Weibull|shape-scale; flexsurv
+parametric-survival-lognormal|Parametric Survival: Log-Normal|when hazard increases then decreases
+flexible-parametric-royston-parmar|Royston-Parmar Flexible Parametric Models|splines on log-hazard
+competing-risks-cif|Competing Risks: Cumulative Incidence|CIF; cmprsk
+fine-gray-regression|Fine-Gray Subdistribution Hazards|subdistribution regression
+frailty-models|Frailty Models|random effects in survival
+recurrent-events|Recurrent Events|Andersen-Gill; PWP models
+landmark-analysis|Landmark Analysis|conditioning on survival to landmark
+multi-state-models|Multi-State Models|mstate package
+conditional-survival|Conditional Survival|probability given survived so far
+restricted-mean-survival-time|Restricted Mean Survival Time (RMST)|alternative summary
+concordance-c-index|Concordance and the C-Index|discrimination for survival
+brier-score-survival|The Brier Score for Survival|time-dependent prediction loss
+time-dependent-roc|Time-Dependent ROC|timeROC package
+survival-simulation|Simulating Survival Data|inverse hazard methods
+interval-censored-data|Interval-Censored Data|NPMLE; turnbull estimator
+left-truncation|Left Truncation|delayed entry; risk sets
+joint-longitudinal-survival|Joint Longitudinal-Survival Models|JM package

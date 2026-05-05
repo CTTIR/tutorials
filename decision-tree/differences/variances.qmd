@@ -1,0 +1,107 @@
+---
+title: Variance Comparisons
+date: "2026-04-17"
+description: "Tests for equal variance: chi-squared variance test, F-test for two variances, Levene's test for multiple groups"
+categories:
+  - variance
+  - f-test
+  - levene
+  - bartlett
+---
+
+## Research question
+
+Variance tests ask whether the spread (not the mean) of a continuous outcome differs across groups or from an expected value. Three distinct designs map to three tests:
+
+1. **Sample vs. population** -- is the variance of a measurement in a small retrospective audit equal to the historical benchmark of $\sigma_0^2 = 0.4^2$? Use the chi-squared variance test.
+2. **Two independent groups** -- does the within-patient day-to-day variability of a continuous glucose monitor differ between two sensor types? Use the F-test for equality of variances.
+3. **Three or more groups (as an ANOVA diagnostic)** -- do variances of post-operative heart rate differ across four surgical services, a prerequisite for the ANOVA comparison of means? Use Levene's test.
+
+## Assumptions
+
+| Test | Assumption | How to verify in R |
+|---|---|---|
+| Chi-squared variance | Sampled data approximately normal; reference $\sigma_0^2$ pre-specified | `shapiro_test()`; protocol specifies reference |
+| F-test for variances | Each group approximately normal | `shapiro_test()` per group |
+| Levene's test | Deviations from group centre | robust to non-normality; prefer the median-based form (`car::leveneTest(..., center = median)`) |
+| Bartlett's test | Normality | `bartlett.test()`; sensitive to non-normality |
+
+## Hypotheses
+
+Chi-squared variance: $H_0: \sigma^2 = \sigma_0^2 \quad \text{vs.} \quad H_1: \sigma^2 \ne \sigma_0^2$.
+
+F-test: $H_0: \sigma_1^2 = \sigma_2^2 \quad \text{vs.} \quad H_1: \sigma_1^2 \ne \sigma_2^2$.
+
+Levene / Bartlett: $H_0: \sigma_1^2 = \ldots = \sigma_k^2 \quad \text{vs.} \quad H_1: \text{at least one differs}$.
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(car); library(EnvStats)
+set.seed(42)
+
+## Scenario 1: chi-squared variance test
+audit <- rnorm(25, mean = 5.2, sd = 0.45)
+EnvStats::varTest(audit, sigma.squared = 0.4^2)
+
+## Scenario 2: F-test for equality of two variances
+cgm <- tibble(
+  sensor = factor(rep(c("A", "B"), each = 30)),
+  sd_day = c(rnorm(30, 14, 3), rnorm(30, 18, 4.5))
+)
+var.test(sd_day ~ sensor, data = cgm)
+
+## Scenario 3: Levene's test across four services
+hr <- tibble(
+  service = factor(rep(c("Cardiac", "General", "Ortho", "Neuro"), each = 40)),
+  hr_sd   = c(rnorm(40, 8, 1.2), rnorm(40, 8.2, 1.6),
+              rnorm(40, 9, 2.0), rnorm(40, 8.5, 1.4))
+)
+leveneTest(hr_sd ~ service, data = hr, center = median)
+bartlett.test(hr_sd ~ service, data = hr)  # for comparison
+```
+
+## Interpreting the output
+
+- **Scenario 1.** Chi-squared = 30.4 on 24 df, $p = .17$; the audit variance is consistent with the benchmark.
+- **Scenario 2.** F(29, 29) = 0.58, $p = .08$; the CGM sensors' variances are borderline different. A Welch t-test on their means would be appropriate given the hint of heterogeneity.
+- **Scenario 3.** Levene's $F(3, 156) = 4.1$, $p = .008$ rejects variance homogeneity across services. A subsequent ANOVA on means should use Welch's F rather than the classical F.
+
+## Effect size
+
+The variance ratio $\sigma_1^2 / \sigma_2^2$ is the natural effect-size measure. Cohen offered no conventional thresholds; common practice considers ratios > 4 noteworthy.
+
+## Reporting (APA 7)
+
+> The day-to-day glucose variability did not differ significantly between the two CGM sensors (F(29, 29) = 0.58, p = .08, variance ratio = 0.58). Levene's test indicated heterogeneous variances across surgical services (F(3, 156) = 4.1, p = .008), so Welch's ANOVA was used for the subsequent comparison of means.
+
+## Common pitfalls
+
+- Bartlett's test is sensitive to non-normality; it can reject equal variances when groups are merely skewed. Levene's median-based form is the safer default.
+- Running variance tests as a decision rule ("use Student if Levene is non-significant") gives inflated Type I error. Welch's ANOVA is recommended regardless, unless the design is perfectly balanced.
+- Chi-squared variance test is very sensitive to normality of the sample.
+
+## Parametric vs. non-parametric alternative
+
+The Fligner-Killeen test (`fligner.test()`) is a non-parametric alternative to Levene's. For comparing variances of non-normal samples, permutation methods (e.g., bootstrap) give assumption-light p-values.
+
+## Further reading
+
+- [One-way ANOVA](/decision-tree/differences/central-tendency/one-way-anova.qmd)
+- Conover, W. J., Johnson, M. E., & Johnson, M. M. (1981). A comparative study of tests for homogeneity of variances. *Technometrics*, 23(4), 351-361.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00b486e62f8c43e1bdf74d8113867811 -->
+<img src="https://vg09.met.vgwort.de/na/00b486e62f8c43e1bdf74d8113867811"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

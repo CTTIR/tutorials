@@ -1,0 +1,24 @@
+measures-of-dispersion|Measures of Dispersion|variance; SD; MAD; IQR; range
+measures-of-shape|Measures of Shape|skewness and kurtosis overview
+quantiles-and-percentiles|Quantiles and Percentiles|interpolation types; R quantile types
+five-number-summary|Five-Number Summary|min Q1 median Q3 max; Tukey boxplot
+skewness|Skewness|definition; sample estimators; interpretation
+kurtosis|Kurtosis|tail heaviness; excess kurtosis
+coefficient-of-variation|Coefficient of Variation|CV; scale-free dispersion
+mean-absolute-deviation|Mean Absolute Deviation|MAD-median; MAD-mean
+interquartile-range|The Interquartile Range|IQR computation; Tukey's hinges
+variance-and-sd|Variance and Standard Deviation|n vs n-1; sample SD bias
+weighted-mean|The Weighted Mean|weights; survey data; applications
+geometric-mean|The Geometric Mean|log-based; multiplicative data
+harmonic-mean|The Harmonic Mean|rates; F1 score; when to use
+trimmed-winsorized-mean|Trimmed and Winsorized Means|robust location measures
+robust-statistics-overview|Robust Statistics: An Overview|breakdown point; influence functions
+frequency-tables|Frequency Tables|absolute relative cumulative frequencies
+cross-tabulations|Cross-Tabulations|two-way tables; table() in R
+contingency-tables|Contingency Tables|r by c; expected counts
+stem-and-leaf-plots|Stem-and-Leaf Plots|back-to-back; Tukey tradition
+summary-by-group|Summary by Group|dplyr group_by summarise; split-apply-combine
+outlier-detection-rules|Outlier Detection Rules|1.5*IQR; 3 SDs; Hampel identifier
+standardisation-zscore|Standardisation and z-Scores|center and scale; robust z
+percentile-rank|Percentile Ranks|converting value to rank
+descriptive-vs-inferential|Descriptive vs Inferential Statistics|distinction and complementary roles

@@ -1,0 +1,35 @@
+rct-design-parallel|Parallel-Group RCT Design|simple two-arm design
+rct-design-crossover|Crossover RCT Design|carryover; washout
+cluster-rct|Cluster-Randomised Trials|unit of analysis; ICC
+stepped-wedge-trial|Stepped-Wedge Trial|sequential cluster rollout
+factorial-trial|Factorial Trials|interaction assumption
+adaptive-design|Adaptive Trial Designs|overview; sample size re-estimation
+sample-size-reestimation|Sample Size Re-Estimation|blinded and unblinded
+randomization-methods|Randomisation Methods|simple; block; stratified
+block-randomization|Block Randomisation|variable block sizes
+stratified-randomization|Stratified Randomisation|balance on key covariates
+minimization-algorithm|Minimisation Algorithm|covariate-adaptive allocation
+blinding-procedures|Blinding Procedures|single; double; triple
+itt-vs-pp-analysis|ITT vs Per-Protocol Analysis|principle; modified ITT
+interim-analysis-group-sequential|Interim Analyses and Group Sequential|alpha spending; stopping rules
+obrien-fleming-boundary|O'Brien-Fleming Boundary|conservative early; aggressive late
+pocock-boundary|Pocock Boundary|constant nominal alpha
+alpha-spending|Alpha-Spending Functions|Lan-DeMets
+conditional-power|Conditional Power|interim futility assessment
+non-inferiority-margin|Non-Inferiority Margin Selection|synthesis method; clinical judgement
+equivalence-clinical|Clinical Equivalence Trials|bioequivalence; TOST
+baseline-adjustment-ancova|Baseline Adjustment with ANCOVA|regression to the mean
+missing-data-rct|Missing Data in RCTs|MCAR MAR MNAR
+multiple-imputation|Multiple Imputation|mice; Rubin's rules
+sensitivity-analysis-clinical|Sensitivity Analyses in Clinical Trials|tipping-point analysis
+subgroup-analysis|Subgroup Analyses|interaction tests; pre-specification
+forest-plot-subgroup|Subgroup Forest Plots|visual summary
+roc-analysis|ROC Analysis|pROC; threshold choice
+cutpoint-selection|Cutpoint Selection|Youden; cost-ratio
+predictive-values-prevalence|Predictive Values and Prevalence|Bayes' theorem in clinic
+likelihood-ratios|Likelihood Ratios|LR+ LR-; fagan nomogram
+cohens-kappa|Cohen's Kappa|binary agreement; chance correction
+weighted-kappa|Weighted Kappa|ordinal agreement; linear/quadratic weights
+icc-continuous-agreement|Intraclass Correlation Coefficient|ICC forms; absolute vs consistency
+bland-altman-analysis|Bland-Altman Limits of Agreement|method comparison
+reliability-cronbach-alpha|Reliability and Cronbach's Alpha|internal consistency

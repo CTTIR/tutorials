@@ -1,0 +1,100 @@
+---
+title: Friedman Test
+date: "2026-04-17"
+description: Non-parametric repeated-measures comparison across three or more dependent measurements
+categories:
+  - friedman
+  - non-parametric
+  - repeated-measures
+  - ranks
+---
+
+## Research question
+
+The Friedman test is the non-parametric counterpart of a one-way repeated-measures ANOVA. Use it when each subject provides three or more measurements and the outcome is ordinal or strongly non-normal. Biomedical example: do patient-reported Dyspnoea scores (Borg scale) change across four time points after initiating a new inhaled bronchodilator in a COPD cohort?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| One group of subjects, each measured at several occasions | design |
+| Outcome at least ordinal | scale level |
+| No assumption of normality or sphericity | -- |
+
+The test converts each subject's measurements into within-subject ranks, then tests whether the average rank per occasion differs.
+
+## Hypotheses
+
+$$H_0: \text{distributions at all occasions are the same} \qquad H_1: \text{at least one differs}$$
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(effectsize); library(ggstatsplot)
+set.seed(42)
+
+# 28 patients; Borg dyspnoea scale at baseline, week 2, week 4, week 8
+borg <- expand_grid(id = 1:28, time = factor(c("b", "w2", "w4", "w8"),
+                                             levels = c("b", "w2", "w4", "w8"))) |>
+  mutate(score = case_when(
+    time == "b"  ~ sample(5:8, n(), replace = TRUE),
+    time == "w2" ~ sample(4:7, n(), replace = TRUE),
+    time == "w4" ~ sample(3:6, n(), replace = TRUE),
+    time == "w8" ~ sample(2:5, n(), replace = TRUE)
+  ))
+
+# Friedman test (requires complete cases per id)
+borg |> friedman_test(score ~ time | id)
+
+# Effect size: Kendall's W (coefficient of concordance)
+borg |> friedman_effsize(score ~ time | id)
+
+# Post-hoc pairwise Wilcoxon with Bonferroni correction
+borg |> wilcox_test(score ~ time, paired = TRUE, p.adjust.method = "bonferroni")
+
+ggwithinstats(data = borg, x = time, y = score, type = "nonparametric",
+              xlab = "Time", ylab = "Borg dyspnoea score")
+```
+
+## Interpreting the output
+
+With Friedman $\chi^2(3) \approx 65$, $p < .001$ and Kendall's $W \approx 0.77$, the null is rejected and the effect is large. Pairwise Bonferroni-adjusted Wilcoxon tests localise the differences; each time point differs from baseline and from week 2.
+
+## Effect size
+
+Kendall's W ranges from 0 (no agreement) to 1 (perfect agreement on ranks). Cohen's thresholds (adapted): small 0.10, medium 0.30, large 0.50.
+
+## Reporting (APA 7)
+
+> Borg dyspnoea scores differed across the four assessment times (Friedman chi-squared(3) = 65.4, p < .001, Kendall's W = .77). Bonferroni-adjusted pairwise Wilcoxon signed-rank tests showed that each subsequent time point was lower than baseline and week 2 (all adjusted p < .05).
+
+## Common pitfalls
+
+- Missing data: Friedman requires each subject to have a value at every time. Drop incomplete cases or switch to a mixed model.
+- Reporting the mean per time point; medians and IQRs are appropriate.
+- Ties inside subjects are averaged into fractional ranks automatically; this is rarely a concern but may reduce power slightly.
+
+## Parametric vs. non-parametric alternative
+
+- Parametric: [one-way repeated-measures ANOVA](/decision-tree/differences/central-tendency/rm-anova-one-way.qmd).
+- Two time points: [Wilcoxon signed-rank test](/decision-tree/differences/central-tendency/wilcoxon-signed-rank.qmd).
+
+## Further reading
+
+- Sheskin, D. J. (2020). *Handbook of Parametric and Nonparametric Statistical Procedures* (5th ed.).
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 006185191de04d77865628ef1892577c -->
+<img src="https://vg09.met.vgwort.de/na/006185191de04d77865628ef1892577c"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

@@ -1,0 +1,130 @@
+---
+title: Outliers
+date: "2026-04-17"
+description: "Detecting univariate and multivariate outliers with boxplots, IQR fences, Grubbs' test, and Mahalanobis distance"
+categories:
+  - foundations
+  - outliers
+  - iqr
+  - grubbs
+  - mahalanobis
+---
+
+## Research question
+
+Outliers distort means, inflate variances, and bias regression slopes. Two scenarios: (1) In a pharmacokinetics study, a plasma-concentration value of 120 ng/mL appears among values ranging 2-15 ng/mL -- is this a transcription error or a genuine extreme responder? (2) In a cardiovascular risk model with 10 predictors, does any patient exert disproportionate leverage on the fitted coefficients?
+
+## Assumptions
+
+Outlier detection is a diagnostic rather than a test; it identifies candidate observations for closer inspection.
+
+| Method | Works for | Assumption |
+|---|---|---|
+| IQR fence | Univariate, any distribution | Data roughly unimodal |
+| Z-score / 3-sigma | Univariate | Approximately normal |
+| Grubbs' test | Univariate, small n | Normality (!) |
+| Mahalanobis distance | Multivariate | Approximately multivariate normal |
+| Cook's distance | Regression residuals | Linear model assumptions |
+
+## Hypotheses
+
+For Grubbs' test of a single outlier:
+
+$$H_0: \text{no outlier} \qquad H_1: \text{the extreme observation is an outlier}$$
+
+## R code
+
+```r
+library(tidyverse)
+library(rstatix)
+library(outliers)
+
+set.seed(42)
+
+# Scenario 1: plasma concentrations with one suspected extreme
+pk <- tibble(
+  subject = 1:18,
+  conc_ng_ml = c(rnorm(17, mean = 8, sd = 3), 120)  # last value implausible
+)
+
+# Univariate fences
+pk |> identify_outliers(conc_ng_ml)
+
+# Visual check
+pk |>
+  ggplot(aes(y = conc_ng_ml)) +
+  geom_boxplot(fill = "#2A9D8F", outlier.colour = "#F4A261", outlier.size = 3) +
+  labs(y = "Concentration (ng/mL)") +
+  theme_minimal()
+
+# Grubbs' test for the single most extreme value
+grubbs.test(pk$conc_ng_ml)
+
+# Scenario 2: multivariate outliers via Mahalanobis distance
+set.seed(99)
+cv_risk <- tibble(
+  age      = round(rnorm(80, 60, 10)),
+  bmi      = round(rnorm(80, 27, 4), 1),
+  sbp      = round(rnorm(80, 132, 16)),
+  ldl      = round(rnorm(80, 3.3, 0.9), 2),
+  crp      = round(rlnorm(80, log(3), 0.4), 2)
+)
+
+md2 <- mahalanobis(cv_risk,
+                   center = colMeans(cv_risk),
+                   cov    = cov(cv_risk))
+cutoff <- qchisq(0.975, df = ncol(cv_risk))
+
+cv_risk |>
+  mutate(md2 = md2, outlier = md2 > cutoff) |>
+  filter(outlier)
+```
+
+The `rstatix::identify_outliers()` function uses Tukey's 1.5 * IQR and 3 * IQR fences to flag mild and extreme outliers. `outliers::grubbs.test()` returns a p-value for the most extreme value under normality. For multivariate outliers, the Mahalanobis distance squared is chi-squared-distributed with degrees of freedom equal to the number of variables.
+
+## Interpreting the output
+
+Scenario 1: `identify_outliers()` flags the 120 ng/mL point as an extreme outlier; Grubbs' test gives $G = 4.02$, $p < .001$. A sensible action is to inspect the source: a factor-10 transcription error (12.0 vs. 120) is by far the most common cause of such extremes.
+
+Scenario 2: Mahalanobis distance flags rows with $d^2 > \chi^2_{0.975, 5} = 12.83$. Such rows are candidates for exclusion or for a sensitivity analysis that reruns the regression without them.
+
+## Effect size
+
+The effect of an outlier is quantified by its leverage ($h_i$) and Cook's distance in regression. A Cook's $d_i > 1$ or $> 4/n$ signals an influential point.
+
+## Reporting (APA 7)
+
+> One plasma-concentration value (120 ng/mL) exceeded three standard deviations and was flagged by Grubbs' test (G = 4.02, p < .001). The record was reviewed: a decimal-point transcription error was confirmed and the value corrected to 12.0 ng/mL before analysis.
+
+## Common pitfalls
+
+- Automatic removal of outliers without inspection is data manipulation; always investigate.
+- The 1.5 * IQR fence will flag points even in perfectly normal data (about 0.7 % of observations).
+- Grubbs' test assumes normality; it is not valid for heavily skewed data.
+- Mahalanobis distance is sensitive to its own outliers (the sample covariance is affected); use robust estimators (MCD via `robustbase`) for contaminated data.
+
+## Parametric vs. non-parametric alternative
+
+When outliers cannot be verified or removed, switch to rank-based tests (Mann-Whitney, Kruskal-Wallis, Spearman) or to robust regression (`MASS::rlm`, `robustbase::lmrob`). These procedures down-weight extreme values automatically.
+
+## Further reading
+
+- [Descriptive univariate statistics](/decision-tree/foundations/descriptive-univariate.qmd)
+- [Simple linear regression](/decision-tree/associations/simple-linear-regression.qmd) (Cook's distance diagnostics)
+- Rousseeuw, P. J., & Leroy, A. M. (2005). *Robust Regression and Outlier Detection*. Wiley.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00e193952cf1443a996fbe0e2f63a7f4 -->
+<img src="https://vg09.met.vgwort.de/na/00e193952cf1443a996fbe0e2f63a7f4"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

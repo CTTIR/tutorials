@@ -1,0 +1,38 @@
+# Hugo (legacy)
+public/
+resources/
+.hugo_build.lock
+
+# Quarto
+.quarto/
+_site/
+/docs/.quarto/
+_freeze/
+
+# R / RStudio
+.Rproj.user/
+.Rhistory
+.RData
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Node (if using any build tools)
+node_modules/
+
+# Python (content generator)
+__pycache__/
+*.pyc
+generate_tutorials.py
+
+/.quarto/
+**/*.quarto_ipynb

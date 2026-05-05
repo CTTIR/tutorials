@@ -1,0 +1,103 @@
+---
+title: Ordinal Logistic Regression
+date: "2026-04-17"
+description: Proportional-odds regression for ordered categorical outcomes
+categories:
+  - ordinal-regression
+  - proportional-odds
+  - polr
+---
+
+## Research question
+
+Use ordinal logistic regression when the outcome has ordered categories (e.g., disease stage I-IV, Likert satisfaction 1-5, NYHA class I-IV). The proportional-odds model fits a single set of coefficients across cumulative thresholds. Biomedical example: does a new rehabilitation programme improve mRS (modified Rankin Scale, 0-5) at 90 days after stroke, adjusting for age and baseline NIHSS?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Ordered categorical outcome | `is.ordered(y)` |
+| Proportional odds (parallel lines) | `brant::brant()` test |
+| Independent observations | design |
+| No severe multicollinearity | `car::vif()` on the linear-predictor equivalent |
+
+If proportional odds fails, use partial-proportional-odds (`VGAM::vglm(..., cumulative(parallel = FALSE))`) or multinomial logistic regression.
+
+## Hypotheses
+
+For each coefficient: $H_0: \beta_j = 0$ vs. $H_1: \beta_j \ne 0$. The coefficient represents the log odds of being in a higher category vs. lower, constant across cut-points under proportional odds.
+
+## R code
+
+```r
+library(tidyverse); library(MASS); library(brant); library(broom); library(gtsummary)
+set.seed(42)
+
+stroke <- tibble(
+  age    = rnorm(200, 70, 12),
+  nihss  = sample(2:20, 200, replace = TRUE),
+  arm    = factor(sample(c("Standard", "Enhanced"), 200, replace = TRUE)),
+  lp     = -0.02 * age + 0.2 * nihss - 0.8 * (arm == "Enhanced")
+) |>
+  mutate(mrs = cut(plogis(lp + rnorm(200, 0, 1)),
+                   breaks = c(-Inf, 0.15, 0.30, 0.50, 0.70, 0.85, Inf),
+                   labels = 0:5)) |>
+  mutate(mrs = factor(mrs, levels = 0:5, ordered = TRUE))
+
+fit <- MASS::polr(mrs ~ age + nihss + arm, data = stroke, Hess = TRUE)
+
+# Coefficients with OR and CIs
+broom::tidy(fit, conf.int = TRUE, exponentiate = TRUE, p.values = TRUE)
+
+# Proportional-odds assumption
+brant::brant(fit)
+
+tbl_regression(fit, exponentiate = TRUE)
+```
+
+## Interpreting the output
+
+Each coefficient is the log odds ratio for being in a *higher* mRS category per unit of predictor. An OR < 1 for `armEnhanced` indicates the enhanced programme reduces the odds of worse outcomes. Brant's test returns a chi-squared statistic for the parallel-lines assumption; a non-significant overall $p$ supports proportional odds.
+
+## Effect size
+
+Per-predictor odds ratios. Model fit: McFadden or Nagelkerke pseudo-$R^2$ via `performance::r2_mcfadden()`.
+
+## Reporting (APA 7)
+
+> In a proportional-odds model, the enhanced rehabilitation programme reduced the odds of a higher 90-day mRS score (OR = 0.47, 95 % CI 0.28-0.79, p = .004) after adjusting for age and baseline NIHSS. Brant's test gave no evidence against the proportional-odds assumption (p = .41).
+
+## Common pitfalls
+
+- Treating an ordinal outcome as continuous (linear regression) obscures the ordering and inflates Type I error in tails.
+- Treating an ordinal outcome as nominal (multinomial) loses efficiency.
+- Ignoring the proportional-odds assumption; always run Brant's test.
+- Collapsing categories to binary throws away the ordering.
+
+## Parametric vs. non-parametric alternative
+
+- When proportional odds fails: partial-proportional-odds model (`VGAM`) or generalised ordered logit (`oglmx`).
+- Alternative: continuation-ratio or adjacent-category logit (`VGAM`).
+- Rank-based: Jonckheere-Terpstra for ordered groups without covariates.
+
+## Further reading
+
+- [Logistic regression](/decision-tree/associations/logistic-regression.qmd)
+- [Multinomial logistic regression](/decision-tree/associations/multinomial-logistic-regression.qmd)
+- Agresti, A. (2010). *Analysis of Ordinal Categorical Data* (2nd ed.).
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00529bbe56af4db8835380c2f81c736c -->
+<img src="https://vg09.met.vgwort.de/na/00529bbe56af4db8835380c2f81c736c"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

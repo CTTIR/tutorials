@@ -1,0 +1,643 @@
+---
+title: "All Tutorials"
+description: "Complete index of every tutorial, grouped by topic area."
+---
+
+::: {.hero}
+::: {.kicker}
+INDEX
+:::
+# All tutorials
+::: {.lead}
+Every tutorial on the site, grouped by topic. Use the links below to jump to a topic landing page or directly to an individual tutorial.
+:::
+:::
+
+## [Statistical Foundations](tutorials/statistical-foundations/index.qmd)
+
+- [**Bias and Variance of Estimators**](tutorials/statistical-foundations/bias-and-variance.qmd) -- Decomposing an estimator's mean squared error into systematic bias and sampling variance
+- [**Big-Op and Little-op Notation**](tutorials/statistical-foundations/big-op-little-op.qmd) -- Stochastic order symbols for describing rates of convergence and stochastic magnitudes
+- [**Characteristic Functions**](tutorials/statistical-foundations/characteristic-functions.qmd) -- Fourier transforms of distributions: always exist, uniquely identify the distribution, and drive convergence theorems
+- [**Confidence Intervals: Introduction**](tutorials/statistical-foundations/confidence-intervals-introduction.qmd) -- Interval estimates with a coverage guarantee, and how they differ from credible intervals
+- [**Convergence in Distribution**](tutorials/statistical-foundations/convergence-in-distribution.qmd) -- The weakest standard mode of convergence, underlying the central limit theorem
+- [**Convergence in Probability**](tutorials/statistical-foundations/convergence-in-probability.qmd) -- The mode of convergence that underpins consistency of estimators
+- [**Estimators and Estimation**](tutorials/statistical-foundations/estimators-and-estimation.qmd) -- Point estimation and the plug-in principle: turning a sample into a guess about a population parameter
+- [**Fisher Information**](tutorials/statistical-foundations/fisher-information.qmd) -- How much the data tell you about a parameter, measured by the curvature of the log-likelihood
+- [**Jensen's Inequality**](tutorials/statistical-foundations/jensens-inequality.qmd) -- The expectation of a convex function is at least the convex function of the expectation
+- [**Likelihood Ratio Tests**](tutorials/statistical-foundations/likelihood-ratio-tests.qmd) -- Comparing nested models by the ratio of maximised likelihoods, with Wilks' asymptotic chi-squared
+- [**Markov and Chebyshev Inequalities**](tutorials/statistical-foundations/chebyshev-markov.qmd) -- Tail bounds derived from moments, with the LLN as a simple consequence
+- [**Maximum Likelihood Estimation**](tutorials/statistical-foundations/maximum-likelihood-estimation.qmd) -- The likelihood function, score equations, and asymptotic properties of the MLE
+- [**Moments and Moment Generating Functions**](tutorials/statistical-foundations/moments-and-mgfs.qmd) -- Moments summarise distributions; the MGF is a generating function that often characterises them uniquely
+- [**Order Statistics**](tutorials/statistical-foundations/order-statistics.qmd) -- Distributions of the sorted sample and their role in quantile theory and robust estimation
+- [**Pivotal Quantities**](tutorials/statistical-foundations/pivotal-quantities.qmd) -- Functions of data and parameter whose distribution does not depend on the parameter, and the CIs they produce
+- [**Population vs. Sample**](tutorials/statistical-foundations/population-vs-sample.qmd) -- Target population, sampling frame, and the distinction between parameters and statistics
+- [**Sampling Distributions**](tutorials/statistical-foundations/sampling-distributions.qmd) -- The distribution of a statistic across repeated samples: the key object that makes inference possible
+- [**Sampling Methods**](tutorials/statistical-foundations/sampling-methods.qmd) -- Simple random, stratified, cluster, systematic, and convenience sampling -- and when each is appropriate
+- [**Scales of Measurement**](tutorials/statistical-foundations/scales-of-measurement.qmd) -- Nominal, ordinal, interval, and ratio scales, and which statistics each legitimately supports
+- [**Slutsky's Theorem**](tutorials/statistical-foundations/slutsky-theorem.qmd) -- Combining convergence in distribution and in probability for asymptotic arguments
+- [**Sufficient Statistics**](tutorials/statistical-foundations/sufficient-statistics.qmd) -- Summaries that capture every bit of information about a parameter, with the factorisation theorem and exponential family
+- [**The Cauchy-Schwarz Inequality**](tutorials/statistical-foundations/cauchy-schwarz.qmd) -- The inner-product inequality that bounds correlations and drives many variance inequalities
+- [**The Central Limit Theorem**](tutorials/statistical-foundations/central-limit-theorem.qmd) -- Why the sampling distribution of the mean is approximately normal, and what that means for everyday inference
+- [**The Cramer-Rao Lower Bound**](tutorials/statistical-foundations/cramer-rao-lower-bound.qmd) -- The smallest variance an unbiased estimator can achieve, derived from Fisher information
+- [**The Delta Method**](tutorials/statistical-foundations/delta-method.qmd) -- Asymptotic distributions of smooth functions of estimators, via a first-order Taylor expansion
+- [**The Empirical Distribution Function**](tutorials/statistical-foundations/empirical-distribution-function.qmd) -- The sample-based step-function estimator of the CDF, with the DKW inequality for its uniform error
+- [**The Glivenko-Cantelli Theorem**](tutorials/statistical-foundations/glivenko-cantelli.qmd) -- The uniform LLN for CDFs: the ECDF converges almost surely to the true CDF at every point simultaneously
+- [**The Law of Large Numbers**](tutorials/statistical-foundations/law-of-large-numbers.qmd) -- Why the sample mean converges to the population mean as the sample grows, in weak and strong forms
+- [**The Method of Moments**](tutorials/statistical-foundations/method-of-moments.qmd) -- Estimate parameters by equating theoretical moments to their sample counterparts
+- [**The Standard Error**](tutorials/statistical-foundations/standard-error.qmd) -- The standard deviation of a statistic's sampling distribution, and how to compute it in R
+- [**Unbiasedness, Consistency, Efficiency**](tutorials/statistical-foundations/unbiasedness-consistency-efficiency.qmd) -- Three core finite- and large-sample properties that let us compare estimators
+
+## [Descriptive Statistics](tutorials/descriptive-statistics/index.qmd)
+
+- [**Coefficient of Variation**](tutorials/descriptive-statistics/coefficient-of-variation.qmd) -- Scale-free dispersion: the ratio of the standard deviation to the mean
+- [**Contingency Tables**](tutorials/descriptive-statistics/contingency-tables.qmd) -- r × c tables of counts, their expected values under independence, and standardised residuals
+- [**Cross-Tabulations**](tutorials/descriptive-statistics/cross-tabulations.qmd) -- Two-way and higher-dimensional tables for joint distributions of categorical variables
+- [**Descriptive vs Inferential Statistics**](tutorials/descriptive-statistics/descriptive-vs-inferential.qmd) -- The distinction between summarising the sample and making claims about the population
+- [**Five-Number Summary**](tutorials/descriptive-statistics/five-number-summary.qmd) -- Min, Q1, median, Q3, max: the compact distribution summary that powers the boxplot
+- [**Frequency Tables**](tutorials/descriptive-statistics/frequency-tables.qmd) -- Counting categorical and discrete-numeric variables: absolute, relative, and cumulative frequencies
+- [**Kurtosis**](tutorials/descriptive-statistics/kurtosis.qmd) -- Quantifying tail heaviness of a distribution, and interpreting excess kurtosis
+- [**Mean Absolute Deviation**](tutorials/descriptive-statistics/mean-absolute-deviation.qmd) -- Average absolute deviation from the mean or median: a robust alternative to the standard deviation
+- [**Measures of Central Tendency**](tutorials/descriptive-statistics/measures-of-location.qmd) -- Mean, median, mode, and their robust cousins -- when each is appropriate and how to compute them in R
+- [**Measures of Dispersion**](tutorials/descriptive-statistics/measures-of-dispersion.qmd) -- Quantifying how spread out the data are: variance, SD, MAD, IQR, and range
+- [**Measures of Shape**](tutorials/descriptive-statistics/measures-of-shape.qmd) -- Skewness and kurtosis: summarising the asymmetry and tail heaviness of a distribution beyond location and spread
+- [**Outlier Detection Rules**](tutorials/descriptive-statistics/outlier-detection-rules.qmd) -- Univariate rules: 1.5·IQR fences, z-score thresholds, Hampel identifier, and Grubbs' test
+- [**Percentile Ranks**](tutorials/descriptive-statistics/percentile-rank.qmd) -- Converting a raw value to its position in the sample distribution, expressed as a percentage
+- [**Quantiles and Percentiles**](tutorials/descriptive-statistics/quantiles-and-percentiles.qmd) -- Dividing a distribution by cumulative probability: the median, quartiles, percentiles, and R's nine quantile definitions
+- [**Robust Statistics: An Overview**](tutorials/descriptive-statistics/robust-statistics-overview.qmd) -- Estimators designed to remain close to the truth under contamination, with key concepts: breakdown point, influence function, efficiency
+- [**Skewness**](tutorials/descriptive-statistics/skewness.qmd) -- Measuring the asymmetry of a distribution: sample estimators, interpretation, and typical values in applied data
+- [**Standardisation and z-Scores**](tutorials/descriptive-statistics/standardisation-zscore.qmd) -- Centring and scaling a variable, and the robust-z alternative
+- [**Stem-and-Leaf Plots**](tutorials/descriptive-statistics/stem-and-leaf-plots.qmd) -- A text-based compact display of small samples that preserves every data value
+- [**Summary by Group**](tutorials/descriptive-statistics/summary-by-group.qmd) -- Split-apply-combine pattern for computing summaries within subgroups of the data
+- [**The Geometric Mean**](tutorials/descriptive-statistics/geometric-mean.qmd) -- Log-scale averaging for multiplicative data: ratios, growth rates, titres
+- [**The Harmonic Mean**](tutorials/descriptive-statistics/harmonic-mean.qmd) -- Reciprocal-averaged summary for rates, speeds, and F1-style composite scores
+- [**The Interquartile Range**](tutorials/descriptive-statistics/interquartile-range.qmd) -- Width of the central 50% of the distribution: robust, interpretable, and the basis of Tukey fences
+- [**The Weighted Mean**](tutorials/descriptive-statistics/weighted-mean.qmd) -- Averaging with unequal weights: survey inclusion probabilities, meta-analysis pooling, and more
+- [**Trimmed and Winsorised Means**](tutorials/descriptive-statistics/trimmed-winsorized-mean.qmd) -- Robust location estimators that compromise between the mean and the median
+- [**Variance and Standard Deviation**](tutorials/descriptive-statistics/variance-and-sd.qmd) -- Squared and unsquared dispersion, the n vs n-1 divisor, and why the sample SD is biased
+
+## [Probability Theory](tutorials/probability/index.qmd)
+
+- [**Bayes' Theorem**](tutorials/probability/bayes-theorem.qmd) -- Inverting conditional probabilities: from likelihood to posterior, with applications to diagnostic testing and Bayesian inference
+- [**Conditional Distributions**](tutorials/probability/conditional-distributions.qmd) -- The distribution of one random variable given the value of another, and conditional expectations
+- [**Conditional Probability**](tutorials/probability/conditional-probability.qmd) -- Probability of one event given another, the product rule, and how conditioning reshapes the sample space
+- [**Convolutions of Distributions**](tutorials/probability/convolutions.qmd) -- Distribution of a sum of independent random variables, computed via convolution integrals
+- [**Copulas: An Introduction**](tutorials/probability/copulas-introduction.qmd) -- Separating marginal distributions from the dependence structure via Sklar's theorem
+- [**Discrete vs Continuous Variables**](tutorials/probability/discrete-vs-continuous.qmd) -- Two fundamental kinds of random variable and the mixed case in between
+- [**Expectation of a Random Variable**](tutorials/probability/expectation.qmd) -- The probability-weighted average of a random variable's values, with its algebraic properties
+- [**Independence**](tutorials/probability/independence.qmd) -- Events and variables that do not inform each other, and the distinction between pairwise and mutual independence
+- [**Joint Distributions**](tutorials/probability/joint-distributions.qmd) -- The distribution of a pair (or vector) of random variables, encoding their dependence structure
+- [**Kolmogorov's Axioms of Probability**](tutorials/probability/kolmogorov-axioms.qmd) -- The three axioms that define a probability measure on a sigma-algebra of events
+- [**Law of Total Probability**](tutorials/probability/law-of-total-probability.qmd) -- Decomposing a marginal probability over a partition of the sample space
+- [**Marginal Distributions**](tutorials/probability/marginal-distributions.qmd) -- Recovering the distribution of a single variable from a joint distribution by integrating out the others
+- [**Random Variables**](tutorials/probability/random-variables.qmd) -- Measurable functions from sample space to real numbers: the mathematical object behind every statistic
+- [**Sample Space and Events**](tutorials/probability/sample-space-events.qmd) -- The set of possible outcomes, events as subsets, and the algebra of set operations
+- [**Student's t-Distribution**](tutorials/probability/t-distribution.qmd) -- Heavier-tailed relative of the normal, used for small-sample inference on means
+- [**The Bernoulli Distribution**](tutorials/probability/bernoulli-distribution.qmd) -- The distribution of a single binary trial with success probability p
+- [**The Beta Distribution**](tutorials/probability/beta-distribution.qmd) -- Distribution over [0, 1] for proportions and probabilities; conjugate prior for the binomial
+- [**The Binomial Distribution**](tutorials/probability/binomial-distribution.qmd) -- The count of successes in n independent Bernoulli trials with common probability p
+- [**The Chi-Squared Distribution**](tutorials/probability/chi-squared-distribution.qmd) -- Sum of squared independent standard normals; foundation of chi-squared tests and ANOVA
+- [**The Correlation Coefficient**](tutorials/probability/correlation-coefficient.qmd) -- Standardised covariance bounded in [-1, 1], measuring the strength of linear association
+- [**The Cumulative Distribution Function**](tutorials/probability/cumulative-distribution-function.qmd) -- F(x) = P(X ≤ x): the universal descriptor of a random variable's distribution
+- [**The Exponential Distribution**](tutorials/probability/exponential-distribution.qmd) -- Waiting time between events in a Poisson process, with the memoryless property
+- [**The F Distribution**](tutorials/probability/f-distribution.qmd) -- Ratio of two independent scaled chi-squared random variables; foundation of ANOVA and variance tests
+- [**The Gamma Distribution**](tutorials/probability/gamma-distribution.qmd) -- Flexible right-skewed distribution for positive continuous data; sum of independent exponentials
+- [**The Geometric Distribution**](tutorials/probability/geometric-distribution.qmd) -- Number of Bernoulli trials until the first success, with the memoryless property
+- [**The Hazard Function**](tutorials/probability/hazard-function.qmd) -- Instantaneous event rate given survival so far; central concept of survival analysis
+- [**The Hypergeometric Distribution**](tutorials/probability/hypergeometric-distribution.qmd) -- Sampling without replacement from a finite population
+- [**The Log-Normal Distribution**](tutorials/probability/lognormal-distribution.qmd) -- Positive-valued distribution whose logarithm is normal; multiplicative processes and biomedical concentrations
+- [**The Multinomial Distribution**](tutorials/probability/multinomial-distribution.qmd) -- Multi-category generalisation of the binomial with category probabilities summing to one
+- [**The Multivariate Normal Distribution**](tutorials/probability/multivariate-normal.qmd) -- Generalisation of the normal to random vectors; the keystone of multivariate analysis
+- [**The Negative Binomial Distribution**](tutorials/probability/negative-binomial-distribution.qmd) -- Overdispersed count distribution, derivable as a gamma mixture of Poissons
+- [**The Normal Distribution**](tutorials/probability/normal-distribution.qmd) -- Definition, properties, and practical use of the normal (Gaussian) distribution, with R examples for every common task
+- [**The Poisson Distribution**](tutorials/probability/poisson-distribution.qmd) -- Counts of rare events per unit time or space with rate λ
+- [**The Probability Density Function**](tutorials/probability/probability-density-function.qmd) -- The function whose integral gives probability for a continuous random variable
+- [**The Probability Mass Function**](tutorials/probability/probability-mass-function.qmd) -- The function that assigns probability to each value of a discrete random variable
+- [**The Survival Function**](tutorials/probability/survival-function.qmd) -- Probability of surviving past time t; the complement of the CDF for positive random variables
+- [**The Uniform Distribution**](tutorials/probability/uniform-distribution.qmd) -- Equal probability over an interval (continuous) or a set (discrete)
+- [**The Weibull Distribution**](tutorials/probability/weibull-distribution.qmd) -- Flexible positive-valued distribution with monotone hazard; reliability and survival analysis
+- [**Transformations of Random Variables**](tutorials/probability/transformations-of-rv.qmd) -- Distribution of g(X) given the distribution of X, via the change-of-variables formula
+- [**Variance and Covariance**](tutorials/probability/variance-covariance-of-rv.qmd) -- Second moments of one and two random variables: dispersion and joint variation
+
+## [Inferential Statistics](tutorials/inference/index.qmd)
+
+- [**Anderson-Darling Test**](tutorials/inference/anderson-darling-test.qmd) -- A distribution goodness-of-fit test with emphasis on the tails
+- [**Bartlett's Test**](tutorials/inference/bartlett-test.qmd) -- Test of equal variances across groups, most powerful under normality but very sensitive to its violation
+- [**Benjamini-Hochberg FDR**](tutorials/inference/benjamini-hochberg-fdr.qmd) -- Controlling the expected proportion of false discoveries among rejected hypotheses
+- [**Benjamini-Yekutieli FDR**](tutorials/inference/benjamini-yekutieli.qmd) -- Dependence-robust false discovery rate control at the cost of conservatism
+- [**Bonferroni Correction**](tutorials/inference/bonferroni-correction.qmd) -- Controlling family-wise error rate by dividing alpha across m tests
+- [**Bootstrap Confidence Intervals**](tutorials/inference/bootstrap-confidence-intervals.qmd) -- Percentile, basic, BCa, and studentised bootstrap CIs
+- [**Chi-Squared Goodness-of-Fit Test**](tutorials/inference/chi-squared-goodness-of-fit.qmd) -- Testing whether observed category frequencies match an expected distribution
+- [**Chi-Squared Test of Independence**](tutorials/inference/chi-squared-independence.qmd) -- Testing association between two categorical variables via observed vs. expected counts under independence
+- [**Cochran-Mantel-Haenszel Test**](tutorials/inference/cochran-mantel-haenszel.qmd) -- Stratified analysis of 2x2 tables across levels of a confounding variable
+- [**Effect Sizes: Overview**](tutorials/inference/effect-sizes-overview.qmd) -- Why effect sizes matter and which measures apply to which tests
+- [**Equivalence Testing with TOST**](tutorials/inference/equivalence-tost.qmd) -- Two one-sided tests for establishing practical equivalence within a margin
+- [**Fisher's Exact Test**](tutorials/inference/fisher-exact-test.qmd) -- Exact test for 2x2 (and r x c) contingency tables, based on the hypergeometric distribution
+- [**Friedman Test**](tutorials/inference/friedman-test.qmd) -- Non-parametric test for three or more paired / repeated measures
+- [**Holm's Step-Down Correction**](tutorials/inference/holm-correction.qmd) -- Sequential Bonferroni with uniformly greater power; controls FWER
+- [**Kendall's Tau**](tutorials/inference/kendall-tau.qmd) -- Rank correlation based on concordant vs discordant pairs; robust to ties and small samples
+- [**Kolmogorov-Smirnov Test**](tutorials/inference/kolmogorov-smirnov-test.qmd) -- CDF-based goodness-of-fit for one-sample and two-sample comparisons
+- [**Kruskal-Wallis Test**](tutorials/inference/kruskal-wallis.qmd) -- Non-parametric one-way ANOVA based on ranks across three or more groups
+- [**Levene's Test of Variances**](tutorials/inference/levene-test.qmd) -- Robust test of variance homogeneity across groups
+- [**Mann-Whitney U Test**](tutorials/inference/mann-whitney-u.qmd) -- Non-parametric two-sample test based on ranks; alternative to the independent t-test
+- [**McNemar's Test**](tutorials/inference/mcnemar-test.qmd) -- Paired / matched binary data: comparing two measurements on the same units, using discordant pairs only
+- [**Mixed ANOVA**](tutorials/inference/mixed-anova.qmd) -- Designs combining between-subjects and within-subjects factors, with the interaction as key
+- [**Multiple Comparisons: Overview**](tutorials/inference/multiple-comparisons-overview.qmd) -- Family-wise error vs false discovery rate and when each applies
+- [**Null and Alternative Hypotheses**](tutorials/inference/null-alternative-hypotheses.qmd) -- Formulating H0 and H1, choosing one- vs two-sided tests, and avoiding post-hoc reformulation
+- [**One-Proportion Test**](tutorials/inference/one-proportion-test.qmd) -- Testing whether an observed proportion differs from a pre-specified reference; exact and score-based methods
+- [**One-Sample t-Test**](tutorials/inference/one-sample-t-test.qmd) -- Testing whether a sample mean equals a pre-specified reference value
+- [**One-Sample z-Test**](tutorials/inference/one-sample-z-test.qmd) -- Comparing a sample mean to a reference when the population variance is known -- rare in practice but pedagogically useful
+- [**One-Way ANOVA**](tutorials/inference/one-way-anova.qmd) -- Comparing means across three or more independent groups via the F-test
+- [**P-Values Explained**](tutorials/inference/p-values-explained.qmd) -- Definition, correct interpretation, and the most common misinterpretations of the p-value
+- [**Paired t-Test**](tutorials/inference/paired-t-test.qmd) -- Comparing two dependent measurements by applying a one-sample t-test to their differences
+- [**Pearson Correlation Test**](tutorials/inference/pearson-correlation-test.qmd) -- Testing whether the Pearson correlation between two continuous variables is non-zero
+- [**Permutation Tests**](tutorials/inference/permutation-tests.qmd) -- Exact or Monte Carlo p-values via resampling under exchangeability
+- [**Post-Hoc Tests with Tukey HSD**](tutorials/inference/post-hoc-tests-tukey.qmd) -- Pairwise comparisons after ANOVA with family-wise error control
+- [**Repeated-Measures ANOVA**](tutorials/inference/repeated-measures-anova.qmd) -- Within-subjects analysis of variance with sphericity checks and corrections
+- [**Shapiro-Wilk Normality Test**](tutorials/inference/shapiro-wilk-test.qmd) -- The most powerful commonly used test for normality in small to moderate samples
+- [**Spearman Rank Correlation Test**](tutorials/inference/spearman-correlation-test.qmd) -- Non-parametric correlation test for monotonic association between two variables
+- [**The Bootstrap: Introduction**](tutorials/inference/bootstrap-introduction.qmd) -- Resampling with replacement to estimate standard errors and sampling distributions
+- [**The Jackknife**](tutorials/inference/jackknife.qmd) -- Leave-one-out resampling for bias and variance estimation
+- [**The Runs Test**](tutorials/inference/runs-test.qmd) -- Testing randomness of a binary or dichotomised sequence via run lengths
+- [**The Sign Test**](tutorials/inference/sign-test.qmd) -- Testing a median or paired difference using only the direction of each observation
+- [**Two-Proportion Test**](tutorials/inference/two-proportion-test.qmd) -- Comparing two independent proportions; z-test and chi-squared equivalence, with risk difference and relative risk
+- [**Two-Sample t-Test**](tutorials/inference/two-sample-t-test.qmd) -- Comparing means between two independent groups with Student's and Welch's t-tests, including assumption checks and effect sizes
+- [**Two-Way ANOVA**](tutorials/inference/two-way-anova.qmd) -- Two between-subjects factors: main effects and interaction
+- [**Type I and Type II Errors**](tutorials/inference/type-i-type-ii-errors.qmd) -- Rejecting a true null (alpha) and failing to reject a false null (beta); power and the trade-off
+- [**Welch's t-Test**](tutorials/inference/welch-t-test.qmd) -- Two-sample t-test that does not assume equal variances; R's default
+- [**Wilcoxon Signed-Rank Test**](tutorials/inference/wilcoxon-signed-rank.qmd) -- Non-parametric paired-sample test based on signed ranks
+
+## [Sample Size & Power](tutorials/sample-size/index.qmd)
+
+- [**Effect Size: Cohen's d**](tutorials/sample-size/effect-size-cohens-d.qmd) -- Standardised mean difference: definition, variants, interpretation
+- [**Effect Size: Cohen's h**](tutorials/sample-size/effect-size-cohens-h.qmd) -- Standardised effect size for comparisons between proportions via arcsine transformation
+- [**Effect Size: Eta-Squared**](tutorials/sample-size/effect-size-eta-squared.qmd) -- Proportion of variance explained in ANOVA and its partial, generalised, and omega variants
+- [**Minimum Detectable Effect**](tutorials/sample-size/minimum-detectable-effect.qmd) -- Solving for the smallest effect that can be detected at a given sample size and power
+- [**Post-Hoc Power: A Controversy**](tutorials/sample-size/post-hoc-power-controversy.qmd) -- Why computing power from the observed effect is circular and uninformative
+- [**Power Analysis: Introduction**](tutorials/sample-size/power-analysis-introduction.qmd) -- The four quantities of power analysis and how they trade against each other in study design
+- [**Power for Agreement (Kappa)**](tutorials/sample-size/power-agreement-kappa.qmd) -- Sample size for Cohen's kappa as a precision-targeted or hypothesis-test planning quantity
+- [**Power for Bland-Altman Studies**](tutorials/sample-size/power-bland-altman.qmd) -- Sample size for estimating limits of agreement with adequate precision
+- [**Power for Chi-Squared Tests**](tutorials/sample-size/power-chi-squared.qmd) -- Sample size for goodness-of-fit and contingency chi-squared using Cohen's w
+- [**Power for Cluster-RCT**](tutorials/sample-size/power-cluster-rct.qmd) -- Sample size for cluster-randomised trials: design effect from ICC and cluster size
+- [**Power for Correlation Tests**](tutorials/sample-size/power-correlation.qmd) -- Sample size for Pearson and Spearman correlations via Fisher's z transformation
+- [**Power for Cox Regression**](tutorials/sample-size/power-cox-regression.qmd) -- Events-driven sample size: the number of events, not subjects, drives power
+- [**Power for Crossover Trials**](tutorials/sample-size/power-crossover.qmd) -- Sample size for 2x2 crossover designs, exploiting within-subject comparison
+- [**Power for Diagnostic Accuracy**](tutorials/sample-size/power-diagnostic-accuracy.qmd) -- Sample size for estimating sensitivity and specificity with adequate precision
+- [**Power for Equivalence (TOST)**](tutorials/sample-size/power-equivalence-tost.qmd) -- Sample size for two-one-sided-tests equivalence testing within a pre-specified margin
+- [**Power for ICC**](tutorials/sample-size/power-icc.qmd) -- Sample size for the intraclass correlation coefficient in reliability studies
+- [**Power for Linear Regression**](tutorials/sample-size/power-linear-regression.qmd) -- Sample size for overall regression F and for individual coefficients via Cohen's f^2
+- [**Power for Logistic Regression**](tutorials/sample-size/power-logistic-regression.qmd) -- Sample size for logistic regression: events per variable, odds-ratio detection, and simulation
+- [**Power for McNemar's Test**](tutorials/sample-size/power-mcnemar.qmd) -- Sample size for paired binary comparisons driven by the rate of discordant pairs
+- [**Power for Non-Inferiority Trials**](tutorials/sample-size/power-non-inferiority.qmd) -- One-sided equivalence: is the new treatment no worse than the reference by more than the margin
+- [**Power for One-Proportion Test**](tutorials/sample-size/power-one-proportion.qmd) -- Sample size for testing a single proportion against a reference, with normal and exact methods
+- [**Power for One-Sample t-Test**](tutorials/sample-size/power-one-sample-t.qmd) -- Computing sample size and power for a test of one mean against a reference
+- [**Power for One-Way ANOVA**](tutorials/sample-size/power-anova.qmd) -- Sample size for detecting a difference among three or more group means
+- [**Power for Paired t-Test**](tutorials/sample-size/power-paired-t.qmd) -- Sample size for paired designs, taking advantage of within-subject correlation
+- [**Power for Repeated-Measures ANOVA**](tutorials/sample-size/power-repeated-measures.qmd) -- Sample size for within-subjects designs with within-subject correlation
+- [**Power for Stepped-Wedge Trials**](tutorials/sample-size/power-stepped-wedge.qmd) -- Variance of the treatment effect in stepped-wedge cluster designs via the Hussey-Hughes formula
+- [**Power for Two-Proportion Test**](tutorials/sample-size/power-two-proportions.qmd) -- Sample size for comparing proportions between two independent groups
+- [**Power for the Log-Rank Test**](tutorials/sample-size/power-logrank-test.qmd) -- Event-based sample size for Kaplan-Meier comparisons via the log-rank test
+- [**Sample Size Sensitivity Analysis**](tutorials/sample-size/sensitivity-analysis-sample-size.qmd) -- Reporting sample size across a range of assumed effect sizes, SDs, and dropout rates
+- [**Sample Size for a Two-Sample t-Test**](tutorials/sample-size/power-two-sample-t.qmd) -- Power analysis and sample size calculation for comparing two independent group means, with worked examples in R
+
+## [Data Visualisation](tutorials/visualisation/index.qmd)
+
+- [**Aesthetics and Geoms**](tutorials/visualisation/aesthetics-and-geoms.qmd) -- The two ggplot2 building blocks: what data to map (aesthetics) and how to draw it (geoms)
+- [**Annotations and Labels**](tutorials/visualisation/annotations-and-labels.qmd) -- Adding text, arrows, rectangles, and repelling labels to ggplot2 figures
+- [**Bar Charts**](tutorials/visualisation/bar-charts.qmd) -- Counts per category and summarised values per category
+- [**Bland-Altman Plots**](tutorials/visualisation/bland-altman-plots.qmd) -- Mean-vs-difference plot for comparing two measurement methods
+- [**Boxplots**](tutorials/visualisation/boxplots.qmd) -- Five-number summary display: Tukey boxplots with whiskers and outlier rules
+- [**Bubble Plots**](tutorials/visualisation/bubble-plots.qmd) -- Scatter plots with a third variable encoded by point size
+- [**Colour Palettes**](tutorials/visualisation/colour-palettes.qmd) -- Discrete, continuous, perceptually uniform, and diverging palettes for ggplot2
+- [**Colour-Blind-Safe Plots**](tutorials/visualisation/colour-blind-safe-plots.qmd) -- Designing plots that remain readable to viewers with colour-vision deficiencies
+- [**Contour Plots**](tutorials/visualisation/contour-plots.qmd) -- Isolines of a 2D scalar field or density
+- [**Correlation Heatmaps**](tutorials/visualisation/correlation-heatmaps.qmd) -- Visualising a correlation matrix with colour-encoded cells and significance markers
+- [**Density Plots**](tutorials/visualisation/density-plots.qmd) -- Smooth distribution display via kernel density estimation
+- [**Dot Plots**](tutorials/visualisation/dot-plots.qmd) -- Cleveland dot plots and Wilkinson dot plots for compact distributional displays
+- [**Facets and Panels**](tutorials/visualisation/facets-and-panels.qmd) -- Creating small multiples via facet_wrap and facet_grid
+- [**Forest Plots (Visualisation)**](tutorials/visualisation/forest-plots-viz.qmd) -- Point estimates and confidence intervals stacked across studies or subgroups
+- [**Funnel Plots (Visualisation)**](tutorials/visualisation/funnel-plots-viz.qmd) -- Study effect vs. precision plot used to detect publication bias in meta-analysis
+- [**Heatmaps**](tutorials/visualisation/heatmaps.qmd) -- Matrix displays with colour-encoded cell values, optionally with row/column ordering
+- [**Hexbin Plots**](tutorials/visualisation/hexbin-plots.qmd) -- Binning the 2D plane into hexagons and colouring by count, for large bivariate data
+- [**Histograms**](tutorials/visualisation/histograms.qmd) -- Univariate distribution display via binned frequencies or densities
+- [**Interactive Plots with ggiraph**](tutorials/visualisation/interactive-ggiraph.qmd) -- Interactive SVG-based ggplot extensions with per-element hover, click, and selection
+- [**Interactive Plots with plotly**](tutorials/visualisation/interactive-plotly.qmd) -- Converting ggplot objects to interactive HTML plots via ggplotly()
+- [**Line Plots**](tutorials/visualisation/line-plots.qmd) -- Connecting ordered observations with lines for time-series and trajectory displays
+- [**Pairs Plots**](tutorials/visualisation/pairs-plots.qmd) -- Scatterplot matrices for exploring pairwise relationships among several continuous variables
+- [**Patchwork: Multi-Plot Composition**](tutorials/visualisation/patchwork-composition.qmd) -- Composing multiple ggplot objects into a single figure with the patchwork package
+- [**ROC Curves**](tutorials/visualisation/roc-curves-plot.qmd) -- Sensitivity vs 1-specificity plots for diagnostic tests and binary classifiers
+- [**Raincloud Plots**](tutorials/visualisation/raincloud-plots.qmd) -- Half-violin + jittered raw points + boxplot: a comprehensive distribution display
+- [**Ridge Plots**](tutorials/visualisation/ridge-plots.qmd) -- Stacked density curves across groups, also called 'joy plots'
+- [**Saving and Exporting Figures**](tutorials/visualisation/ggsave-and-export.qmd) -- Exporting ggplot figures to PDF, PNG, SVG, and TIFF with the right dimensions and DPI
+- [**Scales and Coordinates**](tutorials/visualisation/scales-and-coordinates.qmd) -- Controlling how data values are mapped to visual values (scales) and how the plot area is organised (coordinates)
+- [**Scatter Plots**](tutorials/visualisation/scatter-plots.qmd) -- The bivariate continuous default: geom_point with overplotting strategies and trend lines
+- [**Stacked and Dodged Bars**](tutorials/visualisation/stacked-dodged-bars.qmd) -- Two-factor bar charts: stacking for composition, dodging for side-by-side comparison
+- [**Survival Curves**](tutorials/visualisation/survival-curves-plot.qmd) -- Publication-quality Kaplan-Meier plots with risk tables and log-rank annotation
+- [**The Grammar of Graphics**](tutorials/visualisation/grammar-of-graphics.qmd) -- Understanding ggplot2 as a layered grammar: data, mappings, geoms, stats, scales, coordinates, facets, and themes
+- [**Time Series Plots**](tutorials/visualisation/time-series-plots.qmd) -- Dated line plots with forecast bands and decomposition displays
+- [**Violin Plots**](tutorials/visualisation/violin-plots.qmd) -- Symmetric kernel density plots for comparing distributions across groups
+- [**ggplot2 Themes**](tutorials/visualisation/ggplot-themes.qmd) -- Visual styling of plots via complete themes and fine-grained theme() elements
+
+## [Regression & Modelling](tutorials/regression-modelling/index.qmd)
+
+- [**Added-Variable Plots**](tutorials/regression-modelling/added-variable-plots.qmd) -- Partial regression plots showing each predictor's unique contribution
+- [**Best Subset Selection**](tutorials/regression-modelling/best-subset-selection.qmd) -- Enumerate all candidate predictor subsets to find the best by a chosen criterion
+- [**Beta Regression**](tutorials/regression-modelling/beta-regression.qmd) -- Regression for continuous outcomes in (0, 1): proportions, percentages, fractions
+- [**Centring and Scaling Predictors**](tutorials/regression-modelling/centered-scaled-predictors.qmd) -- Why and how to centre and scale continuous predictors before regression
+- [**Contrasts in R**](tutorials/regression-modelling/contrasts-in-r.qmd) -- Built-in and custom contrast matrices for factor variables in regression and ANOVA
+- [**Cook's Distance**](tutorials/regression-modelling/cooks-distance.qmd) -- Single-number influence measure combining leverage and residual
+- [**Cox Regression as Regression**](tutorials/regression-modelling/survival-regression-cox.qmd) -- The Cox proportional-hazards model in the GLM-family perspective; pointer to the Survival section
+- [**Dirichlet Regression**](tutorials/regression-modelling/dirichlet-regression.qmd) -- Regression for compositional outcomes: vectors of proportions summing to 1
+- [**Dummy Coding**](tutorials/regression-modelling/dummy-coding.qmd) -- Treatment-contrast coding for categorical predictors: reference category and indicator variables
+- [**Effect (Deviation) Coding**](tutorials/regression-modelling/effect-coding.qmd) -- Sum-to-zero contrasts: coefficients as deviations from the grand mean
+- [**Elastic Net**](tutorials/regression-modelling/elastic-net.qmd) -- Combined L1 and L2 penalty: variable selection plus grouping behaviour
+- [**GAMMs: Additive Mixed Models**](tutorials/regression-modelling/gamm-additive-mixed.qmd) -- Combining smooth effects (GAM) with random effects (LMM) via mgcv::gam
+- [**GAMs: Introduction**](tutorials/regression-modelling/gam-introduction.qmd) -- Generalised additive models with smoothing splines for non-linear predictor effects
+- [**Generalised Estimating Equations**](tutorials/regression-modelling/generalized-estimating-equations.qmd) -- Marginal regression models for clustered data with working correlation structures
+- [**Hurdle Models**](tutorials/regression-modelling/hurdle-models.qmd) -- Two-part count models: binary decision for zero vs. non-zero, plus truncated count for positives
+- [**Interactions in Regression**](tutorials/regression-modelling/interactions-in-regression.qmd) -- Product terms in regression, centring, and the interpretation of conditional effects
+- [**Lasso Regression**](tutorials/regression-modelling/lasso-regression.qmd) -- L1-penalised regression for simultaneous shrinkage and variable selection
+- [**Leverage and Influence**](tutorials/regression-modelling/leverage-influence.qmd) -- Hat values, DFBETAs, and Cook's distance for identifying influential observations
+- [**Linear Regression Assumptions**](tutorials/regression-modelling/regression-assumptions.qmd) -- The four classical assumptions of linear regression and how to check each
+- [**Logistic Regression**](tutorials/regression-modelling/logistic-regression.qmd) -- Regression for binary outcomes: odds ratios, logit link, and MLE fitting
+- [**Logistic Regression Diagnostics**](tutorials/regression-modelling/logistic-regression-diagnostics.qmd) -- Calibration plots, Hosmer-Lemeshow, deviance residuals, and influence for GLM
+- [**Mixed-Effects Models: Introduction**](tutorials/regression-modelling/mixed-models-intro.qmd) -- Hierarchical / multilevel regression: fixed effects for population-level structure, random effects for cluster-level variability
+- [**Model Selection with AIC and BIC**](tutorials/regression-modelling/model-selection-aic-bic.qmd) -- Information criteria for comparing models: Akaike's and Bayesian
+- [**Multicollinearity and VIF**](tutorials/regression-modelling/multicollinearity-vif.qmd) -- Variance inflation factors, condition numbers, and remedies for collinear predictors
+- [**Multinomial Logistic Regression**](tutorials/regression-modelling/multinomial-logistic.qmd) -- Regression for unordered categorical outcomes with three or more levels
+- [**Multiple Linear Regression**](tutorials/regression-modelling/multiple-linear-regression.qmd) -- Linear regression with two or more predictors: coefficient interpretation, partial effects, and collinearity
+- [**Negative Binomial Regression**](tutorials/regression-modelling/negative-binomial-regression.qmd) -- Count regression with explicit variance-dispersion parameter for overdispersed data
+- [**Nested vs Crossed Random Effects**](tutorials/regression-modelling/nested-crossed-random-effects.qmd) -- Distinguishing hierarchical from partially-overlapping grouping structures in mixed models
+- [**Offsets in Regression**](tutorials/regression-modelling/offsets-in-regression.qmd) -- Treating exposure time or person-years as a known component of the linear predictor
+- [**Ordinal Logistic Regression**](tutorials/regression-modelling/ordinal-logistic.qmd) -- Regression for ordered categorical outcomes using the proportional-odds model
+- [**Partial Correlation**](tutorials/regression-modelling/partial-correlation.qmd) -- Correlation between two variables after removing the linear influence of others
+- [**Poisson Regression**](tutorials/regression-modelling/poisson-regression.qmd) -- Log-linear count regression with rates and offsets
+- [**Polynomial Regression**](tutorials/regression-modelling/polynomial-regression.qmd) -- Extending linear regression with powers of predictors: orthogonal polynomials and overfitting risk
+- [**Probit Regression**](tutorials/regression-modelling/probit-regression.qmd) -- Binary regression using the cumulative normal link
+- [**Quantile Regression**](tutorials/regression-modelling/quantile-regression.qmd) -- Modelling conditional quantiles (median, upper/lower percentiles) rather than the mean
+- [**Quasi-Poisson Regression**](tutorials/regression-modelling/quasi-poisson.qmd) -- Poisson regression with a dispersion parameter for moderate overdispersion
+- [**R-Squared and Adjusted R-Squared**](tutorials/regression-modelling/r-squared-adjusted.qmd) -- Proportion of variance explained, and the penalty for model complexity
+- [**ROC and AUC for Logistic Models**](tutorials/regression-modelling/roc-auc-for-logistic.qmd) -- Discrimination quality of logistic regression via receiver operating characteristic curves
+- [**Random-Intercept Models**](tutorials/regression-modelling/random-intercepts.qmd) -- Mixed model with cluster-specific intercepts but common slopes
+- [**Random-Slope Models**](tutorials/regression-modelling/random-slopes.qmd) -- Mixed model with cluster-specific slopes, allowing effects to vary across groups
+- [**Residual Diagnostics**](tutorials/regression-modelling/residual-diagnostics.qmd) -- Four standard residual plots, what they show, and how to read them
+- [**Ridge Regression**](tutorials/regression-modelling/ridge-regression.qmd) -- L2 penalty for coefficient shrinkage; stable fits under collinearity
+- [**Robust Regression**](tutorials/regression-modelling/robust-regression.qmd) -- M-estimators and MM-estimators for regression resistant to outliers and heavy-tailed errors
+- [**Simple Linear Regression**](tutorials/regression-modelling/simple-linear-regression.qmd) -- Fitting, diagnosing, and interpreting a linear regression with a single continuous predictor, from first principles
+- [**Spline Regression**](tutorials/regression-modelling/spline-regression.qmd) -- Piecewise-polynomial regression with natural cubic splines for flexible non-linear fits
+- [**Stepwise Regression: Pitfalls**](tutorials/regression-modelling/stepwise-regression-pitfalls.qmd) -- Why automated predictor selection by p-value or AIC has serious statistical problems
+- [**Tobit Regression**](tutorials/regression-modelling/tobit-regression.qmd) -- Linear regression for outcomes censored at a known threshold
+- [**Truncated Regression**](tutorials/regression-modelling/truncated-regression.qmd) -- Regression when observations are missing (not just censored) below or above a threshold
+- [**Worked lme4::lmer Examples**](tutorials/regression-modelling/lme4-lmer-examples.qmd) -- Common formula patterns for lmer with interpretation of each output block
+- [**Zero-Inflated Models**](tutorials/regression-modelling/zero-inflated-models.qmd) -- Mixture models for count data with more zeros than Poisson or negative binomial predicts
+- [**glmer: Generalised Mixed Models**](tutorials/regression-modelling/glmer-generalized-mixed.qmd) -- Extending mixed models to binary, count, and other GLM outcomes
+
+## [Multivariate Methods](tutorials/multivariate/index.qmd)
+
+- [**Bray-Curtis Dissimilarity**](tutorials/multivariate/bray-curtis.qmd) -- The standard ecological distance metric for species-abundance community data
+- [**Canonical Correlation Analysis**](tutorials/multivariate/canonical-correlation.qmd) -- Identifying pairs of linear combinations that maximise correlation between two variable sets
+- [**Cluster Validation: Silhouette**](tutorials/multivariate/cluster-validation-silhouette.qmd) -- Measuring how well each observation fits its assigned cluster relative to neighbouring clusters
+- [**Confirmatory Factor Analysis**](tutorials/multivariate/factor-analysis-confirmatory.qmd) -- Testing a pre-specified factor structure against data, with chi-squared and incremental fit indices
+- [**Correspondence Analysis**](tutorials/multivariate/correspondence-analysis.qmd) -- Low-dimensional biplot representation of contingency tables via chi-squared distance
+- [**DBSCAN Clustering**](tutorials/multivariate/dbscan-clustering.qmd) -- Density-based clustering with automatic noise detection and arbitrary cluster shapes
+- [**Distance and Dissimilarity Measures**](tutorials/multivariate/distance-measures.qmd) -- Euclidean, Manhattan, Minkowski, Canberra, and their use in clustering / MDS
+- [**Exploratory Factor Analysis**](tutorials/multivariate/factor-analysis-exploratory.qmd) -- Identifying latent factors from correlated manifest variables, with extraction, rotation, and number-of-factors decisions
+- [**Factor Rotation**](tutorials/multivariate/factor-rotation.qmd) -- Orthogonal and oblique rotations to make factor loadings interpretable
+- [**Gaussian Mixture Models**](tutorials/multivariate/gaussian-mixture-models.qmd) -- Model-based clustering via mixtures of multivariate normals, fitted by EM
+- [**Hierarchical Clustering**](tutorials/multivariate/hierarchical-clustering.qmd) -- Agglomerative (bottom-up) clustering with various linkage criteria and dendrogram display
+- [**Independent Component Analysis**](tutorials/multivariate/ica-independent-component-analysis.qmd) -- Signal separation: recovering independent latent sources from linear mixtures
+- [**Jaccard and Dice Dissimilarity**](tutorials/multivariate/jaccard-dissimilarity.qmd) -- Distance measures for binary / presence-absence data
+- [**Kernel PCA**](tutorials/multivariate/kernel-pca.qmd) -- Non-linear dimensionality reduction via PCA in an implicit feature space
+- [**Linear Discriminant Analysis**](tutorials/multivariate/linear-discriminant-analysis.qmd) -- Classifier assuming multivariate normal within-class distributions with equal covariance
+- [**MANOVA**](tutorials/multivariate/manova.qmd) -- Multivariate analysis of variance: testing group differences across multiple correlated outcomes jointly
+- [**Mahalanobis Distance**](tutorials/multivariate/mahalanobis-distance.qmd) -- Scale- and correlation-aware distance for multivariate data
+- [**Metric Multidimensional Scaling**](tutorials/multivariate/mds-metric.qmd) -- Representing a distance matrix in low-dimensional Euclidean coordinates
+- [**Multiple Correspondence Analysis**](tutorials/multivariate/multiple-correspondence-analysis.qmd) -- Extension of correspondence analysis to more than two categorical variables
+- [**Non-Metric Multidimensional Scaling**](tutorials/multivariate/mds-nonmetric.qmd) -- MDS using only the ranks of distances, minimising Kruskal stress
+- [**PLS Discriminant Analysis**](tutorials/multivariate/pls-da.qmd) -- PLS extended to classification via dummy-coded class indicators
+- [**Partial Least Squares Regression**](tutorials/multivariate/pls-regression.qmd) -- Regression using latent components optimised for outcome prediction in high dimensions
+- [**Partitioning Around Medoids**](tutorials/multivariate/pam-kmedoids.qmd) -- PAM: robust k-medoids clustering for non-Euclidean distances and outlier-contaminated data
+- [**Principal Component Analysis**](tutorials/multivariate/principal-component-analysis.qmd) -- Dimensionality reduction by variance-maximising projection, with interpretation, scaling, and visualisation in R
+- [**Quadratic Discriminant Analysis**](tutorials/multivariate/quadratic-discriminant-analysis.qmd) -- LDA with class-specific covariance matrices; quadratic decision boundaries
+- [**Structural Equation Models**](tutorials/multivariate/structural-equation-models.qmd) -- Combining measurement (CFA) and structural (path) components for latent-variable regression
+- [**The Elbow Method**](tutorials/multivariate/elbow-method.qmd) -- Choosing the number of clusters by identifying a bend in the within-cluster sum of squares curve
+- [**The Gap Statistic**](tutorials/multivariate/gap-statistic.qmd) -- Choosing the number of clusters via comparison with a null (uniform) distribution
+- [**UMAP and t-SNE: Overview**](tutorials/multivariate/umap-tsne-overview.qmd) -- Modern non-linear dimensionality reduction for visualisation: UMAP, t-SNE, and their caveats
+- [**k-Means Clustering**](tutorials/multivariate/kmeans-clustering.qmd) -- Partitioning observations into k clusters by minimising within-cluster sum of squares
+
+## [Time-Series Analysis](tutorials/time-series/index.qmd)
+
+- [**ARIMA Models**](tutorials/time-series/arima-models.qmd) -- Autoregressive integrated moving average models for forecasting stationary and trending time series
+- [**Augmented Dickey-Fuller Test**](tutorials/time-series/adf-test.qmd) -- Testing for unit roots / non-stationarity against a stationary alternative
+- [**Bayesian Changepoint Detection**](tutorials/time-series/bcp-bayesian-changepoint.qmd) -- Posterior probability of a changepoint at each time, with online and offline variants
+- [**Changepoint Detection**](tutorials/time-series/changepoint-detection.qmd) -- Identifying abrupt shifts in mean, variance, or slope of a time series
+- [**Diebold-Mariano Test**](tutorials/time-series/diebold-mariano.qmd) -- Testing equality of forecast accuracy between two competing models
+- [**Differencing a Time Series**](tutorials/time-series/differencing.qmd) -- Removing trend via first differences; seasonal differencing for cyclic patterns
+- [**ETS Models**](tutorials/time-series/ets-models.qmd) -- State-space formulation of exponential smoothing: Error, Trend, Seasonal
+- [**Exponential Smoothing**](tutorials/time-series/exponential-smoothing.qmd) -- Recursive weighted-average smoothers: simple, Holt (trend), Holt-Winters (seasonal)
+- [**Forecast Accuracy Metrics**](tutorials/time-series/forecast-accuracy-metrics.qmd) -- MAE, RMSE, MAPE, MASE: scaled and scale-dependent measures of forecast error
+- [**GARCH Models**](tutorials/time-series/garch-volatility.qmd) -- Conditional heteroscedasticity models: volatility clustering in financial and other series
+- [**Granger Causality**](tutorials/time-series/granger-causality.qmd) -- Testing whether one time series improves prediction of another beyond its own history
+- [**Holt-Winters Method**](tutorials/time-series/holt-winters.qmd) -- Triple exponential smoothing with level, trend, and seasonal components
+- [**Interpreting ACF and PACF**](tutorials/time-series/acf-pacf-interpretation.qmd) -- Identifying AR and MA orders from autocorrelation and partial autocorrelation functions
+- [**KPSS Test**](tutorials/time-series/kpss-test.qmd) -- Testing for stationarity (null) against a unit-root alternative
+- [**Moving Averages**](tutorials/time-series/moving-averages.qmd) -- Smoothing a time series by averaging over a sliding window
+- [**Phillips-Perron Test**](tutorials/time-series/phillips-perron.qmd) -- Non-parametric adjustment of the Dickey-Fuller test for autocorrelation and heteroscedasticity
+- [**Rolling-Origin Cross-Validation**](tutorials/time-series/rolling-origin-cv.qmd) -- Time-series-aware cross-validation that respects temporal ordering
+- [**Seasonal ARIMA (SARIMA)**](tutorials/time-series/seasonal-arima.qmd) -- ARIMA extended with seasonal autoregressive, moving-average, and differencing terms
+- [**Seasonal Decomposition (STL)**](tutorials/time-series/seasonal-decomposition-stl.qmd) -- Loess-based seasonal-trend decomposition robust to outliers
+- [**Spectral Analysis**](tutorials/time-series/spectral-analysis.qmd) -- Decomposing a time series into frequency components via periodogram and spectral density
+- [**State-Space Models**](tutorials/time-series/state-space-models.qmd) -- Latent-state time-series framework unifying ARIMA, exponential smoothing, and many others
+- [**Stationarity Tests**](tutorials/time-series/stationarity-tests.qmd) -- Testing whether a time series has constant mean and variance over time
+- [**The Kalman Filter**](tutorials/time-series/kalman-filter.qmd) -- Recursive optimal estimation for linear-Gaussian state-space models
+- [**The Ljung-Box Test**](tutorials/time-series/ljung-box.qmd) -- Portmanteau test for remaining autocorrelation in residuals across multiple lags
+- [**Time Series: Introduction**](tutorials/time-series/time-series-introduction.qmd) -- Trend, seasonality, cyclicality, and noise: the four components of a time series
+- [**VECM and Cointegration**](tutorials/time-series/vecm-cointegration.qmd) -- Vector error correction models for cointegrated series; Johansen trace and eigenvalue tests
+- [**Vector Autoregression (VAR)**](tutorials/time-series/multivariate-var.qmd) -- Multivariate time series where each variable depends on lags of all variables
+- [**Wavelet Analysis**](tutorials/time-series/wavelet-analysis.qmd) -- Time-frequency decomposition capturing localised periodicities that change over time
+- [**White Noise Tests**](tutorials/time-series/white-noise-tests.qmd) -- Testing a residual series for independence and constant variance
+- [**X-13ARIMA-SEATS Decomposition**](tutorials/time-series/x13-decomposition.qmd) -- The seasonal adjustment tool used by US Census Bureau and statistical agencies
+
+## [Bayesian Statistics](tutorials/bayesian/index.qmd)
+
+- [**Bayes Factors**](tutorials/bayesian/bayes-factors.qmd) -- Ratio of marginal likelihoods under two models, the Bayesian analogue of a likelihood-ratio test
+- [**Bayes' Theorem for Parameters**](tutorials/bayesian/bayes-theorem-for-parameters.qmd) -- Using Bayes' theorem to update beliefs about parameters given data
+- [**Bayesian ANOVA**](tutorials/bayesian/bayesian-anova.qmd) -- Posterior inference on group differences with credible intervals and contrast comparisons
+- [**Bayesian Hierarchical Models**](tutorials/bayesian/bayesian-hierarchical-intro.qmd) -- Partial pooling through prior structure for grouped / multilevel data
+- [**Bayesian Hypothesis Testing**](tutorials/bayesian/bayes-hypothesis-testing.qmd) -- Region of practical equivalence (ROPE) and Bayes factors for Bayesian decisions
+- [**Bayesian Linear Regression**](tutorials/bayesian/linear-regression-bayes.qmd) -- Linear regression with priors on coefficients, fit via MCMC in brms or rstanarm
+- [**Bayesian Logistic Regression**](tutorials/bayesian/logistic-regression-bayes.qmd) -- Logistic regression with MCMC-based posterior for binary outcomes
+- [**Bayesian Mediation Analysis**](tutorials/bayesian/bayesian-mediation.qmd) -- Testing indirect effects with posterior samples
+- [**Bayesian Meta-Analysis**](tutorials/bayesian/bayesian-meta-analysis.qmd) -- Hierarchical meta-analysis with explicit prior on between-study heterogeneity
+- [**Bayesian Mixed Models**](tutorials/bayesian/bayesian-mixed-models.qmd) -- Multilevel regression with random effects, fit via Bayesian MCMC
+- [**Conjugate Priors**](tutorials/bayesian/conjugate-priors.qmd) -- When the prior and posterior share the same distributional family: the beta-binomial, normal-normal, and gamma-Poisson models
+- [**Credible Intervals**](tutorials/bayesian/credible-intervals.qmd) -- Bayesian analogue of confidence intervals: equal-tailed and highest-posterior-density regions
+- [**Divergences and Pairs Plots**](tutorials/bayesian/divergences-pairs-plots.qmd) -- Diagnosing HMC sampling problems via divergent transitions and pair-plot visualisations
+- [**Gibbs Sampling**](tutorials/bayesian/gibbs-sampling.qmd) -- MCMC via sequential sampling from conditional distributions
+- [**Hamiltonian Monte Carlo**](tutorials/bayesian/hamiltonian-monte-carlo.qmd) -- Gradient-based MCMC using Hamiltonian dynamics; NUTS variant in Stan
+- [**Highest Posterior Density Interval**](tutorials/bayesian/hpd-interval.qmd) -- Shortest interval containing a specified posterior probability mass
+- [**Informative Priors**](tutorials/bayesian/informative-priors.qmd) -- Priors derived from previous studies, expert elicitation, or mechanistic knowledge
+- [**Jeffreys' Prior**](tutorials/bayesian/jeffreys-prior.qmd) -- Invariant reference prior proportional to the square root of the Fisher information
+- [**Leave-One-Out Cross-Validation**](tutorials/bayesian/loo-cv.qmd) -- Efficient Bayesian LOO-CV via Pareto-smoothed importance sampling (PSIS-LOO)
+- [**Metropolis-Hastings**](tutorials/bayesian/metropolis-hastings.qmd) -- The foundational MCMC algorithm with proposal distribution and accept/reject rule
+- [**Posterior Mean and Variance**](tutorials/bayesian/posterior-mean-variance.qmd) -- Point estimates and uncertainty summaries from a posterior distribution
+- [**Posterior Predictive Checks**](tutorials/bayesian/posterior-predictive-checks.qmd) -- Comparing simulated data from the fitted model to observed data for model criticism
+- [**Prior Specification**](tutorials/bayesian/prior-specification.qmd) -- Choosing priors: informative, weakly informative, flat, and the risks of each
+- [**R-hat and ESS Diagnostics**](tutorials/bayesian/rhat-ess-diagnostics.qmd) -- Convergence (R-hat) and effective sample size (ESS) for MCMC quality control
+- [**Stan: Introduction**](tutorials/bayesian/stan-introduction.qmd) -- Writing probabilistic models in Stan's data-parameters-model blocks
+- [**The Beta-Binomial Model**](tutorials/bayesian/beta-binomial-model.qmd) -- Conjugate Bayesian inference for a binomial proportion with a Beta prior
+- [**The Gamma-Poisson Model**](tutorials/bayesian/gamma-poisson-model.qmd) -- Conjugate Bayesian inference for a Poisson rate with Gamma prior
+- [**The Normal-Normal Model**](tutorials/bayesian/normal-normal-model.qmd) -- Conjugate Bayesian inference for a normal mean with known variance
+- [**The Posterior Predictive Distribution**](tutorials/bayesian/posterior-predictive-distribution.qmd) -- Distribution of a new observation integrating over posterior uncertainty about parameters
+- [**The Savage-Dickey Density Ratio**](tutorials/bayesian/savage-dickey-ratio.qmd) -- Bayes factor for a point null via posterior/prior density ratio
+- [**WAIC**](tutorials/bayesian/waic.qmd) -- Widely applicable information criterion: Bayesian out-of-sample prediction score
+- [**Weakly Informative Priors**](tutorials/bayesian/weakly-informative-priors.qmd) -- Priors that regularise without imposing substantive constraints
+- [**brms Basics**](tutorials/bayesian/brms-basics.qmd) -- High-level R interface to Stan: formula syntax, families, prior specification
+- [**rstanarm**](tutorials/bayesian/rstanarm.qmd) -- Pre-compiled Stan models with a frequentist-like R interface
+- [**tidybayes Workflow**](tutorials/bayesian/tidybayes-workflow.qmd) -- Extract, manipulate, and visualise posterior draws in tidyverse style
+
+## [Survival Analysis](tutorials/survival-analysis/index.qmd)
+
+- [**Accelerated Failure Time Models**](tutorials/survival-analysis/accelerated-failure-time.qmd) -- Parametric survival regression on the log-time scale with acceleration-factor interpretation
+- [**Censoring Types**](tutorials/survival-analysis/censoring-types.qmd) -- Right, left, interval, and informative censoring in time-to-event data
+- [**Checking Cox Assumptions**](tutorials/survival-analysis/cox-assumptions-check.qmd) -- Diagnostics for proportional hazards, functional form, and influential observations
+- [**Competing Risks: Cumulative Incidence**](tutorials/survival-analysis/competing-risks-cif.qmd) -- Estimating the probability of each event type in the presence of competing risks
+- [**Concordance and the C-Index**](tutorials/survival-analysis/concordance-c-index.qmd) -- Discrimination ability of a survival model measured by concordance probability
+- [**Conditional Survival**](tutorials/survival-analysis/conditional-survival.qmd) -- Updating prognosis for survivors: P(T > t + s | T > s)
+- [**Cox Proportional Hazards Regression**](tutorials/survival-analysis/cox-proportional-hazards.qmd) -- Semi-parametric regression for survival data with arbitrary baseline hazard
+- [**Fine-Gray Subdistribution Hazards**](tutorials/survival-analysis/fine-gray-regression.qmd) -- Regression directly targeting cumulative incidence in competing-risks data
+- [**Frailty Models**](tutorials/survival-analysis/frailty-models.qmd) -- Random effects in survival: unobserved heterogeneity and clustered survival data
+- [**Hazard, Survival, and Cumulative Hazard**](tutorials/survival-analysis/hazard-survival-cumulative.qmd) -- The three equivalent representations of a time-to-event distribution
+- [**Interval-Censored Data**](tutorials/survival-analysis/interval-censored-data.qmd) -- Events known to occur within a time interval, not at an exact time
+- [**Joint Longitudinal-Survival Models**](tutorials/survival-analysis/joint-longitudinal-survival.qmd) -- Simultaneously modelling a longitudinal biomarker and time-to-event outcome
+- [**Kaplan-Meier Estimation**](tutorials/survival-analysis/kaplan-meier.qmd) -- Non-parametric estimation of the survival function from right-censored data, with confidence intervals and group comparisons
+- [**Landmark Analysis**](tutorials/survival-analysis/landmark-analysis.qmd) -- Conditioning on survival to a landmark time to analyse time-varying covariates
+- [**Left Truncation**](tutorials/survival-analysis/left-truncation.qmd) -- Delayed entry: subjects only enter the study after surviving to a certain age or time
+- [**Log-Rank Test: Details**](tutorials/survival-analysis/log-rank-test-details.qmd) -- Weighted and stratified log-rank test for comparing survival across groups
+- [**Multi-State Models**](tutorials/survival-analysis/multi-state-models.qmd) -- Modelling transitions between discrete states over time
+- [**Parametric Survival: Log-Normal**](tutorials/survival-analysis/parametric-survival-lognormal.qmd) -- Log-normal AFT model for non-monotone hazards
+- [**Parametric Survival: Weibull**](tutorials/survival-analysis/parametric-survival-weibull.qmd) -- Fitting Weibull regression in both PH and AFT parameterisations
+- [**Recurrent Events**](tutorials/survival-analysis/recurrent-events.qmd) -- Modelling repeated events per subject: Andersen-Gill, PWP, and frailty approaches
+- [**Restricted Mean Survival Time (RMST)**](tutorials/survival-analysis/restricted-mean-survival-time.qmd) -- Alternative summary robust to non-proportional hazards and censoring
+- [**Royston-Parmar Flexible Parametric Models**](tutorials/survival-analysis/flexible-parametric-royston-parmar.qmd) -- Splines on the log-cumulative-hazard for flexible baseline without leaving parametric modelling
+- [**Schoenfeld Residuals**](tutorials/survival-analysis/schoenfeld-residuals.qmd) -- Residuals that test the proportional-hazards assumption in Cox regression
+- [**Simulating Survival Data**](tutorials/survival-analysis/survival-simulation.qmd) -- Generating realistic censored time-to-event datasets for power analysis and method validation
+- [**Stratified Cox Models**](tutorials/survival-analysis/stratified-cox.qmd) -- Stratum-specific baseline hazards when proportional hazards fails across groups
+- [**The Brier Score for Survival**](tutorials/survival-analysis/brier-score-survival.qmd) -- Time-dependent prediction loss combining calibration and discrimination
+- [**The Nelson-Aalen Estimator**](tutorials/survival-analysis/nelson-aalen-estimator.qmd) -- Non-parametric estimator of the cumulative hazard under right-censoring
+- [**Time-Dependent ROC**](tutorials/survival-analysis/time-dependent-roc.qmd) -- ROC curves and AUC evaluated at specific follow-up times for survival predictions
+- [**Time-Varying Covariates**](tutorials/survival-analysis/time-varying-covariates.qmd) -- Covariates whose value changes during follow-up: counting-process data layout
+- [**Weighted Log-Rank Tests**](tutorials/survival-analysis/weighted-log-rank.qmd) -- Peto-Peto, Fleming-Harrington, and other weighted variants for non-proportional hazards
+
+## [Bioinformatics](tutorials/bioinformatics/index.qmd)
+
+- [**ATAC-Seq Analysis**](tutorials/bioinformatics/atac-seq-analysis.qmd) -- Chromatin accessibility profiling via ATAC-seq peak calling and differential analysis
+- [**Alignment with BWA and Bowtie**](tutorials/bioinformatics/bwa-bowtie-alignment.qmd) -- Fast read alignment to a reference genome via Burrows-Wheeler Transform indexing
+- [**Batch Correction with ComBat**](tutorials/bioinformatics/batch-correction-combat.qmd) -- Removing known batch effects from expression data using empirical-Bayes methods
+- [**Bulk RNA-seq Differential Expression with DESeq2**](tutorials/bioinformatics/bulk-rnaseq-differential-expression.qmd) -- A complete DESeq2 workflow: from count matrix through normalisation, dispersion estimation, Wald testing, and LFC shrinkage
+- [**Cell-Type Annotation**](tutorials/bioinformatics/scrna-cell-type-annotation.qmd) -- Assigning cell types to clusters using reference-based and manual methods
+- [**ChIP-Seq Analysis**](tutorials/bioinformatics/chip-seq-analysis.qmd) -- TF binding and histone modification profiling from ChIP-seq data
+- [**Copy Number Variation Analysis**](tutorials/bioinformatics/cnv-analysis.qmd) -- Inferring genomic copy-number changes from sequencing or array data
+- [**Counting Reads with featureCounts**](tutorials/bioinformatics/counting-reads-feature-counts.qmd) -- Assigning reads to genes or genomic features from a BAM file
+- [**DNA Methylation Analysis**](tutorials/bioinformatics/methylation-analysis.qmd) -- Differentially methylated positions and regions from bisulfite or array data
+- [**Differential Expression with edgeR**](tutorials/bioinformatics/edger-differential-expression.qmd) -- NB GLM-based differential expression with exactTest and quasi-likelihood F-test
+- [**Differential Expression with limma-voom**](tutorials/bioinformatics/limma-voom.qmd) -- Transforming counts for linear modelling with precision weights
+- [**Drug-Target Interaction Mining**](tutorials/bioinformatics/drug-target-interaction.qmd) -- Integrating bioassay databases for drug-target identification
+- [**FASTQ Quality Control**](tutorials/bioinformatics/fastq-quality-control.qmd) -- Inspecting sequencing read quality via Phred scores and FastQC-style reports
+- [**Finding Marker Genes**](tutorials/bioinformatics/scrna-marker-genes.qmd) -- Identifying cluster-specific genes for cell-type annotation
+- [**GSEA Preranked Analysis**](tutorials/bioinformatics/gsea-preranked.qmd) -- Enrichment of gene sets in a ranked list without a significance cutoff
+- [**GSVA Single-Sample Enrichment**](tutorials/bioinformatics/gsva-single-sample.qmd) -- Per-sample pathway scores for downstream sample-level analysis
+- [**Gene Annotation with biomaRt**](tutorials/bioinformatics/biomart-annotation.qmd) -- Programmatic queries against Ensembl for IDs, coordinates, and annotations
+- [**Gene Ontology Enrichment**](tutorials/bioinformatics/gene-ontology-enrichment.qmd) -- Over-representation of GO terms in a differentially-expressed gene set
+- [**Heatmaps for RNA-seq**](tutorials/bioinformatics/heatmaps-rnaseq.qmd) -- Visualising expression patterns across genes and samples with clustering
+- [**Integration with Harmony**](tutorials/bioinformatics/scrna-integration-harmony.qmd) -- Removing batch effects in scRNA-seq while preserving biological variation
+- [**KEGG Pathway Enrichment**](tutorials/bioinformatics/pathway-enrichment-kegg.qmd) -- Over-representation and visualisation against KEGG metabolic/signalling pathways
+- [**MA Plots**](tutorials/bioinformatics/ma-plots.qmd) -- Mean-average plots for differential expression diagnostics
+- [**Metagenomic Profiling**](tutorials/bioinformatics/metagenomic-profiling.qmd) -- Whole-metagenome taxonomic and functional profiling with MetaPhlAn and Kraken
+- [**Microbiome Analysis with DADA2**](tutorials/bioinformatics/microbiome-dada2.qmd) -- Amplicon sequence variant (ASV) inference from 16S/ITS amplicon data
+- [**Microbiome Diversity Metrics**](tutorials/bioinformatics/microbiome-diversity.qmd) -- Alpha and beta diversity measures for community comparison
+- [**Multi-Omics Integration**](tutorials/bioinformatics/multiomics-integration.qmd) -- Joint analysis of transcriptomic, genomic, and epigenomic layers
+- [**Multiple Sequence Alignment**](tutorials/bioinformatics/msa-biostrings.qmd) -- Aligning multiple sequences via ClustalW, Muscle, or T-Coffee from R
+- [**PCA of RNA-seq Samples**](tutorials/bioinformatics/pca-of-rnaseq.qmd) -- Using PCA on variance-stabilised counts to check sample structure and batches
+- [**Phylogenetic Trees with ape**](tutorials/bioinformatics/phylogenetic-trees-ape.qmd) -- Building and interpreting phylogenetic trees using distance-based and maximum-likelihood methods
+- [**Population Genetics Basics**](tutorials/bioinformatics/population-genetics-basics.qmd) -- Allele frequencies, Hardy-Weinberg equilibrium, and F-statistics
+- [**Protein Structure Prediction**](tutorials/bioinformatics/protein-structure-prediction.qmd) -- From sequence to 3-D structure with AlphaFold and RoseTTAFold
+- [**Proteomics with MSstats**](tutorials/bioinformatics/proteomics-msstats.qmd) -- Differential protein abundance from label-free or labelled mass-spectrometry data
+- [**Pseudoalignment with Salmon and Kallisto**](tutorials/bioinformatics/salmon-kallisto-pseudoalignment.qmd) -- Fast transcript quantification without full alignment
+- [**RNA-seq Normalisation**](tutorials/bioinformatics/rnaseq-normalization.qmd) -- TMM, RLE, upper-quartile, and CPM: making samples comparable
+- [**Read Trimming and Adapter Removal**](tutorials/bioinformatics/read-trimming-adapters.qmd) -- Removing low-quality bases and sequencing adapters before alignment
+- [**STAR: Spliced Alignment**](tutorials/bioinformatics/star-spliced-alignment.qmd) -- Fast splice-aware RNA-seq aligner capable of detecting novel junctions
+- [**Sequence Alignment: Overview**](tutorials/bioinformatics/sequence-alignment-overview.qmd) -- Global vs local alignment, scoring matrices, and the core algorithms
+- [**Single-Cell with Seurat**](tutorials/bioinformatics/single-cell-seurat-intro.qmd) -- End-to-end workflow for single-cell RNA-seq analysis in Seurat
+- [**Spatial Transcriptomics**](tutorials/bioinformatics/spatial-transcriptomics.qmd) -- Spatially resolved expression analysis with Visium and related platforms
+- [**Structural Variant Detection**](tutorials/bioinformatics/structural-variant-detection.qmd) -- Detecting deletions, duplications, inversions, and translocations from WGS
+- [**Surrogate Variable Analysis (SVA)**](tutorials/bioinformatics/surrogate-variable-analysis-sva.qmd) -- Detecting and adjusting for unknown sources of heterogeneity in expression data
+- [**Trajectory Analysis**](tutorials/bioinformatics/scrna-trajectory-analysis.qmd) -- Inferring developmental and activation trajectories from scRNA-seq
+- [**Transcript-to-Gene Summarisation**](tutorials/bioinformatics/tx-to-gene-summarization.qmd) -- Aggregating transcript-level estimates to gene level for standard differential expression
+- [**VCF Manipulation**](tutorials/bioinformatics/vcf-manipulation.qmd) -- Reading, filtering, and subsetting VCF files in R and on the command line
+- [**Variant Annotation with VEP**](tutorials/bioinformatics/annotation-variant-vep.qmd) -- Predicting functional consequences of variants using Ensembl VEP
+- [**Variant Calling with GATK**](tutorials/bioinformatics/variant-calling-gatk.qmd) -- Short-variant detection from aligned BAMs via the GATK Best Practices pipeline
+- [**Volcano Plots**](tutorials/bioinformatics/volcano-plots.qmd) -- Visualising significance versus effect size across genes
+- [**scRNA Clustering**](tutorials/bioinformatics/scrna-clustering.qmd) -- Graph-based clustering of cells via Louvain or Leiden community detection
+- [**scRNA Normalisation**](tutorials/bioinformatics/scrna-normalization.qmd) -- Library-size normalisation and variance stabilisation for scRNA-seq
+- [**scRNA QC and Filtering**](tutorials/bioinformatics/scrna-qc-filtering.qmd) -- Removing low-quality cells before downstream scRNA-seq analysis
+
+## [Machine Learning](tutorials/machine-learning/index.qmd)
+
+- [**A Complete mlr3 Workflow**](tutorials/machine-learning/mlr3-workflow.qmd) -- End-to-end modelling with mlr3: tasks, learners, resamplings, and tuning
+- [**A Complete tidymodels Workflow**](tutorials/machine-learning/tidymodels-workflow.qmd) -- End-to-end modelling in tidymodels: recipes, parsnip, workflows, and tuning
+- [**Anomaly Detection**](tutorials/machine-learning/anomaly-detection.qmd) -- Unsupervised methods for flagging rare, unusual observations
+- [**Bagging**](tutorials/machine-learning/bagging.qmd) -- Bootstrap aggregation: variance reduction through averaging
+- [**Calibration Plots**](tutorials/machine-learning/calibration-plots.qmd) -- Reliability diagrams: do predicted probabilities match observed frequencies?
+- [**CatBoost**](tutorials/machine-learning/catboost.qmd) -- Gradient boosting with native categorical handling and ordered target encoding
+- [**Class Weights for Imbalanced Data**](tutorials/machine-learning/class-weights-imbalanced.qmd) -- Loss-based weighting as an alternative to resampling
+- [**Convolutional Neural Networks: Introduction**](tutorials/machine-learning/cnn-introduction.qmd) -- Spatial filters and pooling for image and signal learning
+- [**Cross-Validation**](tutorials/machine-learning/cross-validation.qmd) -- Estimating out-of-sample predictive performance honestly with k-fold, repeated, nested, and leave-one-out cross-validation
+- [**DBSCAN as an ML Tool**](tutorials/machine-learning/clustering-dbscan-ml.qmd) -- Density-based clustering and outlier detection in one step
+- [**Decision Trees (CART)**](tutorials/machine-learning/decision-trees-cart.qmd) -- Recursive binary partitioning with Gini or variance splits
+- [**Dropout and Early Stopping**](tutorials/machine-learning/dropout-early-stopping.qmd) -- Two of the most effective neural-network regularisation techniques
+- [**Extremely Randomised Trees**](tutorials/machine-learning/extremely-randomized-trees.qmd) -- Extra Trees: random thresholds for faster and more regularised ensembles
+- [**Feature Engineering**](tutorials/machine-learning/feature-engineering.qmd) -- Transformations, interactions, and encodings to expose signal to models
+- [**Feature Selection**](tutorials/machine-learning/feature-selection.qmd) -- Filter, wrapper, and embedded strategies to reduce the feature space
+- [**Feedforward Networks in torch**](tutorials/machine-learning/feedforward-networks-torch.qmd) -- Building and training deep feedforward networks in R with the torch package
+- [**Gradient Boosting**](tutorials/machine-learning/gradient-boosting.qmd) -- Stagewise additive modelling with gradient descent on loss
+- [**Isolation Forest**](tutorials/machine-learning/isolation-forest.qmd) -- Tree-based unsupervised anomaly detection via path length
+- [**Isotonic Regression Calibration**](tutorials/machine-learning/isotonic-regression.qmd) -- Non-parametric monotone calibration via pool-adjacent-violators
+- [**Kernel SVMs**](tutorials/machine-learning/svm-kernel.qmd) -- Non-linear classification via the kernel trick with RBF and polynomial kernels
+- [**LIME Explanations**](tutorials/machine-learning/lime-explanations.qmd) -- Local Interpretable Model-Agnostic Explanations via surrogate linear models
+- [**LightGBM**](tutorials/machine-learning/lightgbm.qmd) -- Histogram-based leaf-wise gradient boosting for large datasets
+- [**Linear Discriminant as ML**](tutorials/machine-learning/linear-discriminant-ml.qmd) -- LDA as a classifier with shared Gaussian class-conditional covariance
+- [**Linear Support Vector Machines**](tutorials/machine-learning/svm-linear.qmd) -- Large-margin classifiers with soft-margin slack and the C parameter
+- [**Logistic Regression as ML**](tutorials/machine-learning/logistic-regression-ml.qmd) -- Linear classifier with log-loss and L1/L2 regularisation
+- [**Naive Bayes**](tutorials/machine-learning/naive-bayes.qmd) -- Probabilistic classification under conditional independence
+- [**Nested Cross-Validation**](tutorials/machine-learning/nested-cv.qmd) -- Honest model evaluation with separate loops for tuning and assessment
+- [**Neural Networks: Introduction**](tutorials/machine-learning/neural-networks-intro.qmd) -- From perceptrons to multi-layer networks: weights, layers, and activation functions
+- [**Partial Dependence Plots**](tutorials/machine-learning/partial-dependence-plots.qmd) -- Marginal effect of a feature on model predictions
+- [**Platt Scaling**](tutorials/machine-learning/platt-scaling.qmd) -- Logistic recalibration: mapping raw scores to calibrated probabilities
+- [**Preprocessing with recipes**](tutorials/machine-learning/recipes-preprocessing.qmd) -- Leak-free feature engineering in tidymodels with recipes
+- [**RNNs and LSTMs: Introduction**](tutorials/machine-learning/rnn-lstm-intro.qmd) -- Recurrent networks for sequence modelling with gated memory
+- [**Random Forests**](tutorials/machine-learning/random-forest.qmd) -- Bagging decision trees with random feature subsets for robust ensembles
+- [**Regularisation in ML**](tutorials/machine-learning/regularization-ridge-lasso-ml.qmd) -- L2 ridge, L1 lasso, and elastic net for controlling model complexity
+- [**SHAP Values**](tutorials/machine-learning/shap-values.qmd) -- Game-theoretic local feature attributions via Shapley values
+- [**SMOTE for Imbalanced Classes**](tutorials/machine-learning/smote-imbalanced.qmd) -- Synthetic Minority Oversampling Technique for class-imbalanced classification
+- [**Stacking Ensembles**](tutorials/machine-learning/stacking-ensembles.qmd) -- Combining heterogeneous base models via a meta-learner
+- [**Supervised Learning: Overview**](tutorials/machine-learning/supervised-learning-overview.qmd) -- Framework, loss functions, generalisation, and the bias-variance decomposition
+- [**The Bias-Variance Tradeoff**](tutorials/machine-learning/bias-variance-tradeoff.qmd) -- Decomposition of prediction error into structural and sampling components
+- [**Train-Test Splits**](tutorials/machine-learning/train-test-split.qmd) -- Holdout evaluation, stratification, and honest generalisation estimates
+- [**Transformers: Overview**](tutorials/machine-learning/transformer-overview.qmd) -- Self-attention architectures underlying modern NLP and beyond
+- [**Variable Importance**](tutorials/machine-learning/variable-importance.qmd) -- Impurity-based and permutation importance for tree ensembles and beyond
+- [**XGBoost**](tutorials/machine-learning/xgboost.qmd) -- Regularised gradient boosting with sparsity awareness and early stopping
+- [**k-Means as an ML Tool**](tutorials/machine-learning/clustering-kmeans-ml.qmd) -- Using k-means for feature engineering, quantisation, and pre-segmentation
+- [**k-Nearest Neighbours Classification**](tutorials/machine-learning/knn-classification.qmd) -- Instance-based learning with majority voting among nearest neighbours
+- [**k-Nearest Neighbours Regression**](tutorials/machine-learning/knn-regression.qmd) -- Local averaging for non-parametric regression
+
+## [Clinical Biostatistics](tutorials/clinical-biostatistics/index.qmd)
+
+- [**Adaptive Trial Designs**](tutorials/clinical-biostatistics/adaptive-design.qmd) -- Pre-specified modifications to trial conduct based on interim data
+- [**Alpha-Spending Functions**](tutorials/clinical-biostatistics/alpha-spending.qmd) -- Flexible interim alpha allocation via Lan-DeMets spending functions
+- [**Baseline Adjustment with ANCOVA**](tutorials/clinical-biostatistics/baseline-adjustment-ancova.qmd) -- Adjusting for baseline covariates to improve precision and address regression to the mean
+- [**Bland-Altman Limits of Agreement**](tutorials/clinical-biostatistics/bland-altman-analysis.qmd) -- Graphical comparison of two measurement methods on the same subjects
+- [**Blinding Procedures**](tutorials/clinical-biostatistics/blinding-procedures.qmd) -- Masking participants, investigators, assessors, and analysts
+- [**Block Randomisation**](tutorials/clinical-biostatistics/block-randomization.qmd) -- Random permutations within fixed blocks for balanced allocation
+- [**Clinical Equivalence Trials**](tutorials/clinical-biostatistics/equivalence-clinical.qmd) -- Two one-sided tests (TOST) for bioequivalence and clinical equivalence
+- [**Cluster-Randomised Trials**](tutorials/clinical-biostatistics/cluster-rct.qmd) -- Randomisation of clusters (clinics, schools) rather than individuals
+- [**Cohen's Kappa**](tutorials/clinical-biostatistics/cohens-kappa.qmd) -- Chance-corrected agreement between two raters on categorical data
+- [**Conditional Power**](tutorials/clinical-biostatistics/conditional-power.qmd) -- Probability of eventual trial success given interim data
+- [**Crossover RCT Design**](tutorials/clinical-biostatistics/rct-design-crossover.qmd) -- Within-subject comparison across treatment periods with washout
+- [**Cutpoint Selection**](tutorials/clinical-biostatistics/cutpoint-selection.qmd) -- Youden's J, cost-based, and closest-to-(0,1) criteria for diagnostic thresholds
+- [**Diagnostic Test Accuracy**](tutorials/clinical-biostatistics/diagnostic-accuracy.qmd) -- Sensitivity, specificity, predictive values, likelihood ratios, and ROC analysis for binary diagnostic tests
+- [**Factorial Trials**](tutorials/clinical-biostatistics/factorial-trial.qmd) -- Simultaneously evaluating multiple interventions via a factorial design
+- [**ITT vs Per-Protocol Analysis**](tutorials/clinical-biostatistics/itt-vs-pp-analysis.qmd) -- Primary analyses under the intent-to-treat and per-protocol principles
+- [**Interim Analyses and Group Sequential Designs**](tutorials/clinical-biostatistics/interim-analysis-group-sequential.qmd) -- Pre-planned interim looks with alpha-spending and early-stopping boundaries
+- [**Intraclass Correlation Coefficient (ICC)**](tutorials/clinical-biostatistics/icc-continuous-agreement.qmd) -- Absolute agreement and consistency for continuous inter-rater reliability
+- [**Likelihood Ratios**](tutorials/clinical-biostatistics/likelihood-ratios.qmd) -- LR+ and LR- as prevalence-independent summaries of diagnostic performance
+- [**Minimisation Algorithm**](tutorials/clinical-biostatistics/minimization-algorithm.qmd) -- Covariate-adaptive allocation that prospectively minimises imbalance
+- [**Missing Data in RCTs**](tutorials/clinical-biostatistics/missing-data-rct.qmd) -- MCAR, MAR, MNAR and their implications for primary analysis
+- [**Multiple Imputation**](tutorials/clinical-biostatistics/multiple-imputation.qmd) -- Imputing multiple plausible values and combining via Rubin's rules
+- [**Non-Inferiority Margin Selection**](tutorials/clinical-biostatistics/non-inferiority-margin.qmd) -- Defining the clinically acceptable maximum inferiority
+- [**O'Brien-Fleming Boundary**](tutorials/clinical-biostatistics/obrien-fleming-boundary.qmd) -- Conservative early stopping boundary in group-sequential trials
+- [**Parallel-Group RCT Design**](tutorials/clinical-biostatistics/rct-design-parallel.qmd) -- The two-arm randomised controlled trial: structure, analysis, and reporting
+- [**Pocock Boundary**](tutorials/clinical-biostatistics/pocock-boundary.qmd) -- Constant nominal alpha across interim analyses
+- [**Predictive Values and Prevalence**](tutorials/clinical-biostatistics/predictive-values-prevalence.qmd) -- How disease prevalence determines PPV and NPV via Bayes' theorem
+- [**ROC Analysis**](tutorials/clinical-biostatistics/roc-analysis.qmd) -- Receiver Operating Characteristic curves and area under the curve
+- [**Randomisation Methods**](tutorials/clinical-biostatistics/randomization-methods.qmd) -- Simple, block, and stratified randomisation for RCT allocation
+- [**Reliability and Cronbach's Alpha**](tutorials/clinical-biostatistics/reliability-cronbach-alpha.qmd) -- Internal consistency of multi-item scales
+- [**Sample Size Re-Estimation**](tutorials/clinical-biostatistics/sample-size-reestimation.qmd) -- Updating trial sample size mid-study using blinded or unblinded nuisance parameter estimates
+- [**Sensitivity Analyses in Clinical Trials**](tutorials/clinical-biostatistics/sensitivity-analysis-clinical.qmd) -- Exploring robustness of conclusions to assumptions about missing data and model choice
+- [**Stepped-Wedge Trial**](tutorials/clinical-biostatistics/stepped-wedge-trial.qmd) -- Sequential rollout cluster design with all clusters eventually treated
+- [**Stratified Randomisation**](tutorials/clinical-biostatistics/stratified-randomization.qmd) -- Separate randomisation lists within levels of baseline covariates
+- [**Subgroup Analyses**](tutorials/clinical-biostatistics/subgroup-analysis.qmd) -- Pre-specified subgroup effects and treatment-by-subgroup interaction tests
+- [**Subgroup Forest Plots**](tutorials/clinical-biostatistics/forest-plot-subgroup.qmd) -- Visual summary of subgroup-specific effects and interaction tests
+- [**Weighted Kappa**](tutorials/clinical-biostatistics/weighted-kappa.qmd) -- Ordinal inter-rater agreement with linear or quadratic weights
+
+## [Meta-Analysis](tutorials/meta-analysis/index.qmd)
+
+- [**Bivariate SROC Curves**](tutorials/meta-analysis/bivariate-sroc.qmd) -- Hierarchical summary ROC modelling for diagnostic-accuracy meta-analysis
+- [**Converting Between Effect Sizes**](tutorials/meta-analysis/effect-size-conversion.qmd) -- Moving between standardised mean differences, correlations, and odds ratios
+- [**Cumulative Meta-Analysis**](tutorials/meta-analysis/cumulative-meta-analysis.qmd) -- Sequentially pooling studies in the order they were published
+- [**Egger's Test for Funnel Asymmetry**](tutorials/meta-analysis/egger-test.qmd) -- Formal regression test for small-study effects and publication bias
+- [**Fixed-Effect vs. Random-Effects Meta-Analysis**](tutorials/meta-analysis/fixed-vs-random-effects.qmd) -- Two ways to pool study-level effect sizes, and the consequences of each for inference and interpretation
+- [**Forest Plots in Meta-Analysis**](tutorials/meta-analysis/forest-plot-meta.qmd) -- Standard visualisation of per-study effects, weights, and the pooled estimate
+- [**Funnel Plots**](tutorials/meta-analysis/funnel-plot-meta.qmd) -- Visual inspection for small-study effects and publication bias
+- [**Individual Participant Data Meta-Analysis**](tutorials/meta-analysis/ipd-meta-analysis.qmd) -- Two-stage vs one-stage analysis of raw data pooled across studies
+- [**Leave-One-Out Meta-Analysis**](tutorials/meta-analysis/leave-one-out.qmd) -- Sensitivity of the pooled estimate to each individual study
+- [**Meta-Analysis of Diagnostic Accuracy**](tutorials/meta-analysis/diagnostic-test-meta.qmd) -- Bivariate and HSROC models for pooling diagnostic test performance
+- [**Meta-Regression**](tutorials/meta-analysis/meta-regression.qmd) -- Explaining between-study heterogeneity with study-level covariates
+- [**NMA Consistency and Inconsistency**](tutorials/meta-analysis/nma-consistency.qmd) -- Loop-specific and global tests for direct-indirect evidence agreement
+- [**NMA League Tables**](tutorials/meta-analysis/nma-league-tables.qmd) -- Pairwise treatment contrasts in a compact triangular grid
+- [**Network Meta-Analysis: Introduction**](tutorials/meta-analysis/network-meta-analysis-intro.qmd) -- Combining direct and indirect comparisons across multiple treatments
+- [**Pooling Correlation Coefficients**](tutorials/meta-analysis/correlation-pooling.qmd) -- Fisher z transformation for meta-analysis of correlations
+- [**Pooling Log-Odds Ratios**](tutorials/meta-analysis/log-odds-ratio-pooling.qmd) -- Fixed and random-effects meta-analysis of binary outcomes on the log scale
+- [**Pooling Risk Ratios**](tutorials/meta-analysis/risk-ratio-pooling.qmd) -- Meta-analysis of binary outcomes on the risk-ratio scale
+- [**Prediction Intervals in Meta-Analysis**](tutorials/meta-analysis/prediction-interval-meta.qmd) -- The plausible range of a future study's true effect under random-effects
+- [**Quantifying Heterogeneity: Q and I^2**](tutorials/meta-analysis/heterogeneity-q-i2.qmd) -- Cochran's Q, I-squared, and their interpretation in meta-analysis
+- [**SUCRA Rankings**](tutorials/meta-analysis/nma-sucra.qmd) -- Surface Under the Cumulative Ranking curve for treatment comparisons
+- [**Selection Models for Publication Bias**](tutorials/meta-analysis/selection-models-bias.qmd) -- Weighted-distribution models for adjusting meta-analysis for selection
+- [**Standardised Mean Difference: Hedges' g**](tutorials/meta-analysis/smd-hedges-g.qmd) -- Small-sample-corrected standardised effect size for continuous outcomes
+- [**Subgroup Meta-Analysis**](tutorials/meta-analysis/subgroup-meta-analysis.qmd) -- Pooling within strata and testing for between-subgroup heterogeneity
+- [**Tau-Squared Estimation**](tutorials/meta-analysis/tau-squared-estimation.qmd) -- Estimators of between-study variance: DL, REML, PM, SJ, EB
+- [**Trim-and-Fill**](tutorials/meta-analysis/trim-and-fill.qmd) -- Adjusting the pooled estimate for apparent funnel asymmetry
+
+## [Experimental Design](tutorials/experimental-design/index.qmd)
+
+- [**2^k Factorial Designs**](tutorials/experimental-design/factorial-2k.qmd) -- Full factorial experiments with k two-level factors
+- [**3^k Factorial Designs**](tutorials/experimental-design/factorial-3k.qmd) -- Full factorial experiments with k three-level factors
+- [**Balanced Incomplete Block Designs**](tutorials/experimental-design/balanced-incomplete-block.qmd) -- BIBDs when block size is smaller than treatment count
+- [**Box-Behnken Designs**](tutorials/experimental-design/box-behnken-design.qmd) -- Three-level rotatable designs for RSM without factorial-corner runs
+- [**Central Composite Designs**](tutorials/experimental-design/central-composite-design.qmd) -- Response-surface designs combining factorial, axial, and centre points
+- [**Completely Randomised Design**](tutorials/experimental-design/completely-randomized-design.qmd) -- The simplest experimental design: random assignment of treatments to units
+- [**Constrained Mixture Designs**](tutorials/experimental-design/constrained-mixture.qmd) -- Mixture experiments with lower and upper bounds on components
+- [**Crossover Designs**](tutorials/experimental-design/crossover-designs.qmd) -- Within-subject comparison of treatments with washout and carryover consideration
+- [**Desirability Functions**](tutorials/experimental-design/desirability-function.qmd) -- Multi-response optimisation via geometric-mean desirability scores
+- [**Fractional Factorial Designs**](tutorials/experimental-design/fractional-factorial-design.qmd) -- A fraction of a 2^k design: economical screening with acceptable confounding
+- [**Graeco-Latin Square Designs**](tutorials/experimental-design/graeco-latin-square.qmd) -- Blocking on three nuisance factors by superimposing two orthogonal Latin squares
+- [**Latin Square Designs**](tutorials/experimental-design/latin-square.qmd) -- Blocking on two nuisance factors via a Latin-square arrangement
+- [**Method of Steepest Ascent**](tutorials/experimental-design/steepest-ascent.qmd) -- Moving along the gradient of a first-order response surface toward the optimum
+- [**Optimal Designs: D, A, I**](tutorials/experimental-design/optimal-design-d-a-i.qmd) -- D-, A-, I-, and G-optimality criteria for computer-generated designs
+- [**Orthogonal Arrays**](tutorials/experimental-design/orthogonal-arrays.qmd) -- Tabulated fractional-factorial arrays L4, L8, L9, L16, L27
+- [**Plackett-Burman Designs**](tutorials/experimental-design/plackett-burman.qmd) -- Highly efficient two-level screening designs for many factors
+- [**Power Analysis for DOE**](tutorials/experimental-design/power-in-doe.qmd) -- Calculating power for detecting main effects and interactions in designed experiments
+- [**Principles of Blocking**](tutorials/experimental-design/blocking-principles.qmd) -- Local control of nuisance variability for precision gains
+- [**Randomisation in Design**](tutorials/experimental-design/randomization-in-design.qmd) -- Purpose, procedures, and role of randomisation in experimental design
+- [**Randomised Complete Block Design**](tutorials/experimental-design/randomised-complete-block.qmd) -- Blocking to control known nuisance variation, with construction, analysis, and interpretation in R
+- [**Repeated-Measures Designs**](tutorials/experimental-design/repeated-measures-design.qmd) -- Designs with a within-subject factor: multiple measurements per unit
+- [**Resolution and Aliasing**](tutorials/experimental-design/resolution-aliasing.qmd) -- Understanding the confounding structure of fractional factorial designs
+- [**Response Surface Methodology**](tutorials/experimental-design/response-surface-methodology.qmd) -- Optimising processes via second-order polynomial response surfaces
+- [**Robust Parameter Design**](tutorials/experimental-design/robust-parameter-design.qmd) -- Choosing controllable factor levels to minimise response variance across noise factors
+- [**Signal-to-Noise Ratios**](tutorials/experimental-design/signal-to-noise-ratio.qmd) -- Taguchi's SNR metrics combining mean and variance
+- [**Simplex Centroid Designs**](tutorials/experimental-design/mixture-centroid.qmd) -- Mixture designs including centroids of all sub-simplices
+- [**Simplex Lattice Mixture Designs**](tutorials/experimental-design/mixture-designs-simplex.qmd) -- Experimental designs for component-proportion factors that sum to 1
+- [**Split-Plot Designs**](tutorials/experimental-design/split-plot-design.qmd) -- Designs with hard-to-change and easy-to-change factors
+- [**Strip-Plot Designs**](tutorials/experimental-design/strip-plot-design.qmd) -- Designs with two hard-to-change factors applied to perpendicular strips
+- [**Taguchi Methods**](tutorials/experimental-design/taguchi-methods.qmd) -- Orthogonal-array designs and signal-to-noise optimisation for quality engineering
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 0ef2d023a83e474c984ed0367102819c -->
+<img src="https://vg09.met.vgwort.de/na/0ef2d023a83e474c984ed0367102819c"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

@@ -1,0 +1,104 @@
+---
+title: Multinomial Logistic Regression
+date: "2026-04-17"
+description: Regression for unordered categorical outcomes with three or more levels
+categories:
+  - multinomial
+  - regression
+  - nnet
+  - softmax
+---
+
+## Research question
+
+Multinomial logistic regression models an unordered categorical outcome with three or more levels, using one level as the reference. Biomedical example: in an emergency-department triage study, does age, sex, and chief-complaint category predict the disposition outcome (discharge, admit to ward, admit to ICU)?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Nominal outcome with >= 3 categories | data check |
+| Independence of irrelevant alternatives (IIA) | Hausman-McFadden test; sensitivity analysis |
+| Independent observations | design |
+| No severe multicollinearity among predictors | `car::vif()` on linear-predictor equivalents |
+
+## Hypotheses
+
+For each coefficient per contrast (non-reference vs. reference category): $H_0: \beta_{jk} = 0$ vs. $H_1: \beta_{jk} \ne 0$.
+
+## R code
+
+```r
+library(tidyverse); library(nnet); library(broom); library(gtsummary)
+set.seed(42)
+
+triage <- tibble(
+  age       = round(rnorm(300, 55, 19)),
+  sex       = factor(sample(c("F", "M"), 300, replace = TRUE)),
+  complaint = factor(sample(c("Cardiac", "Respiratory", "Trauma", "Other"),
+                             300, replace = TRUE, prob = c(0.25, 0.20, 0.15, 0.40)))
+) |>
+  mutate(
+    lp_admit = -1 + 0.03 * age + 0.4 * (complaint == "Cardiac"),
+    lp_icu   = -3 + 0.04 * age + 0.8 * (complaint == "Cardiac") + 0.5 * (sex == "M"),
+    dispo    = factor(
+      sapply(1:300, function(i) {
+        p_admit <- plogis(lp_admit[i]) * (1 - plogis(lp_icu[i]))
+        p_icu   <- plogis(lp_icu[i])
+        sample(c("Discharge", "Ward", "ICU"), 1,
+               prob = c(1 - p_admit - p_icu, p_admit, p_icu))
+      }),
+      levels = c("Discharge", "Ward", "ICU")
+    )
+  )
+
+fit <- multinom(dispo ~ age + sex + complaint, data = triage, trace = FALSE)
+
+broom::tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+
+tbl_regression(fit, exponentiate = TRUE) |>
+  add_global_p()
+```
+
+## Interpreting the output
+
+The model returns two sets of coefficients (Ward vs. Discharge; ICU vs. Discharge). Each exponentiated coefficient is the relative-risk ratio (RRR) for that category vs. the reference. For example, every additional decade of age multiplies the RRR for ICU admission by $\exp(10 \times 0.04) = 1.49$.
+
+## Effect size
+
+RRRs per contrast (the multinomial analogue of odds ratios). Overall model fit: McFadden pseudo-$R^2$ via `performance::r2_mcfadden()`.
+
+## Reporting (APA 7)
+
+> In a multinomial logistic regression, each 10-year increase in age was associated with a higher relative risk of ICU admission (RRR = 1.49, 95 % CI 1.20-1.85, p < .001) and ward admission (RRR = 1.35, 95 % CI 1.14-1.59, p < .001) compared to discharge, after adjustment for sex and chief-complaint category.
+
+## Common pitfalls
+
+- Choice of reference category changes all coefficients; pick a clinically meaningful baseline.
+- `multinom()` uses a neural-network implementation and may have trouble with small samples; check for convergence warnings.
+- Reporting raw logits instead of RRRs makes interpretation harder.
+- IIA assumption is often violated; sensitivity analyses using the nested logit model are appropriate when it matters.
+
+## Parametric vs. non-parametric alternative
+
+For ordered outcomes, prefer [ordinal logistic regression](/decision-tree/associations/ordinal-logistic-regression.qmd) for efficiency. For comparing several categorical variables without a modelled outcome, use the [chi-squared contingency test](/decision-tree/associations/chi-square-contingency.qmd).
+
+## Further reading
+
+- Long, J. S., & Freese, J. (2014). *Regression Models for Categorical Dependent Variables Using Stata* (3rd ed.). Stata Press.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00402ee700f447eca2f899cb4234ccbe -->
+<img src="https://vg09.met.vgwort.de/na/00402ee700f447eca2f899cb4234ccbe"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

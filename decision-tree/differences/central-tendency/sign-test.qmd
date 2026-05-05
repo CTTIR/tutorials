@@ -1,0 +1,101 @@
+---
+title: Sign Test
+date: "2026-04-17"
+description: Paired comparison that uses only the direction of each difference -- the most assumption-light option
+categories:
+  - sign-test
+  - paired
+  - non-parametric
+  - binomial
+---
+
+## Research question
+
+The sign test is the simplest non-parametric test for paired data. It ignores the magnitude of each paired difference and uses only its sign. It is useful when differences are ordinal and symmetry cannot be assumed, or when the measurement scale allows only direction comparisons (a patient feels better, same, or worse). Biomedical examples: (1) do patients report improvement, no change, or deterioration after switching from statin A to statin B in a crossover design?; (2) in matched case-control pairs, does the case sibling have higher systolic BP than the control sibling?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Paired observations per unit | design |
+| Differences measurable at least as "greater / equal / less" | scale level |
+| No symmetry assumption required | -- |
+
+The sign test requires fewer assumptions than any other paired test but sacrifices power.
+
+## Hypotheses
+
+Let $p_+$ be the proportion of pairs with positive difference. The test asks
+
+$$H_0: p_+ = 0.5 \qquad H_1: p_+ \ne 0.5.$$
+
+Under $H_0$, the number of positive differences follows a binomial distribution with probability 0.5.
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(BSDA)
+set.seed(42)
+
+# 24 matched sibling pairs; higher SBP = 1, lower = -1, equal = 0
+pairs <- tibble(
+  pair_id  = 1:24,
+  case_sbp = round(rnorm(24, 136, 10)),
+  ctrl_sbp = round(rnorm(24, 128, 9))
+) |>
+  mutate(sign = sign(case_sbp - ctrl_sbp))
+
+table(pairs$sign)
+
+# Sign test via BSDA::SIGN.test
+SIGN.test(pairs$case_sbp, pairs$ctrl_sbp)
+
+# Equivalent binomial test on non-zero differences
+nonzero <- pairs |> filter(sign != 0)
+pos <- sum(nonzero$sign == 1)
+binom.test(pos, nrow(nonzero), p = 0.5)
+```
+
+## Interpreting the output
+
+The `SIGN.test()` output reports the number of positive, negative, and tied pairs, a point estimate of the median difference, and an exact binomial p-value. With 18 positive out of 23 non-zero pairs, the exact binomial $p = .011$ rejects the null of equal proportions.
+
+## Effect size
+
+The most interpretable effect size is the proportion of positive differences (excluding ties) with a binomial confidence interval. Values far from 0.5 indicate a large shift.
+
+## Reporting (APA 7)
+
+> In 23 matched pairs with a non-zero difference, the case sibling had higher systolic blood pressure than the control sibling in 18 pairs (78 %, 95 % CI 56-93 %). The sign test confirmed this imbalance (exact binomial p = .011).
+
+## Common pitfalls
+
+- Ties: R's `SIGN.test()` excludes them; the binomial denominator must reflect this.
+- The sign test is lower-powered than the Wilcoxon signed-rank when the differences are symmetric; use Wilcoxon when symmetry is plausible.
+- Interpreting the point estimate of the median difference as "the average change" misrepresents the test.
+
+## Parametric vs. non-parametric alternative
+
+- When differences are symmetric, the [Wilcoxon signed-rank test](/decision-tree/differences/central-tendency/wilcoxon-signed-rank.qmd) is more powerful.
+- When differences are approximately normal, the [paired t-test](/decision-tree/differences/central-tendency/paired-t-test.qmd) is preferable.
+
+## Further reading
+
+- [Paired t-test](/decision-tree/differences/central-tendency/paired-t-test.qmd)
+- Conover, W. J. (1999). *Practical Nonparametric Statistics* (3rd ed.). Wiley.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 0095b57034994d5d85135ce725f2df49 -->
+<img src="https://vg09.met.vgwort.de/na/0095b57034994d5d85135ce725f2df49"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

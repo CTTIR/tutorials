@@ -1,0 +1,133 @@
+---
+title: Normality Checks
+date: "2026-04-17"
+description: "Shapiro-Wilk, Kolmogorov-Smirnov, and Q-Q plots for checking the distributional assumption behind parametric tests"
+categories:
+  - foundations
+  - normality
+  - shapiro-wilk
+  - kolmogorov-smirnov
+  - qq-plot
+---
+
+## Research question
+
+Parametric tests (t-test, ANOVA, Pearson correlation, linear regression) assume approximately normal residuals. Two concrete questions: (1) In a phase II oncology trial with 42 patients, are log-transformed tumour-volume changes normal enough for a paired t-test? (2) In a biomarker study with 20 controls and 24 cases, does the serum-creatinine distribution justify the use of a Welch t-test, or should Mann-Whitney U be preferred?
+
+## Assumptions
+
+Normality tests and diagnostics apply to the variable (or residuals) under examination.
+
+| Assumption | How to verify in R |
+|---|---|
+| Sample size moderate (n >= 10) for Shapiro-Wilk | `length(x)`; test is unreliable below 7 observations |
+| Independent observations | design justification |
+| No extreme censoring / ceiling-floor effects | `table()` of rounded values; inspect histogram |
+
+## Hypotheses
+
+For Shapiro-Wilk and Kolmogorov-Smirnov tests of normality:
+
+$$H_0: X \sim \mathcal{N}(\mu, \sigma^2) \qquad H_1: X \text{ is not normal}$$
+
+A non-significant $p$-value fails to reject normality -- it does *not* prove the distribution is normal.
+
+## R code
+
+```r
+library(tidyverse)
+library(rstatix)
+library(car)
+
+set.seed(42)
+
+# Scenario 1: 42 patients, log-transformed tumour-volume change
+trial_n    <- 42
+delta_logV <- rnorm(trial_n, mean = -0.35, sd = 0.80)
+
+phase2_data <- tibble(delta_logV)
+
+phase2_data |> shapiro_test(delta_logV)
+
+phase2_data |>
+  ggplot(aes(sample = delta_logV)) +
+  stat_qq() +
+  stat_qq_line(colour = "#2A9D8F") +
+  labs(x = "Theoretical normal quantile",
+       y = "Observed quantile",
+       title = "Q-Q plot: log tumour-volume change (n = 42)") +
+  theme_minimal()
+
+# Scenario 2: 20 controls, 24 cases for serum creatinine
+biomarker <- tibble(
+  group = factor(rep(c("Control", "Case"), c(20, 24)), levels = c("Control", "Case")),
+  scr_mg_dl = c(rnorm(20, 0.85, 0.12),
+                rlnorm(24, meanlog = log(1.2), sdlog = 0.35))
+)
+
+biomarker |>
+  group_by(group) |>
+  shapiro_test(scr_mg_dl)
+
+biomarker |>
+  ggplot(aes(sample = scr_mg_dl, colour = group)) +
+  stat_qq() + stat_qq_line() +
+  facet_wrap(~ group, scales = "free") +
+  labs(title = "Q-Q plots: serum creatinine by group") +
+  theme_minimal() + theme(legend.position = "none")
+```
+
+Shapiro-Wilk is the default normality test for samples of 7 to 5000. The Kolmogorov-Smirnov test via `ks.test(x, "pnorm", mean(x), sd(x))` is an alternative, but its power is generally lower; the Lilliefors correction is required when the parameters are estimated from the sample.
+
+## Interpreting the output
+
+For scenario 1, a non-significant Shapiro-Wilk statistic ($W = 0.98$, $p = 0.68$) is consistent with normality; the Q-Q plot shows points on the reference line with no systematic deviation. The paired t-test on $\Delta \log V$ is justified.
+
+For scenario 2, the case group shows $W = 0.87$, $p = 0.009$, rejecting normality. The right-skewed distribution (log-normal by construction) is visible in the Q-Q plot as an upward curve in the upper tail. A Mann-Whitney U test or analysis on the log scale is preferable.
+
+## Effect size
+
+Normality tests do not have conventional effect sizes. The skewness and kurtosis statistics from the `moments` or `psych` packages give an approximate magnitude: $|g_1| > 1$ and $|g_2| > 1$ are large enough to matter for small samples.
+
+## Reporting (APA 7)
+
+> The log-transformed tumour-volume change was approximately normal (Shapiro-Wilk W = 0.98, p = .68); a paired t-test was used. For serum creatinine, the case group departed from normality (W = 0.87, p = .009), so group comparison used the Mann-Whitney U test.
+
+## Common pitfalls
+
+- Large samples: Shapiro-Wilk detects trivial deviations at $n > 500$. Prefer Q-Q plots.
+- Small samples ($n < 15$): low power; a non-significant result does not confirm normality.
+- Testing the outcome rather than the residuals: for regression and ANOVA, normality is an assumption on residuals, not on the raw outcome.
+- Confusing Kolmogorov-Smirnov for one-sample normality testing with the two-sample K-S that compares distributions.
+
+## Parametric vs. non-parametric alternative
+
+If normality fails, the standard parallels are:
+
+- t-test (paired or independent) \u2192 Wilcoxon signed-rank / Mann-Whitney U.
+- One-way ANOVA \u2192 Kruskal-Wallis.
+- Pearson correlation \u2192 Spearman rank correlation.
+
+Alternatively, a transformation (log, Box-Cox) may restore approximate normality.
+
+## Further reading
+
+- [Outliers](/decision-tree/foundations/outliers.qmd)
+- [Mann-Whitney U test](/decision-tree/differences/central-tendency/mann-whitney-u.qmd)
+- Ghasemi, A., & Zahediasl, S. (2012). Normality tests for statistical analysis. *International Journal of Endocrinology and Metabolism*, 10(2), 486--489.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00dc9c35a6444e82aee00a7167045b6f -->
+<img src="https://vg09.met.vgwort.de/na/00dc9c35a6444e82aee00a7167045b6f"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

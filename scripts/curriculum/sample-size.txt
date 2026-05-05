@@ -1,0 +1,29 @@
+power-analysis-introduction|Power Analysis: Introduction|four quantities; trade-offs
+power-one-sample-t|Power for One-Sample t-Test|Cohen's d; non-central t
+power-paired-t|Power for Paired t-Test|correlation benefit
+power-anova|Power for One-Way ANOVA|Cohen's f; between/within variance
+power-repeated-measures|Power for Repeated-Measures ANOVA|within-subject correlation
+power-one-proportion|Power for One-Proportion Test|normal approximation; exact
+power-two-proportions|Power for Two-Proportion Test|effect size h; unequal n
+power-chi-squared|Power for Chi-Squared Tests|effect size w; df
+power-correlation|Power for Correlation Tests|Fisher z transform
+power-linear-regression|Power for Linear Regression|R^2 gain; f^2 effect size
+power-logistic-regression|Power for Logistic Regression|event rate; OR magnitude
+power-cox-regression|Power for Cox Regression|number of events; hazard ratio
+power-logrank-test|Power for the Log-Rank Test|events and accrual planning
+power-equivalence-tost|Power for Equivalence (TOST)|margin; variance
+power-non-inferiority|Power for Non-Inferiority Trials|margin selection; allocation
+power-cluster-rct|Power for Cluster-RCT|ICC; cluster size; design effect
+power-stepped-wedge|Power for Stepped-Wedge Trials|Hussey-Hughes formula
+power-crossover|Power for Crossover Trials|within-subject correlation
+power-diagnostic-accuracy|Power for Diagnostic Accuracy|sensitivity; specificity precision
+power-mcnemar|Power for McNemar's Test|discordant pair rate
+power-agreement-kappa|Power for Agreement (Kappa)|expected kappa; precision
+power-icc|Power for ICC|reliability study design
+power-bland-altman|Power for Bland-Altman Studies|limits of agreement precision
+effect-size-cohens-d|Effect Size: Cohen's d|standardised mean difference
+effect-size-cohens-h|Effect Size: Cohen's h|arcsine-transformed proportions
+effect-size-eta-squared|Effect Size: Eta-Squared|variance explained in ANOVA
+minimum-detectable-effect|Minimum Detectable Effect|solve for d given n and power
+post-hoc-power-controversy|Post-Hoc Power: A Controversy|why it is uninformative
+sensitivity-analysis-sample-size|Sample Size Sensitivity Analysis|robustness across assumptions

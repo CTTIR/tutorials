@@ -1,0 +1,160 @@
+---
+title: Interactive Shiny Apps
+description: Didactic Shiny applications that let you explore statistical concepts interactively -- one per major topic area
+---
+
+Each of the sixteen major topic areas is paired with an interactive Shiny application that lets a reader explore the central concept of that area hands-on. The apps are hosted on a dedicated Shiny Server and embedded into the relevant tutorial pages through `iframe` tags, so readers can move between theory, R code, and live exploration without leaving the site.
+
+This section of the site documents each application: what it does, what concepts it is intended to illuminate, which tutorials it is embedded into, and the source code repository where it is maintained. Each app is designed as a self-contained teaching tool -- small enough that a reader can understand every parameter, rich enough that meaningful discoveries are possible.
+
+## App catalogue
+
+The list below follows the same ordering as the tutorial topic areas. Each entry in the catalogue gives the didactic purpose, the user-facing inputs and outputs, and the intended position of the app within the learning sequence. The source code for every app is kept in its own repository and linked from the individual entry.
+
+<!-- card-grid-injected -->
+
+## Apps
+
+::: {.card-grid}
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [CLT Explorer](01-clt-explorer.qmd)
+Interactive Shiny app for visualising the central limit theorem across distributions, sample sizes, and statistics
+:::
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [Summary Statistics Lab](02-summary-statistics-lab.qmd)
+Interactive Shiny app for understanding how location, dispersion, and shape statistics respond to changes in the data
+:::
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [Distribution Explorer](03-distribution-explorer.qmd)
+Visualise and compare discrete and continuous probability distributions with live parameter sliders
+:::
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [Hypothesis Test Simulator](04-hypothesis-test-simulator.qmd)
+Simulate null and alternative distributions to see type I and type II errors materialise as areas under curves
+:::
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [Power Calculator](05-power-calculator.qmd)
+Interactive sample size and power curves for the most common study designs in clinical and life-science research
+:::
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [ggplot2 Playground](06-ggplot-playground.qmd)
+Build a ggplot layer by layer with live R code output, so every aesthetic choice becomes visible
+:::
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [Regression Playground](07-regression-playground.qmd)
+Fit and diagnose regression models interactively: adjust predictors, interactions, and transformations with live output
+:::
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [PCA Explorer](08-pca-explorer.qmd)
+Upload or simulate data and watch PCA loadings, scores, and biplots update with every choice of scaling and component count
+:::
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [Time Series Forecaster](09-time-series-forecaster.qmd)
+Upload a time series, choose a model, and compare forecasts from ETS, ARIMA, and Prophet side by side
+:::
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [Bayesian Updater](10-bayesian-updater.qmd)
+Drag a prior, feed in data, and watch the posterior emerge for the canonical conjugate pairs
+:::
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [Survival Curve Builder](11-survival-curve-builder.qmd)
+Interactive Kaplan-Meier curves, log-rank tests, and Cox model fits, all from a single data input panel
+:::
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [RNA-seq Pipeline Walkthrough](12-rnaseq-pipeline.qmd)
+Step through a full DESeq2 differential expression analysis interactively, from count matrix to volcano and MA plots
+:::
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [ML Workflow Lab](13-ml-workflow-lab.qmd)
+Build, tune, and evaluate a supervised learning pipeline with tidymodels, from preprocessing through to held-out evaluation
+:::
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [Diagnostic Accuracy Calculator](14-diagnostic-accuracy-calculator.qmd)
+Compute and visualise sensitivity, specificity, predictive values, and ROC curves with prevalence sliders
+:::
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [Forest Plot Builder](15-forest-plot-builder.qmd)
+Paste study-level effect sizes and standard errors; get a fixed-effect and random-effects meta-analysis with forest, funnel, and influence diagnostics
+:::
+
+::: {.card}
+::: {.kicker}
+SHINY APP
+:::
+### [Design of Experiments Lab](16-design-of-experiments-lab.qmd)
+Construct factorial, fractional-factorial, and response-surface designs with live randomisation plans and analysis-ready templates
+:::
+
+:::
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00fd8094b1cb4386a878784348971a00 -->
+<img src="https://vg09.met.vgwort.de/na/00fd8094b1cb4386a878784348971a00"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

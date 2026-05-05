@@ -1,0 +1,50 @@
+multiple-linear-regression|Multiple Linear Regression|multiple predictors; partial slopes
+regression-assumptions|Linear Regression Assumptions|linearity; homoscedasticity; normality; independence
+residual-diagnostics|Residual Diagnostics|plots; patterns; heteroscedasticity
+leverage-influence|Leverage and Influence|hat values; DFBETA
+cooks-distance|Cook's Distance|influential observations
+multicollinearity-vif|Multicollinearity and VIF|condition number; variance inflation
+interactions-in-regression|Interactions in Regression|product terms; interpretation
+polynomial-regression|Polynomial Regression|orthogonal polynomials; overfitting risk
+spline-regression|Spline Regression|natural splines; knots; rms package
+dummy-coding|Dummy Coding|reference category; contrasts
+effect-coding|Effect (Deviation) Coding|sum-to-zero contrasts
+contrasts-in-r|Contrasts in R|contr.treatment; contr.sum; custom
+centered-scaled-predictors|Centring and Scaling Predictors|interpretability; interactions
+model-selection-aic-bic|Model Selection with AIC and BIC|information criteria; penalty
+stepwise-regression-pitfalls|Stepwise Regression: Pitfalls|inflated R^2; biased p-values
+best-subset-selection|Best Subset Selection|all-subsets; leaps
+r-squared-adjusted|R-Squared and Adjusted R-Squared|interpretation; limits
+partial-correlation|Partial Correlation|controlling for covariates
+added-variable-plots|Added-Variable Plots|partial regression plots
+logistic-regression|Logistic Regression|binary outcomes; odds ratios
+logistic-regression-diagnostics|Logistic Regression Diagnostics|Hosmer-Lemeshow; calibration
+roc-auc-for-logistic|ROC and AUC for Logistic Models|discrimination
+probit-regression|Probit Regression|cumulative normal link
+multinomial-logistic|Multinomial Logistic Regression|nominal outcomes; softmax
+ordinal-logistic|Ordinal Logistic Regression|proportional odds
+poisson-regression|Poisson Regression|rate models; offsets
+quasi-poisson|Quasi-Poisson Regression|overdispersion adjustment
+negative-binomial-regression|Negative Binomial Regression|variance function; theta
+zero-inflated-models|Zero-Inflated Models|mixture of structural zeros and counts
+hurdle-models|Hurdle Models|two-part: binary + truncated count
+offsets-in-regression|Offsets in Regression|rate per exposure
+gam-introduction|GAMs: Introduction|smooth terms; mgcv
+mixed-models-intro|Mixed-Effects Models: Introduction|fixed vs random effects
+random-intercepts|Random-Intercept Models|subject-level grouping
+random-slopes|Random-Slope Models|slopes vary by group
+nested-crossed-random-effects|Nested vs Crossed Random Effects|model specification
+lme4-lmer-examples|Worked lme4::lmer Examples|formula syntax; key outputs
+glmer-generalized-mixed|glmer: Generalised Mixed Models|binary; count random effects
+gamm-additive-mixed|GAMMs: Additive Mixed Models|smooths plus random effects
+ridge-regression|Ridge Regression|L2 penalty; glmnet
+lasso-regression|Lasso Regression|L1 penalty; variable selection
+elastic-net|Elastic Net|combined L1/L2; alpha choice
+quantile-regression|Quantile Regression|rq; conditional quantiles
+robust-regression|Robust Regression|M-estimators; huber; MASS::rlm
+generalized-estimating-equations|Generalised Estimating Equations|marginal models; correlation structures
+survival-regression-cox|Cox Regression as Regression|refer to survival section
+tobit-regression|Tobit Regression|censored outcomes
+truncated-regression|Truncated Regression|conditional on threshold
+beta-regression|Beta Regression|proportions in (0,1); betareg
+dirichlet-regression|Dirichlet Regression|compositional outcomes

@@ -1,0 +1,51 @@
+---
+title: Survival Curve Builder
+date: "2026-04-17"
+description: "Interactive Kaplan-Meier curves, log-rank tests, and Cox model fits, all from a single data input panel"
+categories:
+  - Survival Analysis
+  - shiny
+  - survival-analysis
+  - kaplan-meier
+  - cox-regression
+---
+
+## Purpose
+
+Survival data has a distinctive shape: time, event indicator, covariates. The Survival Curve Builder lets a reader upload such data (or simulate it) and explore Kaplan-Meier estimation, the log-rank test for group comparisons, and Cox proportional hazards regression, with each output updating as inclusion criteria and covariates change.
+
+## User inputs
+
+- Dataset (built-in lung, ovarian, pbc, or user-uploaded CSV)
+- Time and event columns
+- Grouping variable for curve stratification
+- Covariates for the Cox model with continuous/categorical toggles
+- Subset filters with live row count
+
+## Outputs
+
+- Kaplan-Meier curves with pointwise 95% bands and a risk table below
+- Log-rank test result and, if requested, weighted log-rank variants
+- Cox regression table with hazard ratios, CIs, p-values, and overall model tests
+- Schoenfeld-residual diagnostic plot for each covariate, with a proportional-hazards p-value
+- Predicted survival curves at user-specified covariate profiles
+
+## Didactic value
+
+Dragging the stratification variable on and off turns a single pooled curve into a comparison, making the log-rank test's null hypothesis concrete. Watching hazard ratios move as covariates are added teaches confounding adjustment in a way a static example cannot.
+
+## Embedded in
+
+- `survival-analysis/kaplan-meier.md`
+- `survival-analysis/log-rank-test.md`
+- `survival-analysis/cox-regression.md`
+
+## Source code
+
+Local: `apps/11-survival-curve-builder/`
+
+Run with:
+
+```r
+shiny::runApp("apps/11-survival-curve-builder")
+```

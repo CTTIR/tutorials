@@ -1,0 +1,49 @@
+fastq-quality-control|FASTQ Quality Control|Phred scores; fastqc; Rqc
+read-trimming-adapters|Read Trimming and Adapter Removal|Rfastp; cutadapt
+sequence-alignment-overview|Sequence Alignment: Overview|global vs local; scoring
+bwa-bowtie-alignment|Alignment with BWA and Bowtie|DNA alignment; indexing
+star-spliced-alignment|STAR: Spliced Alignment|splice junctions; RNA-seq
+salmon-kallisto-pseudoalignment|Pseudoalignment with Salmon and Kallisto|quasi-mapping; quantification
+counting-reads-feature-counts|Counting Reads with featureCounts|GTF; strand; primary
+tx-to-gene-summarization|Transcript-to-Gene Summarisation|tximport; DRIMSeq
+rnaseq-normalization|RNA-seq Normalisation|TMM; RLE; upper-quartile
+pca-of-rnaseq|PCA of RNA-seq Samples|QC; batch detection
+edger-differential-expression|Differential Expression with edgeR|exactTest; glmQLFTest
+limma-voom|Differential Expression with limma-voom|voom weights; lmFit
+batch-correction-combat|Batch Correction with ComBat|sva package; known batches
+surrogate-variable-analysis-sva|Surrogate Variable Analysis|unknown batch detection
+volcano-plots|Volcano Plots|EnhancedVolcano; significance vs LFC
+ma-plots|MA Plots|mean-difference plots
+heatmaps-rnaseq|Heatmaps for RNA-seq|pheatmap; ComplexHeatmap
+gene-ontology-enrichment|Gene Ontology Enrichment|topGO; clusterProfiler
+gsea-preranked|GSEA Preranked Analysis|fgsea; ranked lists
+gsva-single-sample|GSVA Single-Sample Enrichment|sample-level pathway scores
+pathway-enrichment-kegg|KEGG Pathway Enrichment|kegg.sets; pathway mapping
+variant-calling-gatk|Variant Calling with GATK|HaplotypeCaller pipeline
+vcf-manipulation|VCF Manipulation|VariantAnnotation; bcftools
+annotation-variant-vep|Variant Annotation with VEP|predicted consequences
+population-genetics-basics|Population Genetics Basics|Hardy-Weinberg; allele frequencies
+phylogenetic-trees-ape|Phylogenetic Trees with ape|distance methods; ML trees
+msa-biostrings|Multiple Sequence Alignment|msa package
+proteomics-msstats|Proteomics with MSstats|LFQ quantification; contrasts
+single-cell-seurat-intro|Single-Cell with Seurat|workflow overview
+scrna-qc-filtering|scRNA QC and Filtering|mitochondrial; feature thresholds
+scrna-normalization|scRNA Normalisation|LogNormalize; SCTransform
+scrna-clustering|scRNA Clustering|graph-based; Louvain; Leiden
+scrna-marker-genes|Finding Marker Genes|FindMarkers; Wilcoxon
+scrna-cell-type-annotation|Cell-Type Annotation|SingleR; manual curation
+scrna-trajectory-analysis|Trajectory Analysis|slingshot; monocle3
+scrna-integration-harmony|Integration with Harmony|batch correction for scRNA
+spatial-transcriptomics|Spatial Transcriptomics|Visium; spatial clustering
+atac-seq-analysis|ATAC-Seq Analysis|peak calling; chromatin accessibility
+chip-seq-analysis|ChIP-Seq Analysis|peak calling; motif enrichment
+methylation-analysis|DNA Methylation Analysis|bisulfite; minfi
+microbiome-dada2|Microbiome Analysis with DADA2|ASVs; error model
+microbiome-diversity|Microbiome Diversity Metrics|alpha; beta; UniFrac
+metagenomic-profiling|Metagenomic Profiling|MetaPhlAn; Kraken
+multiomics-integration|Multi-Omics Integration|MOFA; iCluster
+cnv-analysis|Copy Number Variation Analysis|GATK CNV; segmentation
+structural-variant-detection|Structural Variant Detection|Manta; Delly
+protein-structure-prediction|Protein Structure Prediction|AlphaFold overview
+drug-target-interaction|Drug-Target Interaction Mining|ChEMBL; bioassay data
+biomart-annotation|Gene Annotation with biomaRt|Ensembl queries

@@ -1,0 +1,23 @@
+---
+title: Interdependence Analysis
+description: Exploratory methods that reduce variables or group cases without a prespecified outcome
+---
+
+Interdependence analysis looks for structure in the data without designating any variable as the outcome. Two canonical approaches are covered:
+
+## Method pages
+
+- [Exploratory factor analysis](/decision-tree/interdependence/factor-analysis.qmd) -- reduces many observed variables to fewer latent factors. Includes a brief pointer to confirmatory factor analysis via `lavaan`.
+- [Cluster analysis](/decision-tree/interdependence/cluster-analysis.qmd) -- groups cases into homogeneous clusters. Covers hierarchical methods (Ward, single, complete, average linkage), k-means, two-step clustering, and validation via the elbow method and silhouette.
+
+## Choosing between them
+
+- **Reduce variables** (many measurements per case that may reflect a smaller set of latent traits) \u2192 factor analysis.
+- **Group cases** (each case belongs to an unknown subgroup) \u2192 cluster analysis. Within clustering, pick the algorithm based on scale level and sample size:
+  - mixed types / small $n$ \u2192 hierarchical
+  - metric / large $n$ \u2192 k-means
+  - mixed types / very large $n$ \u2192 two-step
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*

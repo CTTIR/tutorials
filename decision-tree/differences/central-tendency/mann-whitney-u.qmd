@@ -1,0 +1,108 @@
+---
+title: Mann-Whitney U Test
+date: "2026-04-17"
+description: Non-parametric comparison of two independent groups on an ordinal or non-normal continuous outcome
+categories:
+  - mann-whitney
+  - wilcoxon-rank-sum
+  - non-parametric
+  - ranks
+---
+
+## Research question
+
+The Mann-Whitney U test (equivalent to the Wilcoxon rank-sum test) asks whether two independent groups differ in distribution, using ranks instead of raw values. It is the default when an independent-samples comparison is needed but the outcome is ordinal (e.g., Likert-style pain rating) or strongly non-normal (e.g., cytokine concentrations with a long right tail). Biomedical examples: (1) are post-operative pain scores on days 1-7 different between open and laparoscopic cholecystectomy patients?; (2) do serum ferritin levels differ between patients with and without iron-deficiency anaemia?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Two independent groups | design |
+| Outcome at least ordinal | scale level |
+| Similar shape in both groups (for a median-shift interpretation) | overlaid density / boxplot |
+
+If the two distributions have very different shapes, the Mann-Whitney still tests *stochastic dominance* but cannot be interpreted as a difference in medians alone.
+
+## Hypotheses
+
+$$H_0: P(X_1 > X_2) = P(X_2 > X_1) \qquad H_1: P(X_1 > X_2) \ne P(X_2 > X_1)$$
+
+Under the shape-equality assumption, this reduces to $H_0: \text{median}_1 = \text{median}_2$.
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(effectsize); library(ggstatsplot)
+set.seed(42)
+
+# Ferritin (ng/mL) in 28 controls and 22 iron-deficient patients
+fer <- tibble(
+  group    = factor(rep(c("Control", "ID"), c(28, 22)), levels = c("Control", "ID")),
+  ferritin = c(rlnorm(28, log(80), 0.5),
+               rlnorm(22, log(18), 0.6))
+)
+
+# Inspect shapes
+fer |> group_by(group) |> get_summary_stats(ferritin, type = "five_number")
+
+fer |> ggplot(aes(x = group, y = ferritin)) +
+  geom_boxplot(fill = "#2A9D8F", outlier.colour = "#F4A261") +
+  labs(y = "Serum ferritin (ng/mL)") + theme_minimal()
+
+# Mann-Whitney U test
+fer |> wilcox_test(ferritin ~ group, detailed = TRUE)
+
+# Effect size: rank-biserial correlation r (-1 to 1)
+fer |> wilcox_effsize(ferritin ~ group)
+# or equivalently
+effectsize::rank_biserial(ferritin ~ group, data = fer)
+
+# Visualisation with inline stats
+ggbetweenstats(data = fer, x = group, y = ferritin, type = "nonparametric",
+               xlab = "Group", ylab = "Ferritin (ng/mL)")
+```
+
+## Interpreting the output
+
+With $W$ = 534 and $p < .001$, the null of equal distributions is rejected. The rank-biserial $r \approx 0.77$ indicates a large effect. Inspection of the boxplot confirms the patient group's ferritin distribution lies almost entirely below the control distribution.
+
+## Effect size
+
+Rank-biserial correlation $r_{rb}$ = $2 \times U / (n_1 n_2) - 1$. Range $[-1, 1]$; Cohen's thresholds (adapted): small 0.10, medium 0.30, large 0.50.
+
+## Reporting (APA 7)
+
+> Serum ferritin was significantly lower in the iron-deficient group than in controls (Mann-Whitney U = 534, p < .001, rank-biserial r = .77). Median ferritin was 17.5 ng/mL in iron-deficient patients vs. 81.2 ng/mL in controls.
+
+## Common pitfalls
+
+- Reporting mean and SD in a Mann-Whitney analysis invites inconsistency; report medians and IQRs.
+- With ties, R uses a normal approximation; an exact permutation test (`coin::wilcox_test`) is cleaner for small samples.
+- Treating unequal distribution shapes as "median differences" overstates what the test actually shows.
+
+## Parametric vs. non-parametric alternative
+
+- Parametric alternative: [independent-samples t-test](/decision-tree/differences/central-tendency/independent-t-test.qmd).
+- For paired data: [Wilcoxon signed-rank test](/decision-tree/differences/central-tendency/wilcoxon-signed-rank.qmd).
+- For three or more groups: [Kruskal-Wallis test](/decision-tree/differences/central-tendency/kruskal-wallis.qmd).
+
+## Further reading
+
+- [Normality checks](/decision-tree/foundations/normality.qmd)
+- Divine, G., Norton, H. J., Hunt, R., & Dienemann, J. (2013). A review of analysis and sample size calculation considerations for Wilcoxon tests. *Anesthesia & Analgesia*, 117(3), 699-710.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00747d2adc7e4822a6935888fd80a3de -->
+<img src="https://vg09.met.vgwort.de/na/00747d2adc7e4822a6935888fd80a3de"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

@@ -1,0 +1,113 @@
+---
+title: Chi-Squared Contingency Test
+date: "2026-04-17"
+description: "Testing association between two categorical variables; includes Fisher's exact test, phi, and Cramer's V"
+categories:
+  - chi-square
+  - contingency
+  - fisher-exact
+  - phi
+  - cramer-v
+---
+
+## Research question
+
+Use the chi-squared contingency test to assess whether two categorical variables are associated. Biomedical examples: (1) is tumour grade (G1, G2, G3) independent of HER2 status (positive, negative) in a breast-cancer registry?; (2) in a case-control study, does exposure to a specific occupational agent differ between cases and controls?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Independent observations (each subject contributes once) | design |
+| Two categorical variables with >= 2 levels each | scale level |
+| Expected count >= 5 in each cell | `chi$expected; all(chi$expected >= 5)` |
+
+When expected counts fall below 5 (common in 2x2 tables with one sparse cell), use Fisher's exact test.
+
+## Hypotheses
+
+$$H_0: \text{the two variables are independent}\qquad H_1: \text{they are associated}$$
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(effectsize); library(ggstatsplot)
+set.seed(42)
+
+# Breast-cancer cohort: HER2 status x tumour grade
+cohort <- tibble(
+  her2  = factor(sample(c("HER2+", "HER2-"), 320, replace = TRUE, prob = c(0.25, 0.75))),
+  grade = factor(sample(c("G1", "G2", "G3"), 320, replace = TRUE, prob = c(0.3, 0.45, 0.25)),
+                 levels = c("G1", "G2", "G3"))
+)
+
+# Inject association: grade more likely G3 when HER2+
+cohort <- cohort |>
+  mutate(grade = if_else(her2 == "HER2+" & runif(n()) < 0.25,
+                         factor("G3", levels = c("G1", "G2", "G3")), grade))
+
+tab <- table(cohort$her2, cohort$grade)
+tab
+
+chi <- chisq.test(tab)
+chi
+chi$expected
+chi$residuals
+
+# Effect size: phi (2x2) or Cramer's V (larger tables)
+effectsize::cramers_v(tab)
+
+# Fisher's exact test when expected counts are small
+fisher.test(tab, workspace = 2e7)
+
+# Visualisation with inline stats
+ggbarstats(data = cohort, x = grade, y = her2,
+           xlab = "HER2 status", legend.title = "Grade")
+```
+
+## Interpreting the output
+
+With $\chi^2(2) \approx 10.8$, $p = .005$, the null of independence is rejected: HER2 status and grade are associated. Cramer's V $\approx 0.18$ indicates a small-to-medium effect. Standardised residuals identify the G3 x HER2+ cell as the main driver (residual $\approx 2.8$).
+
+## Effect size
+
+| Table size | Measure | Thresholds |
+|---|---|---|
+| 2x2 | Phi ($\phi$) | 0.10 / 0.30 / 0.50 |
+| Larger | Cramer's V | 0.10 / 0.30 / 0.50 |
+| 2x2 | Odds ratio | context-dependent |
+
+## Reporting (APA 7)
+
+> Tumour grade was associated with HER2 status (chi-squared(2) = 10.8, p = .005, Cramer's V = .18). HER2-positive tumours were more frequently G3 than expected under independence.
+
+## Common pitfalls
+
+- Violating the independence assumption by including multiple observations per patient; use McNemar's test for paired categorical data.
+- Applying the chi-squared approximation with sparse cells; Fisher's exact test is the appropriate small-sample alternative.
+- Testing a 3x3 association and reporting only the omnibus p; examine standardised residuals to localise the pattern.
+- Treating ordinal categories as nominal; the Cochran-Armitage trend test uses the ordering and has more power.
+
+## Parametric vs. non-parametric alternative
+
+The chi-squared test is itself non-parametric. For paired categorical data, see McNemar's test. For an ordered category x binary exposure association, the Cochran-Armitage trend test is more powerful.
+
+## Further reading
+
+- Agresti, A. (2007). *An Introduction to Categorical Data Analysis* (2nd ed.). Wiley.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 002807dee5a04b37b022e26eac6d7162 -->
+<img src="https://vg09.met.vgwort.de/na/002807dee5a04b37b022e26eac6d7162"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

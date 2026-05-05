@@ -1,0 +1,99 @@
+---
+title: Kruskal-Wallis Test
+date: "2026-04-17"
+description: Non-parametric comparison of three or more independent groups on an ordinal or non-normal continuous outcome
+categories:
+  - kruskal-wallis
+  - non-parametric
+  - ranks
+  - dunn
+---
+
+## Research question
+
+The Kruskal-Wallis test generalises the Mann-Whitney U test to three or more independent groups. Use it when a one-way ANOVA's normality assumption is violated or the outcome is ordinal. Biomedical example: do visual analogue pain scores differ across four analgesic protocols after orthopaedic surgery?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Independent observations | design |
+| Outcome ordinal or continuous | scale level |
+| Similar distribution shapes for a median-difference interpretation | overlaid boxplots |
+
+## Hypotheses
+
+$$H_0: F_1 = F_2 = \ldots = F_k \qquad H_1: \text{at least one distribution differs}$$
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(dunn.test); library(effectsize); library(ggstatsplot)
+set.seed(42)
+
+# 35 patients per group; VAS pain (0-100) at 6 h post-op
+pain <- tibble(
+  protocol = factor(rep(c("NSAID", "Opioid", "Multimodal", "Regional"), each = 35)),
+  vas      = c(sample(25:75, 35, replace = TRUE),
+               sample(20:70, 35, replace = TRUE),
+               sample(15:60, 35, replace = TRUE),
+               sample(5:50,  35, replace = TRUE))
+)
+
+# Kruskal-Wallis omnibus
+pain |> kruskal_test(vas ~ protocol)
+
+# Effect size: epsilon-squared
+pain |> kruskal_effsize(vas ~ protocol)
+
+# Post-hoc Dunn test with Bonferroni correction
+pain |> dunn_test(vas ~ protocol, p.adjust.method = "bonferroni")
+
+ggbetweenstats(data = pain, x = protocol, y = vas, type = "nonparametric",
+               pairwise.display = "significant",
+               xlab = "Protocol", ylab = "VAS pain (0-100)")
+```
+
+## Interpreting the output
+
+A significant $H(3) \approx 38$, $p < .001$ rejects the null of equal distributions. The epsilon-squared of about 0.27 is a large effect. Dunn post-hoc tests identify which pairs differ after Bonferroni correction.
+
+## Effect size
+
+Epsilon-squared $\varepsilon^2 = H / ((n^2 - 1) / (n + 1))$. Thresholds (adapted): small 0.01, medium 0.08, large 0.26.
+
+## Reporting (APA 7)
+
+> Post-operative VAS pain at 6 h differed across protocols (Kruskal-Wallis H(3) = 38.2, p < .001, epsilon-squared = .27). Bonferroni-adjusted Dunn tests showed that the regional-anaesthesia group reported significantly lower pain than all other groups (all adjusted p < .01).
+
+## Common pitfalls
+
+- Running pairwise Mann-Whitney tests without family-wise correction inflates Type I error; use Dunn with Bonferroni or Benjamini-Hochberg.
+- Reporting mean and SD in a Kruskal-Wallis analysis; report medians and IQRs.
+- Assuming "different distributions" implies "different medians" when the shapes differ.
+
+## Parametric vs. non-parametric alternative
+
+- Parametric: [one-way ANOVA](/decision-tree/differences/central-tendency/one-way-anova.qmd).
+- Repeated measures: [Friedman test](/decision-tree/differences/central-tendency/friedman.qmd).
+- Two groups: [Mann-Whitney U test](/decision-tree/differences/central-tendency/mann-whitney-u.qmd).
+
+## Further reading
+
+- Dinno, A. (2015). Nonparametric pairwise multiple comparisons in independent groups using Dunn's test. *The Stata Journal*, 15(1), 292-300.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 0072383ebcca4dc29bd9ac0cda1af94c -->
+<img src="https://vg09.met.vgwort.de/na/0072383ebcca4dc29bd9ac0cda1af94c"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

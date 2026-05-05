@@ -1,0 +1,29 @@
+factor-analysis-exploratory|Exploratory Factor Analysis|factor extraction; Kaiser; scree
+factor-analysis-confirmatory|Confirmatory Factor Analysis|lavaan; chi-squared; fit indices
+factor-rotation|Factor Rotation|varimax; promax; oblimin
+structural-equation-models|Structural Equation Models|lavaan; path diagrams
+canonical-correlation|Canonical Correlation Analysis|two sets of variables
+mds-metric|Metric Multidimensional Scaling|classical MDS; principal coordinates
+mds-nonmetric|Non-Metric Multidimensional Scaling|Kruskal stress; ordinal distances
+correspondence-analysis|Correspondence Analysis|categorical; chi-squared distance
+multiple-correspondence-analysis|Multiple Correspondence Analysis|MCA for multiple categoricals
+kmeans-clustering|k-Means Clustering|Lloyd's algorithm; k choice
+hierarchical-clustering|Hierarchical Clustering|agglomerative; linkage; dendrogram
+pam-kmedoids|Partitioning Around Medoids|PAM; robust alternative to k-means
+dbscan-clustering|DBSCAN Clustering|density-based; eps and minPts
+gaussian-mixture-models|Gaussian Mixture Models|EM algorithm; mclust
+cluster-validation-silhouette|Cluster Validation: Silhouette|silhouette width; interpretation
+gap-statistic|The Gap Statistic|choosing k by bootstrap
+elbow-method|The Elbow Method|within-cluster SS; subjective
+linear-discriminant-analysis|Linear Discriminant Analysis|MASS::lda; Fisher's LDA
+quadratic-discriminant-analysis|Quadratic Discriminant Analysis|separate covariances; qda
+pls-regression|Partial Least Squares Regression|high-dimensional regression
+pls-da|PLS Discriminant Analysis|classification variant of PLS
+manova|MANOVA|multivariate ANOVA; Wilks' lambda
+distance-measures|Distance and Dissimilarity Measures|Euclidean; Manhattan; Minkowski
+mahalanobis-distance|Mahalanobis Distance|scale- and correlation-aware
+jaccard-dissimilarity|Jaccard and Dice Dissimilarity|binary data
+bray-curtis|Bray-Curtis Dissimilarity|ecological abundance data
+kernel-pca|Kernel PCA|non-linear dimensionality reduction
+umap-tsne-overview|UMAP and t-SNE: Overview|non-linear visualisation; caveats
+ica-independent-component-analysis|Independent Component Analysis|signal separation; fastICA

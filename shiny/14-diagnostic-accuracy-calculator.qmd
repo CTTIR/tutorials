@@ -1,0 +1,51 @@
+---
+title: Diagnostic Accuracy Calculator
+date: "2026-04-17"
+description: "Compute and visualise sensitivity, specificity, predictive values, and ROC curves with prevalence sliders"
+categories:
+  - Clinical Biostatistics
+  - shiny
+  - diagnostic-accuracy
+  - roc
+  - sensitivity
+  - specificity
+---
+
+## Purpose
+
+Clinicians routinely confuse sensitivity with positive predictive value, and the confusion is not innocent: a test with 99% sensitivity applied in a low-prevalence setting can still miss most cases. The Diagnostic Accuracy Calculator makes the dependence of predictive values on prevalence visible, and walks readers through ROC construction, AUC interpretation, and threshold selection.
+
+## User inputs
+
+- Mode: 2x2 table entry, continuous marker with cutoff slider, or upload of marker values with gold-standard labels
+- In continuous mode: choice of operating threshold, with live update of sensitivity, specificity, PPV, NPV
+- Prevalence slider (0-100%) for predictive values
+- Cost ratio slider for expected-utility threshold selection
+
+## Outputs
+
+- 2x2 table with counts, row/column percentages, and every common accuracy measure
+- Likelihood ratios positive and negative
+- ROC curve with current operating point highlighted; AUC with 95% CI
+- Dependence of PPV and NPV on prevalence, shown as curves
+- Suggested threshold by Youden's index or user-specified cost ratio
+
+## Didactic value
+
+Watching PPV collapse from 95% to 20% as prevalence drops from 50% to 1% -- with sensitivity and specificity *held fixed* -- is the quickest way to teach Bayes' theorem to a clinical audience. The cost-ratio slider further demonstrates that the "best" threshold is context-dependent, not an intrinsic property of the test.
+
+## Embedded in
+
+- `clinical-biostatistics/diagnostic-accuracy.md`
+- `clinical-biostatistics/roc-analysis.md`
+- `clinical-biostatistics/predictive-values.md`
+
+## Source code
+
+Local: `apps/14-diagnostic-accuracy-calculator/`
+
+Run with:
+
+```r
+shiny::runApp("apps/14-diagnostic-accuracy-calculator")
+```

@@ -1,0 +1,90 @@
+---
+title: Spearman Rank Correlation
+date: "2026-04-17"
+description: "Rank-based measure of monotonic association, robust to non-linearity and outliers"
+categories:
+  - spearman
+  - correlation
+  - ranks
+  - monotonic
+  - non-parametric
+---
+
+## Research question
+
+Spearman's rho ($\rho$) measures monotonic association between two ordinal or non-normal continuous variables. Use it when Pearson's assumptions fail or when at least one variable is ordinal. Biomedical examples: (1) does disease stage (I-IV) correlate with patient-reported quality-of-life (0-100)?; (2) does serum procalcitonin (right-skewed) correlate with SOFA score on admission to the ICU?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Both variables at least ordinal | scale level |
+| Monotonic relationship (need not be linear) | scatter plot of raw or ranked values |
+| Independent pairs | design |
+
+## Hypotheses
+
+$$H_0: \rho_s = 0 \qquad H_1: \rho_s \ne 0$$
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(ggstatsplot)
+set.seed(42)
+
+# 90 ICU patients: procalcitonin and SOFA
+icu <- tibble(
+  procalcitonin = rlnorm(90, log(2), 1.1),
+  sofa          = pmin(round(log(procalcitonin + 0.1) * 2 + rnorm(90, 0, 1.5) + 6), 20)
+)
+
+cor.test(icu$procalcitonin, icu$sofa, method = "spearman", exact = FALSE)
+
+icu |> cor_test(procalcitonin, sofa, method = "spearman")
+
+ggscatterstats(data = icu, x = procalcitonin, y = sofa, type = "nonparametric",
+               xlab = "Procalcitonin (ng/mL)", ylab = "SOFA score")
+```
+
+## Interpreting the output
+
+Spearman's $\rho = 0.68$, $p < .001$. The association is strong and monotonic: higher procalcitonin is associated with higher SOFA score. Because $\rho$ is computed on ranks, the presence of a skewed procalcitonin distribution does not distort the test.
+
+## Effect size
+
+Spearman's $\rho$ is its own effect size. Cohen's thresholds: small 0.10, medium 0.30, large 0.50.
+
+## Reporting (APA 7)
+
+> Procalcitonin was positively associated with SOFA score on admission (Spearman's rho = .68, p < .001). The relationship was monotonic across the full range of procalcitonin values.
+
+## Common pitfalls
+
+- Reporting Pearson when Spearman is more appropriate for skewed data; Pearson can vastly underestimate a monotonic non-linear relationship.
+- Ties: R's exact test fails with ties and switches to a normal approximation with a warning; set `exact = FALSE` to suppress the warning.
+- Spearman detects monotonic patterns; for U-shaped relationships, neither Pearson nor Spearman is appropriate -- fit a spline or use a polynomial regression.
+
+## Parametric vs. non-parametric alternative
+
+- Parametric (linear, bivariate normal): [Pearson correlation](/decision-tree/associations/pearson-correlation.qmd).
+- Tied-data small samples: [Kendall's tau](/decision-tree/associations/kendall-tau.qmd).
+
+## Further reading
+
+- Newson, R. (2002). Parameters behind "nonparametric" statistics: Kendall's tau, Somers' D and median differences. *The Stata Journal*, 2(1), 45-64.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 005bb10183c941189b747b5eda4db425 -->
+<img src="https://vg09.met.vgwort.de/na/005bb10183c941189b747b5eda4db425"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

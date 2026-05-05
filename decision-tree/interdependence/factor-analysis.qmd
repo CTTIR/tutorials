@@ -1,0 +1,114 @@
+---
+title: Exploratory Factor Analysis
+date: "2026-04-17"
+description: "Reducing many observed variables to a smaller number of latent factors, with a brief pointer to confirmatory FA"
+categories:
+  - factor-analysis
+  - efa
+  - latent-variables
+  - varimax
+---
+
+## Research question
+
+Exploratory factor analysis (EFA) reduces a battery of observed variables to a smaller number of latent factors that explain their shared variance. Biomedical example: in a multi-centre depression study, 12 PHQ-9-style items plus 4 somatic symptoms were administered; do they reflect one, two, or three underlying dimensions?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Variables approximately continuous or at least ordinal with many levels | scale level |
+| Sufficient sample size (commonly 5-10 per item, $n \ge 150$) | sample-size check |
+| Variables are correlated enough to factor | Bartlett's test of sphericity, KMO measure |
+| No extreme outliers | Mahalanobis distance |
+
+## Hypotheses
+
+EFA is exploratory; it does not test a specific null. Model fit is assessed by eigenvalue inspection, parallel analysis, and goodness-of-fit indices in the factor-model sense.
+
+## R code
+
+```r
+library(tidyverse); library(psych); library(GPArotation)
+set.seed(42)
+
+# 300 respondents x 16 items designed around 3 latent factors
+f1 <- rnorm(300); f2 <- rnorm(300); f3 <- rnorm(300)
+items <- tibble(
+  depr1 = 0.8 * f1 + rnorm(300, 0, 0.4),
+  depr2 = 0.7 * f1 + rnorm(300, 0, 0.5),
+  depr3 = 0.9 * f1 + rnorm(300, 0, 0.3),
+  depr4 = 0.6 * f1 + rnorm(300, 0, 0.5),
+  anx1  = 0.8 * f2 + rnorm(300, 0, 0.4),
+  anx2  = 0.7 * f2 + rnorm(300, 0, 0.5),
+  anx3  = 0.9 * f2 + rnorm(300, 0, 0.3),
+  anx4  = 0.6 * f2 + rnorm(300, 0, 0.5),
+  som1  = 0.8 * f3 + rnorm(300, 0, 0.4),
+  som2  = 0.7 * f3 + rnorm(300, 0, 0.5),
+  som3  = 0.9 * f3 + rnorm(300, 0, 0.3),
+  som4  = 0.6 * f3 + rnorm(300, 0, 0.5)
+)
+
+# Factorability
+psych::KMO(items)
+psych::cortest.bartlett(cor(items), n = nrow(items))
+
+# Number of factors: parallel analysis and scree
+psych::fa.parallel(items, fa = "fa")
+
+# EFA with 3 factors, oblique rotation (psychological constructs typically correlate)
+efa <- psych::fa(items, nfactors = 3, rotate = "oblimin", fm = "ml")
+print(efa, cut = 0.30, digits = 2)
+
+# Confirmatory pointer: lavaan syntax
+cfa_model <- '
+  depr =~ depr1 + depr2 + depr3 + depr4
+  anx  =~ anx1 + anx2 + anx3 + anx4
+  som  =~ som1 + som2 + som3 + som4
+'
+# lavaan::cfa(cfa_model, data = items)  # run to fit the CFA
+```
+
+## Interpreting the output
+
+The KMO measure should exceed 0.70 (0.88 in our simulation). Bartlett's test of sphericity should be significant. Parallel analysis recommends the number of factors whose eigenvalues exceed those of random data; here it selects 3 as expected. The rotated loadings show each item loading primarily on its intended factor ($\lambda > 0.60$).
+
+## Effect size
+
+Factor analysis does not report conventional effect sizes. Per-variable communality ($h^2$) and per-factor explained variance are the closest analogues.
+
+## Reporting (APA 7)
+
+> Exploratory factor analysis on 16 items (n = 300) indicated three correlated factors (parallel analysis, KMO = .88, Bartlett's chi-squared = 1 832, p < .001). The three-factor oblimin-rotated solution explained 52 % of the total variance. Items loaded on their intended factors (all primary loadings > .60) and cross-loadings were negligible.
+
+## Common pitfalls
+
+- Using principal components analysis and calling it factor analysis; PCA is a dimensionality-reduction technique that does not partition shared and unique variance.
+- Forcing orthogonal rotation (varimax) when the underlying factors are expected to correlate; use oblimin or promax.
+- Using the Kaiser criterion (eigenvalues > 1) alone; parallel analysis is more accurate.
+- Reporting loadings on very small samples; results will be unstable.
+
+## Parametric vs. non-parametric alternative
+
+For ordinal items, polychoric correlations with `psych::fa(..., cor = "poly")` are preferred. For truly confirmatory hypotheses, use confirmatory factor analysis via `lavaan`.
+
+## Further reading
+
+- [Cluster analysis](/decision-tree/interdependence/cluster-analysis.qmd)
+- Fabrigar, L. R., Wegener, D. T., MacCallum, R. C., & Strahan, E. J. (1999). Evaluating the use of exploratory factor analysis in psychological research. *Psychological Methods*, 4(3), 272-299.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00f09d074cb94a2ab7a0f132ce82af55 -->
+<img src="https://vg09.met.vgwort.de/na/00f09d074cb94a2ab7a0f132ce82af55"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

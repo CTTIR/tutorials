@@ -1,0 +1,51 @@
+---
+title: Distribution Explorer
+date: "2026-04-17"
+description: Visualise and compare discrete and continuous probability distributions with live parameter sliders
+categories:
+  - Probability Theory
+  - shiny
+  - distributions
+  - pdf
+  - cdf
+  - quantiles
+---
+
+## Purpose
+
+Every applied statistician eventually needs to recall the shape of a beta distribution with shape parameters $(2, 5)$, or the hazard function of a Weibull, or the relationship between the gamma and the chi-squared. The Distribution Explorer provides that recall visually: pick a distribution, drag the sliders, and see the PDF, CDF, quantile function, and hazard function update together.
+
+## User inputs
+
+- Distribution family (all major discrete and continuous families)
+- Distribution-specific parameter sliders with sensible ranges
+- Overlay mode: up to three distributions of the same family (or different families) plotted together
+- Reference lines: vertical lines at user-specified quantiles
+
+## Outputs
+
+- PDF or PMF in the top panel
+- CDF in the middle panel
+- Quantile function or hazard function in the bottom panel (user-selectable)
+- Summary table: mean, variance, skewness, kurtosis, median, mode (closed-form where known, numeric otherwise)
+- The $d$, $p$, $q$, $r$ R calls currently shown, ready to copy
+
+## Didactic value
+
+The app makes relationships between families tangible: watching a binomial with $n$ large approach a normal, watching a gamma degenerate into an exponential when shape equals one, watching a t-distribution converge to the normal as degrees of freedom grow. It also serves as a fluency tool -- readers learn by inspection which parameters control location, scale, and shape.
+
+## Embedded in
+
+- Every distribution tutorial under `probability/`
+- `inference/t-test-assumptions.md`
+- `regression-modelling/glm-families.md`
+
+## Source code
+
+Local: `apps/03-distribution-explorer/`
+
+Run with:
+
+```r
+shiny::runApp("apps/03-distribution-explorer")
+```

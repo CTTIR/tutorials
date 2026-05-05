@@ -1,0 +1,149 @@
+/* Decision tree Mermaid palette -- matches wizard tokens */
+.mermaid .node.scale-nominal rect,
+.mermaid .node.scale-nominal polygon { fill: #f4a261 !important; stroke: #b4743f !important; }
+
+.mermaid .node.scale-ordinal rect,
+.mermaid .node.scale-ordinal polygon { fill: #e9c46a !important; stroke: #a88a42 !important; }
+
+.mermaid .node.scale-metric rect,
+.mermaid .node.scale-metric polygon { fill: #2a9d8f !important; stroke: #1d6e65 !important; color: #ffffff; }
+
+.mermaid .node.scale-interdep rect,
+.mermaid .node.scale-interdep polygon { fill: #6a4c93 !important; stroke: #4a3468 !important; color: #ffffff; }
+
+.mermaid .node.nonparam rect { stroke-dasharray: 6, 4 !important; }
+
+.dt-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.dt-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dt-swatch {
+  display: inline-block;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 1px solid #555;
+  border-radius: 3px;
+}
+
+.dt-swatch.nominal  { background: #f4a261; }
+.dt-swatch.ordinal  { background: #e9c46a; }
+.dt-swatch.metric   { background: #2a9d8f; }
+.dt-swatch.interdep { background: #6a4c93; }
+
+.dt-swatch.nonparam-border { background: #ffffff; border: 2px dashed #333; }
+.dt-swatch.param-border    { background: #ffffff; border: 2px solid #333; }
+
+.dt-alt-table {
+  margin-top: 2rem;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.dt-alt-table th,
+.dt-alt-table td {
+  border: 1px solid #d0d7de;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.dt-alt-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+}
+
+@media print {
+  .dt-legend { page-break-inside: avoid; }
+  .mermaid { page-break-inside: avoid; }
+  .dt-zoom-toolbar { display: none !important; }
+  .dt-diagram-viewport { overflow: visible !important; max-height: none !important; }
+  .dt-diagram-inner { transform: none !important; }
+}
+
+/* --- Zoom + pan controls for the static decision tree --- */
+
+.dt-zoom-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin: 0.75rem 0;
+  padding: 0.4rem 0.6rem;
+  background: #f8f9fa;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+}
+
+.dt-zoom-btn {
+  font: inherit;
+  padding: 0.3rem 0.7rem;
+  background: #ffffff;
+  border: 1px solid #c0c7cf;
+  border-radius: 4px;
+  cursor: pointer;
+  min-width: 2.25rem;
+  line-height: 1.2;
+}
+
+.dt-zoom-btn:hover { background: #eef2f5; }
+.dt-zoom-btn:focus-visible { outline: 2px solid #2a9d8f; outline-offset: 1px; }
+
+.dt-zoom-readout {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.dt-diagram-viewport {
+  position: relative;
+  overflow: auto;
+  max-height: 80vh;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  background: #ffffff;
+  /* Allow pan via touch and pointer drag */
+  touch-action: none;
+  cursor: grab;
+}
+
+.dt-diagram-viewport:active { cursor: grabbing; }
+
+.dt-diagram-viewport .mermaid {
+  transform-origin: 0 0;
+  transition: transform 0.08s ease-out;
+  display: inline-block;
+  min-width: 100%;
+  padding: 1rem;
+}
+
+.dt-diagram-viewport .mermaid svg {
+  max-width: none !important;
+  height: auto !important;
+}
+
+/* Fullscreen mode */
+.dt-diagram-viewport.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  max-height: none;
+  border-radius: 0;
+  background: #ffffff;
+}
+
+.dt-diagram-viewport.is-fullscreen .mermaid { padding: 2rem; }

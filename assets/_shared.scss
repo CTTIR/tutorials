@@ -1,0 +1,305 @@
+/*-- scss:rules --*/
+
+/* Layout, typography and components.
+   No hex colours here — colour comes exclusively from the CSS custom
+   properties defined per palette in light.scss / dark.scss. */
+
+:root {
+  --font-body: "Source Sans 3", -apple-system, BlinkMacSystemFont,
+               "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SFMono-Regular", Menlo,
+               Consolas, monospace;
+  --content-max: 46rem;
+  --radius: 6px;
+}
+
+html, body {
+  background: var(--bg) !important;
+  color: var(--fg);
+}
+
+html {
+  font-size: 17px;
+}
+
+body {
+  font-family: var(--font-body);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.content, main {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: var(--fg);
+  margin-top: 1.8em;
+  margin-bottom: 0.6em;
+}
+
+h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.18rem; color: var(--fg-alt); }
+
+a  {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 120ms;
+}
+a:hover {
+  color: var(--accent-hover);
+  border-bottom-color: var(--accent-hover);
+}
+
+hr { border: none; border-top: 1px solid var(--rule); margin: 2.5rem 0; }
+
+/* Navbar — defeats per-navbar [data-bs-theme] attributes from flatly/darkly. */
+.navbar {
+  background: var(--bg) !important;
+  border-bottom: 1px solid var(--rule);
+  box-shadow: none;
+  padding: 0.6rem 0;
+}
+.navbar .navbar-brand {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--fg) !important;
+}
+.navbar .nav-link,
+.navbar .dropdown-item {
+  color: var(--fg) !important;
+  font-size: 0.95rem;
+  padding: 0.4rem 0.9rem !important;
+  border-radius: 4px;
+}
+.navbar .nav-link:hover,
+.navbar .nav-link.active,
+.navbar .dropdown-item:hover {
+  color: var(--accent) !important;
+  background: transparent;
+}
+.navbar .navbar-toggler {
+  border-color: var(--rule);
+  color: var(--fg);
+}
+
+/* Right-hand navbar tools (search trigger, color-scheme toggle).
+   These elements aren't .nav-link items, so the rule above doesn't
+   reach them — without this, flatly's pale icon colour is invisible
+   on our white navbar background. */
+.navbar .quarto-navigation-tool,
+.navbar .quarto-color-scheme-toggle,
+.navbar #quarto-search,
+.navbar #quarto-search a,
+.navbar #quarto-search button,
+.navbar #quarto-search i,
+.navbar .aa-DetachedSearchButton,
+.navbar .aa-DetachedSearchButton-Icon,
+.navbar .aa-SubmitIcon {
+  color: var(--fg) !important;
+  fill: var(--fg) !important;
+}
+.navbar .quarto-navigation-tool i,
+.navbar .quarto-color-scheme-toggle i {
+  color: var(--fg) !important;
+}
+.navbar .quarto-navigation-tool:hover,
+.navbar .quarto-navigation-tool:hover i,
+.navbar .quarto-color-scheme-toggle:hover,
+.navbar .quarto-color-scheme-toggle:hover i,
+.navbar #quarto-search:hover {
+  color: var(--accent) !important;
+}
+.navbar .aa-DetachedSearchButton {
+  background: var(--surface) !important;
+  border: 1px solid var(--rule) !important;
+}
+
+/* Dropdown menu surface in either mode. */
+.dropdown-menu {
+  background-color: var(--surface);
+  border-color: var(--rule);
+}
+.dropdown-item {
+  color: var(--fg);
+}
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: var(--accent-soft);
+  color: var(--fg);
+}
+.dropdown-divider {
+  border-top-color: var(--rule);
+}
+
+/* Right-hand TOC and sidebar nav. */
+#TOC, .sidebar-navigation {
+  font-size: 0.9rem;
+  border-left: 1px solid var(--rule);
+  padding-left: 1rem;
+}
+#TOC a {
+  color: var(--fg-alt);
+  border-bottom: none;
+  padding: 2px 0;
+  display: block;
+}
+#TOC a:hover, #TOC a.active { color: var(--accent); }
+
+/* Hero block on landing pages. */
+.hero {
+  padding: 2.5rem 0 2rem 0;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 2rem;
+}
+.hero h1 { margin-top: 0; font-size: 2.3rem; }
+.hero .lead { font-size: 1.1rem; color: var(--fg-alt); max-width: 52ch; }
+.hero .kicker {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.72rem;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+/* Topic-card grid on the homepage and category pages. */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.card-grid .card {
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.2rem;
+  transition: border-color 180ms, transform 180ms, box-shadow 180ms;
+}
+.card-grid .card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.card-grid .card h3 { margin-top: 0; font-size: 1.02rem; color: var(--accent); }
+.card-grid .card p  { font-size: 0.93rem; color: var(--fg-alt); margin-bottom: 0; }
+.card-grid .card .kicker {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.68rem;
+  color: var(--fg-alt);
+  margin-bottom: 0.3rem;
+}
+
+.callout {
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  padding: 0.85rem 1rem;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin: 1.5rem 0;
+}
+
+/* Code surfaces. */
+pre, code, kbd { font-family: var(--font-mono); font-size: 0.9em; }
+pre > code {
+  background: var(--code-bg);
+  color: var(--code-fg);
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius);
+  display: block;
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+}
+:not(pre) > code {
+  background: var(--code-bg);
+  color: var(--code-fg);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+}
+
+table { width: 100%; margin: 1.3rem 0; border-collapse: collapse; }
+th, td {
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  color: var(--fg);
+}
+th { background: var(--surface); font-weight: 600; }
+tbody tr:hover { background: var(--surface); }
+
+.nav-footer, .page-footer {
+  background: var(--bg) !important;
+  border-top: 1px solid var(--rule);
+  padding: 1.3rem 0;
+  font-size: 0.88rem;
+  color: var(--fg-alt);
+}
+.nav-footer a, .page-footer a { color: var(--fg-alt); }
+.nav-footer a:hover, .page-footer a:hover { color: var(--accent); }
+
+img { max-width: 100%; height: auto; border-radius: var(--radius); }
+blockquote {
+  border-left: 3px solid var(--rule);
+  padding: 0.3rem 1rem;
+  color: var(--fg-alt);
+}
+
+/* Related-tutorials block injected by /js/related.js on tutorial pages. */
+.related-tutorials {
+  margin: 3rem 0 1rem;
+  padding: 1.25rem 0 0;
+  border-top: 2px solid var(--rule);
+}
+.related-tutorials h2 { font-size: 1.15rem; margin: 0 0 0.5rem; color: var(--fg); }
+.related-tutorials .related-blurb { font-size: 0.9rem; color: var(--fg-alt); margin: 0 0 0.5rem; }
+.related-tutorials .related-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+.related-tutorials .related-item {
+  border: 1px solid var(--rule);
+  border-radius: 0.4rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--surface);
+  color: var(--fg);
+}
+.related-tutorials .related-item a {
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--accent);
+}
+.related-tutorials .related-item a:hover {
+  text-decoration: underline;
+  color: var(--accent-hover);
+}
+.related-tutorials .related-item .topic {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-alt);
+  display: block;
+  margin-bottom: 0.2rem;
+}
+.related-tutorials .related-item .related-desc {
+  font-size: 0.82rem;
+  color: var(--fg-alt);
+  margin-top: 0.2rem;
+}
+.related-tutorials .network-link {
+  font-size: 0.88rem;
+  margin-top: 0.5rem;
+}

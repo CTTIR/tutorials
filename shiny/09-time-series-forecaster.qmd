@@ -1,0 +1,51 @@
+---
+title: Time Series Forecaster
+date: "2026-04-17"
+description: "Upload a time series, choose a model, and compare forecasts from ETS, ARIMA, and Prophet side by side"
+categories:
+  - Time Series Analysis
+  - shiny
+  - forecasting
+  - arima
+  - ets
+  - prophet
+---
+
+## Purpose
+
+Forecasting is as much about model comparison as about any single model. The Time Series Forecaster lets a reader upload a series (or pick a built-in one), split it into training and test windows, fit several model families to the training data, and inspect forecasts and accuracy metrics on the test window.
+
+## User inputs
+
+- Dataset (built-in monthly/quarterly/daily examples, or a user-uploaded time-indexed CSV)
+- Train/test split point, chosen by a draggable vertical line on the series plot
+- Models to fit (ETS, auto-ARIMA, manual SARIMA with order selectors, Prophet, naive, seasonal-naive)
+- Forecast horizon in time units of the series
+- Transformation toggles: Box-Cox, differencing
+
+## Outputs
+
+- Series plot with training and test regions shaded differently and forecasts overlaid
+- Diagnostic panel: ACF/PACF of residuals, Ljung-Box test, normality plot
+- Accuracy table: MAE, RMSE, MAPE, MASE across all fitted models on the test window
+- A "forecast details" sidebar for the currently selected model with point forecasts and 80/95 PIs
+
+## Didactic value
+
+Seeing a Prophet fit ride a seasonal swing while an ARIMA ignores it (or vice versa) communicates the inductive biases of each family. Watching the 95% PIs fan out over the forecast horizon reinforces that uncertainty grows with lead time -- a property many students forget when interpreting a point forecast.
+
+## Embedded in
+
+- `time-series/arima-models.md`
+- `time-series/seasonal-decomposition.md`
+- `time-series/forecast-evaluation.md`
+
+## Source code
+
+Local: `apps/09-time-series-forecaster/`
+
+Run with:
+
+```r
+shiny::runApp("apps/09-time-series-forecaster")
+```

@@ -1,0 +1,132 @@
+---
+title: Descriptive Univariate Statistics
+date: "2026-04-17"
+description: "Location, dispersion, and shape measures for a single variable"
+categories:
+  - foundations
+  - descriptive
+  - mean
+  - median
+  - mode
+  - sd
+  - iqr
+---
+
+## Research question
+
+Before any inferential test is run, a clear picture of each variable's distribution is mandatory. Two biomedical scenarios: (1) In a type 2 diabetes registry, what is the typical HbA1c and its variability across 800 patients? (2) In a post-operative recovery study, is the length-of-stay distribution symmetric enough to report a mean, or is it right-skewed enough to require the median?
+
+## Assumptions
+
+Descriptive summaries are assumption-light, but their interpretation depends on context:
+
+| Assumption | How to verify in R |
+|---|---|
+| Data are correctly scaled and typed | `str(df)`; `sapply(df, class)` |
+| Missing values are handled explicitly | `sum(is.na(x))`; `na.omit()` or `na.rm = TRUE` |
+| The chosen summary fits the distribution shape | Histogram (`ggplot2::geom_histogram`) or Q-Q plot |
+
+Reporting a mean when the distribution is strongly skewed gives a misleading sense of typicality; reporting an SD when the distribution is bimodal is even worse.
+
+## Hypotheses
+
+Descriptive statistics are not tests. They produce point estimates and distributional summaries that feed into inferential questions.
+
+## R code
+
+```r
+library(tidyverse)
+library(rstatix)
+library(gtsummary)
+library(psych)
+
+set.seed(42)
+
+diabetes_registry <- tibble(
+  patient_id  = sprintf("P%04d", 1:800),
+  age         = round(rnorm(800, 58, 11)),
+  hba1c       = round(rnorm(800, 7.2, 1.1), 1),
+  los_days    = rpois(800, lambda = 5) + rexp(800, rate = 0.3),   # right-skewed
+  smoker      = factor(sample(c("Never", "Former", "Current"), 800, replace = TRUE,
+                              prob = c(0.55, 0.30, 0.15)))
+)
+
+# Tidy summary of continuous variables
+diabetes_registry |>
+  get_summary_stats(
+    age, hba1c, los_days,
+    type = "common"
+  )
+
+# Psychometric summary: mean, median, SD, skew, kurtosis
+describe(diabetes_registry[, c("age", "hba1c", "los_days")])
+
+# Publication-ready summary table
+diabetes_registry |>
+  tbl_summary(
+    include   = c(age, hba1c, los_days, smoker),
+    statistic = list(
+      age        ~ "{mean} ({sd})",
+      hba1c      ~ "{mean} ({sd})",
+      los_days   ~ "{median} ({p25}-{p75})",
+      smoker     ~ "{n} ({p}%)"
+    )
+  )
+
+# Visualisation of length-of-stay to justify median over mean
+diabetes_registry |>
+  ggplot(aes(x = los_days)) +
+  geom_histogram(bins = 40, fill = "#2A9D8F", colour = "white") +
+  geom_vline(aes(xintercept = mean(los_days)),   colour = "#F4A261", linewidth = 1) +
+  geom_vline(aes(xintercept = median(los_days)), colour = "#6A4C93", linewidth = 1) +
+  labs(x = "Length of stay (days)", y = "Count",
+       title = "Right-skewed LOS: mean (orange) exceeds median (purple)") +
+  theme_minimal()
+```
+
+Two conventions are displayed: metric variables with approximately symmetric distributions (age, HbA1c) get mean and SD; the right-skewed length-of-stay gets median and IQR.
+
+## Interpreting the output
+
+The `get_summary_stats()` table gives $n$, mean, SD, median, Q1, Q3, min, and max in one call. `describe()` adds skewness and kurtosis; a skew of $|g_1| > 1$ signals that the mean is being pulled by a tail. The histogram visually confirms the LOS skew: the mean sits above the median because the long right tail pulls the arithmetic average upward.
+
+## Effect size
+
+Descriptive univariate statistics do not have effect sizes; they *are* the point estimates. For comparisons between groups, see the t-test and ANOVA pages.
+
+## Reporting (APA 7)
+
+> Across 800 patients in the registry, age was 58.2 years (SD = 11.0), HbA1c was 7.21 % (SD = 1.10), and post-operative length of stay had a median of 6.8 days (IQR 4.2-10.1). Current smoking status was reported by 119 patients (14.9 %).
+
+## Common pitfalls
+
+- Reporting a mean for a strongly skewed variable; use the median.
+- Reporting an SD for a bimodal variable; show the histogram instead.
+- Computing a mean of an ordinal variable stored as numeric codes; use the median or frequency counts.
+- Ignoring missing values silently; `mean(x)` returns `NA` unless `na.rm = TRUE`.
+
+## Parametric vs. non-parametric alternative
+
+Summary choice depends on distribution shape, not on the parametric / non-parametric classification of downstream tests.
+
+## Further reading
+
+- [Measurement scales](/decision-tree/foundations/measurement-scales.qmd)
+- [Normality checks](/decision-tree/foundations/normality.qmd)
+- [Outliers](/decision-tree/foundations/outliers.qmd)
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00c1ee2fa53f47ee941ae6908e91ab43 -->
+<img src="https://vg09.met.vgwort.de/na/00c1ee2fa53f47ee941ae6908e91ab43"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

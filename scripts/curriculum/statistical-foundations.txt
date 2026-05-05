@@ -1,0 +1,32 @@
+# Statistical Foundations -- curriculum outline for stub generation
+# format: slug|Title|hint keywords
+scales-of-measurement|Scales of Measurement|nominal; ordinal; interval; ratio; permissible statistics
+population-vs-sample|Population vs. Sample|target population; sampling frame; parameter vs statistic
+sampling-methods|Sampling Methods|SRS; stratified; cluster; systematic; convenience
+sampling-distributions|Sampling Distributions|distribution of statistics; variability of estimators
+standard-error|The Standard Error|SE vs SD; SE for mean and proportion; SE from bootstrap
+bias-and-variance|Bias and Variance of Estimators|bias; variance; MSE decomposition
+estimators-and-estimation|Estimators and Estimation|point estimation; plug-in principle
+unbiasedness-consistency-efficiency|Unbiasedness, Consistency, Efficiency|three core properties of estimators
+method-of-moments|The Method of Moments|equating sample and theoretical moments
+maximum-likelihood-estimation|Maximum Likelihood Estimation|likelihood function; score; MLE; regularity
+fisher-information|Fisher Information|definition; observed vs expected; role in CRLB
+cramer-rao-lower-bound|The Cramer-Rao Lower Bound|efficiency bound for unbiased estimators
+sufficient-statistics|Sufficient Statistics|factorization theorem; exponential family
+likelihood-ratio-tests|Likelihood Ratio Tests|LR statistic; Wilks' theorem
+confidence-intervals-introduction|Confidence Intervals: Introduction|coverage; interpretation; CI vs credible interval
+pivotal-quantities|Pivotal Quantities|constructing CIs via pivots
+law-of-large-numbers|Law of Large Numbers|weak and strong LLN; sample mean consistency
+convergence-in-probability|Convergence in Probability|definition and examples
+convergence-in-distribution|Convergence in Distribution|weak convergence; CDF convergence
+slutsky-theorem|Slutsky's Theorem|combining convergence results for asymptotics
+delta-method|The Delta Method|asymptotic distribution of smooth transformations
+order-statistics|Order Statistics|distributions of min, max, quantiles
+empirical-distribution-function|The Empirical Distribution Function|definition; DKW inequality
+glivenko-cantelli|The Glivenko-Cantelli Theorem|uniform convergence of ECDF to CDF
+moments-and-mgfs|Moments and Moment Generating Functions|MGFs; characterising distributions
+characteristic-functions|Characteristic Functions|Fourier transform of distributions
+jensens-inequality|Jensen's Inequality|convex function bound on expectation
+cauchy-schwarz|The Cauchy-Schwarz Inequality|correlation bound; applications
+chebyshev-markov|Markov and Chebyshev Inequalities|tail bounds from moments
+big-op-little-op|Big-Op and Little-op Notation|stochastic order symbols in asymptotics

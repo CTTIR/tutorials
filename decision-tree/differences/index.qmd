@@ -1,0 +1,26 @@
+---
+title: Differences Between Groups
+description: "Tests for comparing groups on central tendency, variance, or proportions"
+---
+
+Most research questions in clinical and biomedical work are about differences: does treatment A outperform treatment B; does a biomarker differ between healthy and diseased patients; does a surgical technique shorten recovery. This section covers the full toolkit for such comparisons.
+
+## Subsections
+
+- **[Central tendency](/decision-tree/differences/central-tendency/index.qmd)** -- t-tests, ANOVA family, and their non-parametric analogues (Mann-Whitney, Wilcoxon, Kruskal-Wallis, Friedman, sign test).
+- **[Proportions and frequencies](/decision-tree/differences/proportions/index.qmd)** -- binomial tests and chi-squared goodness-of-fit.
+- **[Variances](/decision-tree/differences/variances.qmd)** -- F-test, chi-squared variance test, Levene's test.
+
+## Choosing the right test
+
+Three questions usually narrow the choice to a single test:
+
+1. **Scale level** of the outcome: metric, ordinal, or nominal.
+2. **Group structure**: two groups or more; independent or paired / repeated.
+3. **Normality and variance homogeneity**: only parametric tests require these.
+
+The [interactive wizard](/decision-tree/decision-assistant.qmd) walks through this triage in plain English and returns the recommended test with a link to the full method page.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*

@@ -1,0 +1,105 @@
+---
+title: Pearson Correlation
+date: "2026-04-17"
+description: "Measuring linear association between two continuous, approximately bivariate-normal variables"
+categories:
+  - pearson
+  - correlation
+  - linear
+  - r
+---
+
+## Research question
+
+Pearson's $r$ quantifies linear association between two continuous variables. Biomedical examples: (1) in patients with chronic heart failure, is left-ventricular ejection fraction linearly associated with six-minute-walk distance?; (2) in a Parkinson's cohort, does striatal dopamine-transporter binding correlate with motor symptom severity?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Both variables continuous | scale |
+| Approximate bivariate normality | `shapiro_test` on each; scatter plot with marginal histograms |
+| Linear relationship (no obvious curvature) | scatter plot |
+| No extreme bivariate outliers | Mahalanobis distance or boxplot on each |
+
+If the relationship is monotonic but not linear, use Spearman. If variables are heavily skewed, apply a transformation or use Spearman / Kendall.
+
+## Hypotheses
+
+$$H_0: \rho = 0 \qquad H_1: \rho \ne 0$$
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(broom); library(ggstatsplot)
+set.seed(42)
+
+# 80 heart-failure patients: LVEF (%) and 6MWD (m)
+hf <- tibble(
+  lvef = round(rnorm(80, 38, 8)),
+  mwd  = round(200 + 7 * lvef + rnorm(80, 0, 45))
+)
+
+# Assumptions
+hf |> shapiro_test(lvef, mwd)
+
+ggplot(hf, aes(lvef, mwd)) +
+  geom_point(colour = "#2A9D8F", size = 2, alpha = 0.7) +
+  geom_smooth(method = "lm", colour = "#F4A261") +
+  labs(x = "LVEF (%)", y = "6-min walk (m)") +
+  theme_minimal()
+
+# Pearson correlation with confidence interval
+cor.test(hf$lvef, hf$mwd, method = "pearson") |> tidy()
+
+# Tidy version via rstatix
+hf |> cor_test(lvef, mwd, method = "pearson")
+
+# Inline stats plot
+ggscatterstats(data = hf, x = lvef, y = mwd, type = "parametric",
+               xlab = "LVEF (%)", ylab = "6-min walk (m)")
+```
+
+## Interpreting the output
+
+Pearson $r = 0.78$ with a 95 % CI of $[0.68, 0.86]$, $t(78) \approx 11$, $p < .001$. The linear association is strong: higher ejection fraction is associated with longer walking distance.
+
+## Effect size
+
+Pearson's $r$ itself is the effect size. Cohen's thresholds: small 0.10, medium 0.30, large 0.50. $r^2$ gives the proportion of variance shared linearly.
+
+## Reporting (APA 7)
+
+> LVEF was positively correlated with 6-minute-walk distance (r = .78, 95 % CI [.68, .86], t(78) = 11.0, p < .001). The two variables share 60.8 % of their variance in linear form.
+
+## Common pitfalls
+
+- Pearson is sensitive to outliers; one or two leverage points can dominate $r$.
+- A near-zero Pearson does not imply no relationship; it means no *linear* relationship. Check the scatter plot for curvature.
+- Correlation is not causation: a strong $r$ between two variables does not establish one causes the other; confounders are always possible.
+- Testing many correlations without multiple-testing correction inflates false positives (the "correlation matrix" trap).
+
+## Parametric vs. non-parametric alternative
+
+- Non-parametric: [Spearman rank correlation](/decision-tree/associations/spearman-correlation.qmd) and [Kendall's tau](/decision-tree/associations/kendall-tau.qmd).
+- Directed: [simple linear regression](/decision-tree/associations/simple-linear-regression.qmd) when one variable is considered the predictor.
+
+## Further reading
+
+- Bishara, A. J., & Hittner, J. B. (2012). Testing the significance of a correlation with nonnormal data. *Psychological Methods*, 17(3), 399-417.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 0056112faf9241fd934d1d69c0dcc223 -->
+<img src="https://vg09.met.vgwort.de/na/0056112faf9241fd934d1d69c0dcc223"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

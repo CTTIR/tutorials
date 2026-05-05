@@ -1,0 +1,53 @@
+---
+title: Regression Playground
+date: "2026-04-17"
+description: "Fit and diagnose regression models interactively: adjust predictors, interactions, and transformations with live output"
+categories:
+  - "Regression & Modelling"
+  - shiny
+  - regression
+  - linear-models
+  - diagnostics
+---
+
+## Purpose
+
+Students of regression rarely see what happens to the fitted line and the residual diagnostics when a single observation is moved, a predictor is log-transformed, or a high-leverage point is removed. The Regression Playground makes every such change instantaneous and visible.
+
+## User inputs
+
+- Dataset (built-in or uploaded)
+- Outcome and predictor(s) selection
+- Model family: OLS, logistic, Poisson, negative binomial
+- Transformations: log, square, polynomial, spline (df selector)
+- Interaction toggles between pairs of predictors
+- Subset filters: exclude rows by leverage, residual, or user click
+
+## Outputs
+
+- Model summary table with coefficients, SEs, t/z, p-values, and confidence intervals
+- Fitted plot with confidence and prediction bands
+- Residual-vs-fitted, Q-Q, scale-location, and leverage plots
+- Marginal effects plot (via `ggeffects`) for any predictor
+- The R code to reproduce the current fit
+- A "model comparison" panel for nested-model likelihood-ratio tests and AIC/BIC
+
+## Didactic value
+
+The app teaches what goes wrong, not just what goes right: the visible effect of a single high-leverage point on the slope estimate; the way residual patterns betray a missed non-linearity; the inflation of standard errors when two predictors are highly collinear. These phenomena are the substance of a regression course but rarely experienced hands-on.
+
+## Embedded in
+
+- `regression-modelling/simple-linear-regression.md`
+- `regression-modelling/diagnostics-and-assumptions.md`
+- `regression-modelling/interactions.md`
+
+## Source code
+
+Local: `apps/07-regression-playground/`
+
+Run with:
+
+```r
+shiny::runApp("apps/07-regression-playground")
+```

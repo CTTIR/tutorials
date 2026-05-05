@@ -1,0 +1,50 @@
+---
+title: Power Calculator
+date: "2026-04-17"
+description: Interactive sample size and power curves for the most common study designs in clinical and life-science research
+categories:
+  - "Sample Size & Power"
+  - shiny
+  - power-analysis
+  - sample-size
+  - study-design
+---
+
+## Purpose
+
+The Power Calculator is the workhorse app of the site: a single interface that computes sample size, power, detectable effect, or significance level for any of the common designs a clinical or life-science researcher encounters, and draws the sensitivity of each quantity to the others as a curve.
+
+## User inputs
+
+- Design family (means, proportions, correlations, ANOVA, regression, survival, equivalence)
+- Specific test within the family
+- Three of the four power quantities, with the fourth to solve for
+- Effect-size input mode: standardised, raw, or from pilot summary statistics
+
+## Outputs
+
+- The solved quantity with a bolded summary sentence ("you need $n = 64$ per arm to detect a difference of 5.0 with 80% power at $\alpha = 0.05$")
+- A power curve: power as a function of total sample size, with the current point highlighted
+- A secondary curve: power as a function of effect size for the current $n$
+- The exact R code that would reproduce the calculation with `pwr`, `pwrss`, or `WebPower`
+- A downloadable PDF report with all inputs, results, and curves, suitable for a grant application
+
+## Didactic value
+
+Beyond its utility as a calculator, the app teaches the trade-off structure that governs every study design: doubling the sample size roughly halves the detectable effect, but the relationship is not linear; crossing from 80% to 90% power has a steeper cost than going from 70% to 80%; unbalanced allocation costs power relative to 1:1.
+
+## Embedded in
+
+- Every tutorial under `sample-size/`
+- `clinical-biostatistics/rct-design.md`
+- `clinical-biostatistics/non-inferiority-trials.md`
+
+## Source code
+
+Local: `apps/05-power-calculator/`
+
+Run with:
+
+```r
+shiny::runApp("apps/05-power-calculator")
+```

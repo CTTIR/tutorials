@@ -1,0 +1,105 @@
+---
+title: Paired-Samples t-Test
+date: "2026-04-17"
+description: Comparing two dependent measurements per unit on a continuous outcome
+categories:
+  - paired-t-test
+  - dependent-samples
+  - cohen-dz
+  - pre-post
+---
+
+## Research question
+
+Use the paired t-test when each unit contributes two related measurements and you want to know if their means differ. Biomedical examples: (1) does a twelve-week supervised exercise programme reduce systolic blood pressure (pre vs. post within the same patient)?; (2) do matched tumour-normal tissue pairs differ in the expression of a candidate biomarker measured by qPCR?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Pairs are naturally linked (same unit, matched case-control, left-right eye) | design |
+| The differences are approximately normal | `shapiro_test(d_i)` on the paired differences |
+| No extreme outliers among the differences | boxplot of differences |
+
+Normality applies to the *differences*, not to the two raw distributions.
+
+## Hypotheses
+
+Let $D_i = X_i - Y_i$ be the paired difference. Then
+
+$$H_0: \mu_D = 0 \qquad H_1: \mu_D \ne 0$$
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(effectsize); library(ggstatsplot)
+set.seed(42)
+
+# 40 patients; pre- and post-exercise SBP in mmHg
+ex <- tibble(
+  id  = 1:40,
+  pre  = round(rnorm(40, 142, 12)),
+  post = NA_real_
+) |>
+  mutate(post = round(pre - rnorm(40, 6, 5)))
+
+long <- ex |> pivot_longer(c(pre, post), names_to = "time", values_to = "sbp") |>
+  mutate(time = factor(time, levels = c("pre", "post")))
+
+# Differences + assumption check
+diffs <- ex$post - ex$pre
+shapiro_test(diffs)
+
+# Paired t-test
+long |> t_test(sbp ~ time, paired = TRUE, detailed = TRUE)
+
+# Effect size: Cohen's d_z (mean of differences / SD of differences)
+effectsize::cohens_d(ex$post, ex$pre, paired = TRUE)
+
+ggwithinstats(data = long, x = time, y = sbp, type = "parametric",
+              xlab = "Time", ylab = "Systolic BP (mmHg)",
+              title = "Pre vs. post exercise programme")
+```
+
+## Interpreting the output
+
+The mean difference (post minus pre) is about $-6$ mmHg with a 95 % CI roughly $[-7.6, -4.3]$. The paired $t$ is approximately $-7.6$ on $39$ df, $p < .001$. The effect size $d_z \approx 1.20$ indicates a very large within-subject change.
+
+## Effect size
+
+Cohen's $d_z$ = mean(differences) / SD(differences). Conventional thresholds: small 0.20, medium 0.50, large 0.80.
+
+## Reporting (APA 7)
+
+> The twelve-week programme reduced systolic blood pressure by 6.0 mmHg on average (paired t(39) = -7.59, p < .001, d_z = 1.20, 95 % CI for the mean difference [-7.6, -4.3] mmHg).
+
+## Common pitfalls
+
+- Running an independent t-test on paired data inflates the standard error and wastes power.
+- Reporting two-sample Cohen's $d$ instead of $d_z$ for paired designs gives a misleadingly small effect.
+- Pairs with missing values in one measurement must be dropped or imputed; `t.test()` removes them silently.
+
+## Parametric vs. non-parametric alternative
+
+If the paired differences are non-normal, use the [Wilcoxon signed-rank test](/decision-tree/differences/central-tendency/wilcoxon-signed-rank.qmd). If only the direction of each difference is meaningful, use the [sign test](/decision-tree/differences/central-tendency/sign-test.qmd).
+
+## Further reading
+
+- [Independent-samples t-test](/decision-tree/differences/central-tendency/independent-t-test.qmd)
+- [One-way repeated-measures ANOVA](/decision-tree/differences/central-tendency/rm-anova-one-way.qmd) (three or more measurements per unit)
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 0083758a694a479089f062499698c988 -->
+<img src="https://vg09.met.vgwort.de/na/0083758a694a479089f062499698c988"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

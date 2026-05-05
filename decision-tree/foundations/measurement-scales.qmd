@@ -1,0 +1,117 @@
+---
+title: Measurement Scales
+date: "2026-04-17"
+description: "Nominal, ordinal, interval, and ratio scales -- and which statistical operations each permits"
+categories:
+  - foundations
+  - scales
+  - measurement
+  - nominal
+  - ordinal
+  - interval
+  - ratio
+---
+
+## Research question
+
+Before any test is chosen, the analyst must know the scale of each variable. Two concrete examples: (1) when summarising tumour grade in a retrospective breast-cancer cohort, is it appropriate to report the mean grade, or should the median or the mode be used? (2) In a multicentre trial, should `site_id` be treated as a predictor in a linear model, or only as a random grouping?
+
+## Assumptions
+
+The taxonomy is descriptive rather than inferential. It assumes each variable has been coded faithfully: a variable intended to be ordinal has its levels ordered; a ratio variable genuinely has a meaningful zero.
+
+| Assumption | How to verify in R |
+|---|---|
+| Ordinal factor levels are ordered | `is.ordered(x)`; set with `factor(..., ordered = TRUE)` |
+| No numeric code stored as `character` | `sapply(df, class)` |
+| Zero is meaningful for a ratio variable | Inspect units: mass, counts, time elapsed are ratio; temperature in \u00B0C is interval only |
+
+## Hypotheses
+
+Measurement-scale tutorials do not test hypotheses directly. They determine which downstream hypotheses are well-posed. A t-test on jersey numbers tests $H_0: \mu_1 = \mu_2$ for a quantity that has no meaningful mean; the test is technically computable but substantively meaningless.
+
+## R code
+
+```r
+library(tidyverse)
+library(gtsummary)
+
+set.seed(42)
+
+clinical_cohort <- tibble(
+  patient_id    = sprintf("P%03d", 1:120),
+  sex           = factor(sample(c("Female", "Male"), 120, replace = TRUE)),
+  tumour_grade  = factor(
+    sample(c("G1", "G2", "G3"), 120, replace = TRUE, prob = c(0.3, 0.45, 0.25)),
+    levels = c("G1", "G2", "G3"), ordered = TRUE
+  ),
+  temp_celsius  = round(rnorm(120, mean = 36.8, sd = 0.4), 1),
+  wbc_count_giga_per_l = round(rlnorm(120, meanlog = log(7), sdlog = 0.3), 2)
+)
+
+# Inspect each scale level
+sapply(clinical_cohort, function(x)
+  if (is.ordered(x))      "ordinal"
+  else if (is.factor(x))  "nominal"
+  else if (is.numeric(x)) "metric"
+  else "other"
+)
+
+# Permissible summaries by scale
+clinical_cohort |>
+  tbl_summary(
+    include    = c(sex, tumour_grade, temp_celsius, wbc_count_giga_per_l),
+    statistic  = list(all_categorical() ~ "{n} ({p}%)",
+                      all_continuous()  ~ "{mean} ({sd})")
+  )
+```
+
+The `rstatix` and `gtsummary` packages respect scale levels automatically: a `factor` is summarised by counts and percentages; a numeric variable by mean and standard deviation. An ordinal factor with `ordered = TRUE` stays ordered in downstream tests, so that Spearman or Jonckheere-Terpstra procedures pick up the ordering.
+
+## Interpreting the output
+
+The inspection step confirms that `sex` is nominal, `tumour_grade` ordinal, and the two numeric columns metric. The `tbl_summary()` output reports the appropriate statistic for each column without manual intervention.
+
+## Effect size
+
+Scale-level diagnostics are descriptive; no effect size applies. When a downstream analysis is chosen based on scale, the appropriate effect size for that test (Cohen's $d$, Cramer's $V$, etc.) is used.
+
+## Reporting (APA 7)
+
+Typical methods-section phrasing:
+
+> Tumour grade was treated as an ordered factor (G1 < G2 < G3), sex as an unordered factor (female vs. male), and continuous variables as metric (interval / ratio).
+
+## Common pitfalls
+
+- Storing an ordinal variable as an unordered factor defeats downstream tests that depend on the ordering.
+- Treating a code (site identifier) as numeric invites regression models that fit slopes through arbitrary labels.
+- Reporting a mean of Likert-item scores for a single item is statistically dubious; a median or a composite scale of multiple items is safer.
+
+## Parametric vs. non-parametric alternative
+
+- Nominal outcomes route to chi-squared tests, Fisher's exact test, logistic regression.
+- Ordinal outcomes route to rank-based tests (Mann-Whitney, Kruskal-Wallis, ordinal logistic regression).
+- Metric outcomes with approximately normal residuals support t-tests, ANOVA, linear regression; otherwise their rank-based analogues.
+
+## Further reading
+
+- [Descriptive univariate statistics](/decision-tree/foundations/descriptive-univariate.qmd)
+- [Hypotheses, significance, and power](/decision-tree/foundations/hypotheses-significance.qmd)
+- Stevens, S. S. (1946). *Science*, 103(2684), 677--680.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00d1f04587644e70a6ca0518f83dd538 -->
+<img src="https://vg09.met.vgwort.de/na/00d1f04587644e70a6ca0518f83dd538"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

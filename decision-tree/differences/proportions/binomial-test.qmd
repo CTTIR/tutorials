@@ -1,0 +1,91 @@
+---
+title: Binomial Test
+date: "2026-04-17"
+description: Exact test of a single dichotomous variable against an expected proportion
+categories:
+  - binomial
+  - proportion
+  - exact-test
+---
+
+## Research question
+
+The binomial test compares an observed success proportion to a pre-specified expected proportion. Biomedical examples: (1) in a safety cohort of 60 patients taking a new anticoagulant, the observed 30-day bleeding rate is 12 %; does this differ from the historical benchmark of 8 %?; (2) a single-arm phase II oncology trial reports 18 objective responses out of 40 patients; does this reject the null response rate of 20 %?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Each observation is an independent Bernoulli trial with the same success probability | design |
+| A fixed sample size was specified in advance (not sample-size recalculation) | protocol |
+| The expected proportion is pre-specified | protocol |
+
+## Hypotheses
+
+$$H_0: p = p_0 \qquad H_1: p \ne p_0$$
+
+One-sided versions are permitted when pre-specified.
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(binom)
+
+## Scenario 1: bleeding rate audit
+obs   <- 7
+total <- 60
+p0    <- 0.08
+
+binom.test(obs, total, p = p0, alternative = "two.sided", conf.level = 0.95)
+
+## Scenario 2: phase II response rate
+binom.test(x = 18, n = 40, p = 0.20, alternative = "greater")
+
+## Wilson and Clopper-Pearson intervals for the observed rate
+binom::binom.confint(x = 18, n = 40, conf.level = 0.95,
+                     methods = c("wilson", "exact"))
+```
+
+## Interpreting the output
+
+- **Scenario 1.** The exact binomial test gives $p = .44$; the observed 11.7 % is not significantly different from the 8 % benchmark. The 95 % CI of 4.8-22.6 % is wide because $n$ is modest.
+- **Scenario 2.** The one-sided test gives $p = .001$; the response rate of 45 % is significantly greater than the 20 % null. The Wilson 95 % CI (30.7-60.2 %) gives a more appropriate uncertainty estimate than the Wald CI, especially when $p$ is near the extremes.
+
+## Effect size
+
+The effect size is the absolute difference $\hat{p} - p_0$ or the odds ratio $\hat{p}(1 - p_0) / [p_0 (1 - \hat{p})]$. Cohen's $h$ for proportions uses arcsine-transformed proportions; thresholds: small 0.20, medium 0.50, large 0.80.
+
+## Reporting (APA 7)
+
+> Of 40 patients, 18 achieved an objective response (45 %, 95 % Wilson CI 30.7-60.2 %). The response rate exceeded the historical null of 20 % (exact binomial one-sided p = .001).
+
+## Common pitfalls
+
+- Using the normal (Wald) approximation when $np$ or $n(1-p)$ is small; the exact binomial p-value is always accurate.
+- Reporting the Wald CI $\hat{p} \pm 1.96 \sqrt{\hat{p}(1-\hat{p})/n}$ when it extends below 0 or above 1; use Wilson or Clopper-Pearson instead.
+- Changing the target $p_0$ after seeing the data.
+
+## Parametric vs. non-parametric alternative
+
+The binomial test *is* the exact non-parametric alternative to any normal-approximation proportion test. For very large samples, the one-proportion z-test gives a similar answer.
+
+## Further reading
+
+- [Chi-squared goodness-of-fit](/decision-tree/differences/proportions/chi-square-goodness-of-fit.qmd)
+- Agresti, A., & Coull, B. A. (1998). Approximate is better than "exact" for interval estimation of binomial proportions. *The American Statistician*, 52(2), 119-126.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00a03affe13c43c8b0033569e1377e7b -->
+<img src="https://vg09.met.vgwort.de/na/00a03affe13c43c8b0033569e1377e7b"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

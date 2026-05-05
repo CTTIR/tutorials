@@ -1,0 +1,47 @@
+{
+  "R": {
+    "Version": "4.4.1",
+    "Repositories": [
+      {
+        "Name": "CRAN",
+        "URL": "https://cloud.r-project.org"
+      },
+      {
+        "Name": "BioCsoft",
+        "URL": "https://bioconductor.org/packages/3.19/bioc"
+      }
+    ]
+  },
+  "Packages": {
+    "tidyverse":   { "Package": "tidyverse",   "Version": "2.0.0",  "Source": "Repository", "Repository": "CRAN" },
+    "dplyr":       { "Package": "dplyr",       "Version": "1.1.4",  "Source": "Repository", "Repository": "CRAN" },
+    "tidyr":       { "Package": "tidyr",       "Version": "1.3.1",  "Source": "Repository", "Repository": "CRAN" },
+    "ggplot2":     { "Package": "ggplot2",     "Version": "3.5.1",  "Source": "Repository", "Repository": "CRAN" },
+    "purrr":       { "Package": "purrr",       "Version": "1.0.2",  "Source": "Repository", "Repository": "CRAN" },
+    "rstatix":     { "Package": "rstatix",     "Version": "0.7.2",  "Source": "Repository", "Repository": "CRAN" },
+    "car":         { "Package": "car",         "Version": "3.1-2",  "Source": "Repository", "Repository": "CRAN" },
+    "broom":       { "Package": "broom",       "Version": "1.0.5",  "Source": "Repository", "Repository": "CRAN" },
+    "gtsummary":   { "Package": "gtsummary",   "Version": "1.7.2",  "Source": "Repository", "Repository": "CRAN" },
+    "ggstatsplot": { "Package": "ggstatsplot", "Version": "0.12.3", "Source": "Repository", "Repository": "CRAN" },
+    "psych":       { "Package": "psych",       "Version": "2.4.3",  "Source": "Repository", "Repository": "CRAN" },
+    "lavaan":      { "Package": "lavaan",      "Version": "0.6-17", "Source": "Repository", "Repository": "CRAN" },
+    "factoextra":  { "Package": "factoextra",  "Version": "1.0.7",  "Source": "Repository", "Repository": "CRAN" },
+    "cluster":     { "Package": "cluster",     "Version": "2.1.6",  "Source": "Repository", "Repository": "CRAN" },
+    "afex":        { "Package": "afex",        "Version": "1.3-1",  "Source": "Repository", "Repository": "CRAN" },
+    "effectsize":  { "Package": "effectsize",  "Version": "0.8.7",  "Source": "Repository", "Repository": "CRAN" },
+    "performance": { "Package": "performance", "Version": "0.11.0", "Source": "Repository", "Repository": "CRAN" },
+    "nnet":        { "Package": "nnet",        "Version": "7.3-19", "Source": "Repository", "Repository": "CRAN" },
+    "MASS":        { "Package": "MASS",        "Version": "7.3-60", "Source": "Repository", "Repository": "CRAN" },
+    "brant":       { "Package": "brant",       "Version": "0.3-0",  "Source": "Repository", "Repository": "CRAN" },
+    "pwr":         { "Package": "pwr",         "Version": "1.3-0",  "Source": "Repository", "Repository": "CRAN" },
+    "pROC":        { "Package": "pROC",        "Version": "1.18.5", "Source": "Repository", "Repository": "CRAN" },
+    "binom":       { "Package": "binom",       "Version": "1.1-1.1","Source": "Repository", "Repository": "CRAN" },
+    "dunn.test":   { "Package": "dunn.test",   "Version": "1.3.6",  "Source": "Repository", "Repository": "CRAN" },
+    "outliers":    { "Package": "outliers",    "Version": "0.15",   "Source": "Repository", "Repository": "CRAN" },
+    "BSDA":        { "Package": "BSDA",        "Version": "1.2.2",  "Source": "Repository", "Repository": "CRAN" },
+    "EnvStats":    { "Package": "EnvStats",    "Version": "2.8.1",  "Source": "Repository", "Repository": "CRAN" },
+    "DescTools":   { "Package": "DescTools",   "Version": "0.99.54","Source": "Repository", "Repository": "CRAN" },
+    "NbClust":     { "Package": "NbClust",     "Version": "3.0.1",  "Source": "Repository", "Repository": "CRAN" },
+    "GPArotation": { "Package": "GPArotation", "Version": "2024.3-1","Source":"Repository", "Repository": "CRAN" }
+  }
+}

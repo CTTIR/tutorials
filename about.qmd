@@ -1,0 +1,62 @@
+---
+title: About
+description: "About the Statistics & Bioinformatics Tutorial Collection"
+---
+
+## About This Tutorial Collection
+
+This website provides a comprehensive collection of tutorials covering the most important topics in statistics and bioinformatics. Every tutorial includes practical R code examples that you can reproduce and adapt for your own analyses.
+
+### Who Is This For?
+
+These tutorials are designed for:
+
+- **Students** in biostatistics, bioinformatics, data science, and related fields
+- **Researchers** who need to apply statistical methods in their work
+- **Practitioners** looking to expand their analytical toolkit
+- **Anyone** interested in learning data analysis with R
+
+### What You Will Find
+
+The tutorials span a wide range of topics, from foundational statistical theory to advanced bioinformatics workflows:
+
+- **Statistical Foundations** -- core concepts, probability theory, and distributions
+- **Descriptive Statistics** -- summarising and exploring data
+- **Inferential Statistics** -- hypothesis testing, confidence intervals, and more
+- **Sample Size & Power** -- planning studies with adequate statistical power
+- **Data Visualisation** -- creating publication-quality graphics with ggplot2
+- **Regression & Modelling** -- linear models, GLMs, mixed models, and beyond
+- **Multivariate Methods** -- PCA, clustering, factor analysis
+- **Bayesian Statistics** -- Bayesian inference and computational methods
+- **Survival Analysis** -- time-to-event data analysis
+- **Time Series** -- temporal data analysis and forecasting
+- **Machine Learning** -- supervised and unsupervised methods in R
+- **Bioinformatics** -- genomics, transcriptomics, proteomics, and more
+- **Clinical Biostatistics** -- clinical trial methodology and diagnostic testing
+- **Meta-Analysis** -- systematic evidence synthesis
+- **Experimental Design** -- planning experiments and studies
+- **Reproducible Research** -- best practices for reproducible data analysis
+
+### Technical Requirements
+
+All tutorials use **R** as the primary programming language. To follow along, you will need:
+
+- [R](https://cran.r-project.org/) (version 4.0 or later recommended)
+- [RStudio](https://posit.co/products/open-source/rstudio/) or another R IDE
+- The specific R packages mentioned in each tutorial
+
+### Author
+
+These tutorials are maintained by **R. Heller**. For more information, visit the [main website](https://r-heller.github.io/website/).
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 0015a195ffc14c80a3fcdf264e8c509f -->
+<img src="https://vg09.met.vgwort.de/na/0015a195ffc14c80a3fcdf264e8c509f"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

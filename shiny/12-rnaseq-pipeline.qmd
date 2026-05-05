@@ -1,0 +1,53 @@
+---
+title: RNA-seq Pipeline Walkthrough
+date: "2026-04-17"
+description: "Step through a full DESeq2 differential expression analysis interactively, from count matrix to volcano and MA plots"
+categories:
+  - Bioinformatics
+  - shiny
+  - rna-seq
+  - deseq2
+  - differential-expression
+---
+
+## Purpose
+
+RNA-seq analysis has enough moving parts -- normalisation, dispersion estimation, shrinkage, multiple testing, filtering -- that a static tutorial rarely communicates how each step changes the final gene list. The RNA-seq Pipeline Walkthrough guides a reader through a complete `DESeq2` analysis, one stage at a time, with every intermediate table and plot inspectable.
+
+## User inputs
+
+- Count matrix (user-uploaded or a built-in GEO example)
+- Sample metadata (sample ID, condition, optional covariates such as batch)
+- Design formula, constructed through dropdowns
+- Contrast selection: which condition vs. which reference
+- Filtering thresholds: minimum count, minimum samples
+- LFC shrinkage method: `apeglm`, `ashr`, `normal`
+
+## Outputs
+
+- Sample-sample distance heatmap and PCA plot for QC
+- Dispersion plot with fitted trend
+- Results table with shrunken log-fold changes, standard errors, and adjusted p-values
+- Volcano plot and MA plot with user-adjustable significance thresholds
+- Gene-level count plot for the top hits
+- The full `DESeq2` script reproduced in a copy-ready code panel
+
+## Didactic value
+
+Changing the LFC shrinkage method in a dropdown and seeing the volcano plot reshape -- noisy low-count genes pulled toward zero, high-confidence genes barely moved -- teaches what shrinkage is for in a way the `DESeq2` manual never quite manages. Adding a batch covariate and watching surprising hits collapse communicates the value of design formulas.
+
+## Embedded in
+
+- `bioinformatics/bulk-rnaseq-differential-expression.md`
+- `bioinformatics/rnaseq-quality-control.md`
+- `bioinformatics/lfc-shrinkage.md`
+
+## Source code
+
+Local: `apps/12-rnaseq-pipeline/`
+
+Run with:
+
+```r
+shiny::runApp("apps/12-rnaseq-pipeline")
+```

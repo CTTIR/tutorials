@@ -1,0 +1,129 @@
+---
+title: "Hypotheses, Significance, and Power"
+date: "2026-04-17"
+description: "H0/H1, alpha, beta, p-values, confidence intervals, and effect sizes -- the grammar of inferential statistics"
+categories:
+  - foundations
+  - hypothesis
+  - alpha
+  - beta
+  - power
+  - effect-size
+---
+
+## Research question
+
+Two planning scenarios: (1) A trial is being designed to detect a clinically meaningful 5 mmHg drop in systolic blood pressure -- how many patients per arm are needed at 80 % power? (2) A published study reports $p = 0.062$ for a primary endpoint -- is the result "nearly significant", or is it uninformative?
+
+## Assumptions
+
+Statistical significance testing assumes a well-defined hypothesis pair and a correctly specified sampling model. The assumptions propagate to the specific test (t-test, ANOVA) that instantiates the framework.
+
+| Assumption | How to verify in R |
+|---|---|
+| Test chosen to match data and design | see decision wizard |
+| Alpha level pre-specified (commonly 0.05) | fixed in protocol before analysis |
+| One- vs. two-sided test pre-specified | fixed in protocol |
+| Power calculation based on realistic effect size | `pwr::pwr.t.test()` with domain-informed $d$ |
+
+## Hypotheses
+
+For a two-sample comparison of means:
+
+$$H_0: \mu_1 = \mu_2 \qquad H_1: \mu_1 \ne \mu_2$$
+
+Type I error ($\alpha$) is the probability of rejecting a true $H_0$. Type II error ($\beta$) is the probability of failing to reject a false $H_0$. Power is $1 - \beta$. Effect size (Cohen's $d$, $\eta^2$, odds ratio, etc.) quantifies the magnitude of a departure from $H_0$ and is what the study must be powered to detect.
+
+## R code
+
+```r
+library(tidyverse)
+library(pwr)
+
+# Scenario 1: sample size for a 5 mmHg drop (SD 12), alpha = 0.05, power = 0.80
+pwr_bp <- pwr.t.test(
+  d           = 5 / 12,   # Cohen's d
+  sig.level   = 0.05,
+  power       = 0.80,
+  type        = "two.sample",
+  alternative = "two.sided"
+)
+pwr_bp
+
+# Sample-size sensitivity curve
+sens <- expand_grid(d = seq(0.2, 0.8, by = 0.05),
+                    power = c(0.70, 0.80, 0.90)) |>
+  mutate(n = map2_dbl(d, power, ~ pwr.t.test(d = .x, sig.level = 0.05,
+                                             power = .y,
+                                             type = "two.sample")$n))
+
+sens |>
+  ggplot(aes(x = d, y = n, colour = factor(power))) +
+  geom_line(linewidth = 1) +
+  labs(x = "Cohen's d", y = "n per group",
+       colour = "Power",
+       title = "Sample size per arm vs. effect size and power") +
+  theme_minimal()
+
+# Scenario 2: interpreting a p = 0.062 result
+# Assume observed d = 0.35, n = 60 per group
+pwr.t.test(n = 60, d = 0.35, sig.level = 0.05, type = "two.sample")$power
+```
+
+## Interpreting the output
+
+Scenario 1: the calculation returns $n \approx 91$ patients per arm. Rounding up and allowing for 10 % attrition brings the target to 100 per arm.
+
+Scenario 2: with $n = 60$ and $d = 0.35$, the study had power 0.51 -- barely better than a coin flip. A $p = 0.062$ under such underpowering is completely uninformative; it is not "nearly significant" but "inadequately tested". Replication with a larger sample is the remedy.
+
+## Effect size
+
+Effect-size measures and conventional thresholds (Cohen 1988):
+
+| Test family | Effect size | Small | Medium | Large |
+|---|---|---|---|---|
+| t-test | Cohen's $d$ | 0.20 | 0.50 | 0.80 |
+| ANOVA | Cohen's $f$ / $\eta^2$ | 0.10 / 0.01 | 0.25 / 0.06 | 0.40 / 0.14 |
+| Correlation | Pearson's $r$ | 0.10 | 0.30 | 0.50 |
+| Contingency | Cramer's $V$ | 0.10 | 0.30 | 0.50 |
+| Logistic | Odds ratio | 1.5 | 2.5 | 4.3 |
+
+Always report the effect size alongside the p-value. Cohen's thresholds are conventions, not laws; in clinical research, a "small" effect can still be meaningful if the exposure is common and cheap.
+
+## Reporting (APA 7)
+
+> With a target effect size of d = 0.42 (a 5 mmHg drop relative to an expected SD of 12 mmHg), alpha = 0.05, and power = 0.80, the required sample size is 91 patients per arm. We plan to enrol 100 per arm to allow for 10 % loss to follow-up.
+
+## Common pitfalls
+
+- Treating $p < 0.05$ as a binary truth rather than a continuous measure of evidence.
+- Reporting "marginally significant" for $p \in (0.05, 0.10)$ without a pre-specified alternative alpha.
+- Computing post-hoc power from the observed effect: this is circular and non-informative.
+- Powering a study for an unrealistically large effect to meet sample-size constraints; the study is set up to "succeed" only when the effect is improbable.
+- Ignoring multiple comparisons when multiple primary endpoints are tested.
+
+## Parametric vs. non-parametric alternative
+
+Power calculations for rank-based tests (Mann-Whitney, Wilcoxon) are typically 5-15 % larger than their parametric counterparts under the parametric model but can be smaller when the distribution is heavy-tailed. Use `pwr.t.test()` with a slight inflation as a rough guide, or `WebPower` / `simstudy` for simulation-based power.
+
+## Further reading
+
+- [Sample size for a two-sample t-test](/tutorials/sample-size/power-two-sample-t.qmd)
+- [Effect sizes overview](/tutorials/inference/effect-sizes-overview.qmd)
+- Cohen, J. (1988). *Statistical Power Analysis for the Behavioral Sciences* (2nd ed.).
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00c3fa25758240cab7f589426922329e -->
+<img src="https://vg09.met.vgwort.de/na/00c3fa25758240cab7f589426922329e"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

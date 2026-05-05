@@ -1,0 +1,53 @@
+---
+title: ML Workflow Lab
+date: "2026-04-17"
+description: "Build, tune, and evaluate a supervised learning pipeline with tidymodels, from preprocessing through to held-out evaluation"
+categories:
+  - Machine Learning
+  - shiny
+  - tidymodels
+  - cross-validation
+  - hyperparameter-tuning
+---
+
+## Purpose
+
+The hardest part of learning machine learning is the pipeline: data split, preprocessing recipe, model specification, resampling plan, tuning grid, evaluation on a held-out set. The ML Workflow Lab makes every stage of a `tidymodels` pipeline visible and editable, so that readers can see how each choice feeds forward to the final performance estimate.
+
+## User inputs
+
+- Dataset (built-in classification/regression examples or user-uploaded)
+- Outcome variable and feature selection
+- Data split: proportion for training, stratification toggle
+- Preprocessing steps: imputation, normalisation, one-hot encoding, PCA, upsampling
+- Model family: logistic regression, random forest, boosted trees, SVM
+- Hyperparameter grid and resampling plan (k, repeats)
+- Performance metric primary and secondary (accuracy, AUC, RMSE, $R^2$, F1)
+
+## Outputs
+
+- The resulting `workflow()` object as pseudo-code in a syntax-highlighted panel
+- Tuning-result plot: performance as a function of each hyperparameter
+- Best model summary and the finalised workflow
+- Held-out performance: confusion matrix, ROC, calibration curve, SHAP values (tree models)
+- Variable-importance plot
+
+## Didactic value
+
+The app drives home a single lesson that a surprising number of ML practitioners fail to internalise: preprocessing must be *inside* the resampling loop, not before it, or performance estimates are optimistically biased. Seeing what happens when a "data leak" toggle is flipped on communicates this more viscerally than a warning in a manual.
+
+## Embedded in
+
+- `machine-learning/tidymodels-introduction.md`
+- `machine-learning/cross-validation.md`
+- `machine-learning/hyperparameter-tuning.md`
+
+## Source code
+
+Local: `apps/13-ml-workflow-lab/`
+
+Run with:
+
+```r
+shiny::runApp("apps/13-ml-workflow-lab")
+```

@@ -1,0 +1,111 @@
+---
+title: Multiple Linear Regression
+date: "2026-04-17"
+description: "Modelling a continuous outcome from two or more predictors, with VIF, homoscedasticity checks, and interpretation"
+categories:
+  - multiple-regression
+  - vif
+  - multicollinearity
+  - ols
+---
+
+## Research question
+
+Multiple linear regression models a continuous outcome as a linear combination of several predictors. Biomedical example: in a cardiovascular risk cohort, does LDL cholesterol predict intima-media thickness (IMT) after adjusting for age, sex, BMI, and smoking status?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Linearity in each predictor | component-plus-residual plots (`car::crPlots()`) |
+| Independence of residuals | design |
+| Homoscedasticity | `performance::check_heteroscedasticity()`, `ncvTest()` |
+| Approximately normal residuals | Q-Q plot, `shapiro.test(residuals(fit))` |
+| No severe multicollinearity | `car::vif()`; VIF > 5 flags concern, > 10 is severe |
+| No extreme high-influence points | `cooks.distance()`, leverage |
+
+## Hypotheses
+
+For each coefficient: $H_0: \beta_j = 0$ vs. $H_1: \beta_j \ne 0$. The overall F test tests whether any predictor's coefficient is non-zero.
+
+## R code
+
+```r
+library(tidyverse); library(rstatix); library(car); library(broom)
+library(performance); library(gtsummary)
+set.seed(42)
+
+cv <- tibble(
+  age   = rnorm(250, 58, 9),
+  sex   = factor(sample(c("F", "M"), 250, replace = TRUE)),
+  bmi   = rnorm(250, 27, 4),
+  ldl   = rnorm(250, 3.2, 0.8),
+  smoke = factor(sample(c("Never", "Former", "Current"), 250, replace = TRUE,
+                        prob = c(0.55, 0.30, 0.15))),
+  imt   = NA_real_
+) |>
+  mutate(imt = 0.40 + 0.004 * age + 0.05 * (sex == "M") + 0.006 * bmi +
+               0.04 * ldl + 0.03 * (smoke == "Current") + rnorm(250, 0, 0.08))
+
+fit <- lm(imt ~ age + sex + bmi + ldl + smoke, data = cv)
+
+broom::tidy(fit, conf.int = TRUE)
+broom::glance(fit)
+
+# Diagnostics
+car::vif(fit)
+check_model(fit)   # from performance
+
+# Publication-ready table
+tbl_regression(fit, intercept = TRUE) |>
+  add_global_p() |>
+  add_glance_source_note()
+```
+
+## Interpreting the output
+
+The tidy output gives each coefficient with its standard error, t, p, and 95 % CI. Under adjustment, LDL is associated with IMT at $b = 0.041$ (95 % CI 0.028-0.054), $p < .001$. The overall $R^2 = 0.38$, $F(6, 243) = 24.8$, $p < .001$. VIFs are under 2 for every predictor -- no multicollinearity concern.
+
+## Effect size
+
+For the model: $R^2$, adjusted $R^2$, and Cohen's $f^2$. For individual predictors: standardised beta and the partial $\eta^2$ or semipartial $r$. Cohen's $f^2$ thresholds: 0.02 / 0.15 / 0.35.
+
+## Reporting (APA 7)
+
+> After adjusting for age, sex, BMI, and smoking status, LDL cholesterol was independently associated with IMT (b = 0.041, SE = 0.006, p < .001, 95 % CI [0.028, 0.054]). The full model explained 38 % of the variance in IMT (adjusted R^2 = .37, F(6, 243) = 24.8, p < .001). Variance inflation factors were all below 2.
+
+## Common pitfalls
+
+- Omitted-variable bias: important confounders not in the model bias the remaining coefficients.
+- Interpreting coefficients on unstandardised scales without reporting units.
+- Multicollinearity inflates SEs and destabilises coefficients; check VIF and consider dropping or combining predictors.
+- Over-fitting: as a rough rule, keep predictors to fewer than $n / 15$.
+- Dichotomising a continuous predictor for convenience loses information and power.
+
+## Parametric vs. non-parametric alternative
+
+- Robust regression (`MASS::rlm`, `robustbase::lmrob`) for outlier-robust estimation.
+- Quantile regression (`quantreg::rq`) for non-mean summaries.
+- When the outcome is non-continuous, switch to logistic, Poisson, or ordinal models.
+
+## Further reading
+
+- [Logistic regression](/decision-tree/associations/logistic-regression.qmd)
+- [Simple linear regression](/decision-tree/associations/simple-linear-regression.qmd)
+- Harrell, F. E. (2015). *Regression Modeling Strategies* (2nd ed.). Springer.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 004c030351094c638d32bc95edb81ad2 -->
+<img src="https://vg09.met.vgwort.de/na/004c030351094c638d32bc95edb81ad2"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

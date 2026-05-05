@@ -1,0 +1,34 @@
+bayes-theorem-for-parameters|Bayes' Theorem for Parameters|prior x likelihood proportional to posterior
+prior-specification|Prior Specification|informative; weakly informative; flat
+weakly-informative-priors|Weakly Informative Priors|regularising without imposing
+jeffreys-prior|Jeffreys' Prior|invariance; reference
+posterior-mean-variance|Posterior Mean and Variance|summarising the posterior
+credible-intervals|Credible Intervals|equal-tailed and highest density
+hpd-interval|Highest Posterior Density Interval|shortest credible interval
+posterior-predictive-distribution|The Posterior Predictive Distribution|predicting new observations
+bayes-factors|Bayes Factors|model comparison ratio
+savage-dickey-ratio|The Savage-Dickey Density Ratio|Bayes factor for nested null
+beta-binomial-model|The Beta-Binomial Model|closed-form proportion inference
+normal-normal-model|The Normal-Normal Model|known variance; precision update
+gamma-poisson-model|The Gamma-Poisson Model|conjugate rate inference
+linear-regression-bayes|Bayesian Linear Regression|brms basics
+logistic-regression-bayes|Bayesian Logistic Regression|binary outcomes in brms
+bayesian-mixed-models|Bayesian Mixed Models|random effects in brms
+bayesian-hierarchical-intro|Bayesian Hierarchical Models|shrinkage; partial pooling
+metropolis-hastings|Metropolis-Hastings|proposal; acceptance ratio
+gibbs-sampling|Gibbs Sampling|conditional updates
+hamiltonian-monte-carlo|Hamiltonian Monte Carlo|leapfrog; NUTS
+stan-introduction|Stan: Introduction|data; parameters; model blocks
+brms-basics|brms Basics|formula syntax; family arguments
+rstanarm|rstanarm|pre-compiled Stan models
+rhat-ess-diagnostics|R-hat and ESS Diagnostics|convergence; autocorrelation
+divergences-pairs-plots|Divergences and Pairs Plots|diagnosing HMC problems
+posterior-predictive-checks|Posterior Predictive Checks|pp_check; model criticism
+waic|WAIC|widely applicable information criterion
+loo-cv|Leave-One-Out Cross-Validation|PSIS-LOO; loo package
+bayes-hypothesis-testing|Bayesian Hypothesis Testing|ROPE; Bayes factors
+informative-priors|Informative Priors|using domain knowledge
+bayesian-anova|Bayesian ANOVA|contrast-based comparisons
+bayesian-mediation|Bayesian Mediation Analysis|indirect effects with posteriors
+bayesian-meta-analysis|Bayesian Meta-Analysis|hierarchical model; tau prior
+tidybayes-workflow|tidybayes Workflow|tidy draws; ggplot posteriors

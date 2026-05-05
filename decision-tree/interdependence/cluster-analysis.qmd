@@ -1,0 +1,117 @@
+---
+title: Cluster Analysis
+date: "2026-04-17"
+description: "Hierarchical (Ward, single, complete, average), k-means, and two-step clustering with elbow and silhouette validation"
+categories:
+  - cluster-analysis
+  - kmeans
+  - hierarchical
+  - ward
+  - silhouette
+  - two-step
+---
+
+## Research question
+
+Cluster analysis partitions cases into homogeneous subgroups without a prespecified outcome. Biomedical examples: (1) in a cohort of 280 patients with heart failure, do laboratory and clinical variables reveal phenotypes that suggest subtype-specific management?; (2) among gene-expression profiles from 96 tumour samples, how many molecular subtypes are supported by the data?
+
+## Assumptions
+
+| Assumption | How to verify in R |
+|---|---|
+| Variables on comparable scale (standardise before distance calculation) | `scale()` |
+| Distance metric matched to data type (Euclidean for metric, Gower for mixed) | `cluster::daisy()` |
+| Appropriate algorithm for sample size | hierarchical for small $n$; k-means for large metric $n$; two-step for very large / mixed |
+| No extreme outliers driving a singleton cluster | boxplots, Mahalanobis |
+
+## Hypotheses
+
+Cluster analysis is exploratory; there is no formal null. Decisions about the number of clusters are supported by multiple criteria (elbow, silhouette, gap statistic, NbClust).
+
+## R code
+
+```r
+library(tidyverse); library(cluster); library(factoextra); library(NbClust)
+set.seed(42)
+
+# 240 heart-failure patients, 6 standardised variables
+hf <- tibble(
+  age      = rnorm(240, 68, 11),
+  lvef     = rnorm(240, 36, 10),
+  nt_probnp = rlnorm(240, log(3500), 0.6),
+  egfr     = rnorm(240, 55, 18),
+  sbp      = rnorm(240, 128, 18),
+  hr       = rnorm(240, 78, 14)
+)
+z <- scale(hf)
+
+# Hierarchical clustering with Ward's linkage
+d  <- dist(z, method = "euclidean")
+hc <- hclust(d, method = "ward.D2")
+plot(hc, labels = FALSE, main = "Dendrogram -- Ward's linkage")
+
+# Elbow: within-cluster sum of squares
+factoextra::fviz_nbclust(z, kmeans, method = "wss", k.max = 10)
+
+# Silhouette
+factoextra::fviz_nbclust(z, kmeans, method = "silhouette", k.max = 10)
+
+# k-means with chosen k = 3
+km <- kmeans(z, centers = 3, nstart = 25)
+hf |> mutate(cluster = factor(km$cluster)) |>
+  group_by(cluster) |> summarise(across(everything(), mean))
+
+# Mixed-type clustering (Gower + PAM)
+mixed <- hf |> mutate(diabetes = factor(sample(c("Yes", "No"), 240, replace = TRUE)))
+g <- cluster::daisy(mixed, metric = "gower")
+pam_fit <- cluster::pam(g, k = 3)
+table(pam_fit$clustering)
+```
+
+## Interpreting the output
+
+- **Hierarchical dendrogram** reveals natural groupings; cut the tree at the height corresponding to the desired number of clusters.
+- **Elbow plot** shows diminishing returns in the within-cluster sum of squares as $k$ grows. The "elbow" point (3 in our example) is a conventional choice.
+- **Silhouette plot** gives an average silhouette width per $k$; values near 1 indicate well-separated clusters, near 0 indicate overlap.
+- **Cluster profiles** summarise each cluster by the mean of each variable, suggesting biological or clinical labels (e.g., "elderly, preserved EF, renal dysfunction").
+
+## Effect size
+
+No conventional effect size. The silhouette width is the most widely reported quality index, alongside the Calinski-Harabasz index and Davies-Bouldin index.
+
+## Reporting (APA 7)
+
+> Hierarchical clustering with Ward's linkage on six standardised clinical variables identified three clusters (n = 240). The silhouette analysis and elbow criterion both supported a three-cluster solution (average silhouette width = 0.32). Cluster 1 (n = 86) was characterised by preserved ejection fraction and elderly age, Cluster 2 (n = 94) by reduced ejection fraction and high NT-proBNP, and Cluster 3 (n = 60) by renal dysfunction.
+
+## Common pitfalls
+
+- Failing to standardise variables on different scales; a single high-variance variable dominates the distance metric.
+- Treating cluster number as "discovered"; it is a choice the analyst makes with multiple criteria.
+- Interpreting clusters as substantively meaningful without external validation; replicate in an independent cohort.
+- Using Euclidean distance on categorical or mixed data; switch to Gower.
+- Reporting only the chosen $k$ without the elbow or silhouette diagnostics that justified it.
+
+## Parametric vs. non-parametric alternative
+
+Model-based clustering via Gaussian mixture models (`mclust`) provides likelihood-based model selection and soft cluster assignments. Density-based clustering (DBSCAN) identifies clusters of arbitrary shape and handles noise points.
+
+## Further reading
+
+- [Factor analysis](/decision-tree/interdependence/factor-analysis.qmd)
+- Kaufman, L., & Rousseeuw, P. J. (2009). *Finding Groups in Data: An Introduction to Cluster Analysis*. Wiley.
+
+----
+
+*Structure inspired by the University of Zurich Methodenberatung (methodenberatung.uzh.ch). All text, examples, R code, and reporting sentences are independently authored in English.*
+
+::: {.vgwort-pixel}
+```{=html}
+<!-- VG Wort Zählmarke — public ID: 00eb70662207471db2d103015480b8b0 -->
+<img src="https://vg09.met.vgwort.de/na/00eb70662207471db2d103015480b8b0"
+     width="1" height="1" alt=""
+     loading="eager"
+     fetchpriority="high"
+     decoding="async"
+     style="position:absolute;visibility:hidden;" />
+```
+:::

@@ -1,0 +1,48 @@
+---
+title: Summary Statistics Lab
+date: "2026-04-17"
+description: "Interactive Shiny app for understanding how location, dispersion, and shape statistics respond to changes in the data"
+categories:
+  - Descriptive Statistics
+  - shiny
+  - descriptive-statistics
+  - outliers
+  - robustness
+---
+
+## Purpose
+
+Textbook definitions of the mean, median, variance, MAD, skewness, and kurtosis are easy to memorise and easy to misapply. The Summary Statistics Lab lets a reader draw points onto a numberline, drag them around, add outliers, and watch every summary statistic update in real time. The pedagogical goal is that a reader develops an intuitive feel for which statistics are resistant to outliers, how skewness moves the mean away from the median, and why the variance is not a natural unit for reporting.
+
+## User inputs
+
+- A draggable strip-plot on which points can be added, removed, or moved
+- Preset configurations: symmetric, right-skewed, left-skewed, bimodal, with-outliers
+- A toggle for trimmed mean proportion
+- A toggle for MAD vs. IQR vs. SD
+
+## Outputs
+
+- Live-updating summary table: $n$, mean, median, trimmed mean, SD, MAD, IQR, skewness, kurtosis
+- Boxplot, histogram, and violin plot for the current data
+- A "what happened" panel that narrates how each statistic changed when a point was moved
+
+## Didactic value
+
+Seeing the median refuse to budge as an extreme point is dragged further right, while the mean races after it, communicates robustness more vividly than any equation. Similarly, the divergence of IQR and SD under outlier contamination, and the convergence of mean and median under symmetry, become tactile rather than abstract.
+
+## Embedded in
+
+- `descriptive-statistics/measures-of-location.md`
+- `descriptive-statistics/measures-of-dispersion.md`
+- `descriptive-statistics/robust-statistics.md`
+
+## Source code
+
+Local: `apps/02-summary-statistics-lab/`
+
+Run with:
+
+```r
+shiny::runApp("apps/02-summary-statistics-lab")
+```

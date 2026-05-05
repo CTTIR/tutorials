@@ -1,0 +1,49 @@
+---
+title: Bayesian Updater
+date: "2026-04-17"
+description: "Drag a prior, feed in data, and watch the posterior emerge for the canonical conjugate pairs"
+categories:
+  - Bayesian Statistics
+  - shiny
+  - bayesian
+  - conjugate-priors
+  - posterior
+---
+
+## Purpose
+
+The central Bayesian idea -- prior plus likelihood yields posterior -- is abstract until a reader sees a prior distribution morph into a posterior as data accumulate. The Bayesian Updater shows exactly that for the canonical conjugate pairs (beta-binomial, normal-normal, gamma-Poisson), with a single slider for each prior parameter and a second slider for the amount of data observed.
+
+## User inputs
+
+- Conjugate pair selector (beta-binomial, normal-normal with known variance, gamma-Poisson)
+- Prior parameter sliders with sensible ranges
+- Observed data: either numeric input (sum and count) or an interactive data-entry panel
+- "Prior type" presets: flat, weakly informative, skeptical, enthusiastic
+
+## Outputs
+
+- Overlay plot: prior (dashed), likelihood (light), posterior (solid), all on the same scale
+- Summary table: prior mean/variance, posterior mean/variance, 95% credible interval
+- Sequential-update animation: add one data point at a time and watch the posterior tighten
+- Posterior predictive distribution for the next observation
+
+## Didactic value
+
+The app makes four points that are hard to convey in prose: (1) a flat prior is not "objective", it is informative on the opposite scale; (2) as data accumulate, the posterior concentrates on the MLE regardless of the prior; (3) a strong prior can pull inference far from the data when $n$ is small; (4) the posterior predictive distribution is wider than the posterior for the mean, and this matters for honest forecasting.
+
+## Embedded in
+
+- `bayesian/conjugate-priors.md`
+- `bayesian/prior-selection.md`
+- `bayesian/posterior-summaries.md`
+
+## Source code
+
+Local: `apps/10-bayesian-updater/`
+
+Run with:
+
+```r
+shiny::runApp("apps/10-bayesian-updater")
+```

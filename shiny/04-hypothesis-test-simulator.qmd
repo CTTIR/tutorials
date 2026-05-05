@@ -1,0 +1,52 @@
+---
+title: Hypothesis Test Simulator
+date: "2026-04-17"
+description: Simulate null and alternative distributions to see type I and type II errors materialise as areas under curves
+categories:
+  - Inferential Statistics
+  - shiny
+  - hypothesis-testing
+  - type-i-error
+  - type-ii-error
+  - p-values
+---
+
+## Purpose
+
+The distinction between the null distribution of a test statistic and its distribution under a specific alternative is the conceptual heart of power analysis and of p-values. The Hypothesis Test Simulator draws both distributions, shades the rejection region, and lets the reader watch type I and type II errors change as the significance level, effect size, and sample size move.
+
+## User inputs
+
+- Test type (one-sample t, two-sample t, one-proportion z, two-proportion z, correlation)
+- True effect size under the alternative (Cohen's d, proportion difference, correlation)
+- Sample size $n$
+- Significance level $\alpha$
+- Test direction: two-sided, upper-tailed, lower-tailed
+
+## Outputs
+
+- Overlay of null (centred at 0) and alternative distributions
+- Shaded rejection region with area labelled as $\alpha$
+- Shaded power region and type-II region labelled as $1-\beta$ and $\beta$
+- A second panel showing the distribution of simulated p-values under the alternative
+- A live table of the implied power for a grid of effect sizes and sample sizes
+
+## Didactic value
+
+Seeing the p-value distribution flatten under the null but pile up near zero under the alternative clears up more misconceptions about p-values than a chapter of prose. Watching power creep up as $n$ grows -- and staying stubbornly low when the effect is tiny -- makes the relationship between design and detection vivid.
+
+## Embedded in
+
+- `inference/p-values-explained.md`
+- `inference/one-sample-t-test.md`
+- `sample-size/power-analysis-introduction.md`
+
+## Source code
+
+Local: `apps/04-hypothesis-test-simulator/`
+
+Run with:
+
+```r
+shiny::runApp("apps/04-hypothesis-test-simulator")
+```
