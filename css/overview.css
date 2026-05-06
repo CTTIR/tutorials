@@ -209,6 +209,73 @@
   height: 4px;
 }
 
+/* Autocomplete: title-only dropdown anchored under #overview-search.
+   The wrap element pins position so .autocomplete-list overlays without
+   shifting the page below it. */
+.autocomplete-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 32rem;
+}
+
+.autocomplete-list {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 0.4rem;
+  box-shadow: var(--shadow-md, 0 6px 18px rgba(0, 0, 0, 0.08));
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+.autocomplete-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--fg);
+  border-radius: 0;
+}
+
+.autocomplete-item.is-active,
+.autocomplete-item:hover {
+  background: var(--surface);
+}
+
+.autocomplete-item .autocomplete-pill {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.25rem;
+}
+
+.autocomplete-item .autocomplete-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.autocomplete-item .autocomplete-title mark {
+  background: var(--accent-soft, rgba(255, 220, 100, 0.5));
+  color: inherit;
+  padding: 0;
+  font-weight: 600;
+}
+
 #overview-search {
   width: 100%;
   max-width: 32rem;
