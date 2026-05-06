@@ -97,6 +97,7 @@ website:
         text: "Impressum"
       - icon: github
         href: https://github.com/CTTIR/tutorials
+        aria-label: "Source on GitHub"
   page-navigation: true
   page-footer:
     left: "#tutorials · MIT"

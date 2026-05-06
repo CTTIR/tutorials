@@ -28,7 +28,9 @@ export function createLegend({ root, graph, controller, topicById }) {
       count: t.count,
       colorSwatch: t.color,
       onToggle: () => controller.toggle("topics", t.id),
-      ariaLabel: `Filter by topic: ${t.label}`,
+      // Accessible name must start with visible label per WCAG 2.5.3.
+      // Suffix carries the toggle hint without breaking the rule.
+      ariaLabel: `${t.label}, topic filter`,
     });
     chip.dataset.value = t.id;
     topicBar.appendChild(chip);
@@ -42,7 +44,7 @@ export function createLegend({ root, graph, controller, topicById }) {
       label: t.label,
       count: t.count,
       onToggle: () => controller.toggle("tags", t.id),
-      ariaLabel: `Filter by tag: ${t.label}`,
+      ariaLabel: `${t.label}, tag filter`,
     });
     chip.dataset.value = t.id;
     tagBar.appendChild(chip);
@@ -58,7 +60,7 @@ export function createLegend({ root, graph, controller, topicById }) {
         label: l.label,
         count: l.count,
         onToggle: () => controller.toggle("labels", l.id),
-        ariaLabel: `Filter by label: ${l.label}`,
+        ariaLabel: `${l.label}, label filter`,
       });
       chip.dataset.value = l.id;
       labelBar.appendChild(chip);
