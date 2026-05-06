@@ -8,13 +8,13 @@
     "assert": {
       "preset": "lighthouse:no-pwa",
       "assertions": {
-        "categories:accessibility": ["warn", { "minScore": 0.95 }],
-        "categories:best-practices": ["warn", { "minScore": 0.9 }],
-        "categories:seo": ["warn", { "minScore": 0.9 }],
-        "categories:performance": "off",
-        "uses-http2": "off",
-        "is-on-https": "off",
-        "redirects-http": "off"
+        "categories:accessibility":  ["error", { "minScore": 0.95 }],
+        "categories:best-practices": ["warn",  { "minScore": 0.9  }],
+        "categories:seo":            ["warn",  { "minScore": 0.9  }],
+        "categories:performance":    "off",
+        "uses-http2":                "off",
+        "is-on-https":               "off",
+        "redirects-http":            "off"
       }
     }
   }

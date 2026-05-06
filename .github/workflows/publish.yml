@@ -17,6 +17,14 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Opt every JavaScript action into the Node.js 24 runtime ahead of
+      # the Sept 16 2026 cutoff, silencing the deprecation warnings on
+      # Node 20-bound actions (checkout, setup-python, setup-node,
+      # configure-pages, upload-artifact). Reverse with
+      # ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true if a specific action
+      # turns out to be broken on Node 24.
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - uses: actions/checkout@v4
       # Quarto pre-render shells out to Python (build_graph.py,
@@ -75,8 +83,10 @@ jobs:
           echo "related: $count partials"
 
       # ---------------------------------------------------------------- #
-      # Phase 9b — warn-only gates. Flip continue-on-error: false after a
-      # remediation pass once the first run surfaces any real findings.
+      # Phase 9b gates. Lighthouse a11y is hard now; lychee stays
+      # warn-only because external/legacy linkrot in tutorial bodies is
+      # out of scope for the overview rebuild and would otherwise block
+      # unrelated PRs.
       # ---------------------------------------------------------------- #
 
       - name: Link check (lychee, warn-only)
@@ -103,8 +113,7 @@ jobs:
             curl -fsS http://localhost:8080/overview.html >/dev/null && break
             sleep 0.5
           done
-      - name: Lighthouse a11y on overview.html (warn-only)
-        continue-on-error: true
+      - name: Lighthouse a11y on overview.html
         uses: treosh/lighthouse-ci-action@v12
         with:
           urls: |
