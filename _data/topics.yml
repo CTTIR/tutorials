@@ -1,0 +1,118 @@
+# Topic registry — single source of truth for the 16 tutorial topics.
+#
+# Consumed by:
+#   - scripts/build_graph.py    (validates categories[0], emits graph.json)
+#   - scripts/build_indexes.py  (regenerates index.qmd + tutorials.qmd)
+#   - the JS overview module    (via _artifacts/graph.json's `topics` array)
+#
+# To add or rename a topic:
+#   1. Edit this file.
+#   2. Run `python scripts/build_graph.py` (or `quarto render` — pre-render hook).
+#   3. CI validates that every `slug` here has at least one tutorial under
+#      `tutorials/<slug>/` and that every tutorial's `categories[0]`
+#      matches a `display` string here.
+#
+# Colors are copied verbatim from the legacy js/overview.js TOPIC_COLORS map
+# so the visual identity is unchanged on day one.
+#
+# `order` controls navbar ordering, the legend chip order, and the home page
+# topic cards.
+
+topics:
+  - slug: statistical-foundations
+    display: "Statistical Foundations"
+    color: "#1f77b4"
+    blurb: "Probability, estimators, asymptotics — the language the rest of the site is written in."
+    order: 1
+
+  - slug: descriptive-statistics
+    display: "Descriptive Statistics"
+    color: "#aec7e8"
+    blurb: "Summarising data without modelling assumptions."
+    order: 2
+
+  - slug: probability
+    display: "Probability Theory"
+    color: "#ff7f0e"
+    blurb: "Distributions, random variables, conditional reasoning."
+    order: 3
+
+  - slug: inference
+    display: "Inferential Statistics"
+    color: "#ffbb78"
+    blurb: "Hypothesis tests, confidence intervals, and what they actually mean."
+    order: 4
+
+  - slug: sample-size
+    display: "Sample Size & Power"
+    color: "#2ca02c"
+    blurb: "Designing studies that can answer the question."
+    order: 5
+
+  - slug: visualisation
+    display: "Data Visualisation"
+    color: "#98df8a"
+    blurb: "Showing data so the eye can do the work."
+    order: 6
+
+  - slug: regression-modelling
+    display: "Regression & Modelling"
+    color: "#d62728"
+    blurb: "Linear, generalised, and beyond."
+    order: 7
+
+  - slug: multivariate
+    display: "Multivariate Methods"
+    aliases: ["Multivariate Statistics"]
+    color: "#ff9896"
+    blurb: "When you have many variables and they all matter at once."
+    order: 8
+
+  - slug: time-series
+    display: "Time-Series Analysis"
+    aliases: ["Time Series Analysis", "Time-Series"]
+    color: "#9467bd"
+    blurb: "Data with memory."
+    order: 9
+
+  - slug: bayesian
+    display: "Bayesian Statistics"
+    color: "#c5b0d5"
+    blurb: "Probability as belief, updated by evidence."
+    order: 10
+
+  - slug: survival-analysis
+    display: "Survival Analysis"
+    color: "#8c564b"
+    blurb: "Time-to-event data and the censoring that comes with it."
+    order: 11
+
+  - slug: bioinformatics
+    display: "Bioinformatics"
+    color: "#e377c2"
+    blurb: "Statistics for sequencing and other high-dimensional biological data."
+    order: 12
+
+  - slug: machine-learning
+    display: "Machine Learning"
+    color: "#7f7f7f"
+    blurb: "Predictive modelling, evaluation, and the parts statisticians actually use."
+    order: 13
+
+  - slug: clinical-biostatistics
+    display: "Clinical Biostatistics"
+    color: "#bcbd22"
+    blurb: "Methods for clinical research and regulatory submissions."
+    order: 14
+
+  - slug: meta-analysis
+    display: "Meta-Analysis"
+    color: "#17becf"
+    blurb: "Pooling evidence across studies."
+    order: 15
+
+  - slug: experimental-design
+    display: "Experimental Design"
+    color: "#393b79"
+    blurb: "Planning experiments so the analysis is straightforward and the answer is real."
+    order: 16

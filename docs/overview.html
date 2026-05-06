@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Filter all 569 tutorials by label and explore the relational network of topics and tags.">
+<meta name="description" content="Filter all 569 tutorials by topic, tag, and label, and explore the relational network of how they connect.">
 
 <title>Overview – #tutorials</title>
 <style>
@@ -30,10 +30,6 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="site_libs/quarto-nav/headroom.min.js"></script>
 <script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -47,18 +43,6 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/bootstrap/bootstrap-415613864d971eda3870c9cbcca8992a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
 <link href="site_libs/bootstrap/bootstrap-dark-1c849a85fa736769eb88dc68cad11e6c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
-  "location": "navbar",
-  "copy-button": false,
-  "collapse-after": 3,
-  "panel-placement": "end",
-  "type": "overlay",
-  "limit": 50,
-  "keyboard-shortcut": [
-    "f",
-    "/",
-    "s"
-  ],
-  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -266,7 +250,6 @@ ul.task-list li input[type="checkbox"] {
     <span class="navbar-title">#tutorials</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
@@ -416,19 +399,19 @@ ul.task-list li input[type="checkbox"] {
 
 <div class="hero">
 <div class="kicker">
-<p>ALL TUTORIALS · LABEL FILTER · TAG NETWORK</p>
+<p>ALL TUTORIALS · LINKED FILTERS · TAG NETWORK</p>
 </div>
 <section id="overview" class="level1">
 <h1>Overview</h1>
 <div class="lead">
-<p>Browse every tutorial on the site, filter by topic and label, and explore how the tutorials connect through shared tags. Click any node in the network graph to jump straight to the tutorial; click a label below to narrow the list.</p>
+<p>Browse every tutorial on the site. Selecting a topic, tag, or label filters the network, the article list, and the chip counts together. Click any node in the graph to open the tutorial; shift-click adds its topic to the filter, alt-click adds its tags.</p>
 </div>
 </section>
 </div>
 <section id="tag-network" class="level2">
 <h2 class="anchored" data-anchor-id="tag-network">Tag network</h2>
 <div class="network-help">
-<p>Each node is a tutorial; nodes share an edge when they have at least two tags in common. Colour encodes topic area. Click a node to open the tutorial.</p>
+<p>Each node is a tutorial; nodes share an edge when they have at least two tags in common. Colour encodes topic area. Non-matching nodes fade rather than disappear so the layout stays stable as you filter.</p>
 </div>
 <div id="tutorial-network" style="height: 640px;">
 
@@ -437,29 +420,77 @@ ul.task-list li input[type="checkbox"] {
 <button id="network-reset" type="button">
 Reset zoom
 </button>
-<p><select id="network-topic-filter" aria-label="Filter network by topic"> <option value="">All topics</option> </select></p>
+<details class="downloads-menu">
+<summary>
+Download data
+</summary>
+<ul>
+<li>
+<a href="artifacts/graph.json" download="">graph.json</a> — nodes, edges, topics, tags, labels
+</li>
+<li>
+<a href="artifacts/tutorials.csv" download="">tutorials.csv</a> — id, title, url, topic, tags, labels, date
+</li>
+<li>
+<a href="artifacts/cooccurrence.csv" download="">cooccurrence.csv</a> — tag pairs and counts
+</li>
+</ul>
+</details>
 </div>
 </section>
-<section id="filter-by-label" class="level2">
-<h2 class="anchored" data-anchor-id="filter-by-label">Filter by label</h2>
-<div id="filter-summary" class="filter-summary">
+<section id="filter" class="level2">
+<h2 class="anchored" data-anchor-id="filter">Filter</h2>
+<div class="search-row">
+<p><label for="overview-search" class="visually-hidden">Search tutorials</label> <input id="overview-search" type="search" placeholder="Search tutorials…" autocomplete="off" spellcheck="false"></p>
+</div>
+<div class="year-row">
+<label for="year-slider" class="year-label">Year range: <span id="year-readout"></span></label>
+<div id="year-slider" aria-label="Filter by year range">
 
 </div>
-<div id="topic-filter-bar" class="filter-bar">
+</div>
+<div id="filter-summary" class="filter-summary" aria-live="polite" aria-atomic="true">
+<button id="filter-reset" type="button" hidden="">
+Reset all filters
+</button>
+</div>
+<div id="topic-filter-bar" class="filter-bar" aria-label="Filter by topic">
 
 </div>
-<div id="tag-filter-bar" class="filter-bar">
+<div id="tag-filter-bar" class="filter-bar" aria-label="Filter by tag">
+
+</div>
+<div id="label-filter-bar" class="filter-bar label-bar" aria-label="Filter by label">
 
 </div>
 </section>
 <section id="tutorials" class="level2">
 <h2 class="anchored" data-anchor-id="tutorials">Tutorials</h2>
+<div id="a11y-announcer" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+
+</div>
+<div id="tutorial-list-empty" class="tutorial-list-empty" hidden="true">
+<p>No tutorials match the current filters. Try removing one, or <span role="link">reset all</span>.</p>
+</div>
 <div id="tutorial-list" class="tutorial-list">
 <p>Loading…</p>
 </div>
+<nav id="all-tutorials-nav" class="all-tutorials-nav" aria-label="All tutorials grouped by topic">
+</nav>
+<details id="heatmap-wrapper" class="heatmap-wrapper">
+<summary>
+Tag co-occurrence heatmap
+</summary>
+<div class="heatmap-controls">
+<p><label for="heatmap-n">Top tags: <span id="heatmap-n-readout">20</span></label> <input id="heatmap-n" type="range" min="10" max="50" step="1" value="20"></p>
+</div>
+<div id="heatmap" class="heatmap">
+
+</div>
+</details>
 <link rel="stylesheet" href="css/overview.css">
 <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
-<script src="js/overview.js" defer=""></script>
+<script type="module" src="assets/js/overview/main.js"></script>
 
 
 </section>
@@ -924,16 +955,65 @@ Reset zoom
   </div>
 </footer>
 <script>
+// Global navbar search. Submits to overview.html?q=<term>.
+// Uses the navbar-brand href to resolve the site root, so it
+// works under root and subpath hosting. No-op if the navbar
+// isn't present (e.g. raw print pages).
 (function(){
-  var p = window.location.pathname;
-  var i = p.indexOf("/tutorials/");
-  var root = i >= 0 ? p.slice(0, i) : "";
-  var s = document.createElement("script");
-  s.defer = true;
-  s.src = root + "/js/related.js";
-  document.head.appendChild(s);
+  function inject(){
+    var brand = document.querySelector(".navbar-brand[href]");
+    if (!brand) return;
+    var nav = document.querySelector(".navbar .navbar-nav.ms-auto, .navbar .navbar-nav:last-of-type");
+    if (!nav) return;
+    if (document.getElementById("global-search-form")) return;
+    var rootHref = brand.getAttribute("href") || "";
+    if (rootHref && !rootHref.endsWith("/")) rootHref = rootHref.replace(/[^/]*$/, "");
+    var form = document.createElement("form");
+    form.id = "global-search-form";
+    form.role = "search";
+    form.className = "global-search d-flex";
+    form.addEventListener("submit", function(ev){
+      ev.preventDefault();
+      var q = form.querySelector("input").value.trim();
+      var url = rootHref + "overview.html" + (q ? "?q=" + encodeURIComponent(q) : "");
+      window.location.href = url;
+    });
+    var input = document.createElement("input");
+    input.type = "search";
+    input.name = "q";
+    input.placeholder = "Search…";
+    input.setAttribute("aria-label", "Search tutorials");
+    input.autocomplete = "off";
+    form.appendChild(input);
+    nav.parentNode.insertBefore(form, nav);
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", inject);
+  } else {
+    inject();
+  }
 })();
 </script>
+<style>
+.global-search { margin: 0 0.5rem; align-items: center; }
+.global-search input {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--rule, #ccc);
+  border-radius: 0.3rem;
+  background: var(--surface, #fff);
+  color: var(--fg, #222);
+  font-size: 0.85rem;
+  width: 12rem;
+}
+.global-search input:focus {
+  outline: 2px solid var(--accent, #1a73e8);
+  outline-offset: 1px;
+  border-color: var(--accent, #1a73e8);
+}
+@media (max-width: 768px) {
+  .global-search input { width: 9rem; }
+}
+</style>
 
 
 

@@ -1,5 +1,8 @@
 /* Auto-injects a "Related tutorials" section at the end of every tutorial page.
-   Uses /js/tutorials-manifest.json + tag Jaccard similarity to pick the top 3.
+   Uses /artifacts/graph.json + tag Jaccard similarity to pick the top 3.
+   Phase 7 replaces this client-side script with render-time partials per
+   tutorial. Until then, this file bridges the old contract to the new
+   artifact shape (tutorials.slug -> nodes.id, description -> summary).
    No-ops on non-tutorial pages. */
 
 (function () {
@@ -16,15 +19,30 @@
   async function loadManifest() {
     const root = siteRootHref();
     const candidates = [
-      root + "js/tutorials-manifest.json",
-      "../../js/tutorials-manifest.json",
-      "../js/tutorials-manifest.json",
-      "js/tutorials-manifest.json",
+      root + "artifacts/graph.json",
+      "../../artifacts/graph.json",
+      "../artifacts/graph.json",
+      "artifacts/graph.json",
     ];
     for (const url of candidates) {
       try {
         const r = await fetch(url, { cache: "no-cache" });
-        if (r.ok) return await r.json();
+        if (r.ok) {
+          const data = await r.json();
+          // Adapt to the legacy shape used below: each entry needs
+          // `slug`, `description`, and `topic` as a display name.
+          const topicLabel = new Map((data.topics || []).map(t => [t.id, t.label]));
+          return {
+            tutorials: (data.nodes || []).map(n => ({
+              slug: n.id,
+              url: n.url,
+              title: n.title,
+              description: n.summary,
+              topic: topicLabel.get(n.topic) || n.topic,
+              tags: n.tags || [],
+            })),
+          };
+        }
       } catch (_) { /* try next */ }
     }
     return null;

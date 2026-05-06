@@ -19,9 +19,87 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Quarto pre-render shells out to Python (build_graph.py,
+      # build_related.py); post-render shells out to Node via npx
+      # pagefind. Both runtimes must be on PATH before `quarto render`.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
       - uses: quarto-dev/quarto-actions/setup@v2
       - name: Render
         run: quarto render
+      # Phase 9a CI gates. Front-matter validation is enforced inside
+      # build_graph.py (which runs in pre-render) so a metadata error
+      # already aborts the render with a file-specific message. These
+      # post-render gates verify the *outputs* exist and look sane.
+      - name: Verify graph artifact
+        run: |
+          test -s artifacts/graph.json || {
+            echo "artifacts/graph.json missing or empty"
+            exit 1
+          }
+          python - <<'PY'
+          import json, sys
+          g = json.load(open("artifacts/graph.json", encoding="utf-8"))
+          assert g["nodes"], "graph.json has zero nodes"
+          assert g["edges"], "graph.json has zero edges"
+          assert g["topics"], "graph.json has zero topics"
+          for t in g["topics"]:
+              if t["count"] == 0:
+                  print(f"FAIL: topic {t['id']!r} has zero tutorials", file=sys.stderr)
+                  sys.exit(1)
+          print(f"graph OK: {len(g['nodes'])} nodes, {len(g['edges'])} edges, "
+                f"{len(g['topics'])} topics")
+          PY
+      - name: Verify Pagefind index built
+        run: |
+          test -f docs/pagefind/pagefind.js || {
+            echo "Pagefind index missing — post-render did not produce docs/pagefind/pagefind.js"
+            exit 1
+          }
+          # Index manifest is non-empty (sanity, not byte-perfect).
+          test -s docs/pagefind/pagefind-entry.json || {
+            echo "Pagefind entry index empty"
+            exit 1
+          }
+      - name: Verify related-tutorials partials emitted
+        run: |
+          count=$(find _includes/related -name '*.html' | wc -l)
+          test "$count" -gt 0 || {
+            echo "No related-tutorials partials in _includes/related/"
+            exit 1
+          }
+          echo "related: $count partials"
+
+      # ---------------------------------------------------------------- #
+      # Phase 9b — warn-only gates. Flip continue-on-error: false after a
+      # remediation pass once the first run surfaces any real findings.
+      # ---------------------------------------------------------------- #
+
+      - name: Link check (lychee, warn-only)
+        continue-on-error: true
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Internal links only on this pass; external linkrot is too
+          # noisy to be informative. Tighten scope later if needed.
+          args: --no-progress --include-fragments --offline --base ./docs './docs/**/*.html'
+          fail: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Lighthouse a11y on overview.html (warn-only)
+        continue-on-error: true
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: |
+            ${{ format('file://{0}/docs/overview.html', github.workspace) }}
+          uploadArtifacts: true
+          temporaryPublicStorage: false
+          # Budgets live alongside the workflow so contributors can edit
+          # them without touching the action invocation.
+          configPath: ./.github/lighthouse-budgets.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
