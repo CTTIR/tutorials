@@ -84,22 +84,42 @@ jobs:
         uses: lycheeverse/lychee-action@v2
         with:
           # Internal links only on this pass; external linkrot is too
-          # noisy to be informative. Tighten scope later if needed.
-          args: --no-progress --include-fragments --offline --base ./docs './docs/**/*.html'
+          # noisy to be informative. --root-dir resolves root-relative
+          # links against the rendered docs/ tree (lychee rejects --base
+          # for local roots — needs an absolute path or a URL).
+          args: --no-progress --offline --root-dir ${{ github.workspace }}/docs './docs/**/*.html'
           fail: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # Lighthouse needs an HTTP origin — file:// is rejected as
+      # INVALID_URL. Spin a tiny static server pointing at docs/, audit
+      # overview.html via http://, then the action shuts the server down.
+      - name: Serve docs/ for Lighthouse
+        run: |
+          npx --yes http-server docs -p 8080 -s &
+          echo $! > /tmp/lh-server.pid
+          # Wait until the server actually answers before Lighthouse runs.
+          for i in $(seq 1 20); do
+            curl -fsS http://localhost:8080/overview.html >/dev/null && break
+            sleep 0.5
+          done
       - name: Lighthouse a11y on overview.html (warn-only)
         continue-on-error: true
         uses: treosh/lighthouse-ci-action@v12
         with:
           urls: |
-            ${{ format('file://{0}/docs/overview.html', github.workspace) }}
+            http://localhost:8080/overview.html
           uploadArtifacts: true
           temporaryPublicStorage: false
           # Budgets live alongside the workflow so contributors can edit
           # them without touching the action invocation.
           configPath: ./.github/lighthouse-budgets.json
+      - name: Stop docs server
+        if: always()
+        run: |
+          if [ -f /tmp/lh-server.pid ]; then
+            kill "$(cat /tmp/lh-server.pid)" 2>/dev/null || true
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
