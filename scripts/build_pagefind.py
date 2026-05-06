@@ -15,6 +15,7 @@ without Node still works; CI fails hard via the gate in publish.yml.
 """
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 import sys
@@ -37,6 +38,15 @@ def main() -> int:
             file=sys.stderr,
         )
         return 0
+
+    # Mark topic-index pages with `data-pagefind-ignore` so Pagefind
+    # skips the 16 tutorials/<topic>/index.html files (each just lists
+    # its own tutorials and would dilute search relevance). Pagefind
+    # has no native exclude-glob, so we inject the attribute and let
+    # it filter at index time.
+    skipped = _ignore_topic_indexes()
+    if skipped:
+        print(f"build_pagefind: marked {skipped} topic-index pages with data-pagefind-ignore")
 
     cmd = [
         npx, "-y", "pagefind@latest",
@@ -61,6 +71,27 @@ def main() -> int:
         return 1
     print(f"build_pagefind: OK -> {index_root.relative_to(ROOT)}/")
     return 0
+
+
+_BODY_OPEN_RE = re.compile(r"<body\b(?![^>]*\bdata-pagefind-ignore\b)([^>]*)>")
+
+
+def _ignore_topic_indexes() -> int:
+    """Insert data-pagefind-ignore="all" into each topic-index <body>.
+
+    Idempotent — files that already carry the attribute are left alone.
+    Returns the number of files actually rewritten this pass.
+    """
+    n = 0
+    for index in (DOCS / "tutorials").glob("*/index.html"):
+        text = index.read_text(encoding="utf-8", errors="replace")
+        new, count = _BODY_OPEN_RE.subn(
+            r'<body data-pagefind-ignore="all"\1>', text, count=1
+        )
+        if count:
+            index.write_text(new, encoding="utf-8")
+            n += 1
+    return n
 
 
 if __name__ == "__main__":
