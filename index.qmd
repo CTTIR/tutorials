@@ -6,10 +6,21 @@ title-block-style: none
 ---
 
 ::: {.hero}
+
+<!-- Cross-site logo: source lives in CTTIR/website. Update there to propagate. -->
+```{=html}
+<a href="https://cttir.github.io/website/" class="ctir-avatar-link" aria-label="CTIR home">
+  <img src="https://cttir.github.io/website/images/cttir-logo.png"
+       alt="CTIR — Computational Trauma and Tissue Injury Research"
+       class="ctir-avatar" />
+</a>
+```
+
 ::: {.kicker}
 569 PAGES · SIXTEEN TOPIC AREAS
 :::
-# #tutorials
+
+# [#tutorials](https://cttir.github.io/tutorials/)
 ::: {.lead}
 Comprehensive tutorials covering probability, inference, regression, Bayesian statistics, survival analysis, bioinformatics, and machine learning, with runnable R examples throughout.
 :::

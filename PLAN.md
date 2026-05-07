@@ -330,3 +330,43 @@ pause for confirmation before Phase 3.
 
 If anything in the resolved decisions or phase ordering needs to
 change, say so and I'll revise this file before any code lands.
+
+---
+
+# Recon — landing avatar + linked #tutorials title (branch `feat/landing-avatar`)
+
+## Title rendering surface
+
+`index.qmd` carries both:
+
+- YAML frontmatter `title: "#tutorials"` with `title-block-style: none`
+  (Quarto's title block is suppressed)
+- An explicit body H1 `# #tutorials` inside a `::: {.hero}` div
+
+So the rendered H1 comes from the **body**, not the YAML title block.
+Wrapping the body H1 in a Markdown link is the clean surface — no need to
+remove the YAML `title:` (it still drives `<title>` and OG metadata) and no
+custom title-block partial required.
+
+## Existing navbar `#tutorials` link
+
+Defined in `_quarto.yml` under `website.navbar.title: "#tutorials"`. Quarto
+renders this as the `.navbar-brand` and auto-links it to the site root
+(`https://cttir.github.io/tutorials/`). It is **not** defined in
+`index.qmd` and will be left untouched.
+
+## CSS surface
+
+Themes wire `assets/light.scss` and `assets/dark.scss`, both of which pull
+in `assets/_shared.scss`. Hero / kicker styles live in `_shared.scss`
+(~lines 185–196). New `.ctir-avatar` / `.ctir-avatar-link` rules go there
+so they apply in both themes.
+
+## Plan
+
+1. Insert the avatar `<a><img></a>` block at the top of the `.hero` div in
+   `index.qmd`, immediately above `# #tutorials`. Avatar links to
+   `https://cttir.github.io/website/`.
+2. Wrap the H1 as `# [#tutorials](https://cttir.github.io/tutorials/)`.
+3. Add `.ctir-avatar` / `.ctir-avatar-link` rules to `assets/_shared.scss`.
+4. Cross-site image referenced live; do **not** copy into repo.
