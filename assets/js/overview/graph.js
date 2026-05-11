@@ -16,15 +16,22 @@ export function createGraph({ container, graph, controller, root, topicById }) {
   const idToIndex = new Map();
   graph.nodes.forEach((n, i) => idToIndex.set(n.id, i));
 
-  const visNodes = graph.nodes.map((n, i) => ({
-    id: i,
-    label: n.title.length > 28 ? n.title.slice(0, 26) + "…" : n.title,
-    title: `${n.title}\n${topicById.get(n.topic)?.label ?? n.topic}\n${(n.tags || []).slice(0, 6).join(", ")}`,
-    color: topicById.get(n.topic)?.color || "#888",
-    group: n.topic,
-    nodeRef: n,
-    url: root + n.url,
-  }));
+  const visNodes = graph.nodes.map((n, i) => {
+    const c = topicById.get(n.topic)?.color || "#888";
+    return {
+      id: i,
+      label: n.title.length > 28 ? n.title.slice(0, 26) + "…" : n.title,
+      title: `${n.title}\n${topicById.get(n.topic)?.label ?? n.topic}\n${(n.tags || []).slice(0, 6).join(", ")}`,
+      color: {
+        background: c,
+        border: c,
+        highlight: { background: c, border: c },
+        hover: { background: c, border: c },
+      },
+      nodeRef: n,
+      url: root + n.url,
+    };
+  });
 
   const visEdges = graph.edges.map((e, i) => ({
     id: i,
@@ -77,7 +84,7 @@ export function createGraph({ container, graph, controller, root, topicById }) {
       return ((n >> 16 & 255) + (n >> 8 & 255) + (n & 255)) / 3 < 128;
     })();
     return {
-      nodes: { shape: "dot", size: 8, font: { size: 10, color: fg }, borderWidth: 1 },
+      nodes: { shape: "dot", size: 8, font: { size: 10, color: fg }, borderWidth: 0 },
       edges: {
         color: { color: isDark ? "rgba(200,200,200,0.18)" : "rgba(80,80,80,0.22)", highlight: accent },
         smooth: false,
