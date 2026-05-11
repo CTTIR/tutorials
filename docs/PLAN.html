@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>plan – #tutorials</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-2065f9e58f6345017599ef1c45dc3d4f.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-ced54966b0e53f059c291d5781927a30.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-ccc349d16eea164e4a899defd1a361c0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-65cf5610e5982949b77afe1339426a2c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<script>
+// Clear stale localStorage from before dark-mode-by-default so returning
+// visitors get the new default. Runs once per browser, gated by a versioned
+// flag — users who explicitly toggle after this point are respected.
+(function(){
+  try {
+    if (!localStorage.getItem("quarto-color-scheme-reset-v1")) {
+      localStorage.removeItem("quarto-color-scheme");
+      localStorage.setItem("quarto-color-scheme-reset-v1", "1");
+    }
+  } catch (e) {}
+})();
+</script>
+<script defer="" data-domain="cttir.github.io/tutorials" src="https://analytics.hellebo.de/js/script.file-downloads.outbound-links.js"></script>
+<script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-dark"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = true;
+    const darkModeDefault = authorPrefersDark;
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">#tutorials</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./overview.html"> 
+<span class="menu-text">Overview</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-tutorials" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Tutorials</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-tutorials">    
+        <li>
+    <a class="dropdown-item" href="./tutorials.html">
+ <span class="dropdown-text">All tutorials (A-Z)</span></a>
+  </li>  
+        <li><hr class="dropdown-divider"></li>
+        <li>
+    <a class="dropdown-item" href="./tutorials/statistical-foundations/index.html">
+ <span class="dropdown-text">Statistical Foundations</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./tutorials/descriptive-statistics/index.html">
+ <span class="dropdown-text">Descriptive Statistics</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./tutorials/probability/index.html">
+ <span class="dropdown-text">Probability Theory</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./tutorials/inference/index.html">
+ <span class="dropdown-text">Inferential Statistics</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./tutorials/sample-size/index.html">
+ <span class="dropdown-text">Sample Size &amp; Power</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./tutorials/visualisation/index.html">
+ <span class="dropdown-text">Data Visualisation</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./tutorials/regression-modelling/index.html">
+ <span class="dropdown-text">Regression &amp; Modelling</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./tutorials/multivariate/index.html">
+ <span class="dropdown-text">Multivariate Methods</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./tutorials/time-series/index.html">
+ <span class="dropdown-text">Time-Series Analysis</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./tutorials/bayesian/index.html">
+ <span class="dropdown-text">Bayesian Statistics</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./tutorials/survival-analysis/index.html">
+ <span class="dropdown-text">Survival Analysis</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./tutorials/bioinformatics/index.html">
+ <span class="dropdown-text">Bioinformatics</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./tutorials/machine-learning/index.html">
+ <span class="dropdown-text">Machine Learning</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./tutorials/clinical-biostatistics/index.html">
+ <span class="dropdown-text">Clinical Biostatistics</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./tutorials/meta-analysis/index.html">
+ <span class="dropdown-text">Meta-Analysis</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./tutorials/experimental-design/index.html">
+ <span class="dropdown-text">Experimental Design</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-applications" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Applications</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-applications">    
+        <li>
+    <a class="dropdown-item" href="./decision-tree/index.html">
+ <span class="dropdown-text">Decision Tree</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./decision-tree/decision-assistant.html">
+ <span class="dropdown-text">Decision Assistant (wizard)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./decision-tree/decision-tree.html">
+ <span class="dropdown-text">Decision Tree (chart)</span></a>
+  </li>  
+        <li><hr class="dropdown-divider"></li>
+        <li>
+    <a class="dropdown-item" href="./shiny/index.html">
+ <span class="dropdown-text">Shiny Apps (overview)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="./about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./impressum.html"> 
+<span class="menu-text">Impressum</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/CTTIR/tutorials"> <i class="bi bi-github" role="img" aria-label="Source on GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#plan-overview-page-tag-network-search" id="toc-plan-overview-page-tag-network-search" class="nav-link active" data-scroll-target="#plan-overview-page-tag-network-search">PLAN — overview page, tag network, search</a>
+  <ul class="collapse">
+  <li><a href="#resolved-decisions-from-audit-open-questions" id="toc-resolved-decisions-from-audit-open-questions" class="nav-link" data-scroll-target="#resolved-decisions-from-audit-open-questions">Resolved decisions (from audit open questions)</a></li>
+  <li><a href="#architecture-summary" id="toc-architecture-summary" class="nav-link" data-scroll-target="#architecture-summary">Architecture summary</a></li>
+  <li><a href="#filter-state-contract" id="toc-filter-state-contract" class="nav-link" data-scroll-target="#filter-state-contract">Filter state contract</a></li>
+  <li><a href="#datatopics.yml-shape" id="toc-datatopics.yml-shape" class="nav-link" data-scroll-target="#datatopics.yml-shape"><code>_data/topics.yml</code> shape</a></li>
+  <li><a href="#front-matter-contract-post-upgrade" id="toc-front-matter-contract-post-upgrade" class="nav-link" data-scroll-target="#front-matter-contract-post-upgrade">Front-matter contract (post-upgrade)</a></li>
+  <li><a href="#phase-breakdown-one-commit-per-phase" id="toc-phase-breakdown-one-commit-per-phase" class="nav-link" data-scroll-target="#phase-breakdown-one-commit-per-phase">Phase breakdown (one commit per phase)</a>
+  <ul class="collapse">
+  <li><a href="#phase-2-foundation-_datatopics.yml-render-time-artifact-build" id="toc-phase-2-foundation-_datatopics.yml-render-time-artifact-build" class="nav-link" data-scroll-target="#phase-2-foundation-_datatopics.yml-render-time-artifact-build">Phase 2 — Foundation: <code>_data/topics.yml</code> + render-time artifact build</a></li>
+  <li><a href="#phase-3-linked-filter-state-new-overview-module" id="toc-phase-3-linked-filter-state-new-overview-module" class="nav-link" data-scroll-target="#phase-3-linked-filter-state-new-overview-module">Phase 3 — Linked filter state + new overview module</a></li>
+  <li><a href="#phase-4-pagefind-search" id="toc-phase-4-pagefind-search" class="nav-link" data-scroll-target="#phase-4-pagefind-search">Phase 4 — Pagefind search</a></li>
+  <li><a href="#phase-5-date-slider-topic-legend-with-counts" id="toc-phase-5-date-slider-topic-legend-with-counts" class="nav-link" data-scroll-target="#phase-5-date-slider-topic-legend-with-counts">Phase 5 — Date slider + topic legend with counts</a></li>
+  <li><a href="#phase-6-tag-co-occurrence-heatmap-remove-legacy" id="toc-phase-6-tag-co-occurrence-heatmap-remove-legacy" class="nav-link" data-scroll-target="#phase-6-tag-co-occurrence-heatmap-remove-legacy">Phase 6 — Tag co-occurrence heatmap + remove legacy</a></li>
+  <li><a href="#phase-7-render-time-related-tutorials-partial" id="toc-phase-7-render-time-related-tutorials-partial" class="nav-link" data-scroll-target="#phase-7-render-time-related-tutorials-partial">Phase 7 — Render-time related-tutorials partial</a></li>
+  <li><a href="#phase-8-mobile-fallback-accessibility-hardening" id="toc-phase-8-mobile-fallback-accessibility-hardening" class="nav-link" data-scroll-target="#phase-8-mobile-fallback-accessibility-hardening">Phase 8 — Mobile fallback + accessibility hardening</a></li>
+  <li><a href="#phase-9-ci-gates-downloads" id="toc-phase-9-ci-gates-downloads" class="nav-link" data-scroll-target="#phase-9-ci-gates-downloads">Phase 9 — CI gates + downloads</a></li>
+  </ul></li>
+  <li><a href="#what-this-plan-deliberately-does-not-do" id="toc-what-this-plan-deliberately-does-not-do" class="nav-link" data-scroll-target="#what-this-plan-deliberately-does-not-do">What this plan deliberately does <strong>not</strong> do</a></li>
+  <li><a href="#risk-register" id="toc-risk-register" class="nav-link" data-scroll-target="#risk-register">Risk register</a></li>
+  <li><a href="#approval-gate" id="toc-approval-gate" class="nav-link" data-scroll-target="#approval-gate">Approval gate</a></li>
+  </ul></li>
+  <li><a href="#recon-landing-avatar-linked-tutorials-title-branch-featlanding-avatar" id="toc-recon-landing-avatar-linked-tutorials-title-branch-featlanding-avatar" class="nav-link" data-scroll-target="#recon-landing-avatar-linked-tutorials-title-branch-featlanding-avatar">Recon — landing avatar + linked #tutorials title (branch <code>feat/landing-avatar</code>)</a>
+  <ul class="collapse">
+  <li><a href="#title-rendering-surface" id="toc-title-rendering-surface" class="nav-link" data-scroll-target="#title-rendering-surface">Title rendering surface</a></li>
+  <li><a href="#existing-navbar-tutorials-link" id="toc-existing-navbar-tutorials-link" class="nav-link" data-scroll-target="#existing-navbar-tutorials-link">Existing navbar <code>#tutorials</code> link</a></li>
+  <li><a href="#css-surface" id="toc-css-surface" class="nav-link" data-scroll-target="#css-surface">CSS surface</a></li>
+  <li><a href="#plan" id="toc-plan" class="nav-link" data-scroll-target="#plan">Plan</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+
+<section id="plan-overview-page-tag-network-search" class="level1">
+<h1>PLAN — overview page, tag network, search</h1>
+<p>Phase 1 plan, derived from <code>AUDIT.md</code> and the prompt’s required improvements. All 8 open questions resolved per the audit’s recommendations (user agreed “use recommendations” on 2026-05-06).</p>
+<p>This plan is the contract for Phases 2–N. <strong>No code changes happen until the user approves this file.</strong> Each phase below lands as one commit (or PR if requested), with a render screenshot and a short summary.</p>
+<hr>
+<section id="resolved-decisions-from-audit-open-questions" class="level2">
+<h2 class="anchored" data-anchor-id="resolved-decisions-from-audit-open-questions">Resolved decisions (from audit open questions)</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 12%">
+<col style="width: 41%">
+<col style="width: 45%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Decision</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td><strong>Keep <code>categories</code> + folder convention.</strong> Add <strong>only</strong> a new optional <code>labels:</code> key for the new label dimension (<code>beginner</code>, <code>intermediate</code>, <code>case-study</code>, <code>reference</code>, …). Do <strong>not</strong> migrate 569 files.</td>
+<td><code>categories[0]</code> already encodes the topic display name; <code>categories[1:]</code> are tags. The build pipeline parses this. Adding <code>labels:</code> is the smallest delta that gives us the third axis.</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td><strong>Keep vis-network 9.1.9</strong> for the force graph. <strong>Add D3 v7</strong> <em>only</em> for the heatmap.</td>
+<td>vis-network is integrated, performant at 569 nodes, and the upgrade is about <em>linking</em> not <em>replacing</em>. D3 is the cleanest heatmap library.</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td><strong>Introduce <code>_data/topics.yml</code></strong> as the single source of truth for <code>slug → display name → color → short description → order</code>. Both <code>build_manifest.py</code> and <code>build_indexes.py</code> import it; the JS layer receives it as part of <code>_artifacts/graph.json</code>. The two hardcoded copies (<code>TOPIC_COLORS</code>, <code>TOPIC_NAMES</code>, <code>CATEGORIES_ORDER</code>) are deleted.</td>
+<td>Three drift sources collapse to one. CI can validate it.</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><strong>Pagefind replaces Quarto’s default textsearch.</strong> Quarto’s <code>website.search:</code> is explicitly disabled; Pagefind drives both the global navbar search and the overview page filter.</td>
+<td>Single index, scoped to tutorials only, on-demand WASM loading. Avoids two competing indexes.</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td><strong>Tag chip combination logic flips to OR within category, AND across categories</strong>, matching the prompt. Topics: OR. Tags: OR. Labels: OR. Combined: AND.</td>
+<td>Matches user intent (“show me tutorials tagged X <em>or</em> Y”); current AND-within-tags is so strict it usually matches zero with &gt;1 tag selected.</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td><strong>CI gates phase in over two phases.</strong> Phase 9a: front-matter validation, manifest freshness, topics.yml integrity, Pagefind index non-empty (hard fail). Phase 9b: Lighthouse a11y ≥ 95, no Quarto warnings, no commercial-link gate (hard fail after a remediation pass).</td>
+<td>Strict gates on day one would block the very PR that introduces them.</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td><strong>Pin Quarto to 1.6.43</strong> in <code>_quarto.yml</code> (<code>quarto-required: "&gt;=1.6.40"</code>) and in <code>publish.yml</code> (<code>with: { version: 1.6.43 }</code>). User can bump if their local is newer; we’ll align to whatever <code>quarto --version</code> reports locally before Phase 2.</td>
+<td>Reproducibility. The exact pin will be confirmed against the user’s local install in Phase 2.</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td><strong>Move generated artifacts out of git.</strong> <code>js/tutorials-manifest.json</code> is replaced by <code>_artifacts/graph.json</code>, gitignored, built by a <code>pre-render:</code> hook in <code>_quarto.yml</code>. CI verifies the artifact exists post-render.</td>
+<td>The current setup ships stale data silently; this is gap #1 in the audit.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="architecture-summary" class="level2">
+<h2 class="anchored" data-anchor-id="architecture-summary">Architecture summary</h2>
+<pre><code>_data/topics.yml                # SoT: slug, display, color, order, blurb
+                                # 16 entries
+
+scripts/
+  build_graph.py                # NEW: reads _data/topics.yml + all .qmd
+                                # front matter, emits _artifacts/graph.json
+                                # AND _artifacts/tutorials.csv
+                                # AND _artifacts/cooccurrence.csv
+                                # Run by Quarto pre-render hook.
+  build_related.py              # NEW: reads _artifacts/graph.json,
+                                # writes _includes/related/&lt;slug&gt;.html
+                                # (replaces client-side js/related.js
+                                # with a static HTML partial per page)
+  build_pagefind.sh             # NEW: post-render Pagefind step
+                                # (also wired into publish.yml)
+  build_manifest.py             # KEPT but slimmed: now just emits the
+                                # legacy js/tutorials-manifest.json shape
+                                # for backward-compat during transition.
+                                # Deleted at end of Phase 6.
+  build_indexes.py              # MODIFIED to read _data/topics.yml
+                                # instead of CATEGORIES_ORDER.
+
+_artifacts/                     # gitignored, built at render time
+  graph.json
+  tutorials.csv
+  cooccurrence.csv
+
+_includes/related/&lt;slug&gt;.html   # gitignored, built at render time
+
+assets/js/overview/             # NEW ES modules, single entry point
+  main.js                       # bootstrap, wire components to state
+  state.js                      # filterState + URL &lt;-&gt; Set sync
+  graph.js                      # vis-network rendering, opacity-based filter
+  search.js                     # Pagefind integration + debounce
+  legend.js                     # topic chips + tag chips + label chips
+  slider.js                     # noUiSlider date range
+  heatmap.js                    # D3 co-occurrence
+  list.js                       # filtered article list
+  a11y.js                       # aria-live announcer + parallel nav
+
+assets/scss/overview/
+  _overview.scss                # consumes Quarto/Bootstrap CSS vars
+
+overview.qmd                    # rewired to load main.js as a module
+
+.github/workflows/publish.yml   # adds pre-render artifact build,
+                                # post-render Pagefind, CI gates,
+                                # Lighthouse + axe-core run</code></pre>
+<hr>
+</section>
+<section id="filter-state-contract" class="level2">
+<h2 class="anchored" data-anchor-id="filter-state-contract">Filter state contract</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode ts code-with-copy"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Single source of truth, owned by state.js</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> FilterState <span class="op">=</span> {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  topics<span class="op">:</span> <span class="bu">Set</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;;</span>   <span class="co">// OR within</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  tags<span class="op">:</span>   <span class="bu">Set</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;;</span>   <span class="co">// OR within</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  labels<span class="op">:</span> <span class="bu">Set</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;;</span>   <span class="co">// OR within</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  query<span class="op">:</span>  <span class="dt">string</span><span class="op">;</span>        <span class="co">// Pagefind query</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  dateFrom<span class="op">:</span> <span class="dt">number</span><span class="op">;</span>      <span class="co">// year</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  dateTo<span class="op">:</span>   <span class="dt">number</span><span class="op">;</span>      <span class="co">// year</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">// A node passes iff:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">//   (topics.size === 0 || topics.has(node.topic))</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">//   &amp;&amp; (tags.size === 0 || node.tags.some(t =&gt; tags.has(t)))</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">//   &amp;&amp; (labels.size === 0 || node.labels.some(l =&gt; labels.has(l)))</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">//   &amp;&amp; node.year &gt;= dateFrom &amp;&amp; node.year &lt;= dateTo</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">//   &amp;&amp; (query === "" || pagefindHits.has(node.id))</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>URL serialization: <code>?topics=a,b&amp;tags=x,y&amp;labels=l1&amp;from=2024&amp;to=2026&amp;q=foo</code>, written via <code>history.replaceState</code> (no history pollution).</p>
+<p>Subscribers (graph, list, legend counts, heatmap, slider readout, URL): all listen to a single <code>filterState.subscribe(fn)</code> and re-render with smooth transitions. Non-matching graph nodes fade to ~10% opacity, never removed (positions stable).</p>
+<hr>
+</section>
+<section id="datatopics.yml-shape" class="level2">
+<h2 class="anchored" data-anchor-id="datatopics.yml-shape"><code>_data/topics.yml</code> shape</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">slug</span><span class="kw">:</span><span class="at"> statistical-foundations</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">display</span><span class="kw">:</span><span class="at"> </span><span class="st">"Statistical Foundations"</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">color</span><span class="kw">:</span><span class="at"> </span><span class="st">"#1f77b4"</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">blurb</span><span class="kw">:</span><span class="at"> </span><span class="st">"Probability, estimators, asymptotics."</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">order</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">slug</span><span class="kw">:</span><span class="at"> descriptive-statistics</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">display</span><span class="kw">:</span><span class="at"> </span><span class="st">"Descriptive Statistics"</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">color</span><span class="kw">:</span><span class="at"> </span><span class="st">"#aec7e8"</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">blurb</span><span class="kw">:</span><span class="at"> </span><span class="st">"Summarising data without modelling assumptions."</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">order</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co"># ... 16 entries total</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The 16 colors are copied verbatim from the current <code>js/overview.js::TOPIC_COLORS</code> so the visual identity stays the same on day one. The <code>display</code> strings match the current <code>categories[0]</code> values exactly, so no <code>.qmd</code> files need editing.</p>
+<hr>
+</section>
+<section id="front-matter-contract-post-upgrade" class="level2">
+<h2 class="anchored" data-anchor-id="front-matter-contract-post-upgrade">Front-matter contract (post-upgrade)</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"..."</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">date</span><span class="kw">:</span><span class="at"> </span><span class="st">"YYYY-MM-DD"</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">description</span><span class="kw">:</span><span class="at"> </span><span class="st">"..."</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">categories</span><span class="kw">:</span><span class="co">                    # unchanged</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">"&lt;Topic Display Name&gt;"</span><span class="co">     # MUST match a topics.yml display</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">"&lt;tag-1&gt;"</span><span class="co">                  # kebab-case</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">"&lt;tag-2&gt;"</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">labels</span><span class="kw">:</span><span class="co">                        # NEW, optional</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> beginner</span><span class="co">                   # one or more of: beginner, intermediate,</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">                               # advanced, case-study, reference,</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">                               # methods, theory</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>labels:</code> is <strong>optional</strong>. Tutorials without <code>labels:</code> are still indexed, just absent from the label-chip filter. Phase 5 adds them gradually; we do <strong>not</strong> bulk-edit 569 files.</p>
+<hr>
+</section>
+<section id="phase-breakdown-one-commit-per-phase" class="level2">
+<h2 class="anchored" data-anchor-id="phase-breakdown-one-commit-per-phase">Phase breakdown (one commit per phase)</h2>
+<section id="phase-2-foundation-_datatopics.yml-render-time-artifact-build" class="level3">
+<h3 class="anchored" data-anchor-id="phase-2-foundation-_datatopics.yml-render-time-artifact-build">Phase 2 — Foundation: <code>_data/topics.yml</code> + render-time artifact build</h3>
+<ul>
+<li><p>Create <code>_data/topics.yml</code> with 16 entries (verbatim colors/names from current code).</p></li>
+<li><p>Write <code>scripts/build_graph.py</code> that:</p>
+<ul>
+<li>Loads <code>_data/topics.yml</code>.</li>
+<li>Walks <code>tutorials/**/*.qmd</code>, parses YAML front matter, validates <code>categories[0]</code> against topics.yml, collects tags from <code>categories[1:]</code>, reads optional <code>labels:</code>.</li>
+<li>Computes nodes, edges (≥2 shared tags), per-topic/tag/label counts, co-occurrence pairs.</li>
+<li>Writes <code>_artifacts/graph.json</code>, <code>_artifacts/tutorials.csv</code>, <code>_artifacts/cooccurrence.csv</code>.</li>
+<li>Validates: every topic in topics.yml has ≥1 tutorial; no orphan <code>categories[0]</code>. Hard-fails with file-specific errors.</li>
+</ul></li>
+<li><p>Wire into <code>_quarto.yml</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">project</span><span class="kw">:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">pre-render</span><span class="kw">:</span><span class="at"> scripts/build_graph.py</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><code>.gitignore</code> adds <code>_artifacts/</code>.</p></li>
+<li><p>Keep <code>build_manifest.py</code> running too (writes legacy <code>js/tutorials-manifest.json</code>) so the existing <code>overview.js</code> still works unmodified through this phase. Verifies parity with the new <code>graph.json</code>.</p></li>
+<li><p><strong>Acceptance:</strong> <code>quarto render</code> produces <code>_artifacts/graph.json</code> with 569 nodes; the old page still renders identically.</p></li>
+</ul>
+</section>
+<section id="phase-3-linked-filter-state-new-overview-module" class="level3">
+<h3 class="anchored" data-anchor-id="phase-3-linked-filter-state-new-overview-module">Phase 3 — Linked filter state + new overview module</h3>
+<ul>
+<li>New JS module skeleton under <code>assets/js/overview/</code>.</li>
+<li><code>state.js</code>: filterState, URL serializer, pub/sub.</li>
+<li><code>graph.js</code>: replaces vis-network setup from <code>js/overview.js</code>. Reads <code>_artifacts/graph.json</code>. Subscribes to filterState; updates node/edge opacity (does not destroy/recreate the network).</li>
+<li><code>legend.js</code>: topic + tag + label chips with live counts. <strong>OR within, AND across</strong> combination logic.</li>
+<li><code>list.js</code>: article list driven by filterState.</li>
+<li><code>overview.qmd</code> switches its <code>&lt;script&gt;</code> to load <code>assets/js/overview/main.js</code> as a module. Old <code>js/overview.js</code> kept for one phase as a fallback (gated behind a feature flag in the page).</li>
+<li><strong>Headline test:</strong> clicking a topic chip fades non-matching nodes, updates list, updates URL, updates tag-count badges. Reload restores the same view from the URL.</li>
+<li><strong>Acceptance:</strong> all four components (graph, list, chips, URL) move in sync. Reset button clears state.</li>
+</ul>
+</section>
+<section id="phase-4-pagefind-search" class="level3">
+<h3 class="anchored" data-anchor-id="phase-4-pagefind-search">Phase 4 — Pagefind search</h3>
+<ul>
+<li><p>Disable Quarto’s default search in <code>_quarto.yml</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">website</span><span class="kw">:</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">search</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Add <code>scripts/build_pagefind.sh</code> (post-render). Index limited to <code>docs/tutorials/</code>. Output to <code>docs/pagefind/</code>.</p></li>
+<li><p><code>assets/js/overview/search.js</code>: search box on overview, 150ms debounce, feeds <code>filterState.query</code>. Snippets shown in the article list.</p></li>
+<li><p>Add a global navbar search input that uses the same Pagefind index but jumps to overview with <code>?q=...</code> populated.</p></li>
+<li><p>Wire <code>build_pagefind.sh</code> into <code>publish.yml</code> after <code>quarto render</code>.</p></li>
+<li><p><strong>Acceptance:</strong> typing in the search box fades non-matching nodes and shows ranked snippets. Reload preserves query via URL.</p></li>
+</ul>
+</section>
+<section id="phase-5-date-slider-topic-legend-with-counts" class="level3">
+<h3 class="anchored" data-anchor-id="phase-5-date-slider-topic-legend-with-counts">Phase 5 — Date slider + topic legend with counts</h3>
+<ul>
+<li>Add <code>assets/js/overview/slider.js</code> using <strong>noUiSlider</strong> (vendored under <code>assets/vendor/nouislider/</code>, no CDN).</li>
+<li><code>legend.js</code> upgraded to render topic chips with live counts (already scaffolded in Phase 3; this phase polishes accessibility, focus states, keyboard handling).</li>
+<li>Begin annotating ~50 high-traffic tutorials with <code>labels:</code> (manual pass; user-driven, not bulk-scripted). Label chips appear once any tutorial has labels.</li>
+<li><strong>Acceptance:</strong> dragging the slider re-filters everything. Tab-navigable chips. Lighthouse a11y ≥ 90 on overview.</li>
+</ul>
+</section>
+<section id="phase-6-tag-co-occurrence-heatmap-remove-legacy" class="level3">
+<h3 class="anchored" data-anchor-id="phase-6-tag-co-occurrence-heatmap-remove-legacy">Phase 6 — Tag co-occurrence heatmap + remove legacy</h3>
+<ul>
+<li><code>assets/js/overview/heatmap.js</code> using D3 v7 (vendored). Top-N tags via slider (default N=20, range 10–50). Heatmap recomputes against the filtered subset. Cell click → set tags filter to {i, j}.</li>
+<li>Collapsed <code>&lt;details&gt;</code> below the graph by default.</li>
+<li><strong>Remove</strong> the legacy <code>js/overview.js</code> and the legacy <code>js/tutorials-manifest.json</code> (now <code>.gitignored</code> and regenerated).</li>
+<li><strong>Remove</strong> <code>scripts/build_manifest.py</code> (replaced by <code>build_graph.py</code>).</li>
+<li><strong>Acceptance:</strong> heatmap renders, clicks set filters, theme-aware colors. Repo no longer contains the legacy files.</li>
+</ul>
+</section>
+<section id="phase-7-render-time-related-tutorials-partial" class="level3">
+<h3 class="anchored" data-anchor-id="phase-7-render-time-related-tutorials-partial">Phase 7 — Render-time related-tutorials partial</h3>
+<ul>
+<li>Replace the client-side <code>js/related.js</code> with a render-time <code>scripts/build_related.py</code> that emits one <code>_includes/related/&lt;slug&gt;.html</code> per tutorial.</li>
+<li>A small Lua filter (or per-page <code>include-after-body:</code>) injects the matching partial into each tutorial.</li>
+<li>Static fallback if the partial is missing (no JS at all).</li>
+<li><strong>Acceptance:</strong> every tutorial page shows a “Related tutorials” section with no JS request. <code>js/related.js</code> is deleted.</li>
+</ul>
+</section>
+<section id="phase-8-mobile-fallback-accessibility-hardening" class="level3">
+<h3 class="anchored" data-anchor-id="phase-8-mobile-fallback-accessibility-hardening">Phase 8 — Mobile fallback + accessibility hardening</h3>
+<ul>
+<li><code>@media (max-width: 768px)</code> hides the network and the heatmap (collapsed to a sortable HTML table); search, chips, slider stay.</li>
+<li>Parallel <code>&lt;nav aria-label="All tutorials"&gt;</code> always rendered, hidden on desktop with <code>.visually-hidden</code>.</li>
+<li><code>aria-live="polite"</code> announcer for filter changes.</li>
+<li>All chips, slider handles, heatmap cells keyboard-accessible with visible focus rings.</li>
+<li><strong>Acceptance:</strong> <code>axe-core</code> zero errors. Lighthouse a11y ≥ 95 on overview.</li>
+</ul>
+</section>
+<section id="phase-9-ci-gates-downloads" class="level3">
+<h3 class="anchored" data-anchor-id="phase-9-ci-gates-downloads">Phase 9 — CI gates + downloads</h3>
+<ul>
+<li><strong>9a (hard now):</strong>
+<ol type="1">
+<li>Front-matter validator: every tutorial has <code>title</code>, <code>date</code>, <code>description</code>, <code>categories[0]</code> matching topics.yml.</li>
+<li><code>_artifacts/graph.json</code> non-empty, edges &gt; 0.</li>
+<li>Pagefind index non-empty.</li>
+<li>Every topic in topics.yml has ≥1 tutorial.</li>
+<li>No <code>external-commercial: true</code> without explicit allow.</li>
+</ol></li>
+<li><strong>9b (after remediation):</strong>
+<ol start="6" type="1">
+<li>Quarto render emits zero warnings.</li>
+<li>Lighthouse a11y ≥ 95 on <code>overview.html</code>.</li>
+</ol></li>
+<li>“Download” dropdown on overview offering <code>graph.json</code>, <code>tutorials.csv</code>, <code>cooccurrence.csv</code> (already generated at render time, just exposed).</li>
+<li><code>README-network.md</code> documenting the architecture, how to add a tutorial, how to extend topics.yml, troubleshooting.</li>
+<li><strong>Acceptance:</strong> workflow fails loudly on injected violations of each gate.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="what-this-plan-deliberately-does-not-do" class="level2">
+<h2 class="anchored" data-anchor-id="what-this-plan-deliberately-does-not-do">What this plan deliberately does <strong>not</strong> do</h2>
+<ul>
+<li>Touch the Decision Tree app, Decision Assistant wizard, or Shiny apps.</li>
+<li>Change any tutorial body content.</li>
+<li>Rename or move any existing tutorial URL.</li>
+<li>Bulk-edit 569 <code>.qmd</code> files. The only edits to existing tutorials in this plan are <em>optional</em> <code>labels:</code> additions in Phase 5 and only to ~50 high-traffic ones.</li>
+<li>Replace vis-network with D3 for the network.</li>
+<li>Add user accounts, comments, or any server-side feature.</li>
+</ul>
+<hr>
+</section>
+<section id="risk-register" class="level2">
+<h2 class="anchored" data-anchor-id="risk-register">Risk register</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 66%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Risk</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>pre-render:</code> script breaks <code>quarto preview</code> workflow</td>
+<td>Script must be idempotent and fast (&lt;5s for 569 files); skip work if <code>_artifacts/graph.json</code> is newer than every <code>.qmd</code>.</td>
+</tr>
+<tr class="even">
+<td>Pagefind index size on small tutorials with code blocks</td>
+<td>Configure Pagefind to skip code blocks via <code>data-pagefind-ignore</code>. Measure index size; rollback to lunr if &gt;2 MB.</td>
+</tr>
+<tr class="odd">
+<td>vis-network opacity transitions janky on low-end mobile</td>
+<td>Phase 8 mobile fallback hides the graph entirely below 768px.</td>
+</tr>
+<tr class="even">
+<td>URL params get long with many filters</td>
+<td>Encode multi-value as comma-separated; cap at sensible length; the Reset button is always visible.</td>
+</tr>
+<tr class="odd">
+<td>Topic color drift between dark and light themes</td>
+<td>All non-topic colors come from CSS vars; topic colors stay constant intentionally (they’re the identity signal). Documented in <code>README-network.md</code>.</td>
+</tr>
+<tr class="even">
+<td>Stale <code>_artifacts/</code> on dev machines</td>
+<td><code>.gitignore</code> + Quarto pre-render; CI is source of truth.</td>
+</tr>
+<tr class="odd">
+<td>Lighthouse a11y &lt; 95 in Phase 9b</td>
+<td>Phase 8 explicitly targets a11y first; gate flipped only after remediation.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="approval-gate" class="level2">
+<h2 class="anchored" data-anchor-id="approval-gate">Approval gate</h2>
+<p><strong>Status:</strong> Phase 1 complete. Awaiting user approval of this plan. On approval, Phase 2 begins (<code>_data/topics.yml</code> + <code>build_graph.py</code> + <code>pre-render</code> wiring). One commit, render screenshot, summary, then pause for confirmation before Phase 3.</p>
+<p>If anything in the resolved decisions or phase ordering needs to change, say so and I’ll revise this file before any code lands.</p>
+<hr>
+</section>
+</section>
+<section id="recon-landing-avatar-linked-tutorials-title-branch-featlanding-avatar" class="level1">
+<h1>Recon — landing avatar + linked #tutorials title (branch <code>feat/landing-avatar</code>)</h1>
+<section id="title-rendering-surface" class="level2">
+<h2 class="anchored" data-anchor-id="title-rendering-surface">Title rendering surface</h2>
+<p><code>index.qmd</code> carries both:</p>
+<ul>
+<li>YAML frontmatter <code>title: "#tutorials"</code> with <code>title-block-style: none</code> (Quarto’s title block is suppressed)</li>
+<li>An explicit body H1 <code># #tutorials</code> inside a <code>::: {.hero}</code> div</li>
+</ul>
+<p>So the rendered H1 comes from the <strong>body</strong>, not the YAML title block. Wrapping the body H1 in a Markdown link is the clean surface — no need to remove the YAML <code>title:</code> (it still drives <code>&lt;title&gt;</code> and OG metadata) and no custom title-block partial required.</p>
+</section>
+<section id="existing-navbar-tutorials-link" class="level2">
+<h2 class="anchored" data-anchor-id="existing-navbar-tutorials-link">Existing navbar <code>#tutorials</code> link</h2>
+<p>Defined in <code>_quarto.yml</code> under <code>website.navbar.title: "#tutorials"</code>. Quarto renders this as the <code>.navbar-brand</code> and auto-links it to the site root (<code>https://cttir.github.io/tutorials/</code>). It is <strong>not</strong> defined in <code>index.qmd</code> and will be left untouched.</p>
+</section>
+<section id="css-surface" class="level2">
+<h2 class="anchored" data-anchor-id="css-surface">CSS surface</h2>
+<p>Themes wire <code>assets/light.scss</code> and <code>assets/dark.scss</code>, both of which pull in <code>assets/_shared.scss</code>. Hero / kicker styles live in <code>_shared.scss</code> (~lines 185–196). New <code>.ctir-avatar</code> / <code>.ctir-avatar-link</code> rules go there so they apply in both themes.</p>
+</section>
+<section id="plan" class="level2">
+<h2 class="anchored" data-anchor-id="plan">Plan</h2>
+<ol type="1">
+<li>Insert the avatar <code>&lt;a&gt;&lt;img&gt;&lt;/a&gt;</code> block at the top of the <code>.hero</code> div in <code>index.qmd</code>, immediately above <code># #tutorials</code>. Avatar links to <code>https://cttir.github.io/website/</code>.</li>
+<li>Wrap the H1 as <code># [#tutorials](https://cttir.github.io/tutorials/)</code>.</li>
+<li>Add <code>.ctir-avatar</code> / <code>.ctir-avatar-link</code> rules to <code>assets/_shared.scss</code>.</li>
+<li>Cross-site image referenced live; do <strong>not</strong> copy into repo.</li>
+</ol>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/cttir\.github\.io\/tutorials\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>#tutorials · MIT</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+    <a class="nav-link" href="./overview.html">
+<p>Overview</p>
+</a>
+  </li>  
+    <li class="nav-item">
+    <a class="nav-link" href="./tutorials.html">
+<p>All tutorials</p>
+</a>
+  </li>  
+    <li class="nav-item">
+    <a class="nav-link" href="./about.html">
+<p>About</p>
+</a>
+  </li>  
+    <li class="nav-item">
+    <a class="nav-link" href="./impressum.html">
+<p>Impressum</p>
+</a>
+  </li>  
+    <li class="nav-item">
+    <a class="nav-link" href="mailto:58561665+r-heller@users.noreply.github.com">
+<p>Kontakt</p>
+</a>
+  </li>  
+</ul>
+    </div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+<script>
+// Global navbar search. Submits to overview.html?q=<term>.
+// Uses the navbar-brand href to resolve the site root, so it
+// works under root and subpath hosting. No-op if the navbar
+// isn't present (e.g. raw print pages).
+(function(){
+  function inject(){
+    var brand = document.querySelector(".navbar-brand[href]");
+    if (!brand) return;
+    var nav = document.querySelector(".navbar .navbar-nav.ms-auto, .navbar .navbar-nav:last-of-type");
+    if (!nav) return;
+    if (document.getElementById("global-search-form")) return;
+    var rootHref = brand.getAttribute("href") || "";
+    if (rootHref && !rootHref.endsWith("/")) rootHref = rootHref.replace(/[^/]*$/, "");
+    var form = document.createElement("form");
+    form.id = "global-search-form";
+    form.role = "search";
+    form.className = "global-search d-flex";
+    form.addEventListener("submit", function(ev){
+      ev.preventDefault();
+      var q = form.querySelector("input").value.trim();
+      var url = rootHref + "overview.html" + (q ? "?q=" + encodeURIComponent(q) : "");
+      window.location.href = url;
+    });
+    var input = document.createElement("input");
+    input.type = "search";
+    input.name = "q";
+    input.placeholder = "Search…";
+    input.setAttribute("aria-label", "Search tutorials");
+    input.autocomplete = "off";
+    form.appendChild(input);
+    nav.parentNode.insertBefore(form, nav);
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", inject);
+  } else {
+    inject();
+  }
+})();
+</script>
+<style>
+.global-search { margin: 0 0.5rem; align-items: center; }
+.global-search input {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--rule, #ccc);
+  border-radius: 0.3rem;
+  background: var(--surface, #fff);
+  color: var(--fg, #222);
+  font-size: 0.85rem;
+  width: 12rem;
+}
+.global-search input:focus {
+  outline: 2px solid var(--accent, #1a73e8);
+  outline-offset: 1px;
+  border-color: var(--accent, #1a73e8);
+}
+@media (max-width: 768px) {
+  .global-search input { width: 9rem; }
+}
+</style>
+
+
+
+
+</body></html>

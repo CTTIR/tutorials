@@ -66,10 +66,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
@@ -80,21 +76,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-ced54966b0e53f059c291d5781927a30.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-e35ea3f25c322afcea5fdc2238c094aa.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-f8a8e85494cd1c075b72640d2d7a7817.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-ccc349d16eea164e4a899defd1a361c0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-65cf5610e5982949b77afe1339426a2c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
-  "location": "navbar",
-  "copy-button": false,
-  "collapse-after": 3,
-  "panel-placement": "end",
-  "type": "overlay",
-  "limit": 50,
-  "keyboard-shortcut": [
-    "f",
-    "/",
-    "s"
-  ],
-  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -302,7 +286,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <span class="navbar-title">#tutorials</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
@@ -423,7 +406,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span class="menu-text">Impressum</span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/CTTIR/tutorials"> <i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/CTTIR/tutorials"> <i class="bi bi-github" role="img" aria-label="Source on GitHub">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -558,6 +541,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Over-integration destroys biology; always inspect cell-type marker expression post-integration.</li>
 <li>Batch as a fixed effect in the DE model is an alternative to explicit embedding integration for focused comparisons.</li>
 </ul>
+
+
+<section class="related-tutorials" data-render="static">
+
+<h2 class="anchored">Related tutorials</h2>
+
+<p class="related-blurb">Closest matches by shared tags (scrnaseq, integration, harmony).</p>
+
+<div class="related-list"><div class="related-item"><span class="topic">Bioinformatics</span><a href="../bioinformatics/multiomics-integration.html">Multi-Omics Integration</a><div class="related-desc">Joint analysis of transcriptomic, genomic, and epigenomic layers</div></div><div class="related-item"><span class="topic">Bioinformatics</span><a href="../bioinformatics/scrna-cell-type-annotation.html">Cell-Type Annotation</a><div class="related-desc">Assigning cell types to clusters using reference-based and manual methods</div></div><div class="related-item"><span class="topic">Bioinformatics</span><a href="../bioinformatics/scrna-clustering.html">scRNA Clustering</a><div class="related-desc">Graph-based clustering of cells via Louvain or Leiden community detection</div></div></div>
+
+<p class="network-link"><a href="../../overview.html">Explore the full tag network →</a></p>
+
+</section>
 
 
 </section>
@@ -1022,16 +1018,65 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </footer>
 <script>
+// Global navbar search. Submits to overview.html?q=<term>.
+// Uses the navbar-brand href to resolve the site root, so it
+// works under root and subpath hosting. No-op if the navbar
+// isn't present (e.g. raw print pages).
 (function(){
-  var p = window.location.pathname;
-  var i = p.indexOf("/tutorials/");
-  var root = i >= 0 ? p.slice(0, i) : "";
-  var s = document.createElement("script");
-  s.defer = true;
-  s.src = root + "/js/related.js";
-  document.head.appendChild(s);
+  function inject(){
+    var brand = document.querySelector(".navbar-brand[href]");
+    if (!brand) return;
+    var nav = document.querySelector(".navbar .navbar-nav.ms-auto, .navbar .navbar-nav:last-of-type");
+    if (!nav) return;
+    if (document.getElementById("global-search-form")) return;
+    var rootHref = brand.getAttribute("href") || "";
+    if (rootHref && !rootHref.endsWith("/")) rootHref = rootHref.replace(/[^/]*$/, "");
+    var form = document.createElement("form");
+    form.id = "global-search-form";
+    form.role = "search";
+    form.className = "global-search d-flex";
+    form.addEventListener("submit", function(ev){
+      ev.preventDefault();
+      var q = form.querySelector("input").value.trim();
+      var url = rootHref + "overview.html" + (q ? "?q=" + encodeURIComponent(q) : "");
+      window.location.href = url;
+    });
+    var input = document.createElement("input");
+    input.type = "search";
+    input.name = "q";
+    input.placeholder = "Search…";
+    input.setAttribute("aria-label", "Search tutorials");
+    input.autocomplete = "off";
+    form.appendChild(input);
+    nav.parentNode.insertBefore(form, nav);
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", inject);
+  } else {
+    inject();
+  }
 })();
 </script>
+<style>
+.global-search { margin: 0 0.5rem; align-items: center; }
+.global-search input {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--rule, #ccc);
+  border-radius: 0.3rem;
+  background: var(--surface, #fff);
+  color: var(--fg, #222);
+  font-size: 0.85rem;
+  width: 12rem;
+}
+.global-search input:focus {
+  outline: 2px solid var(--accent, #1a73e8);
+  outline-offset: 1px;
+  border-color: var(--accent, #1a73e8);
+}
+@media (max-width: 768px) {
+  .global-search input { width: 9rem; }
+}
+</style>
 
 
 

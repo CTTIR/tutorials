@@ -45,18 +45,21 @@ function renderCard(t, root, topicById, snippetHTML) {
   const topic = topicById.get(t.topic);
   const pill = document.createElement("span");
   pill.className = "topic-pill";
-  pill.style.background = topic?.color || "#888";
-  pill.style.color = "#fff";
+  const bg = topic?.color || "#888";
+  pill.style.background = bg;
+  // Pick text colour by luminance so pastel topics (Descriptive Stats,
+  // Visualisation, Multivariate, Bayesian, …) keep WCAG AA contrast.
+  pill.style.color = readableText(bg);
   pill.textContent = topic?.label || t.topic;
 
-  const h4 = document.createElement("h4");
+  const h3 = document.createElement("h3");
   const a = document.createElement("a");
   a.href = root + t.url;
   a.textContent = t.title;
-  h4.appendChild(a);
+  h3.appendChild(a);
 
   card.appendChild(pill);
-  card.appendChild(h4);
+  card.appendChild(h3);
 
   if (snippetHTML) {
     // Pagefind returns excerpts containing <mark>…</mark> highlights —
@@ -84,4 +87,20 @@ function renderCard(t, root, topicById, snippetHTML) {
     card.appendChild(tags);
   }
   return card;
+}
+
+// WCAG luminance check — returns "#111" or "#fff" depending on which
+// gives better contrast against the supplied colour. Threshold tuned
+// to flip on the darker pastels in our topic palette.
+function readableText(hex) {
+  const m = String(hex || "").match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (!m) return "#fff";
+  let h = m[1];
+  if (h.length === 3) h = h.split("").map(c => c + c).join("");
+  const r = parseInt(h.slice(0, 2), 16) / 255;
+  const g = parseInt(h.slice(2, 4), 16) / 255;
+  const b = parseInt(h.slice(4, 6), 16) / 255;
+  const lin = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+  const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  return L > 0.5 ? "#111" : "#fff";
 }

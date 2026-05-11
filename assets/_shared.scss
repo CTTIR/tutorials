@@ -140,12 +140,15 @@ hr { border: none; border-top: 1px solid var(--rule); margin: 2.5rem 0; }
   line-height: 1;
 }
 .navbar .quarto-color-scheme-toggle i { color: var(--fg) !important; }
+/* dark.scss is the primary theme, light.scss is the alternate — so the
+   `.alternate` class is present in light mode. Show a moon in light mode
+   (the destination is dark) and a sun in dark mode. */
 .navbar .quarto-color-scheme-toggle:not(.alternate) i::before {
-  content: "\f495"; /* bi-moon-stars */
+  content: "\f5a2"; /* bi-sun */
   font-family: "bootstrap-icons" !important;
 }
 .navbar .quarto-color-scheme-toggle.alternate i::before {
-  content: "\f5a2"; /* bi-sun */
+  content: "\f495"; /* bi-moon-stars */
   font-family: "bootstrap-icons" !important;
 }
 
