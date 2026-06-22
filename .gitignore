@@ -46,3 +46,7 @@ generate_tutorials.py
 
 /.quarto/
 **/*.quarto_ipynb
+*.tmp
+*.log
+*.bak
+*.orig
