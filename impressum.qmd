@@ -39,11 +39,7 @@ Albert-Einstein-Straße 47\
 02977 Hoyerswerda\
 Deutschland
 
-### EU-Streitschlichtung
-
-Die Europäische Kommission stellt eine Plattform zur
-Online-Streitbeilegung (OS) bereit:
-<https://ec.europa.eu/consumers/odr/>.
+### Verbraucherstreitbeilegung
 
 Ich bin nicht verpflichtet und nicht bereit, an einem
 Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle
