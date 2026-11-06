@@ -129,6 +129,8 @@ jobs:
           if [ -f /tmp/lh-server.pid ]; then
             kill "$(cat /tmp/lh-server.pid)" 2>/dev/null || true
           fi
+      - name: Reject counting pixels in source and rendered pages
+        run: python3 scripts/check-no-counting-pixels.py .
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

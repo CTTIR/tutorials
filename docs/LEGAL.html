@@ -428,9 +428,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#legal-pages-pflege--und-build-hinweise" id="toc-legal-pages-pflege--und-build-hinweise" class="nav-link active" data-scroll-target="#legal-pages-pflege--und-build-hinweise">Legal pages — Pflege- und Build-Hinweise</a>
   <ul class="collapse">
   <li><a href="#plausible-analytics" id="toc-plausible-analytics" class="nav-link" data-scroll-target="#plausible-analytics">Plausible Analytics</a></li>
-  <li><a href="#vg-wort-standard-zählpixel" id="toc-vg-wort-standard-zählpixel" class="nav-link" data-scroll-target="#vg-wort-standard-zählpixel">VG Wort Standard-Zählpixel</a>
-  <ul class="collapse">
-  <li><a href="#workflow-pro-zählpflichtigem-tutorial" id="toc-workflow-pro-zählpflichtigem-tutorial" class="nav-link" data-scroll-target="#workflow-pro-zählpflichtigem-tutorial">Workflow pro zählpflichtigem Tutorial</a></li>
+  
   </ul></li>
   <li><a href="#ci-guard" id="toc-ci-guard" class="nav-link" data-scroll-target="#ci-guard">CI-Guard</a></li>
   </ul></li>
@@ -455,24 +453,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="plausible-analytics">Plausible Analytics</h2>
 <p>Selbst gehostet auf <code>analytics.hellebo.de</code> (Server in Deutschland), eingebunden via <code>_quarto.yml</code> → <code>format.html.include-in-header</code>. Cookielos, IP wird nicht gespeichert.</p>
 </section>
-<section id="vg-wort-standard-zählpixel" class="level2">
-<h2 class="anchored" data-anchor-id="vg-wort-standard-zählpixel">VG Wort Standard-Zählpixel</h2>
-<p>Pandoc-Lua-Filter <code>scripts/vgwort.lua</code>, in <code>_quarto.yml</code> unter <code>filters:</code> aktiviert.</p>
-<section id="workflow-pro-zählpflichtigem-tutorial" class="level3">
-<h3 class="anchored" data-anchor-id="workflow-pro-zählpflichtigem-tutorial">Workflow pro zählpflichtigem Tutorial</h3>
-<ol type="1">
-<li><p>Token aus <a href="https://tom.vgwort.de/">VG Wort T.O.M.</a> ziehen.</p></li>
-<li><p>Mindestens <strong>1.500 Zeichen</strong> Text (METIS-Standardverfahren).</p></li>
-<li><p>In der YAML-Frontmatter der Tutorial-Seite:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"Mein Tutorial"</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">vgwort_pixel</span><span class="kw">:</span><span class="at"> </span><span class="st">"vg08.met.vgwort.de/na/&lt;32-hex-token&gt;"</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
-<li><p>Übersichten, Listings, Impressum, 404 und Werke unter 1.500 Zeichen bleiben pixelfrei.</p></li>
-</ol>
-<p><code>vgwort_audit.csv</code> im Repo-Root kann als Verzeichnis aller zugewiesenen Tokens gepflegt werden (Tutorial-Slug, Datum, Token).</p>
-</section>
-</section>
+<section id="counting-pixels"><h2>Counting pixels</h2><p>No VG Wort counting pixels are included.</p></section>
 <section id="ci-guard" class="level2">
 <h2 class="anchored" data-anchor-id="ci-guard">CI-Guard</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/check-legal-placeholders.sh</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>

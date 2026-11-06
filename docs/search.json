@@ -22852,28 +22852,21 @@
     "href": "LEGAL.html",
     "title": "Legal pages — Pflege- und Build-Hinweise",
     "section": "",
-    "text": "Dieses Repository enthält eine konsolidierte Rechtliches-Seite:\n\nimpressum.qmd — Impressum (§ 5 DDG, § 18 Abs. 2 MStV), Datenschutzerklärung und Haftungsausschluss in einem Dokument.\n\nIm Header oben rechts als Impressum, im Footer ebenfalls als einzelner Link inkl. Kontakt. Aliase (/datenschutz.html, /haftungsausschluss.html, /privacy/, /disclaimer/, …) verweisen auf die konsolidierte Seite.\n\n\nSelbst gehostet auf analytics.hellebo.de (Server in Deutschland), eingebunden via _quarto.yml → format.html.include-in-header. Cookielos, IP wird nicht gespeichert.\n\n\n\nPandoc-Lua-Filter scripts/vgwort.lua, in _quarto.yml unter filters: aktiviert.\n\n\n\nToken aus VG Wort T.O.M. ziehen.\nMindestens 1.500 Zeichen Text (METIS-Standardverfahren).\nIn der YAML-Frontmatter der Tutorial-Seite:\n---\ntitle: \"Mein Tutorial\"\nvgwort_pixel: \"vg08.met.vgwort.de/na/&lt;32-hex-token&gt;\"\n---\nÜbersichten, Listings, Impressum, 404 und Werke unter 1.500 Zeichen bleiben pixelfrei.\n\nvgwort_audit.csv im Repo-Root kann als Verzeichnis aller zugewiesenen Tokens gepflegt werden (Tutorial-Slug, Datum, Token).\n\n\n\n\nbash scripts/check-legal-placeholders.sh\nScannt das gerenderte docs/-Verzeichnis auf {CONTACT_EMAIL_HELLER}, {CONTACT_EMAIL_LEBOULANGER}, {SITE_DOMAIN} sowie auf TODO/FIXME in den Rechtliches-Seiten und schlägt bei Treffern fehl."
+    "text": "Legal information. No VG Wort counting pixels are included."
   },
   {
     "objectID": "LEGAL.html#plausible-analytics",
     "href": "LEGAL.html#plausible-analytics",
     "title": "Legal pages — Pflege- und Build-Hinweise",
     "section": "",
-    "text": "Selbst gehostet auf analytics.hellebo.de (Server in Deutschland), eingebunden via _quarto.yml → format.html.include-in-header. Cookielos, IP wird nicht gespeichert."
-  },
-  {
-    "objectID": "LEGAL.html#vg-wort-standard-zählpixel",
-    "href": "LEGAL.html#vg-wort-standard-zählpixel",
-    "title": "Legal pages — Pflege- und Build-Hinweise",
-    "section": "",
-    "text": "Pandoc-Lua-Filter scripts/vgwort.lua, in _quarto.yml unter filters: aktiviert.\n\n\n\nToken aus VG Wort T.O.M. ziehen.\nMindestens 1.500 Zeichen Text (METIS-Standardverfahren).\nIn der YAML-Frontmatter der Tutorial-Seite:\n---\ntitle: \"Mein Tutorial\"\nvgwort_pixel: \"vg08.met.vgwort.de/na/&lt;32-hex-token&gt;\"\n---\nÜbersichten, Listings, Impressum, 404 und Werke unter 1.500 Zeichen bleiben pixelfrei.\n\nvgwort_audit.csv im Repo-Root kann als Verzeichnis aller zugewiesenen Tokens gepflegt werden (Tutorial-Slug, Datum, Token)."
+    "text": "Legal information. No VG Wort counting pixels are included."
   },
   {
     "objectID": "LEGAL.html#ci-guard",
     "href": "LEGAL.html#ci-guard",
     "title": "Legal pages — Pflege- und Build-Hinweise",
     "section": "",
-    "text": "bash scripts/check-legal-placeholders.sh\nScannt das gerenderte docs/-Verzeichnis auf {CONTACT_EMAIL_HELLER}, {CONTACT_EMAIL_LEBOULANGER}, {SITE_DOMAIN} sowie auf TODO/FIXME in den Rechtliches-Seiten und schlägt bei Treffern fehl."
+    "text": "Legal information. No VG Wort counting pixels are included."
   },
   {
     "objectID": "overview.html#tag-network",
@@ -22953,13 +22946,6 @@
     "text": "Component\nTechnology\n\n\n\n\nStatic site generator\nHugo (v0.159.2)\n\n\nBase theme\nHugo Coder (Go module)\n\n\nCustom theme\nAcademic (local, in themes/academic/)\n\n\nFonts\nSource Sans 3, JetBrains Mono\n\n\nHosting\nGitHub Pages\n\n\nCI/CD\nGitHub Actions (auto-deploy on push to main)\n\n\nTutorial code\nR (4.0+)\n\n\nInteractive apps\nR Shiny, hosted separately, embedded via iframe\n\n\nTaxonomies\nCategories (topic areas), Tags (methods/packages), Series (learning paths)"
   },
   {
-    "objectID": "PROJECT_CONCEPT.html#vg-wort-compliance",
-    "href": "PROJECT_CONCEPT.html#vg-wort-compliance",
-    "title": "Project Concept: Statistics & Bioinformatics Tutorial Platform",
-    "section": "",
-    "text": "Every tutorial is written to qualify for VG Wort METIS tracking:\n\nMinimum 1,800 characters of original text per page (excluding code blocks)\nEach page is a standalone, original work\nTracking pixels can be added to the Hugo template via a frontmatter field"
-  },
-  {
     "objectID": "PROJECT_CONCEPT.html#repository-structure",
     "href": "PROJECT_CONCEPT.html#repository-structure",
     "title": "Project Concept: Statistics & Bioinformatics Tutorial Platform",
@@ -22972,62 +22958,6 @@
     "title": "Project Concept: Statistics & Bioinformatics Tutorial Platform",
     "section": "",
     "text": "Done: Full Hugo infrastructure, theme, layouts, CSS, landing page, deploy pipeline\nNext: Generate 560+ tutorial markdown files, create Shiny instruction files, commit & push"
-  },
-  {
-    "objectID": "scripts/README_vgwort.html",
-    "href": "scripts/README_vgwort.html",
-    "title": "distribute_vgwort.py — usage",
-    "section": "",
-    "text": "Distributes VG Wort Zählmarken from the shared xlsx inventory into eligible .qmd pages of this Quarto site. One marker per page; idempotent; atomic.\n\n\nF:\\Dropbox\\Arbeit\\Firma\\boulingua\\VGWort - rh\\zaehlmarken_combined.xlsx\nThis file is shared across tutorials/, courses/, and any other repo. Run the script in one repo, commit, then run in the next — that’s the intended workflow.\n\n\n\n\nMake sure the working tree is clean:\ngit status\nDry-run against a small slice first (recommended for first run in a repo):\npython scripts/distribute_vgwort.py `\n    --xlsx \"F:\\Dropbox\\Arbeit\\Firma\\boulingua\\VGWort - rh\\zaehlmarken_combined.xlsx\" `\n    --only \"tutorials/statistical-foundations/**\"\nDry-run for the whole repo:\npython scripts/distribute_vgwort.py `\n    --xlsx \"F:\\Dropbox\\Arbeit\\Firma\\boulingua\\VGWort - rh\\zaehlmarken_combined.xlsx\"\nApply (only after the dry-run output looks right):\npython scripts/distribute_vgwort.py `\n    --xlsx \"F:\\Dropbox\\Arbeit\\Firma\\boulingua\\VGWort - rh\\zaehlmarken_combined.xlsx\" `\n    --apply\nReview and commit:\ngit diff\ngit add -A\ngit commit -m \"Embed VG Wort Zählmarken in eligible tutorial pages\"\n\n\n\n\n\nRefuses to run if git status --porcelain is non-empty.\nRefuses to run if a Dropbox ... CONFLICTED COPY ... xlsx sits next to the original.\nBacks up the xlsx to &lt;name&gt;.bak.&lt;YYYYMMDD-HHMMSS&gt; before any write.\nFor each eligible page (≥ 1,800 prose chars, no existing marker): appends the ::: {.vgwort-pixel} block, flips that xlsx row to Used=True with the page URL, and atomically saves the xlsx — one marker at a time, in the same transaction as the qmd write.\n\n\n\n\n--xlsx &lt;path&gt;          Required. Path to zaehlmarken_combined.xlsx.\n--apply | --dry-run    Default is --dry-run.\n--root &lt;dir&gt;           Default \".\". Quarto project root.\n--min-chars &lt;n&gt;        Default 1800. VG Wort minimum.\n--exclude &lt;glob&gt;       Repeatable. Adds to defaults (docs/**, _freeze/**, ...).\n--only &lt;glob&gt;          Repeatable. Restricts to matching paths.\n\n\n\n\nqmd changes (uncommitted): git checkout -- .\nqmd changes (committed): git revert &lt;sha&gt;\nxlsx: copy back from &lt;name&gt;.bak.&lt;timestamp&gt; next to the original.\n\nIf you have to roll back the xlsx, also roll back the qmd writes — the two must stay in sync.\n\n\n\n\nindex.qmd → marker registers .../index.html.\ndraft: true → skipped.\nFiles starting with _ (Quarto include partials) → skipped.\nExisting marker present → reconciled against xlsx (fixes Used=False rows; warns on URL mismatch; errors on foreign markers not in xlsx).\nInsufficient markers in pool → refuses to partially allocate; aborts before any write.\n\n\n\n\n\n0 — success.\n1 — completed but with reconciliation anomalies (foreign markers, URL mismatches). Review the log.\n2 — preflight failure (missing xlsx, dirty git tree, Dropbox conflict).\n3 — allocation halted (insufficient markers)."
-  },
-  {
-    "objectID": "scripts/README_vgwort.html#the-shared-inventory",
-    "href": "scripts/README_vgwort.html#the-shared-inventory",
-    "title": "distribute_vgwort.py — usage",
-    "section": "",
-    "text": "F:\\Dropbox\\Arbeit\\Firma\\boulingua\\VGWort - rh\\zaehlmarken_combined.xlsx\nThis file is shared across tutorials/, courses/, and any other repo. Run the script in one repo, commit, then run in the next — that’s the intended workflow."
-  },
-  {
-    "objectID": "scripts/README_vgwort.html#order-of-operations-powershell",
-    "href": "scripts/README_vgwort.html#order-of-operations-powershell",
-    "title": "distribute_vgwort.py — usage",
-    "section": "",
-    "text": "Make sure the working tree is clean:\ngit status\nDry-run against a small slice first (recommended for first run in a repo):\npython scripts/distribute_vgwort.py `\n    --xlsx \"F:\\Dropbox\\Arbeit\\Firma\\boulingua\\VGWort - rh\\zaehlmarken_combined.xlsx\" `\n    --only \"tutorials/statistical-foundations/**\"\nDry-run for the whole repo:\npython scripts/distribute_vgwort.py `\n    --xlsx \"F:\\Dropbox\\Arbeit\\Firma\\boulingua\\VGWort - rh\\zaehlmarken_combined.xlsx\"\nApply (only after the dry-run output looks right):\npython scripts/distribute_vgwort.py `\n    --xlsx \"F:\\Dropbox\\Arbeit\\Firma\\boulingua\\VGWort - rh\\zaehlmarken_combined.xlsx\" `\n    --apply\nReview and commit:\ngit diff\ngit add -A\ngit commit -m \"Embed VG Wort Zählmarken in eligible tutorial pages\""
-  },
-  {
-    "objectID": "scripts/README_vgwort.html#what---apply-does",
-    "href": "scripts/README_vgwort.html#what---apply-does",
-    "title": "distribute_vgwort.py — usage",
-    "section": "",
-    "text": "Refuses to run if git status --porcelain is non-empty.\nRefuses to run if a Dropbox ... CONFLICTED COPY ... xlsx sits next to the original.\nBacks up the xlsx to &lt;name&gt;.bak.&lt;YYYYMMDD-HHMMSS&gt; before any write.\nFor each eligible page (≥ 1,800 prose chars, no existing marker): appends the ::: {.vgwort-pixel} block, flips that xlsx row to Used=True with the page URL, and atomically saves the xlsx — one marker at a time, in the same transaction as the qmd write."
-  },
-  {
-    "objectID": "scripts/README_vgwort.html#cli",
-    "href": "scripts/README_vgwort.html#cli",
-    "title": "distribute_vgwort.py — usage",
-    "section": "",
-    "text": "--xlsx &lt;path&gt;          Required. Path to zaehlmarken_combined.xlsx.\n--apply | --dry-run    Default is --dry-run.\n--root &lt;dir&gt;           Default \".\". Quarto project root.\n--min-chars &lt;n&gt;        Default 1800. VG Wort minimum.\n--exclude &lt;glob&gt;       Repeatable. Adds to defaults (docs/**, _freeze/**, ...).\n--only &lt;glob&gt;          Repeatable. Restricts to matching paths."
-  },
-  {
-    "objectID": "scripts/README_vgwort.html#rolling-back",
-    "href": "scripts/README_vgwort.html#rolling-back",
-    "title": "distribute_vgwort.py — usage",
-    "section": "",
-    "text": "qmd changes (uncommitted): git checkout -- .\nqmd changes (committed): git revert &lt;sha&gt;\nxlsx: copy back from &lt;name&gt;.bak.&lt;timestamp&gt; next to the original.\n\nIf you have to roll back the xlsx, also roll back the qmd writes — the two must stay in sync."
-  },
-  {
-    "objectID": "scripts/README_vgwort.html#edge-cases-handled",
-    "href": "scripts/README_vgwort.html#edge-cases-handled",
-    "title": "distribute_vgwort.py — usage",
-    "section": "",
-    "text": "index.qmd → marker registers .../index.html.\ndraft: true → skipped.\nFiles starting with _ (Quarto include partials) → skipped.\nExisting marker present → reconciled against xlsx (fixes Used=False rows; warns on URL mismatch; errors on foreign markers not in xlsx).\nInsufficient markers in pool → refuses to partially allocate; aborts before any write."
-  },
-  {
-    "objectID": "scripts/README_vgwort.html#exit-codes",
-    "href": "scripts/README_vgwort.html#exit-codes",
-    "title": "distribute_vgwort.py — usage",
-    "section": "",
-    "text": "0 — success.\n1 — completed but with reconciliation anomalies (foreign markers, URL mismatches). Review the log.\n2 — preflight failure (missing xlsx, dirty git tree, Dropbox conflict).\n3 — allocation halted (insufficient markers)."
   },
   {
     "objectID": "shiny/01-clt-explorer.html",

@@ -67,8 +67,6 @@ quarto render
 ## Quality checks
 
 ```bash
-# Prose-length audit (VG Wort METIS, threshold = 1,800 chars)
-python scripts/vgwort_audit.py --csv vgwort_audit.csv
 
 # Decision-tree wizard state-machine tests
 node --test scripts/wizard-test.mjs
