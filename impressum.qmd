@@ -23,14 +23,12 @@ Deutschland
 
 ### Kontakt
 
-E-Mail: [58561665+r-heller@users.noreply.github.com](mailto:58561665+r-heller@users.noreply.github.com)\
+E-Mail: [cttir.dev@outlook.com](mailto:cttir.dev@outlook.com)\
 Web: <https://cttir.github.io/website/>
 
-Der Kontaktweg ist eine GitHub-Noreply-Adresse; Antworten können
-entsprechend verzögert erfolgen. Für schnelle Fehlermeldungen ist
-ein Issue im
+Für Fehlermeldungen zu den Inhalten ist ein Issue im
 [Repository](https://github.com/CTTIR/tutorials/issues) der
-effizientere Weg.
+schnellste Weg.
 
 ### Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV
 
